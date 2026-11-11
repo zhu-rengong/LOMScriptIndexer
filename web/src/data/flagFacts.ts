@@ -3387,6 +3387,674 @@ export const flagFacts: Record<string, FlagFactTable> = {
     },
     negated: {},
   },
+  E00001: {
+    values: {
+      "1": "fact.E00001.1",
+    },
+    negated: {},
+  },
+  E00007: {
+    values: {
+      "1": "fact.E00007.1",
+    },
+    negated: {},
+  },
+  E21002: {
+    values: {
+      "1": "fact.E21002.1",
+    },
+    negated: {},
+  },
+  E21003: {
+    values: {
+      "1": "fact.E21003.1",
+    },
+    negated: {},
+  },
+  G10008: {
+    values: {
+      "1": "fact.G10008.1",
+    },
+    negated: {},
+  },
+  G30001: {
+    values: {
+      "1": "fact.G30001.1",
+    },
+    negated: {},
+  },
+  G30011: {
+    values: {
+      "1": "fact.G30011.1",
+    },
+    negated: {},
+  },
+  G30015: {
+    values: {
+      "1": "fact.G30015.1",
+    },
+    negated: {},
+  },
+  M00017: {
+    values: {
+      "1": "fact.M00017.1",
+    },
+    negated: {},
+  },
+  M00018: {
+    values: {
+      "1": "fact.M00018.1",
+    },
+    negated: {},
+  },
+  M00025: {
+    values: {
+      "1": "fact.M00025.1",
+    },
+    negated: {},
+  },
+  M10002: {
+    values: {
+      "1": "fact.M10002.1",
+    },
+    negated: {},
+  },
+  M10004: {
+    values: {
+      "1": "fact.M10004.1",
+    },
+    negated: {},
+  },
+  M10005: {
+    values: {
+      "1": "fact.M10005.1",
+    },
+    negated: {},
+  },
+  M30001: {
+    values: {
+      "1": "fact.M30001.1",
+    },
+    negated: {},
+  },
+  M30014: {
+    values: {
+      "1": "fact.M30014.1",
+    },
+    negated: {},
+  },
+  M30024: {
+    values: {
+      "1": "fact.M30024.1",
+    },
+    negated: {},
+  },
+  M30030: {
+    values: {
+      "1": "fact.M30030.1",
+    },
+    negated: {},
+  },
+  M30031: {
+    values: {
+      "1": "fact.M30031.1",
+    },
+    negated: {},
+  },
+  M30032: {
+    values: {
+      "1": "fact.M30032.1",
+    },
+    negated: {},
+  },
+  M30033: {
+    values: {
+      "1": "fact.M30033.1",
+    },
+    negated: {},
+  },
+  M30034: {
+    values: {
+      "1": "fact.M30034.1",
+    },
+    negated: {},
+  },
+  M30056: {
+    values: {
+      "1": "fact.M30056.1",
+    },
+    negated: {},
+  },
+  M30057: {
+    values: {
+      "1": "fact.M30057.1",
+    },
+    negated: {},
+  },
+  M30061: {
+    values: {
+      "1": "fact.M30061.1",
+    },
+    negated: {},
+  },
+  M30068: {
+    values: {
+      "1": "fact.M30068.1",
+    },
+    negated: {},
+  },
+  M30069: {
+    values: {
+      "1": "fact.M30069.1",
+    },
+    negated: {},
+  },
+  M30073: {
+    values: {
+      "1": "fact.M30073.1",
+    },
+    negated: {},
+  },
+  M40010: {
+    values: {
+      "1": "fact.M40010.1",
+    },
+    negated: {},
+  },
+  M40013: {
+    values: {
+      "1": "fact.M40013.1",
+    },
+    negated: {},
+  },
+  M40029: {
+    values: {
+      "1": "fact.M40029.1",
+    },
+    negated: {},
+  },
+  M40035: {
+    values: {
+      "1": "fact.M40035.1",
+    },
+    negated: {},
+  },
+  M50003: {
+    values: {
+      "1": "fact.M50003.1",
+    },
+    negated: {},
+  },
+  M50004: {
+    values: {
+      "1": "fact.M50004.1",
+    },
+    negated: {},
+  },
+  M50006: {
+    values: {
+      "1": "fact.M50006.1",
+    },
+    negated: {},
+  },
+  M50012: {
+    values: {
+      "1": "fact.M50012.1",
+    },
+    negated: {},
+  },
+  M50020: {
+    values: {
+      "1": "fact.M50020.1",
+    },
+    negated: {},
+  },
+  M50030: {
+    values: {
+      "1": "fact.M50030.1",
+    },
+    negated: {},
+  },
+  M50031: {
+    values: {
+      "1": "fact.M50031.1",
+    },
+    negated: {},
+  },
+  M50037: {
+    values: {
+      "1": "fact.M50037.1",
+    },
+    negated: {},
+  },
+  M50039: {
+    values: {
+      "1": "fact.M50039.1",
+    },
+    negated: {},
+  },
+  M50042: {
+    values: {
+      "1": "fact.M50042.1",
+    },
+    negated: {},
+  },
+  M50043: {
+    values: {
+      "1": "fact.M50043.1",
+    },
+    negated: {},
+  },
+  M50048: {
+    values: {
+      "1": "fact.M50048.1",
+    },
+    negated: {},
+  },
+  M60017: {
+    values: {
+      "1": "fact.M60017.1",
+    },
+    negated: {},
+  },
+  M60020: {
+    values: {
+      "1": "fact.M60020.1",
+    },
+    negated: {},
+  },
+  M60022: {
+    values: {
+      "1": "fact.M60022.1",
+    },
+    negated: {},
+  },
+  M60027: {
+    values: {
+      "1": "fact.M60027.1",
+    },
+    negated: {},
+  },
+  M60041: {
+    values: {
+      "1": "fact.M60041.1",
+    },
+    negated: {},
+  },
+  M60056: {
+    values: {
+      "1": "fact.M60056.1",
+    },
+    negated: {},
+  },
+  M60059: {
+    values: {
+      "1": "fact.M60059.1",
+    },
+    negated: {},
+  },
+  M60069: {
+    values: {
+      "1": "fact.M60069.1",
+    },
+    negated: {},
+  },
+  M60072: {
+    values: {
+      "1": "fact.M60072.1",
+    },
+    negated: {},
+  },
+  M60076: {
+    values: {
+      "1": "fact.M60076.1",
+    },
+    negated: {},
+  },
+  M60093: {
+    values: {
+      "1": "fact.M60093.1",
+    },
+    negated: {},
+  },
+  M70019: {
+    values: {
+      "1": "fact.M70019.1",
+    },
+    negated: {},
+  },
+  M70029: {
+    values: {
+      "1": "fact.M70029.1",
+    },
+    negated: {},
+  },
+  M70032: {
+    values: {
+      "1": "fact.M70032.1",
+    },
+    negated: {},
+  },
+  M70033: {
+    values: {
+      "1": "fact.M70033.1",
+    },
+    negated: {},
+  },
+  M70034: {
+    values: {
+      "1": "fact.M70034.1",
+    },
+    negated: {},
+  },
+  M70036: {
+    values: {
+      "1": "fact.M70036.1",
+    },
+    negated: {},
+  },
+  M70037: {
+    values: {
+      "1": "fact.M70037.1",
+    },
+    negated: {},
+  },
+  M70041: {
+    values: {
+      "1": "fact.M70041.1",
+    },
+    negated: {},
+  },
+  M70042: {
+    values: {
+      "1": "fact.M70042.1",
+    },
+    negated: {},
+  },
+  M70043: {
+    values: {
+      "1": "fact.M70043.1",
+    },
+    negated: {},
+  },
+  M70044: {
+    values: {
+      "1": "fact.M70044.1",
+    },
+    negated: {},
+  },
+  M70047: {
+    values: {
+      "1": "fact.M70047.1",
+    },
+    negated: {},
+  },
+  M70055: {
+    values: {
+      "1": "fact.M70055.1",
+    },
+    negated: {},
+  },
+  M70071: {
+    values: {
+      "1": "fact.M70071.1",
+    },
+    negated: {},
+  },
+  M80001: {
+    values: {
+      "1": "fact.M80001.1",
+      "2": "fact.M80001.2",
+      "3": "fact.M80001.3",
+    },
+    negated: {},
+  },
+  M80004: {
+    values: {
+      "1": "fact.M80004.1",
+    },
+    negated: {},
+  },
+  M80014: {
+    values: {
+      "1": "fact.M80014.1",
+    },
+    negated: {},
+  },
+  M80018: {
+    values: {
+      "1": "fact.M80018.1",
+    },
+    negated: {},
+  },
+  M80039: {
+    values: {
+      "1": "fact.M80039.1",
+    },
+    negated: {},
+  },
+  M80053: {
+    values: {
+      "1": "fact.M80053.1",
+    },
+    negated: {},
+  },
+  M80057: {
+    values: {
+      "1": "fact.M80057.1",
+    },
+    negated: {},
+  },
+  M80058: {
+    values: {
+      "1": "fact.M80058.1",
+    },
+    negated: {},
+  },
+  M80059: {
+    values: {
+      "1": "fact.M80059.1",
+    },
+    negated: {},
+  },
+  M80060: {
+    values: {
+      "1": "fact.M80060.1",
+    },
+    negated: {},
+  },
+  M80061: {
+    values: {
+      "1": "fact.M80061.1",
+    },
+    negated: {},
+  },
+  M80062: {
+    values: {
+      "1": "fact.M80062.1",
+    },
+    negated: {},
+  },
+  M80063: {
+    values: {
+      "1": "fact.M80063.1",
+    },
+    negated: {},
+  },
+  M80065: {
+    values: {
+      "1": "fact.M80065.1",
+    },
+    negated: {},
+  },
+  M80066: {
+    values: {
+      "1": "fact.M80066.1",
+    },
+    negated: {},
+  },
+  M80067: {
+    values: {
+      "1": "fact.M80067.1",
+    },
+    negated: {},
+  },
+  S0604_01: {
+    values: {
+      "1": "fact.S0604_01.1",
+    },
+    negated: {},
+  },
+  S2003_01: {
+    values: {
+      "1": "fact.S2003_01.1",
+    },
+    negated: {},
+  },
+  S8400: {
+    values: {
+      "1": "fact.S8400.1",
+    },
+    negated: {},
+  },
+  上官世家: {
+    values: {
+      "1": "fact.上官世家.1",
+    },
+    negated: {},
+  },
+  丐帮: {
+    values: {
+      "1": "fact.丐帮.1",
+    },
+    negated: {},
+  },
+  全真派: {
+    values: {
+      "1": "fact.全真派.1",
+    },
+    negated: {},
+  },
+  南宫世家: {
+    values: {
+      "1": "fact.南宫世家.1",
+    },
+    negated: {},
+  },
+  叶云裳设陷阱: {
+    values: {
+      "1": "fact.叶云裳设陷阱.1",
+    },
+    negated: {},
+  },
+  四师兄的阴损伎俩: {
+    values: {
+      "1": "fact.四师兄的阴损伎俩.1",
+    },
+    negated: {},
+  },
+  小师妹: {
+    values: {
+      "1": "fact.小师妹.1",
+    },
+    negated: {},
+  },
+  小梅: {
+    values: {
+      "1": "fact.小梅.1",
+    },
+    negated: {},
+  },
+  小竹: {
+    values: {
+      "1": "fact.小竹.1",
+    },
+    negated: {},
+  },
+  峨嵋派: {
+    values: {
+      "1": "fact.峨嵋派.1",
+    },
+    negated: {},
+  },
+  崆峒派: {
+    values: {
+      "1": "fact.崆峒派.1",
+    },
+    negated: {},
+  },
+  嵩山十八铜人: {
+    values: {
+      "1": "fact.嵩山十八铜人.1",
+    },
+    negated: {},
+  },
+  嵩山派: {
+    values: {
+      "1": "fact.嵩山派.1",
+    },
+    negated: {},
+  },
+  沧帮的背叛: {
+    values: {
+      "1": "fact.沧帮的背叛.1",
+    },
+    negated: {},
+  },
+  点苍派: {
+    values: {
+      "1": "fact.点苍派.1",
+    },
+    negated: {},
+  },
+  画中仙: {
+    values: {
+      "1": "fact.画中仙.1",
+    },
+    negated: {},
+  },
+  设陷阱: {
+    values: {
+      "1": "fact.设陷阱.1",
+    },
+    negated: {},
+  },
+  连环火箭: {
+    values: {
+      "1": "fact.连环火箭.1",
+    },
+    negated: {},
+  },
+  邹博: {
+    values: {
+      "1": "fact.邹博.1",
+    },
+    negated: {},
+  },
+  锦香宫: {
+    values: {
+      "1": "fact.锦香宫.1",
+    },
+    negated: {},
+  },
+  锦香宫支援: {
+    values: {
+      "1": "fact.锦香宫支援.1",
+    },
+    negated: {},
+  },
+  青城派: {
+    values: {
+      "1": "fact.青城派.1",
+    },
+    negated: {},
+  },
+  龙湘的勇气: {
+    values: {
+      "1": "fact.龙湘的勇气.1",
+    },
+    negated: {},
+  },
 };
 
 export const flagFactKey = (flag: string, value: string, negated: boolean): string => {
