@@ -5,7 +5,7 @@ from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from io import BytesIO
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from ..console import Reporter
@@ -24,7 +24,7 @@ from .portrait_cache import (
     settings_snapshot,
 )
 
-PORTRAIT_VERSION = 4
+PORTRAIT_VERSION = 5
 PREVIEW_VERSION = 1
 PORTRAIT_DIR = SITE_DATA_DIR / "portraits"
 THUMBNAIL_SIZE = AVATAR_SIZE
@@ -66,6 +66,7 @@ class Plan:
     images: dict[tuple[str, str], str]
     artifacts: dict[tuple[str, str], str]
     fallback: dict[tuple[str, str], tuple[str, str]]
+    recovered: int
 
 
 @dataclass(frozen=True)
@@ -200,6 +201,59 @@ def _fallbacks(previous: Previous | None, output: Path, preview_dir: Path) \
     return result
 
 
+def _special_id(segment: str) -> str | None:
+    pieces = segment.split("_")
+    if len(pieces) < 3 or pieces[0] != "Special" or not pieces[1].isdigit():
+        return None
+    return pieces[1]
+
+
+def _anchors(expressions: dict[str, str], index: dict[str, Path]) \
+        -> dict[tuple[str, str], set[str]]:
+    groups: dict[tuple[str, str], set[str]] = {}
+    for address in expressions.values():
+        if address not in index:
+            continue
+        parts = address.split("/")
+        for depth, segment in enumerate(parts[:-1]):
+            ident = _special_id(segment)
+            if ident is None:
+                continue
+            groups.setdefault(("/".join(parts[:depth]), ident), set()).add(segment)
+    return groups
+
+
+def _stem_index(index: dict[str, Path]) -> dict[str, list[str]]:
+    stems: dict[str, list[str]] = {}
+    for address in index:
+        stems.setdefault(PurePosixPath(address).stem, []).append(address)
+    return stems
+
+
+def _resolve(address: str, index: dict[str, Path], stems: dict[str, list[str]],
+             anchors: dict[tuple[str, str], set[str]]) -> str | None:
+    if address in index:
+        return address
+    if "/" not in address:
+        matches = stems.get(PurePosixPath(address).stem) or []
+        return matches[0] if len(matches) == 1 else None
+    parts = address.split("/")
+    for depth, segment in enumerate(parts[:-1]):
+        ident = _special_id(segment)
+        if ident is None:
+            continue
+        parent = "/".join(parts[:depth])
+        tail = "/".join(parts[depth + 1:])
+        matches: list[str] = []
+        for folder in anchors.get((parent, ident), ()):
+            candidate = f"{parent}/{folder}/{tail}" if parent else f"{folder}/{tail}"
+            if candidate in index:
+                matches.append(candidate)
+        if len(matches) == 1:
+            return matches[0]
+    return None
+
+
 def _plan(characters: dict[str, dict[str, str]], index: dict[str, Path],
           frames: dict[str, dict[str, Frame]], previous: Previous | None,
           output: Path, preview_dir: Path) -> Plan:
@@ -207,14 +261,20 @@ def _plan(characters: dict[str, dict[str, str]], index: dict[str, Path],
     missing: list[dict] = []
     images: dict[tuple[str, str], str] = {}
     artifacts: dict[tuple[str, str], str] = {}
+    stems = _stem_index(index)
+    recovered = 0
     for character, expressions in sorted(characters.items()):
         table = frames.get(character, {})
+        anchors = _anchors(expressions, index)
         for expression, address in sorted(expressions.items()):
-            bundle = index.get(address)
-            if bundle is None:
+            resolved = _resolve(address, index, stems, anchors)
+            if resolved is None:
                 missing.append({"character": character, "expression": expression,
                                 "address": address})
                 continue
+            if resolved != address:
+                recovered += 1
+            bundle = index[resolved]
             override = table.get(expression)
             if previous is not None:
                 reused = _reusable(previous, character, expression, override,
@@ -223,10 +283,10 @@ def _plan(characters: dict[str, dict[str, str]], index: dict[str, Path],
                     images[(character, expression)] = reused[0]
                     artifacts[(character, expression)] = reused[1]
                     continue
-            entry = grouped.setdefault(bundle, {}).setdefault(address, [])
+            entry = grouped.setdefault(bundle, {}).setdefault(resolved, [])
             entry.append((character, expression, override))
     return Plan(grouped, missing, images, artifacts,
-                _fallbacks(previous, output, preview_dir))
+                _fallbacks(previous, output, preview_dir), recovered)
 
 
 def character_expressions(session: AssetSession) -> tuple[dict[str, dict[str, str]], list[dict]]:
@@ -528,8 +588,8 @@ def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = Fa
         characters, index, issues = cached
     plan = _plan(characters, index, frames, previous, output, preview_dir)
     reporter.info(f"portraits: {len(plan.grouped)} bundles to render,"
-                  f" {len(plan.images)} reused, {workers} threads,"
-                  f" {CHUNK_SIZE} per batch")
+                  f" {len(plan.images)} reused, {plan.recovered} addresses resolved,"
+                  f" {workers} threads, {CHUNK_SIZE} per batch")
     output.mkdir(parents=True, exist_ok=True)
     preview_dir.mkdir(parents=True, exist_ok=True)
     exported = _export_images(plan.grouped, output, preview_dir, issues, reporter, workers)
