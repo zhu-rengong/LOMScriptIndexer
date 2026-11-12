@@ -10,6 +10,7 @@ class CallSpec:
     value_index: int | None = None
     value_delta: int = 0
     display_index: int | None = None
+    extra_index: int | None = None
 
 
 @dataclass(frozen=True)

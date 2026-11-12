@@ -189,8 +189,10 @@ class Renderer:
                     self._stat_value(key, beat.value, out)
                     continue
                 row: list[Any] = [BEAT_META, beat.kind, key, beat.value]
-                if beat.hidden:
-                    row.append(True)
+                if beat.hidden or beat.extra:
+                    row.append(beat.hidden)
+                if beat.extra:
+                    row.append(beat.extra)
                 out.append(row)
             elif isinstance(beat, LoreBeat):
                 self._legend(beat.key, out)

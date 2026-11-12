@@ -47,6 +47,7 @@ export type MetaView = {
   key: string;
   value: number | null;
   hidden: boolean;
+  extra: string;
 };
 
 export type BattleLine = {
@@ -104,6 +105,7 @@ export type MetaChip = {
   title?: string;
   seal?: MetaSeal;
   hidden?: boolean;
+  jump?: string;
 };
 
 export type ChoiceOption = OptionView & { index: number };

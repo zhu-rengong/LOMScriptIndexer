@@ -8,6 +8,7 @@ from .versions import CHECKPOINT_SHARDS, SCHEMA_VERSION
 from .vocab import (
     GLOBAL_CHECKPOINTS,
     GLOBAL_GRAPH,
+    GLOBAL_MISSIONS,
     GLOBAL_TEXT,
     GLOBAL_VAR_READS,
     GLOBAL_WORDCOUNT,
@@ -17,6 +18,7 @@ ASSET_URL_TEMPLATES: dict[str, str] = {
     "graph": "data/graph.js",
     "varReads": "data/var-reads.js",
     "wordcount": "data/wordcount.js",
+    "missions": "data/missions.js",
     "textHead": "data/text-{lang}-head.js",
     "textShard": "data/text-{lang}-{key}.js",
     "checkpoint": "data/checkpoints-{index}.js",
@@ -25,7 +27,8 @@ ASSET_URL_TEMPLATES: dict[str, str] = {
 }
 
 ARTIFACT_PATTERNS = (
-    "graph.js", "var-reads.js", "wordcount.js", "text-*.js", "checkpoints-*.js")
+    "graph.js", "var-reads.js", "wordcount.js", "missions.js",
+    "text-*.js", "checkpoints-*.js")
 
 
 def assets_payload() -> dict[str, str]:
@@ -64,6 +67,10 @@ def var_reads_script(payload: Any) -> str:
     return f"window.{GLOBAL_VAR_READS}={dump_json(payload)};\n"
 
 
+def missions_script(payload: Any) -> str:
+    return f"window.{GLOBAL_MISSIONS}={dump_json(payload)};\n"
+
+
 def text_payload(lang: str, characters: Mapping[str, str], titles: Mapping[str, str],
                  names: Mapping[str, Any], edge_labels: Mapping[str, str],
                  scripts: Mapping[str, Any], shard_keys: Sequence[str],
@@ -100,6 +107,10 @@ def write_wordcount(path: Path, payload: Mapping[str, Any]) -> int:
 
 def write_var_reads(path: Path, payload: Mapping[str, Any]) -> int:
     return atomic_write_text(path, var_reads_script(payload))
+
+
+def write_missions(path: Path, payload: Mapping[str, Any]) -> int:
+    return atomic_write_text(path, missions_script(payload))
 
 
 def write_checkpoint_shards(dir_path: Path, conditions: Mapping[str, Any],

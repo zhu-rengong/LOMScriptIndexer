@@ -30,6 +30,8 @@ from .game.layout import (
 )
 from .game.locale_tables import character_labels, extract_locales
 from .game.lore import probe_legend_texts
+from .game.missions import extract as extract_missions
+from .game.missions import summarize as summarize_missions
 from .game.portraits import export_portraits
 from .game.lore import summarize as summarize_lore
 from .game.scripts import ScriptCorpus, extract_scripts
@@ -49,6 +51,8 @@ from .paths import (
     LOCALE_DIR,
     LUA_DIR,
     MANIFEST_PATH,
+    MISSIONS_CACHE_PATH,
+    MISSIONS_PATH,
     PORTRAIT_PREVIEW_DIR,
     SITE_DATA_DIR,
     STATS_CACHE_PATH,
@@ -60,6 +64,7 @@ from .versions import (
     ENTRY_VERSION,
     LOCALE_VERSION,
     LORE_VERSION,
+    MISSION_VERSION,
     SCHEMA_VERSION,
     STAT_VERSION,
 )
@@ -72,6 +77,7 @@ STAGE_SCRIPTS = "scripts"
 STAGE_CHECKPOINTS = "checkpoint conditions"
 STAGE_ENTRIES = "system entries"
 STAGE_STATS = "stat assets"
+STAGE_MISSIONS = "mission assets"
 STAGE_BATTLES = "battle levels"
 STAGE_LOCALES = "locale tables"
 STAGE_LORE = "lore texts"
@@ -83,6 +89,7 @@ EXTRACT_STAGES = (
     STAGE_CHECKPOINTS,
     STAGE_ENTRIES,
     STAGE_STATS,
+    STAGE_MISSIONS,
     STAGE_BATTLES,
     STAGE_LOCALES,
     STAGE_LORE,
@@ -103,6 +110,7 @@ class ExtractRequest:
     with_entries: bool = True
     with_lore: bool = True
     with_stats: bool = True
+    with_missions: bool = True
     with_battles: bool = True
     with_portraits: bool = True
     portrait_jobs: int = 0
@@ -315,6 +323,44 @@ def _stat_stage(session: AssetSession, reporter: Reporter, fingerprint: str) -> 
     )
 
 
+def _mission_stage(session: AssetSession, reporter: Reporter, fingerprint: str) -> Stage:
+    def run() -> tuple[dict[str, Any], dict[str, Any]]:
+        if session.generator is None:
+            return {}, {"skip": GENERATOR_MISSING}
+        try:
+            payload, stats = extract_missions(session, reporter)
+        except Exception as exc:
+            return {}, {"skip": f"mission asset extraction failed: {type(exc).__name__}: {exc}"}
+        details = {key: stats[key] for key in ("unresolved", "sub_missions") if key in stats}
+        return payload, details
+
+    def summarize(payload: dict[str, Any], details: dict[str, Any]) -> StageStats:
+        elapsed = float(details.get("elapsed") or 0.0)
+        values = summarize_missions(payload, elapsed)
+        for key in ("unresolved", "sub_missions"):
+            if key in details:
+                values[key] = details[key]
+        return StageStats(
+            values=values,
+            skipped=bool(details.get("skip")),
+            elapsed=elapsed,
+        )
+
+    def write_artifact(payload: dict[str, Any], details: dict[str, Any]) -> None:
+        _write_versioned(MISSIONS_PATH, MISSION_VERSION, payload)
+
+    return Stage(
+        title=STAGE_MISSIONS,
+        version=MISSION_VERSION,
+        cache_path=MISSIONS_CACHE_PATH,
+        fingerprint=fingerprint,
+        run=run,
+        summarize=summarize,
+        write_artifact=write_artifact,
+        note=lambda stats: _cache_note(stats, "missions"),
+    )
+
+
 def _battle_stage(session: AssetSession, reporter: Reporter, fingerprint: str) -> Stage:
     def run() -> tuple[dict[str, Any], dict[str, Any]]:
         if session.generator is None:
@@ -452,6 +498,7 @@ def _stage_versions(request: ExtractRequest) -> dict[str, int]:
         "checkpoints": CHECKPOINT_VERSION if request.with_checkpoints else 0,
         "entries": ENTRY_VERSION if request.with_entries else 0,
         "stats": STAT_VERSION if request.with_stats else 0,
+        "missions": MISSION_VERSION if request.with_missions else 0,
         "battles": BATTLE_VERSION if request.with_battles else 0,
         "locale": LOCALE_VERSION,
         "lore": LORE_VERSION if request.with_lore else 0,
@@ -463,8 +510,8 @@ def _manifest_payload(
     corpus: ScriptCorpus, story_key_counts: dict[str, int],
     locale_stats: dict[str, Any], namespace_counts: dict[str, int],
     checkpoint_stats: dict[str, Any], entry_stats: dict[str, Any],
-    stat_stats: dict[str, Any], battle_stats: dict[str, Any],
-    lore_stats: dict[str, Any],
+    stat_stats: dict[str, Any], mission_stats: dict[str, Any],
+    battle_stats: dict[str, Any], lore_stats: dict[str, Any],
 ) -> dict[str, Any]:
     return {
         "schema": SCHEMA_VERSION,
@@ -482,6 +529,7 @@ def _manifest_payload(
         "checkpoint_stats": checkpoint_stats,
         "entry_stats": entry_stats,
         "stat_stats": stat_stats,
+        "mission_stats": mission_stats,
         "battle_stats": battle_stats,
         "lore_stats": lore_stats,
     }
@@ -492,12 +540,12 @@ def _run_extract(layout: GameLayout, langs: tuple[str, ...], request: ExtractReq
     reporter.configure(EXTRACT_STAGES)
     fingerprint = layout.fingerprint()
     needs_generator = (request.with_checkpoints or request.with_entries or request.with_lore
-                       or request.with_stats or request.with_battles)
+                       or request.with_stats or request.with_missions or request.with_battles)
     generator = try_build_generator(layout) if needs_generator else None
     if needs_generator and generator is None:
         reporter.warn(
             "TypeTreeGeneratorAPI is not installed or its .NET runtime is unavailable;"
-            " condition, entry, lore and stat extraction will be skipped"
+            " condition, entry, lore, stat and mission extraction will be skipped"
         )
     session = AssetSession(layout, generator, reporter.info)
     try:
@@ -532,6 +580,10 @@ def _run_extract(layout: GameLayout, langs: tuple[str, ...], request: ExtractReq
         stat_stats = (
             _run_stage(_stat_stage(session, reporter, fingerprint), request.force, reporter)
             if request.with_stats else _disabled_stage(reporter, STAGE_STATS)
+        )
+        mission_stats = (
+            _run_stage(_mission_stage(session, reporter, fingerprint), request.force, reporter)
+            if request.with_missions else _disabled_stage(reporter, STAGE_MISSIONS)
         )
         battle_stats = (
             _run_stage(_battle_stage(session, reporter, fingerprint), request.force, reporter)
@@ -579,11 +631,12 @@ def _run_extract(layout: GameLayout, langs: tuple[str, ...], request: ExtractReq
         _manifest_payload(
             layout, langs, request, corpus, story_key_counts, locale_stats,
             namespace_counts, checkpoint_stats, entry_stats, stat_stats,
-            battle_stats, lore_stats),
+            mission_stats, battle_stats, lore_stats),
     )
     reporter.blank()
     reporter.write(f"[done] {len(corpus.scripts)} scripts -> {LUA_DIR}")
     reporter.write(f"[done] stat assets -> {STATS_PATH}")
+    reporter.write(f"[done] mission assets -> {MISSIONS_PATH}")
     reporter.write(f"[done] battle levels -> {BATTLES_PATH}")
     if request.with_portraits:
         reporter.write(f"[done] character portraits -> {SITE_DATA_DIR / 'portraits'}")
@@ -608,10 +661,16 @@ def run_extract(request: ExtractRequest, reporter: Reporter) -> ExtractResult:
         reporter.error("no language selected; pass --langs zh-tw,zh-cn")
         return ExtractResult(STATUS_USAGE, "no language")
 
+    required = tuple(
+        path for path, enabled in (
+            (MISSIONS_PATH, request.with_missions),
+            (BATTLES_PATH, request.with_battles),
+        ) if enabled
+    )
     manifest = load_manifest(MANIFEST_PATH)
     if not request.force and manifest_matches(
             manifest, layout.fingerprint(), langs, LUA_DIR, LOCALE_DIR,
-            _stage_versions(request), (BATTLES_PATH,) if request.with_battles else ()):
+            _stage_versions(request), required):
         reporter.write("[skip] resources unchanged and outputs complete; use --force to rerun")
         if request.with_portraits:
             export_portraits(layout, reporter, labels=character_labels(langs[0]),

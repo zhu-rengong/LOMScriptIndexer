@@ -54,6 +54,7 @@ const boot = async () => {
   try {
     if (!window.SR_DATA) await loadScript(`data/graph.js?v=${DATA_SCHEMA}`);
     if (!window.SR_VARREADS) await loadScript(`data/var-reads.js?v=${DATA_SCHEMA}`);
+    if (!window.SR_MISSIONS) await loadScript(`data/missions.js?v=${DATA_SCHEMA}`);
     const { start } = await import("./bootstrap");
     start();
   } catch (error) {

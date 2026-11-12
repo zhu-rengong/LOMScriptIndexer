@@ -9,6 +9,7 @@ data/entries.json
 data/lore.json
 data/stats.json
 data/battles.json
+data/missions.json
 
 # generated reader data written by scriptindexer-build
 docs/data/

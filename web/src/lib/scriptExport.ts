@@ -195,7 +195,7 @@ const renderRows = (input: unknown, indent: string): string[] => {
         }
         continue;
       }
-      const text = metaText(meta.kind, meta.key, meta.value);
+      const text = metaText(meta.kind, meta.key, meta.value, meta.extra);
       if (text) out.push(`${indent}· ${text}`);
       continue;
     }

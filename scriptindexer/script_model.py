@@ -90,6 +90,7 @@ class MetaBeat:
     key: str
     value: int | None = None
     hidden: bool = False
+    extra: str = ""
 
 
 @dataclass(frozen=True)

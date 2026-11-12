@@ -1,6 +1,7 @@
 import { checkpoints } from "../data/checkpoints";
 import { flagFacts, flagFactKey, flagMeasureKey } from "../data/flagFacts";
 import { graph } from "../data/graph";
+import { missions } from "../data/missions";
 import { names } from "../data/names";
 import { t } from "../i18n";
 import { pinia } from "../stores";
@@ -483,7 +484,43 @@ const gain = (label: string, count: number | null): string => {
   return t("metaGain", { label });
 };
 
-export const metaText = (kind: string, key: string, value: number | null): string => {
+const missionLabel = (missionId: string): string =>
+  missions.isMain(missionId) ? t("missionMain") : missionId;
+
+const missionNote = (missionId: string): string => {
+  if (!missionId) return "";
+  const note = names.label("mission", missionId);
+  return note && note !== missionId ? note : "";
+};
+
+const missionText = (key: string, extra: string): string => {
+  if (!key) return "";
+  const missionId = missions.missionIdOf(key, extra);
+  if (!missionId) return key === "clear" ? "" : t("metaMissionRaw", { key });
+  const label = missionLabel(missionId);
+  if (key === "clear") return t("metaMissionClear", { mission: label });
+  const state = missions.missionOfState(key)?.state;
+  if (state?.start) {
+    return t("metaMissionScript", { mission: label, state: key, script: state.start });
+  }
+  return t("metaMission", { mission: label, state: key });
+};
+
+const missionTriggerText = (key: string, value: number | null): string => {
+  const missionId = key && key !== "0" ? key : "";
+  const label = missionId ? missionLabel(missionId) : "";
+  if (value === 1) {
+    return label ? t("metaMissionTrigger", { name: label }) : t("metaMissionUntrigger");
+  }
+  return label ? t("metaMissionUntriggerName", { name: label }) : t("metaMissionUntrigger");
+};
+
+export const metaText = (
+  kind: string,
+  key: string,
+  value: number | null,
+  extra = "",
+): string => {
   if (kind === "stat") {
     const name = displayNameOf("stat", key);
     const delta = signed(value);
@@ -530,7 +567,8 @@ export const metaText = (kind: string, key: string, value: number | null): strin
     });
   }
   if (kind === "library") return t("metaLibrary", { name: displayNameOf("chronicle", key) });
-  if (kind === "mission") return t("metaMission", { key });
+  if (kind === "mission") return missionText(key, extra);
+  if (kind === "missionTrigger") return missionTriggerText(key, value);
   if (kind === "dice") return t("metaDice", { name: displayNameOf("check", key) });
   return "";
 };
@@ -566,9 +604,16 @@ export const metaDisplay = (
   kind: string,
   key: string,
   value: number | null,
+  extra = "",
 ): { text: string; title: string; seal?: MetaSeal } => {
-  const raw = metaText(kind, key, value);
+  const raw = metaText(kind, key, value, extra);
   const fallbackTitle = raw.length > 24 ? raw : "";
+  if (kind === "mission" || kind === "missionTrigger") {
+    const missionId =
+      kind === "mission" ? missions.missionIdOf(key, extra) : key && key !== "0" ? key : "";
+    const note = missionNote(missionId);
+    return { text: raw, title: [note, raw].filter(Boolean).join("\n") };
+  }
   if (!view().inferEnabled || (kind !== "setflag" && kind !== "flag")) {
     return { text: raw, title: fallbackTitle };
   }

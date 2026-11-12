@@ -30,6 +30,10 @@ def main(argv: list[str] | None = None) -> int:
                         help="also extract stat asset names and notes (default on)")
     parser.add_argument("--no-stats", dest="with_stats", action="store_false",
                         help="skip the stat asset extraction")
+    parser.add_argument("--missions", dest="with_missions", action="store_true", default=True,
+                        help="also extract mission definitions and start scripts (default on)")
+    parser.add_argument("--no-missions", dest="with_missions", action="store_false",
+                        help="skip the mission definition extraction")
     parser.add_argument("--battles", dest="with_battles", action="store_true", default=True,
                         help="also extract battle and combat levels (default on)")
     parser.add_argument("--no-battles", dest="with_battles", action="store_false",
@@ -50,6 +54,7 @@ def main(argv: list[str] | None = None) -> int:
         with_entries=args.with_entries,
         with_lore=args.with_lore,
         with_stats=args.with_stats,
+        with_missions=args.with_missions,
         with_battles=args.with_battles,
         with_portraits=args.with_portraits,
         portrait_jobs=args.jobs,

@@ -27,6 +27,14 @@ CHECKPOINT_CLASSES: dict[str, str] = {
 POSITION_CLASS = "PositionResultData"
 STAT_CLASS = "GameStat"
 
+MISSION_CLASS = "MissionData"
+MISSION_MANAGER_CLASS = "MissionManagerData"
+SUB_MISSIONS_CLASS = "SubMissionsData"
+MISSION_CLASSES = frozenset({
+    MISSION_CLASS, MISSION_MANAGER_CLASS, SUB_MISSIONS_CLASS,
+})
+MISSION_DATA_FIELDS: tuple[str, ...] = ("_name", "_desc", "_initKey", "_missions")
+
 BATTLE_CLASS = "BattleLevel"
 COMBAT_CLASS = "CombatLevel"
 COMBAT_ACTION_CLASS = "CombatEventAction"

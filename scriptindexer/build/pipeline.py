@@ -18,6 +18,7 @@ from ..js_writer import (
     text_payload,
     write_checkpoint_shards,
     write_graph,
+    write_missions,
     write_text_head,
     write_text_shard,
     write_var_reads,
@@ -32,6 +33,7 @@ from ..paths import (
     LORE_PATH,
     LUA_DIR,
     MANIFEST_PATH,
+    MISSIONS_PATH,
     REPORT_PATH,
     SITE_DATA_DIR,
     STATS_PATH,
@@ -44,6 +46,7 @@ from ..versions import (
     CHECKPOINT_VERSION,
     ENTRY_VERSION,
     LORE_VERSION,
+    MISSION_VERSION,
     SCHEMA_VERSION,
     STAT_VERSION,
 )
@@ -196,6 +199,65 @@ def _load_stat_notes(reporter: Reporter) -> dict[str, str]:
             notes[key] = note.strip()
     reporter.info(f"stat names: {len(notes)} notes from {len(items)} assets")
     return notes
+
+
+def _load_missions(reporter: Reporter) -> dict[str, dict[str, Any]]:
+    payload = read_json(MISSIONS_PATH)
+    if not isinstance(payload, dict):
+        reporter.warn("data/missions.json missing; mission notes and start scripts are unavailable")
+        return {}
+    if payload.get("version") != MISSION_VERSION:
+        reporter.warn(
+            f"data/missions.json version {payload.get('version')} does not match"
+            f" {MISSION_VERSION}; rerun extract.py"
+        )
+        return {}
+    items = payload.get("items")
+    if not isinstance(items, dict):
+        return {}
+    missions = {
+        key: record for key, record in items.items()
+        if isinstance(key, str) and isinstance(record, dict)
+    }
+    reporter.info(f"mission definitions: {len(missions)} missions loaded")
+    return missions
+
+
+def _register_mission_names(missions: dict[str, dict[str, Any]],
+                            name_registry: labels.NameTables) -> None:
+    table = name_registry.setdefault("mission", {})
+    for mission_id, record in missions.items():
+        note = record.get("desc")
+        if isinstance(note, str) and note:
+            table[mission_id] = note
+
+
+def _emit_missions(reporter: Reporter,
+                   missions: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    payload: dict[str, Any] = {"schema": SCHEMA_VERSION, "missions": {}}
+    states = 0
+    for mission_id, record in sorted(missions.items()):
+        raw_states = record.get("states")
+        states_map: dict[str, dict[str, str]] = {}
+        if isinstance(raw_states, dict):
+            for state_key, state in raw_states.items():
+                if not isinstance(state_key, str) or not isinstance(state, dict):
+                    continue
+                states_map[state_key] = {
+                    "start": str(state.get("start") or ""),
+                    "next": str(state.get("next") or ""),
+                }
+        payload["missions"][mission_id] = {
+            "main": bool(record.get("main")),
+            "init": str(record.get("init") or ""),
+            "states": states_map,
+        }
+        states += len(states_map)
+    size = write_missions(SITE_DATA_DIR / "missions.js", payload)
+    reporter.info(
+        f"mission definitions: {len(payload['missions'])} missions,"
+        f" {states} states, {format_bytes(size)}")
+    return {"size": size, "missions": len(payload["missions"]), "states": states}
 
 
 def render_language(lang: str, locale: dict, node_ids: list[str],
@@ -584,8 +646,10 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
         return BuildResult(False, len(node_ids), len(edges), len(chapters), {}, REPORT_PATH)
     lore = _load_lore(reporter)
     stat_notes = _load_stat_notes(reporter)
+    mission_items = _load_missions(reporter)
     battle_items = _load_battles(reporter)
     name_registry: labels.NameTables = {}
+    _register_mission_names(mission_items, name_registry)
     battle_cards = (BattleCards(battle_items, locale, name_registry, stat_notes)
                     if battle_items else None)
 
@@ -608,6 +672,7 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     SITE_DATA_DIR.mkdir(parents=True, exist_ok=True)
     reporter.stage(STAGE_RENDER)
     checkpoints = _emit_checkpoints(reporter, locale, name_registry, stat_notes)
+    missions = _emit_missions(reporter, mission_items)
     checkpoint_mapping = checkpoints["mapping"]
     reads = var_reads.collect_reads(checkpoints["conditions"])
 
@@ -655,6 +720,7 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     wordcount_size = write_wordcount(SITE_DATA_DIR / "wordcount.js", wordcount_payload)
     parts.append(("wordcount.js", wordcount_size))
     parts.extend((item["name"], item["bytes"]) for item in checkpoints["parts"])
+    parts.append(("missions.js", missions["size"]))
 
     reads_size = write_var_reads(SITE_DATA_DIR / "var-reads.js", reads)
     parts.append(("var-reads.js", reads_size))
@@ -732,6 +798,15 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
         "missing": metrics.get("lore_missing", 0),
         "samples": metrics.get("lore_missing_samples", []),
     }
+    mission_manifest = manifest.get("mission_stats") or {}
+    mission_report = {
+        "missions": missions["missions"],
+        "states": missions["states"],
+        "extracted": mission_manifest.get("missions", 0),
+        "with_start": mission_manifest.get("with_start", 0),
+        "with_note": mission_manifest.get("with_note", 0),
+        "unresolved": mission_manifest.get("unresolved", 0),
+    }
     report_payload = build_report_payload(
         generated=time.strftime("%Y-%m-%d %H:%M:%S"),
         script_count=len(node_ids),
@@ -747,6 +822,7 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
         checkpoints=counts.checkpoint_report,
         battles=battle_report,
         lore=lore_report,
+        missions=mission_report,
         wordcount={"bytes": wordcount_size, "langs": wordcount_report},
         time_stats={
             "explicit": len(time_by_script),

@@ -90,7 +90,7 @@ GROUP_KINDS = tuple(GROUP_OP_KIND.values())
 META_KINDS = (
     "stat", "rel", "flag", "setstat", "setrel", "setflag", "settitle", "setlover",
     "book", "misc", "special", "talent", "library", "story",
-    "mission", "dice", "time",
+    "mission", "missionTrigger", "dice", "time",
 )
 
 ITEM_KINDS = frozenset({
@@ -118,6 +118,7 @@ GLOBAL_TEXT = "SR_TEXT"
 GLOBAL_CHECKPOINTS = "SR_CHECKPOINTS"
 GLOBAL_VAR_READS = "SR_VARREADS"
 GLOBAL_WORDCOUNT = "SR_WORDCOUNT"
+GLOBAL_MISSIONS = "SR_MISSIONS"
 
 
 def wire_payload() -> dict[str, Any]:

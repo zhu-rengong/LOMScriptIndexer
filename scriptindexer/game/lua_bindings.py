@@ -46,7 +46,8 @@ LUA_BINDINGS = Semantics(
         "RemoveSpecial": CallSpec("special", value_index=1, value_delta=-1),
         "AddTalent": CallSpec("talent", value_index=1, value_delta=1),
         "AddAchievementLib": CallSpec("library"),
-        "Mission": CallSpec("mission", key_index=1, key_fallback=0),
+        "Mission": CallSpec("mission", key_index=1, key_fallback=0, extra_index=0),
+        "IsTriggerSubMission": CallSpec("missionTrigger", key_index=0, value_index=1),
     },
     dice_roll_methods=("ExecuteRoll", "Setup", "SetRandom"),
 )

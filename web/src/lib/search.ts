@@ -48,7 +48,12 @@ export const needleOf = (input: unknown): string =>
 
 let cache: SearchIndex = emptyIndex();
 
-const indexedMetaKinds = new Set([...(dataset.vocab.itemKinds || []), "settitle"]);
+const indexedMetaKinds = new Set([
+  ...(dataset.vocab.itemKinds || []),
+  "settitle",
+  "mission",
+  "missionTrigger",
+]);
 
 const indexedMetaText = (rows: unknown): string => {
   const parts: string[] = [];
@@ -56,7 +61,7 @@ const indexedMetaText = (rows: unknown): string => {
     if (!beatRows.isBeat(row, "meta")) return;
     const meta = beatRows.parseMeta(row);
     if (!indexedMetaKinds.has(meta.kind)) return;
-    const label = metaText(meta.kind, meta.key, meta.value);
+    const label = metaText(meta.kind, meta.key, meta.value, meta.extra);
     if (label) parts.push(label);
   });
   return parts.join("\n");
