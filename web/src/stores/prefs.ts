@@ -36,6 +36,10 @@ const SCALE_STEP = 5;
 const LEADING_MIN = 50;
 const LEADING_MAX = 250;
 const LEADING_STEP = 5;
+const PORTRAIT_SIZE_MIN = 24;
+const PORTRAIT_SIZE_MAX = 80;
+const PORTRAIT_SIZE_STEP = 4;
+const PORTRAIT_SIZE_DEFAULT = 56;
 
 const GROUP_DEFAULT = { scale: 100, leading: 100, weight: BASE_WEIGHT };
 const SLOT_DEFAULT = { scale: 100, leading: 100, weight: null as number | null };
@@ -58,6 +62,12 @@ const LIMITS = {
   measure: { min: MEASURE_MIN, max: MEASURE_MAX, fallback: MEASURE_DEFAULT },
   scale: { min: SCALE_MIN, max: SCALE_MAX, step: SCALE_STEP },
   leading: { min: LEADING_MIN, max: LEADING_MAX, step: LEADING_STEP },
+  portraitSize: {
+    min: PORTRAIT_SIZE_MIN,
+    max: PORTRAIT_SIZE_MAX,
+    step: PORTRAIT_SIZE_STEP,
+    fallback: PORTRAIT_SIZE_DEFAULT,
+  },
 };
 
 const clampNumber = (value: unknown, min: number, max: number, fallback: number): number => {
@@ -71,6 +81,11 @@ const clampScale = (value: unknown, fallback: number): number =>
 
 const clampLeading = (value: unknown, fallback: number): number =>
   Math.round(clampNumber(value, LEADING_MIN, LEADING_MAX, fallback) / LEADING_STEP) * LEADING_STEP;
+
+const clampPortraitSize = (value: unknown, fallback: number): number =>
+  Math.round(
+    clampNumber(value, PORTRAIT_SIZE_MIN, PORTRAIT_SIZE_MAX, fallback) / PORTRAIT_SIZE_STEP,
+  ) * PORTRAIT_SIZE_STEP;
 
 const clampWeight = (value: unknown, fallback: number | null): number | null => {
   if (value === null) return fallback;
@@ -124,6 +139,8 @@ export const usePrefsStore = defineStore("prefs", () => {
   const groups = ref<Record<string, PrefEntry>>(defaultGroups());
   const slots = ref<Record<string, PrefEntry>>(defaultSlots());
   const measure = ref(MEASURE_DEFAULT);
+  const showPortraits = ref(false);
+  const portraitSize = ref(PORTRAIT_SIZE_DEFAULT);
   const customFontOpen = ref(false);
 
   const groupStack = (groupId: string): string =>
@@ -187,6 +204,7 @@ export const usePrefsStore = defineStore("prefs", () => {
     const root = document.documentElement;
     root.style.setProperty("--font-base", BASE_FONT);
     root.style.setProperty("--reader-measure", `${measure.value}px`);
+    root.style.setProperty("--rd-portrait-w", `${portraitSize.value}px`);
     for (const slot of TYPE_SLOTS) {
       const entry = resolveEntry("slot", slot.id);
       if (!entry) continue;
@@ -202,6 +220,8 @@ export const usePrefsStore = defineStore("prefs", () => {
       groups: groups.value,
       slots: slots.value,
       measure: measure.value,
+      showPortraits: showPortraits.value,
+      portraitSize: portraitSize.value,
     });
   };
 
@@ -210,12 +230,16 @@ export const usePrefsStore = defineStore("prefs", () => {
       groups: groups.value,
       slots: slots.value,
       measure: measure.value,
+      showPortraits: showPortraits.value,
+      portraitSize: portraitSize.value,
     });
 
   const resetDefaults = (): void => {
     groups.value = defaultGroups();
     slots.value = defaultSlots();
     measure.value = MEASURE_DEFAULT;
+    showPortraits.value = false;
+    portraitSize.value = PORTRAIT_SIZE_DEFAULT;
   };
 
   const restoreFromStorage = (): void => {
@@ -226,6 +250,8 @@ export const usePrefsStore = defineStore("prefs", () => {
     measure.value = Math.round(
       clampNumber(source.measure, MEASURE_MIN, MEASURE_MAX, MEASURE_DEFAULT),
     );
+    showPortraits.value = source.showPortraits === true;
+    portraitSize.value = clampPortraitSize(source.portraitSize, PORTRAIT_SIZE_DEFAULT);
     const storedGroups = source.groups && typeof source.groups === "object" ? source.groups : null;
     if (storedGroups) {
       for (const group of GROUPS) {
@@ -246,6 +272,10 @@ export const usePrefsStore = defineStore("prefs", () => {
 
   const set = (patch: PrefPatch): PrefState => {
     if (patch && typeof patch === "object") {
+      if (typeof patch.showPortraits === "boolean") showPortraits.value = patch.showPortraits;
+      if (patch.portraitSize !== undefined) {
+        portraitSize.value = clampPortraitSize(patch.portraitSize, portraitSize.value);
+      }
       if (patch.measure !== undefined) {
         measure.value = Math.round(
           clampNumber(patch.measure, MEASURE_MIN, MEASURE_MAX, measure.value),
@@ -316,6 +346,8 @@ export const usePrefsStore = defineStore("prefs", () => {
     groups,
     slots,
     measure,
+    showPortraits,
+    portraitSize,
     customFontOpen,
     resolveEntry,
     get,

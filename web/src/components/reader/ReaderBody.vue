@@ -193,7 +193,7 @@ defineExpose({ body, scrollFraction });
     id="readerBody"
     ref="body"
     class="reader-body"
-    :class="{ 'is-revealing': view.revealHeld }"
+    :class="{ 'is-revealing': view.revealOn }"
     :aria-busy="isLoading ? 'true' : 'false'"
     @scroll.passive="onScroll"
   >

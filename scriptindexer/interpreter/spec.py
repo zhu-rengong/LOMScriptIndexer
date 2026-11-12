@@ -42,4 +42,8 @@ class Semantics:
     character_object: str = "characters"
     character_get: str = "Get"
     character_portrait: str = "GetPortrait"
+    character_load_portrait: str = "LoadCharacterPortrait"
+    stage_object: str = "stage"
+    stage_portrait_method: str = "showPortrait"
+    stage_show_method: str = "show"
     stat_getter_prefix: str = "Get"

@@ -78,6 +78,53 @@
     animation: beat-in var(--t-base) var(--ease);
   }
 
+  .say.has-portrait {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .say-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .portrait-avatar {
+    position: relative;
+    display: block;
+    flex: none;
+    width: var(--rd-portrait-w, 56px);
+    height: calc(var(--rd-portrait-w, 56px) * 1.15);
+    overflow: hidden;
+    border: 1px solid var(--line-1);
+    border-radius: var(--r-sm);
+  }
+
+  .portrait-avatar canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform: scaleX(-1);
+  }
+
+  .portrait-placeholder {
+    position: absolute;
+    inset: 0;
+    width: 55%;
+    height: 56%;
+    margin: auto;
+    fill: none;
+    stroke: var(--ink-2);
+    stroke-width: 1.6;
+    opacity: 0.45;
+  }
+
+  @media (max-width: 600px) {
+    .say.has-portrait {
+      gap: 8px;
+    }
+  }
+
   .say .who {
     display: block;
     width: fit-content;

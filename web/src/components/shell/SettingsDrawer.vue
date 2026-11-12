@@ -138,6 +138,14 @@ const isWeightOn = (value: number | null) => {
   return weight.value !== null && Number(value) === Number(weight.value);
 };
 
+const togglePortraits = (value: boolean) => {
+  prefs.set({ showPortraits: value });
+};
+
+const onPortraitSize = (event: Event) => {
+  prefs.set({ portraitSize: Number((event.target as HTMLInputElement).value) });
+};
+
 const reset = () => {
   prefs.reset();
   ui.toast(t("toastReset"));
@@ -201,6 +209,36 @@ onMounted(() => {
     </header>
 
     <div class="drawer-body">
+      <section class="settings-section">
+        <p class="settings-caption">{{ t("readerDisplay") }}</p>
+        <label class="settings-switch" :for="UI_IDS.showPortraits">
+          <input
+            :id="UI_IDS.showPortraits"
+            type="checkbox"
+            :checked="prefs.showPortraits"
+            @change="togglePortraits(($event.target as HTMLInputElement).checked)"
+          />
+          <span>{{ t("showPortraits") }}</span>
+        </label>
+        <p class="settings-hint">{{ t("showPortraitsHint") }}</p>
+        <div class="field-row sub-row" :hidden="!prefs.showPortraits">
+          <label class="sub-label" :for="UI_IDS.portraitSize">{{ t("portraitSize") }}</label>
+          <output class="field-value">{{ prefs.portraitSize }}px</output>
+        </div>
+        <input
+          :id="UI_IDS.portraitSize"
+          class="range"
+          type="range"
+          :min="prefs.limits.portraitSize.min"
+          :max="prefs.limits.portraitSize.max"
+          :step="prefs.limits.portraitSize.step"
+          :value="prefs.portraitSize"
+          :hidden="!prefs.showPortraits"
+          :aria-label="t('portraitSize')"
+          @input="onPortraitSize"
+        />
+      </section>
+
       <section class="settings-section">
         <p class="settings-caption">{{ t("fontTypes") }}</p>
         <div id="typeGroups" class="settings-tabs" role="tablist" :aria-label="t('fontTypes')">

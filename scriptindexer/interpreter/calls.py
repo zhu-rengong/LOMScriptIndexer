@@ -138,7 +138,27 @@ class CallHandler:
                 value = self.analyzer.expressions.eval(args[0], state)
                 state.speaker = (
                     value.id.split(":")[0] if isinstance(value, CharRef) else None)
+                if len(args) > 1:
+                    self.apply_portrait(state, self.analyzer.expressions.eval(args[1], state))
             return None
+
+        if obj == self.semantics.character_object \
+                and method == self.semantics.character_load_portrait and len(args) > 1:
+            character = unwrap_text(self.analyzer.expressions.eval(args[0], state))
+            expression = unwrap_text(self.analyzer.expressions.eval(args[1], state))
+            if character and expression:
+                state.portraits[character] = expression
+            return None
+
+        if obj == self.semantics.stage_object:
+            if method == self.semantics.stage_portrait_method and len(args) > 1:
+                self.apply_portrait(state, self.analyzer.expressions.eval(args[1], state))
+                return None
+            if method == self.semantics.stage_show_method and args:
+                settings = self.analyzer.expressions.eval(args[0], state)
+                if isinstance(settings, dict):
+                    self.apply_portrait(state, settings.get("portrait"))
+                return None
 
         if method == self.semantics.dialog_method and not obj:
             dialog_style = dialog_style_of(args[0], "saydialogs") if args else ""
@@ -156,6 +176,7 @@ class CallHandler:
 
         if obj == self.semantics.scene_object and method == self.semantics.init_method:
             state.pending_story_script = None
+            state.portraits.clear()
             return None
 
         if obj == self.semantics.scene_object and method in self.semantics.jumps:
@@ -164,6 +185,7 @@ class CallHandler:
 
         if obj == self.semantics.scene_object and method == self.semantics.scene_method:
             self.emit_scene(args, state, beats)
+            state.portraits.clear()
             return None
 
         if obj == self.semantics.stat_object:
@@ -197,6 +219,13 @@ class CallHandler:
 
         return None
 
+    def apply_portrait(self, state: EvalState, value: Any) -> None:
+        if not isinstance(value, CharRef):
+            return
+        character, _, expression = value.id.partition(":")
+        if character and expression:
+            state.portraits[character] = expression
+
     def set_time(self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]) -> None:
         if len(args) < 3:
             return
@@ -222,7 +251,8 @@ class CallHandler:
         speaker = state.speaker if mode in ("dialog", "think") else None
         if speaker in self.semantics.speaker_sentinels:
             speaker = None
-        beats.append(SayBeat(speaker, ref, mode))
+        expression = state.portraits.get(speaker, "") if speaker else ""
+        beats.append(SayBeat(speaker, ref, mode, expression))
         self.analyzer.context.say_count += 1
 
     def apply_effect(self, method: str, args: Sequence[lua.Node], state: EvalState,

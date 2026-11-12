@@ -6,8 +6,7 @@ export type ShortcutHandlers = {
   help: () => void;
   search: () => void;
   infer: () => void;
-  revealStart: () => void;
-  revealEnd: () => void;
+  reveal: () => void;
 };
 
 const typingInField = (): boolean => {
@@ -54,7 +53,8 @@ export const useShortcuts = (handlers: ShortcutHandlers): void => {
     }
     if (String(event.key || "").toLowerCase() === "h") {
       event.preventDefault();
-      handlers.revealStart();
+      if (event.repeat) return;
+      handlers.reveal();
       return;
     }
     if (String(event.key || "").toLowerCase() === "j") {
@@ -62,20 +62,10 @@ export const useShortcuts = (handlers: ShortcutHandlers): void => {
     }
   };
 
-  const onKeyUp = (event: KeyboardEvent) => {
-    if (String(event.key || "").toLowerCase() === "h") handlers.revealEnd();
-  };
-
-  const onBlur = () => handlers.revealEnd();
-
   onMounted(() => {
     document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("keyup", onKeyUp);
-    window.addEventListener("blur", onBlur);
   });
   onBeforeUnmount(() => {
     document.removeEventListener("keydown", onKeyDown);
-    document.removeEventListener("keyup", onKeyUp);
-    window.removeEventListener("blur", onBlur);
   });
 };

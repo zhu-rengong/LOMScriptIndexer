@@ -30,6 +30,7 @@ from .game.layout import (
 )
 from .game.locale_tables import extract_locales
 from .game.lore import probe_legend_texts
+from .game.portraits import export_portraits
 from .game.lore import summarize as summarize_lore
 from .game.scripts import ScriptCorpus, extract_scripts
 from .game.stat_assets import extract as extract_stats
@@ -48,6 +49,7 @@ from .paths import (
     LOCALE_DIR,
     LUA_DIR,
     MANIFEST_PATH,
+    SITE_DATA_DIR,
     STATS_CACHE_PATH,
     STATS_PATH,
 )
@@ -72,6 +74,7 @@ STAGE_STATS = "stat assets"
 STAGE_BATTLES = "battle levels"
 STAGE_LOCALES = "locale tables"
 STAGE_LORE = "lore texts"
+STAGE_PORTRAITS = "character portraits"
 
 EXTRACT_STAGES = (
     STAGE_SCRIPTS,
@@ -82,6 +85,7 @@ EXTRACT_STAGES = (
     STAGE_BATTLES,
     STAGE_LOCALES,
     STAGE_LORE,
+    STAGE_PORTRAITS,
 )
 
 GENERATOR_MISSING = (
@@ -99,6 +103,7 @@ class ExtractRequest:
     with_lore: bool = True
     with_stats: bool = True
     with_battles: bool = True
+    with_portraits: bool = True
 
 
 @dataclass(frozen=True)
@@ -558,6 +563,13 @@ def _run_extract(layout: GameLayout, langs: tuple[str, ...], request: ExtractReq
     finally:
         session.close()
 
+    if request.with_portraits:
+        reporter.stage(STAGE_PORTRAITS)
+        try:
+            export_portraits(layout, reporter, force=request.force)
+        except Exception as exc:
+            reporter.warn(f"character portraits skipped: {type(exc).__name__}: {exc}")
+
     save_manifest(
         MANIFEST_PATH,
         _manifest_payload(
@@ -569,6 +581,8 @@ def _run_extract(layout: GameLayout, langs: tuple[str, ...], request: ExtractReq
     reporter.write(f"[done] {len(corpus.scripts)} scripts -> {LUA_DIR}")
     reporter.write(f"[done] stat assets -> {STATS_PATH}")
     reporter.write(f"[done] battle levels -> {BATTLES_PATH}")
+    if request.with_portraits:
+        reporter.write(f"[done] character portraits -> {SITE_DATA_DIR / 'portraits'}")
     for lang in langs:
         reporter.write(f"[done] {lang} locale table -> {LOCALE_DIR / (lang + '.json')}")
     reporter.write(f"[done] manifest -> {MANIFEST_PATH}")

@@ -415,6 +415,40 @@
     letter-spacing: 0.12em;
   }
 
+  .settings-switch {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    color: var(--ink);
+    font-family: var(--rd-ff-body, var(--font-base));
+    font-size: var(--rd-fs-body, 16px);
+    line-height: 1.6;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+  }
+
+  .settings-switch input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--accent-strong);
+    cursor: pointer;
+  }
+
+  .settings-switch input:focus-visible {
+    outline: 2px solid var(--accent-strong);
+    outline-offset: 2px;
+  }
+
+  .settings-hint {
+    margin: var(--sp-2) 0 0;
+    color: var(--ink-2);
+    font-family: var(--rd-ff-caption, var(--font-base));
+    font-size: var(--rd-fs-caption, 14px);
+    line-height: 1.6;
+    letter-spacing: 0.04em;
+  }
+
   .field-row {
     display: flex;
     align-items: baseline;

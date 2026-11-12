@@ -907,7 +907,7 @@
     display: inline-flex;
   }
 
-  .reader-actions [aria-pressed="true"] svg {
+  .reader-actions #bookmarkBtn[aria-pressed="true"] svg {
     fill: currentColor;
     color: var(--accent);
   }

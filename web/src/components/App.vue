@@ -39,8 +39,7 @@ useShortcuts({
     input?.focus();
   },
   infer: view.toggleInfer,
-  revealStart: view.holdReveal,
-  revealEnd: view.releaseReveal,
+  reveal: view.toggleReveal,
 });
 
 useHashRoute((id) => {

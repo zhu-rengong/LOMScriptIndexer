@@ -25,7 +25,7 @@ export const useViewStore = defineStore("view", () => {
   const fontTarget = ref<FontTarget>({ scope: "slot", id: "dialog" });
   const railOpen = ref(false);
   const inferEnabled = ref(storedInfer === null ? true : storedInfer === true);
-  const revealHeld = ref(false);
+  const revealOn = ref(false);
   const visibleKinds = ref<ReaderVisibility>({
     dialog: true,
     think: true,
@@ -94,12 +94,8 @@ export const useViewStore = defineStore("view", () => {
     visibleKinds.value = { ...visibleKinds.value, [kind]: !visibleKinds.value[kind] };
   };
 
-  const holdReveal = (): void => {
-    revealHeld.value = true;
-  };
-
-  const releaseReveal = (): void => {
-    revealHeld.value = false;
+  const toggleReveal = (): void => {
+    revealOn.value = !revealOn.value;
   };
 
   let langToken = 0;
@@ -127,7 +123,7 @@ export const useViewStore = defineStore("view", () => {
     fontTarget,
     railOpen,
     inferEnabled,
-    revealHeld,
+    revealOn,
     visibleKinds,
     filtering,
     isOverlayRail,
@@ -141,8 +137,7 @@ export const useViewStore = defineStore("view", () => {
     toggleRail,
     toggleInfer,
     toggleKind,
-    holdReveal,
-    releaseReveal,
+    toggleReveal,
     switchLang,
   };
 });

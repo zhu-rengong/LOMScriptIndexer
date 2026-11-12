@@ -46,6 +46,7 @@ declare module 'vue' {
     NavMenu: typeof import('./components/reader/NavMenu.vue')['default']
     OptionBlock: typeof import('./components/reader/OptionBlock.vue')['default']
     OutlineTab: typeof import('./components/shell/rail/OutlineTab.vue')['default']
+    PortraitAvatar: typeof import('./components/reader/PortraitAvatar.vue')['default']
     ReaderBody: typeof import('./components/reader/ReaderBody.vue')['default']
     ReaderHeader: typeof import('./components/reader/ReaderHeader.vue')['default']
     ReaderPane: typeof import('./components/reader/ReaderPane.vue')['default']

@@ -109,7 +109,7 @@ export type MetaChip = {
 export type ChoiceOption = OptionView & { index: number };
 
 export type ReaderBlock =
-  | { kind: "say"; mode: string; speaker: string; text: string }
+  | { kind: "say"; mode: string; speaker: string; text: string; expression?: string }
   | { kind: "time"; rounds: number }
   | { kind: "meta"; chips: MetaChip[] }
   | { kind: "dice"; chips: MetaChip[] }

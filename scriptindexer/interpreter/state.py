@@ -28,6 +28,7 @@ class EvalState:
     env: dict[str, Any] = field(default_factory=dict)
     menu_options: list[OptionDraft] = field(default_factory=list)
     pending_story_script: str | None = None
+    portraits: dict[str, str] = field(default_factory=dict)
 
     def clone(self) -> EvalState:
         return EvalState(
@@ -37,6 +38,7 @@ class EvalState:
             env=dict(self.env),
             menu_options=list(self.menu_options),
             pending_story_script=self.pending_story_script,
+            portraits=dict(self.portraits),
         )
 
 

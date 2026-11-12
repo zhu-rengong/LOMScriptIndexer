@@ -12,11 +12,13 @@ import MetaChips from "./MetaChips.vue";
 import SayLine from "./SayLine.vue";
 import SceneSwitch from "./SceneSwitch.vue";
 import TimeLine from "./TimeLine.vue";
+import { usePrefsStore } from "../../stores/prefs";
 import { useViewStore } from "../../stores/view";
 
 const props = defineProps<{ blocks: ReaderBlock[]; path?: string }>();
 
 const view = useViewStore();
+const prefs = usePrefsStore();
 
 const components: Record<ReaderBlock["kind"], Component> = {
   say: SayLine,
@@ -40,7 +42,13 @@ const foldKeyOf = (index: number): string => {
 const blockProps = (block: ReaderBlock, index: number): Record<string, unknown> => {
   switch (block.kind) {
     case "say":
-      return { mode: block.mode, speaker: block.speaker, text: block.text };
+      return {
+        mode: block.mode,
+        speaker: block.speaker,
+        text: block.text,
+        expression: block.expression || "",
+        showPortrait: prefs.showPortraits,
+      };
     case "time":
       return { rounds: block.rounds };
     case "meta":

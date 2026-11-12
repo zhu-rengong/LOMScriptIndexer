@@ -48,10 +48,13 @@ export const asNumber = (value: unknown, fallback: number): number =>
 export const isBeat = (row: unknown, kind: BeatKind): boolean =>
   Array.isArray(row) && row.length > 0 && row[0] === BEAT_TAG[kind];
 
-export const parseSay = (row: BeatRow): { speaker: string; text: string; mode: string } => ({
+export const parseSay = (
+  row: BeatRow,
+): { speaker: string; text: string; mode: string; expression: string } => ({
   speaker: asString(row[1]),
   text: asString(row[2]),
   mode: asString(row[3]) || "dialog",
+  expression: asString(row[4]),
 });
 
 export const sayKindOf = (mode: string): SayKind => {

@@ -1,5 +1,5 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { extname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import vue from "@vitejs/plugin-vue";
 import AutoImport from "unplugin-auto-import/vite";
@@ -24,7 +24,12 @@ const docsData = (): Plugin => ({
         next();
         return;
       }
-      res.setHeader("Content-Type", "text/javascript; charset=utf-8");
+      const types: Record<string, string> = {
+        ".js": "text/javascript; charset=utf-8",
+        ".json": "application/json; charset=utf-8",
+        ".dds": "image/vnd-ms.dds",
+      };
+      res.setHeader("Content-Type", types[extname(file)] || "application/octet-stream");
       res.setHeader("Cache-Control", "no-store");
       createReadStream(file).pipe(res);
     });

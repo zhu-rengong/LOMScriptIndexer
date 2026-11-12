@@ -250,7 +250,7 @@ class Renderer:
             if speaker:
                 self.think_named_count += 1
         self.counter.add_text(beat.mode if beat.mode in TEXT_KINDS else "dialog", text)
-        return [BEAT_SAY, speaker, text, beat.mode]
+        return [BEAT_SAY, speaker, text, beat.mode, beat.expression if speaker else ""]
 
     def _choice(self, beat: ChoiceBeat) -> list[Any]:
         options: list[list[Any]] = []

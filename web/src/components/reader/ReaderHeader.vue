@@ -31,13 +31,7 @@ const navOpen = computed(() => overlay.isOpen("navMenu"));
 
 const inferOn = computed(() => view.inferEnabled);
 
-const revealOn = computed(() => view.revealHeld);
-
-const pressReveal = (event: PointerEvent) => {
-  const target = event.currentTarget as HTMLElement | null;
-  if (target && target.setPointerCapture) target.setPointerCapture(event.pointerId);
-  view.holdReveal();
-};
+const revealOn = computed(() => view.revealOn);
 
 const chapterTitleText = computed(() =>
   selectedScript.value ? chapterTitle(graph.chapterOf(selectedScript.value)) : "",
@@ -123,18 +117,12 @@ const toggleBookmark = () => {
               class="btn btn-icon btn-sm"
               :class="{ 'is-on': revealOn }"
               type="button"
+              :aria-pressed="revealOn"
               :title="t('revealBtnTitle')"
               :aria-label="t('revealBtnTitle')"
-              @pointerdown="pressReveal"
-              @pointerup="view.releaseReveal"
-              @pointercancel="view.releaseReveal"
-              @pointerleave="view.releaseReveal"
-              @blur="view.releaseReveal"
-              @keydown.space.prevent="view.holdReveal"
-              @keydown.enter.prevent="view.holdReveal"
-              @keyup="view.releaseReveal"
+              @click="view.toggleReveal"
             >
-              <AppIcon :name="revealOn ? 'eye' : 'eye-off'" />
+              <AppIcon :name="revealOn ? 'eye-off' : 'eye'" />
             </button>
           </span>
           <div class="menu-wrap reader-nav" id="navWrap">

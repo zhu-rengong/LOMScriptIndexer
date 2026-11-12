@@ -20,6 +20,8 @@ ASSET_URL_TEMPLATES: dict[str, str] = {
     "textHead": "data/text-{lang}-head.js",
     "textShard": "data/text-{lang}-{key}.js",
     "checkpoint": "data/checkpoints-{index}.js",
+    "portraitManifest": "data/portraits/manifest.json",
+    "portrait": "data/portraits/{file}",
 }
 
 ARTIFACT_PATTERNS = (

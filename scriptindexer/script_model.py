@@ -51,6 +51,7 @@ class SayBeat:
     speaker: str | None
     ref: TextRef
     mode: str
+    expression: str = ""
 
 
 @dataclass(frozen=True)

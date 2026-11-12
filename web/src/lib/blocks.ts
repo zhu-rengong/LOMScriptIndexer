@@ -150,7 +150,13 @@ const builders: Record<BeatKind, Builder> = {
   say: (buffer, row) => {
     buffer.flushAll();
     const said = beatRows.parseSay(row);
-    buffer.push({ kind: "say", mode: said.mode, speaker: said.speaker, text: said.text });
+    buffer.push({
+      kind: "say",
+      mode: said.mode,
+      speaker: said.speaker,
+      text: said.text,
+      expression: said.expression,
+    });
   },
   battle: (buffer, row) => {
     buffer.flushAll();
