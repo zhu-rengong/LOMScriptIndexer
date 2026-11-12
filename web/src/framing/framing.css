@@ -1118,6 +1118,34 @@ input {
   color: var(--fx-ink-2);
 }
 
+.fx-keys {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 2px 0 0;
+  list-style: none;
+}
+
+.fx-keys li {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  color: var(--fx-ink-3);
+}
+
+.fx-keys kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--fx-line);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--fx-ink-2);
+  font-family: var(--fx-mono);
+  font-size: 9px;
+  text-align: center;
+}
+
 .fx-status {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr) auto;

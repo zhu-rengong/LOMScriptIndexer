@@ -177,5 +177,13 @@ const onSlider = (event: Event): void => {
         <dd class="fx-mono">{{ store.avatarSize[0] }}×{{ store.avatarSize[1] }}</dd>
       </div>
     </dl>
+
+    <ul class="fx-keys">
+      <li><kbd>drag</kbd><span>pan the frame</span></li>
+      <li><kbd>wheel</kbd><span>zoom at cursor</span></li>
+      <li><kbd>arrows</kbd><span>nudge · shift coarse</span></li>
+      <li><kbd>+ / −</kbd><span>step zoom</span></li>
+      <li><kbd>R</kbd><span>reset to default</span></li>
+    </ul>
   </aside>
 </template>
