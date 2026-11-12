@@ -620,6 +620,7 @@ def _run_extract(layout: GameLayout, langs: tuple[str, ...], request: ExtractReq
             reporter.info(f"game version: v{build_info.version}")
     finally:
         session.close()
+        generator = None
 
     if request.with_portraits:
         reporter.stage(STAGE_PORTRAITS)

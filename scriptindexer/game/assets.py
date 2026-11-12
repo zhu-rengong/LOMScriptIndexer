@@ -21,15 +21,43 @@ def typetree_available() -> bool:
     return True
 
 
+def _release_item(item: Any, seen: set[int]) -> None:
+    if id(item) in seen:
+        return
+    seen.add(id(item))
+    nested = getattr(item, "files", None)
+    if isinstance(nested, dict) and getattr(item, "objects", None) is None:
+        for child in list(nested.values()):
+            _release_item(child, seen)
+        nested.clear()
+    cache = getattr(item, "_cache", None)
+    if isinstance(cache, dict):
+        cache.clear()
+    objects = getattr(item, "objects", None)
+    if isinstance(objects, dict):
+        objects.clear()
+    try:
+        item.environment = None
+    except Exception:
+        pass
+    for target in (getattr(item, "reader", None), item):
+        dispose = getattr(target, "dispose", None)
+        if callable(dispose):
+            try:
+                dispose()
+            except Exception:
+                pass
+
+
 def _dispose(env: Any) -> None:
-    for serialized in (getattr(env, "files", {}) or {}).values():
-        reader = getattr(serialized, "reader", None)
-        if reader is None:
+    seen: set[int] = set()
+    for name in ("cabs", "files"):
+        table = getattr(env, name, None)
+        if not isinstance(table, dict):
             continue
-        try:
-            reader.dispose()
-        except Exception:
-            continue
+        for item in list(table.values()):
+            _release_item(item, seen)
+        table.clear()
 
 
 def unity_version(layout: GameLayout) -> str:
@@ -398,3 +426,4 @@ class AssetSession:
         self._scopes.clear()
         self._type_index = None
         self._class_index = None
+        self.generator = None

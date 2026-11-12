@@ -1,5 +1,6 @@
 import hashlib
 import os
+import threading
 import time
 from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
@@ -44,6 +45,8 @@ CHUNK_SIZE = 10
 MAX_ISSUES = 200
 
 Target = tuple[str, str, Frame | None]
+
+_READ_LOCK = threading.Lock()
 
 
 @dataclass(frozen=True)
@@ -101,14 +104,18 @@ class RenderError(Exception):
         self.error = error
 
 
-def asset_fingerprint(layout: GameLayout) -> str:
+def game_fingerprint(layout: GameLayout) -> str:
     aa = layout.data_dir / "StreamingAssets" / "aa"
-    parts = [str(PORTRAIT_VERSION), layout.fingerprint()]
+    parts = [layout.fingerprint()]
     if aa.is_dir():
         for path in sorted(aa.rglob("*.bundle")):
             stat = path.stat()
             parts.append(f"{path.name}:{stat.st_size}:{stat.st_mtime_ns}")
     return hashlib.sha256("|".join(parts).encode("utf-8")).hexdigest()[:16]
+
+
+def asset_fingerprint(game: str) -> str:
+    return hashlib.sha256(f"{PORTRAIT_VERSION}|{game}".encode("utf-8")).hexdigest()[:16]
 
 
 def _worker_count(jobs: int) -> int:
@@ -118,37 +125,11 @@ def _worker_count(jobs: int) -> int:
     return max(1, min(cores // 2, MAX_JOBS))
 
 
-def _load_previous(layout: GameLayout, output: Path, preview_dir: Path) -> Previous | None:
-    manifest = read_json(output / "manifest.json")
-    if not isinstance(manifest, dict) or manifest.get("version") != PORTRAIT_VERSION:
-        return None
-    fingerprint = asset_fingerprint(layout)
-    if manifest.get("fingerprint") != fingerprint:
-        return None
-    if manifest.get("columns") != ATLAS_COLUMNS:
-        return None
-    pages = manifest.get("pages")
-    if not isinstance(pages, list) or not pages or not all(
-            isinstance(name, str) and Path(name).name == name for name in pages):
-        return None
-    characters = manifest.get("characters")
-    if not isinstance(characters, dict):
-        return None
-    for table in characters.values():
-        if not isinstance(table, dict):
-            return None
-        for value in table.values():
-            if not isinstance(value, list) or len(value) != 2:
-                return None
-            page, cell = value
-            if not isinstance(page, int) or not isinstance(cell, int):
-                return None
-            if not 0 <= page < len(pages) or not 0 <= cell < ATLAS_CELLS:
-                return None
+def _load_previews(preview_dir: Path, game: str) -> dict | None:
     previews = read_json(preview_dir / "index.json")
     if not isinstance(previews, dict) or previews.get("version") != PREVIEW_VERSION:
         return None
-    if previews.get("assets") != fingerprint:
+    if previews.get("assets") != game:
         return None
     artifacts = previews.get("artifacts")
     if not isinstance(artifacts, dict) or not isinstance(previews.get("characters"), dict):
@@ -159,7 +140,45 @@ def _load_previous(layout: GameLayout, output: Path, preview_dir: Path) -> Previ
         name = entry.get("file")
         if not isinstance(name, str) or Path(name).name != name:
             return None
-    return Previous(manifest, previews, load_crop_index(fingerprint))
+    return previews
+
+
+def _valid_manifest(manifest: Any, asset: str) -> bool:
+    if not isinstance(manifest, dict) or manifest.get("version") != PORTRAIT_VERSION:
+        return False
+    if manifest.get("fingerprint") != asset or manifest.get("columns") != ATLAS_COLUMNS:
+        return False
+    pages = manifest.get("pages")
+    if not isinstance(pages, list) or not pages or not all(
+            isinstance(name, str) and Path(name).name == name for name in pages):
+        return False
+    characters = manifest.get("characters")
+    if not isinstance(characters, dict):
+        return False
+    for table in characters.values():
+        if not isinstance(table, dict):
+            return False
+        for value in table.values():
+            if not isinstance(value, list) or len(value) != 2:
+                return False
+            page, cell = value
+            if not isinstance(page, int) or not isinstance(cell, int):
+                return False
+            if not 0 <= page < len(pages) or not 0 <= cell < ATLAS_CELLS:
+                return False
+    return True
+
+
+def _load_previous(output: Path, preview_dir: Path, game: str,
+                   asset: str) -> Previous | None:
+    manifest = read_json(output / "manifest.json")
+    valid = _valid_manifest(manifest, asset)
+    previews = _load_previews(preview_dir, game)
+    crops = load_crop_index(game)
+    if not valid and previews is None and crops is None:
+        return None
+    document = manifest if isinstance(manifest, dict) and valid else {}
+    return Previous(document, previews or {}, crops)
 
 
 def _complete(previous: Previous, output: Path, preview_dir: Path) -> bool:
@@ -321,18 +340,24 @@ def character_expressions(session: AssetSession) -> tuple[dict[str, dict[str, st
     return characters, issues
 
 
-def bundle_index(layout: GameLayout) -> dict[str, Path]:
+def bundle_index(layout: GameLayout, reporter: Reporter) -> dict[str, Path]:
     index: dict[str, Path] = {}
-    for file in sorted(bundle_dir(layout).glob("*.bundle")):
+    files = sorted(bundle_dir(layout).glob("*.bundle"))
+    started = time.monotonic()
+    for number, file in enumerate(files, 1):
         try:
             env = unitypy().load(str(file))
         except Exception:
-            continue
-        try:
-            for address in env.container:
-                index.setdefault(address.replace("\\", "/"), file)
-        finally:
-            _dispose(env)
+            env = None
+        if env is not None:
+            try:
+                for address in env.container:
+                    index.setdefault(address.replace("\\", "/"), file)
+            finally:
+                _dispose(env)
+        if number % 25 == 0 or number == len(files):
+            reporter.info(f"portraits: indexed {number}/{len(files)} bundles,"
+                          f" {time.monotonic() - started:.1f}s")
     return index
 
 
@@ -393,7 +418,8 @@ def _artifact_key(prefix: str, address: str) -> str:
 def _render_address(address: str, obj: Any, artifact: str, targets: tuple[Target, ...],
                     preview_missing: bool, preview_dir: Path) -> Render:
     try:
-        image = obj.read().image
+        with _READ_LOCK:
+            image = obj.read().image
     except Exception as exc:
         raise RenderError("image_read_failed", type(exc).__name__) from exc
     picture = _picture(image)
@@ -445,16 +471,17 @@ def _render_chunk(batch: tuple[Job, ...], preview_dir: Path) \
 
 
 def _export_crops(grouped: dict[Path, dict[str, list[Target]]], preview_dir: Path,
-                  issues: list[dict], reporter: Reporter, jobs: int) -> Export:
+                  issues: list[dict], reporter: Reporter, jobs: int,
+                  force_previews: bool) -> Export:
     crops: list[Crop] = []
     previews: dict[str, dict] = {}
     started = time.monotonic()
     total = len(grouped)
     targets_total = sum(len(entries) for table in grouped.values()
                         for entries in table.values())
-    serial = total <= 1 and targets_total <= CHUNK_SIZE
+    serial = jobs <= 1 or (total <= 1 and targets_total <= CHUNK_SIZE)
     executor = ThreadPoolExecutor(max_workers=jobs)
-    window = max(jobs, 2)
+    window = 1
     pending: list[tuple[Any, list]] = []
     completed = 0
 
@@ -522,7 +549,7 @@ def _export_crops(grouped: dict[Path, dict[str, list[Target]]], preview_dir: Pat
                     issues.append({"address": key, "reason": "sprite_not_found"})
                     continue
                 artifact = _artifact_key(prefix, key)
-                missing = not (preview_dir / f"{artifact}.webp").is_file()
+                missing = force_previews or not (preview_dir / f"{artifact}.webp").is_file()
                 batch.append(Job(key, obj, artifact, tuple(entries), missing))
             chunks = [tuple(batch[index:index + CHUNK_SIZE])
                       for index in range(0, len(batch), CHUNK_SIZE)]
@@ -624,25 +651,27 @@ def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = Fa
                      labels: Mapping[str, str] | None = None, jobs: int = 0) -> dict:
     started = time.monotonic()
     workers = _worker_count(jobs)
-    previous = None if force else _load_previous(layout, output, preview_dir)
+    game = game_fingerprint(layout)
+    asset = asset_fingerprint(game)
+    previous = None if force else _load_previous(output, preview_dir, game, asset)
     frames = load_frames()
     snapshot = settings_snapshot(frames)
-    if previous is not None and same_settings_snapshot(previous.manifest.get("settings"),
-                                                       snapshot) \
+    if previous is not None and previous.manifest.get("version") == PORTRAIT_VERSION \
+            and previous.manifest.get("fingerprint") == asset \
+            and same_settings_snapshot(previous.manifest.get("settings"), snapshot) \
             and _complete(previous, output, preview_dir):
         reporter.info(f"portraits: {len(previous.manifest.get('characters', {}))}"
                       f" characters from cache")
         return previous.manifest
-    fingerprint = asset_fingerprint(layout)
-    cached = load_bundle_cache(layout, fingerprint)
+    cached = load_bundle_cache(layout, game)
     if cached is None:
         session = AssetSession(layout, try_build_generator(layout), reporter.info)
         try:
             characters, issues = character_expressions(session)
         finally:
             session.close()
-        index = bundle_index(layout)
-        save_bundle_cache(fingerprint, characters, index, issues)
+        index = bundle_index(layout, reporter)
+        save_bundle_cache(game, characters, index, issues)
     else:
         characters, index, issues = cached
     plan = _plan(characters, index, frames, previous, preview_dir)
@@ -652,7 +681,9 @@ def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = Fa
     output.mkdir(parents=True, exist_ok=True)
     preview_dir.mkdir(parents=True, exist_ok=True)
     PORTRAIT_CROP_DIR.mkdir(parents=True, exist_ok=True)
-    exported = _export_crops(plan.grouped, preview_dir, issues, reporter, workers)
+    force_previews = previous is None or not previous.previews
+    exported = _export_crops(plan.grouped, preview_dir, issues, reporter, workers,
+                             force_previews)
     records: dict[tuple[str, str], dict] = dict(plan.crops)
     for crop in exported.crops:
         records[(crop.character, crop.expression)] = {
@@ -698,7 +729,7 @@ def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = Fa
     previews = {key: value for key, value in previews.items() if key in used}
     manifest = {
         "version": PORTRAIT_VERSION,
-        "fingerprint": fingerprint,
+        "fingerprint": asset,
         "size": list(THUMBNAIL_SIZE),
         "columns": ATLAS_COLUMNS,
         "pages": page_files,
@@ -712,7 +743,7 @@ def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = Fa
         "version": PREVIEW_VERSION,
         "avatar": list(THUMBNAIL_SIZE),
         "head_band": HEAD_BAND,
-        "assets": fingerprint,
+        "assets": game,
         "settings": framing_digest(),
         "artifacts": dict(sorted(previews.items())),
         "characters": preview_characters,
@@ -720,9 +751,9 @@ def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = Fa
     nested: dict[str, dict[str, dict]] = {}
     for (character, expression), record in records.items():
         nested.setdefault(character, {})[expression] = record
-    save_crop_index(fingerprint, nested)
+    save_crop_index(game, nested)
     _sweep(output, set(page_files), (".dds", ".webp"))
-    _sweep(PORTRAIT_CROP_DIR, set(cells.values()), (".png",))
+    _sweep(PORTRAIT_CROP_DIR, {f"{cell}.png" for cell in cells.values()}, (".png",))
     _sweep(preview_dir, {entry["file"] for entry in previews.values()
                          if isinstance(entry.get("file"), str)}, (".webp",))
     elapsed = time.monotonic() - started
