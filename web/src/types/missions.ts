@@ -4,7 +4,7 @@ export type MissionTime = {
   year: number;
   month: number;
   stage: number;
-  day: number;
+  day?: number;
 };
 
 export type MissionTimeRule = {

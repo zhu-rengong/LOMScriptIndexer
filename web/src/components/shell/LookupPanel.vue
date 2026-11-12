@@ -99,7 +99,7 @@ const lookupTitleKey = computed(() =>
 );
 
 const subText = computed(() =>
-  kind.value === "mission" ? t("missionPanelSub") : t(lookupTitleKey.value),
+  kind.value === "mission" ? "" : t(lookupTitleKey.value),
 );
 
 const rowOf = (node: GraphNode) => ({
@@ -199,7 +199,7 @@ onMounted(() => {
         <AppIcon name="close" />
       </button>
     </header>
-    <p id="lookupSub" class="lookup-sub">{{ subText }}</p>
+    <p v-if="subText" id="lookupSub" class="lookup-sub">{{ subText }}</p>
     <div id="lookupList" class="lookup-list popover-list">
       <MissionStateDetail
         v-if="kind === 'mission' && missionHit"

@@ -23,9 +23,10 @@ const props = defineProps<{
 const store = useScriptStore();
 const panels = usePanelsStore();
 
-const missionNote = computed(() => {
+const missionName = computed(() => {
+  if (props.record?.main) return t("missionMain");
   const value = names.label("mission", props.missionId);
-  return value && value !== props.missionId ? value : "";
+  return value && value !== props.missionId ? value : props.missionId;
 });
 
 const note = computed(() => {
@@ -33,11 +34,12 @@ const note = computed(() => {
   return value && value !== props.stateKey ? value : "";
 });
 
+const heading = computed(() =>
+  note.value ? `${missionName.value} · ${note.value}` : missionName.value,
+);
+
 const stageText = (stage: number): string =>
   t(`missionStage.${stage}`, { defaultValue: String(stage) });
-
-const dayText = (day: number): string =>
-  t(`missionDay.${day}`, { defaultValue: String(day) });
 
 const pointText = (time: MissionTime | null): string => {
   if (!time || !time.year) return "";
@@ -45,7 +47,6 @@ const pointText = (time: MissionTime | null): string => {
     year: time.year,
     month: time.month,
     stage: stageText(time.stage),
-    day: dayText(time.day),
   });
 };
 
@@ -95,13 +96,11 @@ const go = (id: string) => {
 
 <template>
   <div class="mission-detail">
-    <div class="mission-tags">
-      <span v-if="record?.main" class="mission-tag">{{ t("missionMain") }}</span>
+    <p class="mission-heading">{{ heading }}</p>
+    <div v-if="!state.active || state.beforeMain" class="mission-tags">
       <span v-if="!state.active" class="mission-tag is-warn">{{ t("missionPanelInactive") }}</span>
       <span v-if="state.beforeMain" class="mission-tag">{{ t("missionPanelBeforeMain") }}</span>
     </div>
-    <p v-if="missionNote" class="mission-note">{{ missionNote }}</p>
-    <p v-if="note" class="mission-state-note">{{ note }}</p>
 
     <dl class="mission-rows">
       <div class="mission-row">

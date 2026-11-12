@@ -1116,17 +1116,13 @@
     color: var(--warn);
   }
 
-  .mission-note,
-  .mission-state-note {
-    margin: 0 0 var(--sp-1);
-    color: var(--ink);
+  .mission-heading {
+    margin: 0 0 var(--sp-2);
+    color: var(--accent-strong);
     font-family: var(--rd-ff-ui, var(--font-base));
     font-size: var(--rd-fs-ui, 16px);
+    font-weight: var(--rd-fw-ui, 400);
     line-height: var(--rd-lh-ui, 1.6);
-  }
-
-  .mission-state-note {
-    color: var(--accent-strong);
   }
 
   .mission-rows {

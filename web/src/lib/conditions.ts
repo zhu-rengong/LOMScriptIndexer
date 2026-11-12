@@ -484,46 +484,36 @@ const gain = (label: string, count: number | null): string => {
   return t("metaGain", { label });
 };
 
-const missionLabel = (missionId: string): string =>
-  missions.isMain(missionId) ? t("missionMain") : missionId;
-
-const missionNote = (missionId: string): string => {
+const missionName = (missionId: string): string => {
   if (!missionId) return "";
+  if (missions.isMain(missionId)) return t("missionMain");
   const note = names.label("mission", missionId);
-  return note && note !== missionId ? note : "";
+  return note && note !== missionId ? note : missionId;
+};
+
+const stateNoteOf = (key: string): string => {
+  const note = names.label("missionState", key);
+  return note && note !== key ? note : "";
 };
 
 const missionText = (key: string, extra: string): string => {
   if (!key) return "";
   const missionId = missions.missionIdOf(key, extra);
   if (!missionId) return key === "clear" ? "" : t("metaMissionRaw", { key });
-  const label = missionLabel(missionId);
-  if (key === "clear") return t("metaMissionClear", { mission: label });
-  const state = missions.missionOfState(key)?.state;
-  const note = names.label("missionState", key);
-  const hasNote = !!note && note !== key;
-  if (state?.start) {
-    return t(hasNote ? "metaMissionNoteScript" : "metaMissionScript", {
-      mission: label,
-      state: key,
-      script: state.start,
-      note,
-    });
+  if (key === "clear") {
+    return t("metaMissionClear", { mission: missionName(missionId) });
   }
-  return t(hasNote ? "metaMissionNote" : "metaMission", {
-    mission: label,
-    state: key,
-    note,
-  });
+  const name = stateNoteOf(key) || missionName(missionId);
+  return t("metaMission", { name });
 };
 
 const missionTriggerText = (key: string, value: number | null): string => {
   const missionId = key && key !== "0" ? key : "";
-  const label = missionId ? missionLabel(missionId) : "";
+  const name = missionId ? missionName(missionId) : "";
   if (value === 1) {
-    return label ? t("metaMissionTrigger", { name: label }) : t("metaMissionUntrigger");
+    return name ? t("metaMissionTrigger", { name }) : t("metaMissionUntrigger");
   }
-  return label ? t("metaMissionUntriggerName", { name: label }) : t("metaMissionUntrigger");
+  return name ? t("metaMissionUntriggerName", { name }) : t("metaMissionUntrigger");
 };
 
 export const metaText = (
@@ -622,8 +612,8 @@ export const metaDisplay = (
   if (kind === "mission" || kind === "missionTrigger") {
     const missionId =
       kind === "mission" ? missions.missionIdOf(key, extra) : key && key !== "0" ? key : "";
-    const note = missionNote(missionId);
-    return { text: raw, title: [note, raw].filter(Boolean).join("\n") };
+    const name = missionName(missionId);
+    return { text: raw, title: [name, key].filter(Boolean).join(" · ") };
   }
   if (!view().inferEnabled || (kind !== "setflag" && kind !== "flag")) {
     return { text: raw, title: fallbackTitle };
