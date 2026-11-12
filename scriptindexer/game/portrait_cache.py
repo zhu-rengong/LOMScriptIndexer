@@ -2,11 +2,12 @@ from pathlib import Path
 from typing import Any
 
 from ..jsonio import read_json, write_json
-from ..paths import PORTRAIT_CACHE_PATH
+from ..paths import PORTRAIT_CACHE_PATH, PORTRAIT_CROP_DIR, PORTRAIT_CROP_INDEX_PATH
 from .framing import Frame
 from .layout import GameLayout
 
 CACHE_VERSION = 1
+CROP_VERSION = 1
 FRAME_DIGITS = 5
 
 
@@ -127,3 +128,55 @@ def save_bundle_cache(fingerprint: str, characters: dict[str, dict[str, str]],
         "issues": list(issues),
     }
     write_json(PORTRAIT_CACHE_PATH, payload, indent=None)
+
+
+def crop_file(digest: str) -> Path:
+    return PORTRAIT_CROP_DIR / f"{digest}.png"
+
+
+def load_crop_index(fingerprint: str) -> dict[str, dict[str, dict]] | None:
+    payload = read_json(PORTRAIT_CROP_INDEX_PATH)
+    if not isinstance(payload, dict) or payload.get("version") != CROP_VERSION:
+        return None
+    if payload.get("fingerprint") != fingerprint:
+        return None
+    characters = payload.get("characters")
+    if not isinstance(characters, dict):
+        return None
+    parsed: dict[str, dict[str, dict]] = {}
+    for character, table in characters.items():
+        if not isinstance(character, str) or not isinstance(table, dict):
+            continue
+        entries: dict[str, dict] = {}
+        for expression, record in table.items():
+            if not isinstance(expression, str) or not isinstance(record, dict):
+                continue
+            address = record.get("address")
+            cell = record.get("cell")
+            artifact = record.get("artifact")
+            if not isinstance(address, str) or not isinstance(cell, str) \
+                    or not isinstance(artifact, str):
+                continue
+            if Path(cell).name != cell or not crop_file(cell).is_file():
+                continue
+            entries[expression] = {
+                "address": address,
+                "frame": record.get("frame"),
+                "cell": cell,
+                "artifact": artifact,
+            }
+        if entries:
+            parsed[character] = entries
+    return parsed
+
+
+def save_crop_index(fingerprint: str, characters: dict[str, dict[str, dict]]) -> None:
+    payload = {
+        "version": CROP_VERSION,
+        "fingerprint": fingerprint,
+        "characters": {
+            character: {expression: dict(record) for expression, record in sorted(table.items())}
+            for character, table in sorted(characters.items())
+        },
+    }
+    write_json(PORTRAIT_CROP_INDEX_PATH, payload, indent=None)

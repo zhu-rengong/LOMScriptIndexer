@@ -5,11 +5,29 @@ import { ensurePortraitManifest, pickPortrait, portraitUrl } from "../../lib/por
 
 const props = defineProps<{ character: string; expression: string }>();
 
-const loaded = ref(false);
-const failed = ref(false);
+const loads = new Map<string, Promise<boolean>>();
+
+const loadPage = (url: string): Promise<boolean> => {
+  const pending = loads.get(url);
+  if (pending) return pending;
+  const next = new Promise<boolean>((resolve) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => resolve(true);
+    image.onerror = () => resolve(false);
+    image.src = url;
+  });
+  loads.set(url, next);
+  return next;
+};
 
 const pick = computed(() => pickPortrait(props.character, props.expression));
 const src = computed(() => (pick.value ? portraitUrl(pick.value.file) : ""));
+const loadedPage = ref("");
+const failedPage = ref("");
+
+const loaded = computed(() => !!src.value && loadedPage.value === src.value);
+const failed = computed(() => !!src.value && failedPage.value === src.value);
 
 const label = computed(() => {
   const parts = [speakerName(props.character), props.expression || t("portraitUnknown")];
@@ -17,31 +35,35 @@ const label = computed(() => {
   return parts.filter(Boolean).join(" · ");
 });
 
+const style = computed<Record<string, string | number>>(() => ({
+  "--portrait-sheet": loaded.value ? `url("${src.value}")` : "none",
+  "--portrait-columns": pick.value?.columns ?? 1,
+  "--portrait-col": pick.value?.column ?? 0,
+  "--portrait-row": pick.value?.row ?? 0,
+  "--portrait-aspect": pick.value?.aspect ?? 1.15,
+}));
+
 onMounted(() => {
   void ensurePortraitManifest();
 });
 
 watch(
-  () => [props.character, props.expression, pick.value?.file],
-  () => {
-    loaded.value = false;
-    failed.value = false;
+  src,
+  (url) => {
+    if (!url) return;
+    const token = url;
+    void loadPage(url).then((ok) => {
+      if (src.value !== token) return;
+      if (ok) loadedPage.value = token;
+      else failedPage.value = token;
+    });
   },
+  { immediate: true },
 );
 </script>
 
 <template>
-  <span class="portrait-avatar" role="img" :aria-label="label" :title="label">
-    <img
-      v-if="src"
-      v-show="!failed"
-      :src="src"
-      alt=""
-      loading="lazy"
-      decoding="async"
-      @load="loaded = true"
-      @error="failed = true"
-    />
+  <span class="portrait-avatar" role="img" :aria-label="label" :title="label" :style="style">
     <svg
       v-if="!src || !loaded || failed"
       class="portrait-placeholder"

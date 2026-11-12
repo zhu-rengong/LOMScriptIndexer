@@ -11,7 +11,7 @@ from .common import EXIT_DATA, EXIT_OK
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Export character portrait avatars as WebP images (read only)")
+        description="Export character portrait avatars as paged WebP atlases (read only)")
     parser.add_argument("--game", default=None,
                         help=f"game root directory (defaults to ${GAME_ENV})")
     parser.add_argument("--lang", default=DEFAULT_LANG,

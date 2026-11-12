@@ -10,24 +10,32 @@ from typing import Any
 
 from ..console import Reporter
 from ..jsonio import atomic_write_bytes, read_json, write_json
-from ..paths import PORTRAIT_PREVIEW_DIR, SITE_DATA_DIR
+from ..paths import PORTRAIT_CROP_DIR, PORTRAIT_PREVIEW_DIR, SITE_DATA_DIR
 from .assets import AssetSession, _dispose, try_build_generator, unitypy
 from .framing import AVATAR_SIZE, HEAD_BAND, Frame, default_frame, framing_digest, load_frames
 from .layout import GameLayout
 from .portrait_cache import (
     bundle_dir,
-    frame_at,
+    crop_file,
+    frame_value,
     load_bundle_cache,
+    load_crop_index,
     same_frame_value,
     same_settings_snapshot,
     save_bundle_cache,
+    save_crop_index,
     settings_snapshot,
 )
 
-PORTRAIT_VERSION = 5
+PORTRAIT_VERSION = 6
 PREVIEW_VERSION = 1
 PORTRAIT_DIR = SITE_DATA_DIR / "portraits"
 THUMBNAIL_SIZE = AVATAR_SIZE
+ATLAS_COLUMNS = 16
+ATLAS_ROWS = 16
+ATLAS_CELLS = ATLAS_COLUMNS * ATLAS_ROWS
+ATLAS_QUALITY = 85
+ATLAS_METHOD = 4
 PREVIEW_MAX = 1400
 PREVIEW_QUALITY = 76
 PREVIEW_METHOD = 1
@@ -39,16 +47,25 @@ Target = tuple[str, str, Frame | None]
 
 
 @dataclass(frozen=True)
+class Crop:
+    character: str
+    expression: str
+    address: str
+    frame: list[float] | None
+    cell: str
+    artifact: str
+
+
+@dataclass(frozen=True)
 class Export:
-    images: dict[tuple[str, str], str]
-    artifacts: dict[tuple[str, str], str]
+    crops: list[Crop]
     previews: dict[str, dict]
 
 
 @dataclass(frozen=True)
 class Render:
-    images: list[tuple[str, str, str]]
     artifact: str
+    crops: list[Crop]
     preview: dict
     errors: list[tuple[str, str, str]]
 
@@ -57,15 +74,14 @@ class Render:
 class Previous:
     manifest: dict
     previews: dict
+    crops: dict[str, dict[str, dict]] | None
 
 
 @dataclass(frozen=True)
 class Plan:
     grouped: dict[Path, dict[str, list[Target]]]
     missing: list[dict]
-    images: dict[tuple[str, str], str]
-    artifacts: dict[tuple[str, str], str]
-    fallback: dict[tuple[str, str], tuple[str, str]]
+    crops: dict[tuple[str, str], dict]
     recovered: int
 
 
@@ -109,10 +125,26 @@ def _load_previous(layout: GameLayout, output: Path, preview_dir: Path) -> Previ
     fingerprint = asset_fingerprint(layout)
     if manifest.get("fingerprint") != fingerprint:
         return None
-    files = manifest.get("files")
-    if not isinstance(files, list) or not files or not all(
-            isinstance(name, str) and Path(name).name == name for name in files):
+    if manifest.get("columns") != ATLAS_COLUMNS:
         return None
+    pages = manifest.get("pages")
+    if not isinstance(pages, list) or not pages or not all(
+            isinstance(name, str) and Path(name).name == name for name in pages):
+        return None
+    characters = manifest.get("characters")
+    if not isinstance(characters, dict):
+        return None
+    for table in characters.values():
+        if not isinstance(table, dict):
+            return None
+        for value in table.values():
+            if not isinstance(value, list) or len(value) != 2:
+                return None
+            page, cell = value
+            if not isinstance(page, int) or not isinstance(cell, int):
+                return None
+            if not 0 <= page < len(pages) or not 0 <= cell < ATLAS_CELLS:
+                return None
     previews = read_json(preview_dir / "index.json")
     if not isinstance(previews, dict) or previews.get("version") != PREVIEW_VERSION:
         return None
@@ -127,13 +159,13 @@ def _load_previous(layout: GameLayout, output: Path, preview_dir: Path) -> Previ
         name = entry.get("file")
         if not isinstance(name, str) or Path(name).name != name:
             return None
-    return Previous(manifest, previews)
+    return Previous(manifest, previews, load_crop_index(fingerprint))
 
 
 def _complete(previous: Previous, output: Path, preview_dir: Path) -> bool:
-    files = previous.manifest.get("files")
-    if not isinstance(files, list) or not all(
-            (output / name).is_file() for name in files if isinstance(name, str)):
+    pages = previous.manifest.get("pages")
+    if not isinstance(pages, list) or not all(
+            (output / name).is_file() for name in pages if isinstance(name, str)):
         return False
     artifacts = previous.previews.get("artifacts")
     if not isinstance(artifacts, dict):
@@ -145,60 +177,26 @@ def _complete(previous: Previous, output: Path, preview_dir: Path) -> bool:
     return True
 
 
-def _reusable(previous: Previous, character: str, expression: str, override: Frame | None,
-              output: Path, preview_dir: Path) -> tuple[str, str] | None:
-    tables = previous.manifest.get("characters")
-    table = tables.get(character) if isinstance(tables, dict) else None
-    file = table.get(expression) if isinstance(table, dict) else None
-    if not isinstance(file, str) or not (output / file).is_file():
+def _reusable(previous: Previous, character: str, expression: str, address: str,
+              override: Frame | None, preview_dir: Path) -> dict | None:
+    table = previous.crops.get(character) if previous.crops else None
+    record = table.get(expression) if isinstance(table, dict) else None
+    if not isinstance(record, dict) or record.get("address") != address:
         return None
-    if not same_frame_value(override, frame_at(previous.manifest.get("settings"),
-                                               character, expression)):
+    if not same_frame_value(override, record.get("frame")):
         return None
-    characters = previous.previews.get("characters")
-    record = characters.get(character) if isinstance(characters, dict) else None
-    entries = record.get("expressions") if isinstance(record, dict) else None
-    artifact = entries.get(expression) if isinstance(entries, dict) else None
+    cell = record.get("cell")
+    artifact = record.get("artifact")
+    if not isinstance(cell, str) or not crop_file(cell).is_file():
+        return None
     if not isinstance(artifact, str):
         return None
-    previews = previous.previews.get("artifacts")
-    record = previews.get(artifact) if isinstance(previews, dict) else None
-    if not isinstance(record, dict):
-        return None
-    name = record.get("file")
+    stored = previous.previews.get("artifacts")
+    entry = stored.get(artifact) if isinstance(stored, dict) else None
+    name = entry.get("file") if isinstance(entry, dict) else None
     if not isinstance(name, str) or not (preview_dir / name).is_file():
         return None
-    return file, artifact
-
-
-def _fallbacks(previous: Previous | None, output: Path, preview_dir: Path) \
-        -> dict[tuple[str, str], tuple[str, str]]:
-    result: dict[tuple[str, str], tuple[str, str]] = {}
-    if previous is None:
-        return result
-    tables = previous.manifest.get("characters")
-    previews = previous.previews.get("characters")
-    artifacts = previous.previews.get("artifacts")
-    if not isinstance(tables, dict) or not isinstance(previews, dict) \
-            or not isinstance(artifacts, dict):
-        return result
-    for character, table in tables.items():
-        record = previews.get(character)
-        entries = record.get("expressions") if isinstance(record, dict) else None
-        if not isinstance(table, dict) or not isinstance(entries, dict):
-            continue
-        for expression, file in table.items():
-            artifact = entries.get(expression)
-            stored = artifacts.get(artifact) if isinstance(artifact, str) else None
-            name = stored.get("file") if isinstance(stored, dict) else None
-            if not isinstance(file, str) or not (output / file).is_file():
-                continue
-            if not isinstance(name, str) or not (preview_dir / name).is_file():
-                continue
-            if not isinstance(artifact, str):
-                continue
-            result[(character, expression)] = (file, artifact)
-    return result
+    return record
 
 
 def _special_id(segment: str) -> str | None:
@@ -256,11 +254,10 @@ def _resolve(address: str, index: dict[str, Path], stems: dict[str, list[str]],
 
 def _plan(characters: dict[str, dict[str, str]], index: dict[str, Path],
           frames: dict[str, dict[str, Frame]], previous: Previous | None,
-          output: Path, preview_dir: Path) -> Plan:
+          preview_dir: Path) -> Plan:
     grouped: dict[Path, dict[str, list[Target]]] = {}
     missing: list[dict] = []
-    images: dict[tuple[str, str], str] = {}
-    artifacts: dict[tuple[str, str], str] = {}
+    crops: dict[tuple[str, str], dict] = {}
     stems = _stem_index(index)
     recovered = 0
     for character, expressions in sorted(characters.items()):
@@ -274,19 +271,16 @@ def _plan(characters: dict[str, dict[str, str]], index: dict[str, Path],
                 continue
             if resolved != address:
                 recovered += 1
-            bundle = index[resolved]
             override = table.get(expression)
             if previous is not None:
-                reused = _reusable(previous, character, expression, override,
-                                   output, preview_dir)
+                reused = _reusable(previous, character, expression, resolved,
+                                   override, preview_dir)
                 if reused is not None:
-                    images[(character, expression)] = reused[0]
-                    artifacts[(character, expression)] = reused[1]
+                    crops[(character, expression)] = reused
                     continue
-            entry = grouped.setdefault(bundle, {}).setdefault(resolved, [])
+            entry = grouped.setdefault(index[resolved], {}).setdefault(resolved, [])
             entry.append((character, expression, override))
-    return Plan(grouped, missing, images, artifacts,
-                _fallbacks(previous, output, preview_dir), recovered)
+    return Plan(grouped, missing, crops, recovered)
 
 
 def character_expressions(session: AssetSession) -> tuple[dict[str, dict[str, str]], list[dict]]:
@@ -357,14 +351,25 @@ def _default_frame(picture: Any) -> Frame:
     return default_frame(picture.size, head.getchannel("A").getbbox())
 
 
-def avatar(picture: Any, frame: Frame) -> bytes:
+def _crop_picture(picture: Any, frame: Frame) -> Any:
     from PIL import Image
 
     left, top, width, height = frame.box(picture.size)
     crop = picture.crop((left, top, left + width, top + height))
     crop = crop.resize(THUMBNAIL_SIZE, Image.Resampling.LANCZOS)
+    return crop.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+
+
+def _crop_digest(picture: Any) -> str:
+    width, height = picture.size
+    digest = hashlib.sha256(f"{width}x{height}|".encode("ascii"))
+    digest.update(picture.tobytes())
+    return digest.hexdigest()[:24]
+
+
+def _png_bytes(picture: Any) -> bytes:
     output = BytesIO()
-    crop.save(output, format="WEBP", quality=85, method=4)
+    picture.save(output, format="PNG")
     return output.getvalue()
 
 
@@ -385,8 +390,8 @@ def _artifact_key(prefix: str, address: str) -> str:
     return hashlib.sha256(f"{prefix}|{address}".encode("utf-8")).hexdigest()[:24]
 
 
-def _render_address(obj: Any, artifact: str, targets: tuple[Target, ...],
-                    preview_missing: bool, output: Path, preview_dir: Path) -> Render:
+def _render_address(address: str, obj: Any, artifact: str, targets: tuple[Target, ...],
+                    preview_missing: bool, preview_dir: Path) -> Render:
     try:
         image = obj.read().image
     except Exception as exc:
@@ -402,32 +407,33 @@ def _render_address(obj: Any, artifact: str, targets: tuple[Target, ...],
         except Exception:
             errors.append(("", "", "preview_write_failed"))
     rendered: dict[tuple[float, float, float], str] = {}
-    images: list[tuple[str, str, str]] = []
+    crops: list[Crop] = []
     for character, expression, frame in targets:
         active = frame or default
         key = (round(active.x, 5), round(active.y, 5), round(active.w, 5))
         digest = rendered.get(key)
         if digest is None:
             try:
-                payload = avatar(picture, active)
+                crop = _crop_picture(picture, active)
             except Exception:
                 errors.append((character, expression, "image_crop_failed"))
                 continue
-            digest = hashlib.sha256(payload).hexdigest()[:24] + ".webp"
-            if not (output / digest).is_file():
-                atomic_write_bytes(output / digest, payload)
+            digest = _crop_digest(crop)
+            path = crop_file(digest)
+            if not path.is_file():
+                atomic_write_bytes(path, _png_bytes(crop))
             rendered[key] = digest
-        images.append((character, expression, digest))
-    return Render(images, artifact, record, errors)
+        crops.append(Crop(character, expression, address, frame_value(frame), digest, artifact))
+    return Render(artifact, crops, record, errors)
 
 
-def _render_chunk(batch: tuple[Job, ...], output: Path, preview_dir: Path) \
+def _render_chunk(batch: tuple[Job, ...], preview_dir: Path) \
         -> list[tuple[str, Render | None, str, str]]:
     results: list[tuple[str, Render | None, str, str]] = []
     for job in batch:
         try:
-            render = _render_address(job.obj, job.artifact, job.targets,
-                                     job.preview_missing, output, preview_dir)
+            render = _render_address(job.key, job.obj, job.artifact, job.targets,
+                                     job.preview_missing, preview_dir)
         except RenderError as exc:
             results.append((job.key, None, exc.reason, exc.error))
             continue
@@ -438,11 +444,9 @@ def _render_chunk(batch: tuple[Job, ...], output: Path, preview_dir: Path) \
     return results
 
 
-def _export_images(grouped: dict[Path, dict[str, list[Target]]], output: Path,
-                   preview_dir: Path, issues: list[dict], reporter: Reporter,
-                   jobs: int) -> Export:
-    images: dict[tuple[str, str], str] = {}
-    artifact_of: dict[tuple[str, str], str] = {}
+def _export_crops(grouped: dict[Path, dict[str, list[Target]]], preview_dir: Path,
+                  issues: list[dict], reporter: Reporter, jobs: int) -> Export:
+    crops: list[Crop] = []
     previews: dict[str, dict] = {}
     started = time.monotonic()
     total = len(grouped)
@@ -460,9 +464,7 @@ def _export_images(grouped: dict[Path, dict[str, list[Target]]], output: Path,
                 issues.append({"address": key, "reason": failure, "error": detail})
                 continue
             previews[render.artifact] = render.preview
-            for character, expression, digest in render.images:
-                images[(character, expression)] = digest
-                artifact_of[(character, expression)] = render.artifact
+            crops.extend(render.crops)
             for character, expression, reason in render.errors:
                 entry = {"address": key, "reason": reason}
                 if character:
@@ -476,7 +478,7 @@ def _export_images(grouped: dict[Path, dict[str, list[Target]]], output: Path,
         completed += 1
         if completed % 20 == 0 or completed == total:
             reporter.info(
-                f"portraits: {completed}/{total} bundles, {len(images)} images,"
+                f"portraits: {completed}/{total} bundles, {len(crops)} crops,"
                 f" {time.monotonic() - started:.1f}s")
 
     def drain(item: tuple[Any, list]) -> None:
@@ -526,11 +528,11 @@ def _export_images(grouped: dict[Path, dict[str, list[Target]]], output: Path,
                       for index in range(0, len(batch), CHUNK_SIZE)]
             if serial:
                 for chunk in chunks:
-                    merge(_render_chunk(chunk, output, preview_dir))
+                    merge(_render_chunk(chunk, preview_dir))
                 _dispose(env)
                 note()
                 continue
-            futures = [executor.submit(_render_chunk, chunk, output, preview_dir)
+            futures = [executor.submit(_render_chunk, chunk, preview_dir)
                        for chunk in chunks]
             pending.append((env, futures))
             while len(pending) >= window:
@@ -541,7 +543,64 @@ def _export_images(grouped: dict[Path, dict[str, list[Target]]], output: Path,
         executor.shutdown(wait=True)
         for item in pending:
             _dispose(item[0])
-    return Export(images, artifact_of, previews)
+    return Export(crops, previews)
+
+
+def _page_key(cells: list[str]) -> str:
+    digest = hashlib.sha256(
+        f"{PORTRAIT_VERSION}|{ATLAS_COLUMNS}|{ATLAS_CELLS}|".encode("ascii"))
+    digest.update("|".join(cells).encode("ascii"))
+    return digest.hexdigest()[:24]
+
+
+def _paginate(cells: dict[tuple[str, str], str]) \
+        -> tuple[list[list[str]], dict[tuple[str, str], list[int]]]:
+    tables: dict[str, dict[str, str]] = {}
+    for (character, expression), cell in cells.items():
+        tables.setdefault(character, {})[expression] = cell
+    pages: list[list[str]] = []
+    positions: dict[tuple[str, str], list[int]] = {}
+    current: list[str] = []
+    for character in sorted(tables):
+        names = sorted(tables[character])
+        entries = [tables[character][name] for name in names]
+        if not entries:
+            continue
+        if current and len(current) + len(entries) > ATLAS_CELLS:
+            pages.append(current)
+            current = []
+        start = len(current)
+        page = len(pages)
+        for offset, expression in enumerate(names):
+            positions[(character, expression)] = [page, start + offset]
+        current.extend(entries)
+        if len(current) == ATLAS_CELLS:
+            pages.append(current)
+            current = []
+    if current:
+        pages.append(current)
+    return pages, positions
+
+
+def _write_page(path: Path, cells: list[str]) -> None:
+    from PIL import Image
+
+    width, height = THUMBNAIL_SIZE
+    rows = (len(cells) + ATLAS_COLUMNS - 1) // ATLAS_COLUMNS
+    page = Image.new("RGBA", (ATLAS_COLUMNS * width, rows * height), (0, 0, 0, 0))
+    try:
+        for index, cell in enumerate(cells):
+            crop = Image.open(crop_file(cell))
+            try:
+                page.paste(crop, ((index % ATLAS_COLUMNS) * width,
+                                  (index // ATLAS_COLUMNS) * height))
+            finally:
+                crop.close()
+        output = BytesIO()
+        page.save(output, format="WEBP", quality=ATLAS_QUALITY, method=ATLAS_METHOD)
+    finally:
+        page.close()
+    atomic_write_bytes(path, output.getvalue())
 
 
 def _sweep(directory: Path, keep: set[str], suffixes: tuple[str, ...]) -> None:
@@ -586,38 +645,50 @@ def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = Fa
         save_bundle_cache(fingerprint, characters, index, issues)
     else:
         characters, index, issues = cached
-    plan = _plan(characters, index, frames, previous, output, preview_dir)
+    plan = _plan(characters, index, frames, previous, preview_dir)
     reporter.info(f"portraits: {len(plan.grouped)} bundles to render,"
-                  f" {len(plan.images)} reused, {plan.recovered} addresses resolved,"
+                  f" {len(plan.crops)} reused, {plan.recovered} addresses resolved,"
                   f" {workers} threads, {CHUNK_SIZE} per batch")
     output.mkdir(parents=True, exist_ok=True)
     preview_dir.mkdir(parents=True, exist_ok=True)
-    exported = _export_images(plan.grouped, output, preview_dir, issues, reporter, workers)
-    images = {key: value[0] for key, value in plan.fallback.items()}
-    images.update(plan.images)
-    images.update(exported.images)
-    artifact_of = {key: value[1] for key, value in plan.fallback.items()}
-    artifact_of.update(plan.artifacts)
-    artifact_of.update(exported.artifacts)
+    PORTRAIT_CROP_DIR.mkdir(parents=True, exist_ok=True)
+    exported = _export_crops(plan.grouped, preview_dir, issues, reporter, workers)
+    records: dict[tuple[str, str], dict] = dict(plan.crops)
+    for crop in exported.crops:
+        records[(crop.character, crop.expression)] = {
+            "address": crop.address,
+            "frame": crop.frame,
+            "cell": crop.cell,
+            "artifact": crop.artifact,
+        }
+    cells = {key: record["cell"] for key, record in records.items()}
+    pages, positions = _paginate(cells)
+    page_files: list[str] = []
+    for page_cells in pages:
+        name = f"{_page_key(page_cells)}.webp"
+        page_files.append(name)
+        if not (output / name).is_file():
+            _write_page(output / name, page_cells)
     names = labels or {}
-    available: dict[str, dict[str, str]] = {}
+    available: dict[str, dict[str, list[int]]] = {}
     preview_characters: dict[str, dict] = {}
+    used: set[str] = set()
     for character, expressions in sorted(characters.items()):
-        table: dict[str, str] = {}
+        table: dict[str, list[int]] = {}
         variants: dict[str, str] = {}
         for expression in sorted(expressions):
             key = (character, expression)
-            file = images.get(key)
-            artifact = artifact_of.get(key)
-            if file is None or artifact is None:
+            record = records.get(key)
+            position = positions.get(key)
+            if record is None or position is None:
                 continue
-            table[expression] = file
-            variants[expression] = artifact
+            table[expression] = position
+            variants[expression] = record["artifact"]
+            used.add(record["artifact"])
         if table:
             available[character] = table
             preview_characters[character] = {"label": names.get(character) or character,
                                              "expressions": variants}
-    used = set(artifact_of.values())
     previews: dict[str, dict] = {}
     if previous is not None:
         stored = previous.previews.get("artifacts")
@@ -625,14 +696,14 @@ def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = Fa
             previews.update({key: value for key, value in stored.items() if key in used})
     previews.update(exported.previews)
     previews = {key: value for key, value in previews.items() if key in used}
-    files = sorted(set(images.values()))
     manifest = {
         "version": PORTRAIT_VERSION,
         "fingerprint": fingerprint,
         "size": list(THUMBNAIL_SIZE),
+        "columns": ATLAS_COLUMNS,
+        "pages": page_files,
         "settings": snapshot,
         "characters": available,
-        "files": files,
         "missing": plan.missing,
         "issues": _trim_issues(issues),
     }
@@ -646,13 +717,18 @@ def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = Fa
         "artifacts": dict(sorted(previews.items())),
         "characters": preview_characters,
     }, indent=None)
-    _sweep(output, set(files), (".dds", ".webp"))
+    nested: dict[str, dict[str, dict]] = {}
+    for (character, expression), record in records.items():
+        nested.setdefault(character, {})[expression] = record
+    save_crop_index(fingerprint, nested)
+    _sweep(output, set(page_files), (".dds", ".webp"))
+    _sweep(PORTRAIT_CROP_DIR, set(cells.values()), (".png",))
     _sweep(preview_dir, {entry["file"] for entry in previews.values()
                          if isinstance(entry.get("file"), str)}, (".webp",))
     elapsed = time.monotonic() - started
     reporter.info(
-        f"portraits: {len(available)} characters, {len(files)} images,"
-        f" {len(previews)} previews, {len(plan.images)} reused,"
-        f" {len(exported.images)} rendered, {len(plan.grouped)} bundles,"
+        f"portraits: {len(available)} characters, {len(page_files)} pages,"
+        f" {len(previews)} previews, {len(plan.crops)} reused,"
+        f" {len(exported.crops)} rendered, {len(plan.grouped)} bundles,"
         f" {len(plan.missing)} missing, {len(issues)} issues, {elapsed:.1f}s")
     return manifest
