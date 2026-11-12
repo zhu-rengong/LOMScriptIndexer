@@ -608,6 +608,8 @@ def run_extract(request: ExtractRequest, reporter: Reporter) -> ExtractResult:
             manifest, layout.fingerprint(), langs, LUA_DIR, LOCALE_DIR,
             _stage_versions(request), (BATTLES_PATH,) if request.with_battles else ()):
         reporter.write("[skip] resources unchanged and outputs complete; use --force to rerun")
+        if request.with_portraits:
+            export_portraits(layout, reporter)
         reporter.write(
             f"       {manifest.get('script_count')} scripts, "
             + ", ".join(f"{lang} {count} keys"
