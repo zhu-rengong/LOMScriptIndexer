@@ -1,4 +1,5 @@
 import hashlib
+from io import BytesIO
 from pathlib import Path
 from typing import Any
 
@@ -6,10 +7,9 @@ from ..console import Reporter
 from ..jsonio import atomic_write_bytes, read_json, write_json
 from ..paths import SITE_DATA_DIR
 from .assets import AssetSession, _dispose, try_build_generator, unitypy
-from .dds import to_dds
 from .layout import GameLayout
 
-PORTRAIT_VERSION = 1
+PORTRAIT_VERSION = 2
 PORTRAIT_DIR = SITE_DATA_DIR / "portraits"
 THUMBNAIL_SIZE = (80, 92)
 HEAD_BAND = 0.42
@@ -108,7 +108,9 @@ def avatar(image: Any) -> bytes:
     left = max(0, min(width - band_width, center - band_width // 2))
     frame = picture.crop((left, 0, left + band_width, band_height))
     frame = frame.resize(THUMBNAIL_SIZE, Image.Resampling.LANCZOS)
-    return to_dds(frame.tobytes(), THUMBNAIL_SIZE[0], THUMBNAIL_SIZE[1])
+    output = BytesIO()
+    frame.save(output, format="WEBP", quality=85, method=4)
+    return output.getvalue()
 
 
 def _targets(characters: dict[str, dict[str, str]], index: dict[str, Path]) \
@@ -151,7 +153,7 @@ def _export_images(grouped: dict[Path, dict[str, tuple[str, str]]], output: Path
                     issues.append({"address": key, "reason": "image_read_failed",
                                    "error": type(exc).__name__})
                     continue
-                name = hashlib.sha256(payload).hexdigest()[:24] + ".dds"
+                name = hashlib.sha256(payload).hexdigest()[:24] + ".webp"
                 if not (output / name).is_file():
                     atomic_write_bytes(output / name, payload)
                 images[key] = name

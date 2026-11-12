@@ -100,7 +100,7 @@
     border-radius: var(--r-sm);
   }
 
-  .portrait-avatar canvas {
+  .portrait-avatar img {
     display: block;
     width: 100%;
     height: 100%;

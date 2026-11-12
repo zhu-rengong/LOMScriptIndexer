@@ -27,7 +27,7 @@ const docsData = (): Plugin => ({
       const types: Record<string, string> = {
         ".js": "text/javascript; charset=utf-8",
         ".json": "application/json; charset=utf-8",
-        ".dds": "image/vnd-ms.dds",
+        ".webp": "image/webp",
       };
       res.setHeader("Content-Type", types[extname(file)] || "application/octet-stream");
       res.setHeader("Cache-Control", "no-store");
