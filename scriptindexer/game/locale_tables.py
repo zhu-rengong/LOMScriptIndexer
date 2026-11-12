@@ -4,7 +4,9 @@ from pathlib import Path
 from typing import Any
 
 from ..console import Reporter
+from ..jsonio import read_json
 from ..languages import SUPPORTED_LANGS
+from ..paths import LOCALE_DIR
 from .assets import AssetSession
 
 _LOCALE_LINE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)/([^\r\n=]{1,160}?) = (.*)$")
@@ -64,6 +66,12 @@ def parse_locale_text(text: str) -> tuple[dict[str, dict[str, str]], int]:
         table.setdefault(namespace, {})[key] = value.replace("\\n", "\n")
         line_count += 1
     return table, line_count
+
+
+def character_labels(lang: str) -> dict[str, str]:
+    payload = read_json(LOCALE_DIR / f"{lang}.json")
+    table = payload.get("Character") if isinstance(payload, dict) else None
+    return table if isinstance(table, dict) else {}
 
 
 def merge_tables_into(target: dict[str, dict[str, str]],

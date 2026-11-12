@@ -28,7 +28,7 @@ from .game.layout import (
     install_folder_name,
     steamapps_dir,
 )
-from .game.locale_tables import extract_locales
+from .game.locale_tables import character_labels, extract_locales
 from .game.lore import probe_legend_texts
 from .game.portraits import export_portraits
 from .game.lore import summarize as summarize_lore
@@ -49,6 +49,7 @@ from .paths import (
     LOCALE_DIR,
     LUA_DIR,
     MANIFEST_PATH,
+    PORTRAIT_PREVIEW_DIR,
     SITE_DATA_DIR,
     STATS_CACHE_PATH,
     STATS_PATH,
@@ -566,7 +567,8 @@ def _run_extract(layout: GameLayout, langs: tuple[str, ...], request: ExtractReq
     if request.with_portraits:
         reporter.stage(STAGE_PORTRAITS)
         try:
-            export_portraits(layout, reporter, force=request.force)
+            export_portraits(layout, reporter, force=request.force,
+                             labels=tables[langs[0]].get("Character"))
         except Exception as exc:
             reporter.warn(f"character portraits skipped: {type(exc).__name__}: {exc}")
 
@@ -583,6 +585,7 @@ def _run_extract(layout: GameLayout, langs: tuple[str, ...], request: ExtractReq
     reporter.write(f"[done] battle levels -> {BATTLES_PATH}")
     if request.with_portraits:
         reporter.write(f"[done] character portraits -> {SITE_DATA_DIR / 'portraits'}")
+        reporter.write(f"[done] portrait previews -> {PORTRAIT_PREVIEW_DIR}")
     for lang in langs:
         reporter.write(f"[done] {lang} locale table -> {LOCALE_DIR / (lang + '.json')}")
     reporter.write(f"[done] manifest -> {MANIFEST_PATH}")
@@ -609,7 +612,7 @@ def run_extract(request: ExtractRequest, reporter: Reporter) -> ExtractResult:
             _stage_versions(request), (BATTLES_PATH,) if request.with_battles else ()):
         reporter.write("[skip] resources unchanged and outputs complete; use --force to rerun")
         if request.with_portraits:
-            export_portraits(layout, reporter)
+            export_portraits(layout, reporter, labels=character_labels(langs[0]))
         reporter.write(
             f"       {manifest.get('script_count')} scripts, "
             + ", ".join(f"{lang} {count} keys"

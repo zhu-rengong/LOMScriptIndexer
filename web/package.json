@@ -6,6 +6,7 @@
   "packageManager": "pnpm@12.11.2",
   "scripts": {
     "dev": "vite",
+    "framing": "vite --open /framing/",
     "build": "node scripts/prune.mjs && vue-tsc --build && vite build",
     "typecheck": "vue-tsc --build",
     "lint": "oxlint src vite.config.ts",

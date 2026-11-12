@@ -72,6 +72,7 @@ declare global {
   const useCssModule: typeof import('vue').useCssModule
   const useCssVars: typeof import('vue').useCssVars
   const useFoldStore: typeof import('./stores/fold').useFoldStore
+  const useFramingStore: typeof import('./stores/framing').useFramingStore
   const useId: typeof import('vue').useId
   const useModel: typeof import('vue').useModel
   const usePanelsStore: typeof import('./stores/panels').usePanelsStore
@@ -94,6 +95,9 @@ declare global {
   // @ts-ignore
   export type { FoldState } from './stores/fold'
   import('./stores/fold')
+  // @ts-ignore
+  export type { ExpressionRow, CharacterRow, FrameSelection } from './stores/framing'
+  import('./stores/framing')
   // @ts-ignore
   export type { FocusTarget, PendingHit } from './stores/panels'
   import('./stores/panels')
@@ -171,6 +175,7 @@ declare module 'vue' {
     readonly useCssModule: UnwrapRef<typeof import('vue')['useCssModule']>
     readonly useCssVars: UnwrapRef<typeof import('vue')['useCssVars']>
     readonly useFoldStore: UnwrapRef<typeof import('./stores/fold')['useFoldStore']>
+    readonly useFramingStore: UnwrapRef<typeof import('./stores/framing')['useFramingStore']>
     readonly useId: UnwrapRef<typeof import('vue')['useId']>
     readonly useModel: UnwrapRef<typeof import('vue')['useModel']>
     readonly usePanelsStore: UnwrapRef<typeof import('./stores/panels')['usePanelsStore']>
