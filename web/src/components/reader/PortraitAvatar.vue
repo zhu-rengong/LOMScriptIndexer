@@ -34,7 +34,7 @@ watch(
   <span class="portrait-avatar" role="img" :aria-label="label" :title="label">
     <img
       v-if="src"
-      v-show="loaded && !failed"
+      v-show="!failed"
       :src="src"
       alt=""
       loading="lazy"
