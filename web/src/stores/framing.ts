@@ -43,6 +43,8 @@ export type FrameSelection = {
   frame: Frame;
 };
 
+export type FrameClipboard = { frame: Frame; label: string; expression: string };
+
 const EMPTY: Settings = { version: 1, frames: {} };
 
 export const useFramingStore = defineStore("framing", () => {
@@ -52,6 +54,7 @@ export const useFramingStore = defineStore("framing", () => {
   const orphans = ref<FrameMap>({});
   const diskText = ref("");
   const selection = ref<{ character: string; expression: string } | null>(null);
+  const clipboard = ref<FrameClipboard | null>(null);
   const query = ref("");
   const status = ref<"idle" | "loading" | "ready" | "error">("idle");
   const error = ref("");
@@ -105,6 +108,13 @@ export const useFramingStore = defineStore("framing", () => {
   const sharedCharacters = computed(
     () => new Set(sharedUses.value.map((use) => use.character)).size,
   );
+
+  const hasClipboard = computed(() => clipboard.value !== null);
+
+  const clipboardSource = computed(() => {
+    const held = clipboard.value;
+    return held ? `${held.label} / ${held.expression}` : "";
+  });
 
   const payload = computed<Settings>(() => {
     const data = index.value;
@@ -257,6 +267,25 @@ export const useFramingStore = defineStore("framing", () => {
     setFrame(defaultFrame(active.artifact));
   };
 
+  const copyFrame = (): void => {
+    const active = current.value;
+    if (!active) return;
+    clipboard.value = {
+      frame: { ...active.frame },
+      label: active.label,
+      expression: active.expression,
+    };
+    notice.value = `copied framing from ${active.label} / ${active.expression}`;
+  };
+
+  const pasteFrame = (): void => {
+    const active = current.value;
+    const held = clipboard.value;
+    if (!active || !held) return;
+    setFrame(held.frame);
+    notice.value = `pasted framing from ${held.label} / ${held.expression}`;
+  };
+
   const nudge = (dx: number, dy: number): void => {
     const active = current.value;
     if (!active) return;
@@ -386,10 +415,14 @@ export const useFramingStore = defineStore("framing", () => {
     maxWidth,
     sharedCount,
     sharedCharacters,
+    hasClipboard,
+    clipboardSource,
     select,
     load,
     setFrame,
     resetFrame,
+    copyFrame,
+    pasteFrame,
     nudge,
     zoomBy,
     applyToCharacter,

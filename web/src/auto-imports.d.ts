@@ -96,7 +96,7 @@ declare global {
   export type { FoldState } from './stores/fold'
   import('./stores/fold')
   // @ts-ignore
-  export type { ExpressionRow, CharacterRow, FrameSelection } from './stores/framing'
+  export type { ExpressionRow, CharacterRow, FrameSelection, FrameClipboard } from './stores/framing'
   import('./stores/framing')
   // @ts-ignore
   export type { FocusTarget, PendingHit } from './stores/panels'

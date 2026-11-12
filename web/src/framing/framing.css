@@ -1088,6 +1088,12 @@ input {
   gap: 6px;
 }
 
+.fx-clipboard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
 .fx-actions .fx-btn {
   height: 34px;
 }

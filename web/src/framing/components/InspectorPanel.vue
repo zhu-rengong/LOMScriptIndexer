@@ -39,6 +39,10 @@ const sharedHint = computed(() =>
     : `apply to ${store.sharedCount} expressions across ${store.sharedCharacters} characters`,
 );
 
+const clipboardHint = computed(() =>
+  store.hasClipboard ? `paste framing from ${store.clipboardSource}` : "nothing copied yet",
+);
+
 const zoomText = computed(() => {
   const current = active.value;
   if (!current) return "—";
@@ -163,6 +167,20 @@ const onSlider = (event: Event): void => {
     </div>
 
     <div class="fx-actions">
+      <div class="fx-clipboard">
+        <button type="button" class="fx-btn" :disabled="!active" @click="store.copyFrame()">
+          Copy
+        </button>
+        <button
+          type="button"
+          class="fx-btn"
+          :disabled="!active || !store.hasClipboard"
+          :title="clipboardHint"
+          @click="store.pasteFrame()"
+        >
+          Paste
+        </button>
+      </div>
       <button type="button" class="fx-btn" :disabled="!active" @click="store.resetFrame()">
         Reset to default
       </button>
@@ -209,6 +227,7 @@ const onSlider = (event: Event): void => {
       <li><kbd>wheel</kbd><span>zoom at cursor</span></li>
       <li><kbd>arrows</kbd><span>nudge · shift coarse</span></li>
       <li><kbd>+ / −</kbd><span>step zoom</span></li>
+      <li><kbd>Ctrl C / V</kbd><span>copy / paste framing</span></li>
       <li><kbd>R</kbd><span>reset to default</span></li>
     </ul>
   </aside>

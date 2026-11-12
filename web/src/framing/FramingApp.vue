@@ -55,6 +55,19 @@ const onKey = (event: KeyboardEvent): void => {
   ) {
     return;
   }
+  const modifier = event.ctrlKey || event.metaKey;
+  if (modifier && !event.altKey && !event.shiftKey) {
+    const key = event.key.toLowerCase();
+    if (key === "c" || key === "v") {
+      if (key === "c") {
+        if (store.current) store.copyFrame();
+      } else if (store.hasClipboard) {
+        store.pasteFrame();
+      }
+      event.preventDefault();
+      return;
+    }
+  }
   if (event.ctrlKey || event.metaKey || event.altKey) return;
   const step = event.shiftKey ? 0.01 : 0.002;
   const key = event.key;
