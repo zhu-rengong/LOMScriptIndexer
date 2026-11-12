@@ -316,6 +316,48 @@ def canonicalize_checkpoints(checkpoints: Mapping[str, dict[str, Any]],
             _walk_checkpoint(checkpoint, locale, name_registry, stat_notes)
 
 
+def _mission_states(missions: Mapping[str, dict[str, Any]]) -> Iterable[Mapping[str, Any]]:
+    for record in missions.values():
+        if not isinstance(record, Mapping):
+            continue
+        states = record.get("states")
+        if not isinstance(states, Mapping):
+            continue
+        for state in states.values():
+            if isinstance(state, Mapping):
+                yield state
+
+
+def canonicalize_missions(missions: Mapping[str, dict[str, Any]],
+                          locale: Mapping[str, Any], name_registry: NameTables,
+                          stat_notes: Mapping[str, str] | None = None) -> None:
+    for state in _mission_states(missions):
+        for item in state.get("conditions") or []:
+            if not isinstance(item, Mapping):
+                continue
+            expr = item.get("expr")
+            if isinstance(expr, dict):
+                _seed_expression(expr, name_registry, locale)
+    for state in _mission_states(missions):
+        for item in state.get("conditions") or []:
+            if not isinstance(item, Mapping):
+                continue
+            expr = item.get("expr")
+            if isinstance(expr, dict):
+                _walk_expression(expr, locale, name_registry, stat_notes)
+        for field in ("modifyFlagsTrue", "modifyFlagsFalse"):
+            for change in state.get(field) or []:
+                if not isinstance(change, dict):
+                    continue
+                key = str(change.get("key") or "")
+                if not key:
+                    continue
+                canonical = canonical_key(
+                    VALUE_FLAG, key, "", locale, name_registry, stat_notes)
+                if canonical:
+                    change["key"] = canonical
+
+
 def finalize_registry(tables: NameTables,
                       kinds: Iterable[str] | None = None) -> dict[str, dict[str, str]]:
     allowed = set(kinds) if kinds is not None else None

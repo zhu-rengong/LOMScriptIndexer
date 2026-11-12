@@ -500,10 +500,21 @@ const missionText = (key: string, extra: string): string => {
   const label = missionLabel(missionId);
   if (key === "clear") return t("metaMissionClear", { mission: label });
   const state = missions.missionOfState(key)?.state;
+  const note = names.label("missionState", key);
+  const hasNote = !!note && note !== key;
   if (state?.start) {
-    return t("metaMissionScript", { mission: label, state: key, script: state.start });
+    return t(hasNote ? "metaMissionNoteScript" : "metaMissionScript", {
+      mission: label,
+      state: key,
+      script: state.start,
+      note,
+    });
   }
-  return t("metaMission", { mission: label, state: key });
+  return t(hasNote ? "metaMissionNote" : "metaMission", {
+    mission: label,
+    state: key,
+    note,
+  });
 };
 
 const missionTriggerText = (key: string, value: number | null): string => {
@@ -632,6 +643,9 @@ export const metaDisplay = (
 export const metaTarget = (kind: string, key: string): { kind: string; key: string } | null => {
   if (!key) return null;
   if (kind === "setflag") return { kind: "flag", key };
+  if (kind === "mission") {
+    return missions.missionOfState(key) ? { kind: "mission", key } : null;
+  }
   return LOOKUP_KINDS.has(kind) ? { kind, key } : null;
 };
 

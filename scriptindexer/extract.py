@@ -331,13 +331,17 @@ def _mission_stage(session: AssetSession, reporter: Reporter, fingerprint: str) 
             payload, stats = extract_missions(session, reporter)
         except Exception as exc:
             return {}, {"skip": f"mission asset extraction failed: {type(exc).__name__}: {exc}"}
-        details = {key: stats[key] for key in ("unresolved", "sub_missions") if key in stats}
+        details = {
+            key: stats[key]
+            for key in ("unresolved", "condition_gaps", "sub_missions")
+            if key in stats
+        }
         return payload, details
 
     def summarize(payload: dict[str, Any], details: dict[str, Any]) -> StageStats:
         elapsed = float(details.get("elapsed") or 0.0)
         values = summarize_missions(payload, elapsed)
-        for key in ("unresolved", "sub_missions"):
+        for key in ("unresolved", "condition_gaps", "sub_missions"):
             if key in details:
                 values[key] = details[key]
         return StageStats(

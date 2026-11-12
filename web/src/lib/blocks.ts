@@ -1,5 +1,3 @@
-import { graph } from "../data/graph";
-import { missions } from "../data/missions";
 import { names } from "../data/names";
 import { textStore } from "../data/text";
 import { t } from "../i18n";
@@ -54,10 +52,6 @@ const metaChipOf = (meta: MetaView): { chip: MetaChip | null; isDice: boolean } 
   if (display.title) chip.title = display.title;
   if (display.seal) chip.seal = display.seal;
   if (meta.hidden) chip.hidden = true;
-  if (meta.kind === "mission") {
-    const start = missions.startOf(meta.key);
-    if (start && graph.nodeById.has(start)) chip.jump = start;
-  }
   return { chip, isDice: !!target && meta.kind === "dice" };
 };
 

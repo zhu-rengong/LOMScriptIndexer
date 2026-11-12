@@ -1090,6 +1090,152 @@
     padding: var(--sp-1);
   }
 
+  .mission-detail {
+    padding: var(--sp-2) var(--sp-2) var(--sp-3);
+  }
+
+  .mission-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: var(--sp-1);
+  }
+
+  .mission-tag {
+    padding: 0 6px;
+    border: 1px solid var(--line-1);
+    border-radius: var(--r-sm);
+    color: var(--ink-2);
+    font-family: var(--rd-ff-ui-micro, var(--font-base));
+    font-size: var(--rd-fs-ui-micro, 16px);
+    line-height: 1.5;
+  }
+
+  .mission-tag.is-warn {
+    border-color: var(--warn);
+    color: var(--warn);
+  }
+
+  .mission-note,
+  .mission-state-note {
+    margin: 0 0 var(--sp-1);
+    color: var(--ink);
+    font-family: var(--rd-ff-ui, var(--font-base));
+    font-size: var(--rd-fs-ui, 16px);
+    line-height: var(--rd-lh-ui, 1.6);
+  }
+
+  .mission-state-note {
+    color: var(--accent-strong);
+  }
+
+  .mission-rows {
+    display: grid;
+    gap: var(--sp-2);
+    margin: 0;
+  }
+
+  .mission-row {
+    display: grid;
+    grid-template-columns: 5.5em minmax(0, 1fr);
+    gap: var(--sp-2);
+    align-items: start;
+    padding-top: var(--sp-2);
+    border-top: 1px solid var(--line-1);
+  }
+
+  .mission-row:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .mission-label {
+    color: var(--ink-2);
+    font-family: var(--rd-ff-caption, var(--font-base));
+    font-size: var(--rd-fs-caption, 16px);
+    line-height: var(--rd-lh-caption, 1.6);
+    letter-spacing: 0.04em;
+  }
+
+  .mission-value {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: var(--ink);
+    font-family: var(--rd-ff-ui, var(--font-base));
+    font-size: var(--rd-fs-ui, 16px);
+    line-height: var(--rd-lh-ui, 1.6);
+  }
+
+  .mission-link {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--accent-strong);
+    font-family: var(--rd-ff-code, var(--font-base));
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .mission-link:hover {
+    text-decoration: underline;
+  }
+
+  .mission-muted {
+    color: var(--ink-2);
+  }
+
+  .mission-cond {
+    padding: var(--sp-1) 0;
+    border-top: 1px dashed var(--line-1);
+  }
+
+  .mission-cond:first-child {
+    border-top: 0;
+  }
+
+  .mission-cond-note {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--ink-2);
+    font-family: var(--rd-ff-caption, var(--font-base));
+    font-size: var(--rd-fs-caption, 16px);
+  }
+
+  .mission-flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 8px;
+    padding: 2px 0;
+  }
+
+  .mission-sub-label {
+    color: var(--ink-2);
+    font-family: var(--rd-ff-caption, var(--font-base));
+    font-size: var(--rd-fs-caption, 16px);
+  }
+
+  .mission-flag {
+    padding: 0 6px;
+    border: 1px solid var(--line-1);
+    border-radius: var(--r-sm);
+  }
+
+  .mission-dialog {
+    margin: 0 0 4px;
+    color: var(--ink);
+  }
+
+  .mission-portrait {
+    margin-right: 6px;
+    padding: 0 5px;
+    border: 1px solid var(--line-1);
+    border-radius: var(--r-sm);
+    color: var(--ink-2);
+    font-family: var(--rd-ff-ui-micro, var(--font-base));
+    font-size: var(--rd-fs-ui-micro, 16px);
+  }
+
   .lookup-hint {
     flex: none;
     padding: var(--sp-3) var(--sp-4);
@@ -1261,35 +1407,43 @@
     overflow-wrap: anywhere;
   }
 
-  .lookup-cond .cx-expr {
+  .lookup-cond .cx-expr,
+  .mission-cond .cx-expr {
     display: block;
   }
 
-  .lookup-cond .cx-line + .cx-line {
+  .lookup-cond .cx-line + .cx-line,
+  .mission-cond .cx-line + .cx-line {
     margin-top: 2px;
   }
 
-  .lookup-cond .cx-var {
+  .lookup-cond .cx-var,
+  .mission-cond .cx-var {
     margin: 0 3px;
     padding: 0 5px;
     font-size: var(--rd-fs-ui-compact, 16px);
     line-height: var(--rd-lh-ui-compact, 1.6);
   }
 
-  .lookup-cond .cx-var.is-link {
+  .lookup-cond .cx-var.is-link,
+  .mission-cond .cx-var.is-link {
     font-family: var(--rd-ff-code, var(--font-base));
   }
 
   .lookup-cond .cx-type,
-  .lookup-cond .cx-id {
+  .lookup-cond .cx-id,
+  .mission-cond .cx-type,
+  .mission-cond .cx-id {
     font-size: calc(var(--rd-fs-ui-compact, 16px) * 0.82);
   }
 
-  .lookup-cond .cx-gtag {
+  .lookup-cond .cx-gtag,
+  .mission-cond .cx-gtag {
     font-size: calc(var(--rd-fs-ui-compact, 16px) * 0.82);
   }
 
-  .lookup-cond .cx-fallback {
+  .lookup-cond .cx-fallback,
+  .mission-cond .cx-fallback {
     padding: 0 4px;
     font-size: calc(var(--rd-fs-ui-compact, 16px) * 0.82);
   }

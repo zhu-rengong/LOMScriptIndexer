@@ -1,18 +1,49 @@
-import type { MissionPack, MissionRecord, MissionState } from "../types/missions";
+import type {
+  MissionPack,
+  MissionRecord,
+  MissionState,
+  MissionTimeRule,
+} from "../types/missions";
 import { readMissions } from "./globals";
+import { DATA_SCHEMA } from "./schema";
 
 export type MissionLookup = { mission: string; state: MissionState };
 
+const EMPTY_TIME: MissionTimeRule = {
+  check: false,
+  type: 0,
+  specific: null,
+  min: null,
+  max: null,
+  period: 0,
+};
+
 const pack: MissionPack = readMissions();
-const records: Record<string, MissionRecord> = pack.missions || {};
+const records: Record<string, MissionRecord> =
+  pack.schema === DATA_SCHEMA ? pack.missions || {} : {};
+
+const normalizeState = (state: MissionState): MissionState => ({
+  ...state,
+  active: state.active !== false,
+  position: Number(state.position) || 0,
+  positionCode: state.positionCode || "",
+  beforeMain: state.beforeMain === true,
+  start: state.start || "",
+  next: state.next || "",
+  time: state.time || EMPTY_TIME,
+  conditions: state.conditions || [],
+  startDialogs: state.startDialogs || [],
+  alertDialogs: state.alertDialogs || [],
+  modifyFlagsTrue: state.modifyFlagsTrue || [],
+  modifyFlagsFalse: state.modifyFlagsFalse || [],
+});
 
 const stateIndex = new Map<string, MissionLookup>();
 
 for (const mission of Object.keys(records)) {
-  const record = records[mission];
-  const states = record.states || {};
+  const states = records[mission].states || {};
   for (const stateKey of Object.keys(states)) {
-    stateIndex.set(stateKey, { mission, state: states[stateKey] });
+    stateIndex.set(stateKey, { mission, state: normalizeState(states[stateKey]) });
   }
 }
 
@@ -37,6 +68,4 @@ const isMain = (missionId: string): boolean => {
   return record ? record.main : missionId === "main";
 };
 
-const startOf = (stateKey: string): string => missionOfState(stateKey)?.state.start || "";
-
-export const missions = { isMain, missionIdOf, missionOfState, recordOf, startOf };
+export const missions = { isMain, missionIdOf, missionOfState, recordOf };

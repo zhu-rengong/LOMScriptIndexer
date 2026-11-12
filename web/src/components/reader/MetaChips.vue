@@ -2,10 +2,8 @@
 import type { MetaChip, MetaSeal } from "../../types/beats";
 import AppIcon from "../ui/AppIcon.vue";
 import { usePanelsStore } from "../../stores/panels";
-import { useScriptStore } from "../../stores/script";
 
 const panels = usePanelsStore();
-const store = useScriptStore();
 
 const props = defineProps<{ chips: MetaChip[]; dice?: boolean; method?: string }>();
 
@@ -22,15 +20,6 @@ const open = (chip: MetaChip, event: Event) => {
     props.method || chip.target.method,
   );
 };
-
-const activate = (chip: MetaChip, event: Event) => {
-  if (!chip.jump) {
-    open(chip, event);
-    return;
-  }
-  event.stopPropagation();
-  store.select(chip.jump, { history: true });
-};
 </script>
 
 <template>
@@ -38,15 +27,15 @@ const activate = (chip: MetaChip, event: Event) => {
     <div class="meta-chips">
       <template v-for="(chip, index) in chips" :key="index">
         <button
-          v-if="chip.target || chip.jump"
+          v-if="chip.target"
           class="btn btn-sm meta-action meta-chip"
           type="button"
           :class="{ 'is-hidden': chip.hidden }"
-          :aria-haspopup="chip.target ? 'dialog' : undefined"
+          aria-haspopup="dialog"
           :title="chip.title"
           :data-kind="chip.match?.kind"
           :data-key="chip.match?.key"
-          @click="activate(chip, $event)"
+          @click="open(chip, $event)"
         >
           <span
             v-if="chip.seal"

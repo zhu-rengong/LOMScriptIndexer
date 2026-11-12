@@ -223,41 +223,153 @@ def _load_missions(reporter: Reporter) -> dict[str, dict[str, Any]]:
     return missions
 
 
-def _register_mission_names(missions: dict[str, dict[str, Any]],
+def _register_mission_names(missions: dict[str, dict[str, Any]], locale: dict[str, Any],
                             name_registry: labels.NameTables) -> None:
-    table = name_registry.setdefault("mission", {})
+    mission_table = name_registry.setdefault("mission", {})
+    state_table = name_registry.setdefault("missionState", {})
+    dialog_table = name_registry.setdefault("missionDialog", {})
+    position_table = name_registry.setdefault("missionPosition", {})
+    raw_position = locale.get("Position") if isinstance(locale, dict) else None
+    position_locale = raw_position if isinstance(raw_position, dict) else {}
+    positions_done: set[str] = set()
     for mission_id, record in missions.items():
         note = record.get("desc")
         if isinstance(note, str) and note:
-            table[mission_id] = note
+            mission_table[mission_id] = note
+        raw_states = record.get("states")
+        if not isinstance(raw_states, dict):
+            continue
+        for state_key, state in raw_states.items():
+            if not isinstance(state_key, str) or not isinstance(state, dict):
+                continue
+            desc = state.get("desc")
+            if isinstance(desc, str) and desc:
+                state_table[state_key] = desc
+            code = state.get("positionCode")
+            if isinstance(code, str) and code and code not in positions_done:
+                text = position_locale.get(f"Name/{code}")
+                if isinstance(text, str) and text:
+                    position_table[code] = text
+                positions_done.add(code)
+            for field in ("startDialogs", "alertDialogs"):
+                for dialog in state.get(field) or []:
+                    if not isinstance(dialog, dict):
+                        continue
+                    key = dialog.get("key")
+                    if not isinstance(key, str) or not key:
+                        continue
+                    text = position_locale.get(f"Dialog/{key}")
+                    if isinstance(text, str) and text:
+                        dialog_table[key] = text
+
+
+def _mission_time(value: Any) -> dict[str, int] | None:
+    if not isinstance(value, dict):
+        return None
+    return {field: int(value.get(field) or 0) for field in ("year", "month", "stage", "day")}
+
+
+def _mission_flags(items: Any) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for change in items or []:
+        if not isinstance(change, dict):
+            continue
+        key = str(change.get("key") or "")
+        if not key:
+            continue
+        out.append({
+            "key": key,
+            "value": int(change.get("value") or 0),
+            "note": str(change.get("note") or ""),
+        })
+    return out
 
 
 def _emit_missions(reporter: Reporter,
                    missions: dict[str, dict[str, Any]]) -> dict[str, Any]:
     payload: dict[str, Any] = {"schema": SCHEMA_VERSION, "missions": {}}
-    states = 0
+    state_count = 0
+    condition_count = 0
+    dialog_count = 0
+    flag_count = 0
     for mission_id, record in sorted(missions.items()):
         raw_states = record.get("states")
-        states_map: dict[str, dict[str, str]] = {}
+        states_map: dict[str, dict[str, Any]] = {}
         if isinstance(raw_states, dict):
             for state_key, state in raw_states.items():
                 if not isinstance(state_key, str) or not isinstance(state, dict):
                     continue
+                raw_time = state.get("time") if isinstance(state.get("time"), dict) else {}
+                conditions: list[dict[str, Any]] = []
+                for item in state.get("conditions") or []:
+                    if not isinstance(item, dict):
+                        continue
+                    expr = item.get("expr")
+                    if not isinstance(expr, dict):
+                        continue
+                    conditions.append({
+                        "note": str(item.get("note") or ""),
+                        "expr": expr,
+                    })
+                dialogs: dict[str, list[dict[str, str]]] = {}
+                for field in ("startDialogs", "alertDialogs"):
+                    items: list[dict[str, str]] = []
+                    for dialog in state.get(field) or []:
+                        if not isinstance(dialog, dict):
+                            continue
+                        key = str(dialog.get("key") or "")
+                        if not key:
+                            continue
+                        items.append({
+                            "portrait": str(dialog.get("portrait") or ""),
+                            "key": key,
+                        })
+                    dialogs[field] = items
+                    dialog_count += len(items)
+                flags_true = _mission_flags(state.get("modifyFlagsTrue"))
+                flags_false = _mission_flags(state.get("modifyFlagsFalse"))
+                flag_count += len(flags_true) + len(flags_false)
                 states_map[state_key] = {
+                    "active": bool(state.get("active", True)),
+                    "position": int(state.get("position") or 0),
+                    "positionCode": str(state.get("positionCode") or ""),
+                    "beforeMain": bool(state.get("beforeMain")),
                     "start": str(state.get("start") or ""),
                     "next": str(state.get("next") or ""),
+                    "time": {
+                        "check": bool(raw_time.get("check")),
+                        "type": int(raw_time.get("type") or 0),
+                        "specific": _mission_time(raw_time.get("specific")),
+                        "min": _mission_time(raw_time.get("min")),
+                        "max": _mission_time(raw_time.get("max")),
+                        "period": int(raw_time.get("period") or 0),
+                    },
+                    "conditions": conditions,
+                    "startDialogs": dialogs["startDialogs"],
+                    "alertDialogs": dialogs["alertDialogs"],
+                    "modifyFlagsTrue": flags_true,
+                    "modifyFlagsFalse": flags_false,
                 }
+                condition_count += len(conditions)
+                state_count += 1
         payload["missions"][mission_id] = {
             "main": bool(record.get("main")),
             "init": str(record.get("init") or ""),
             "states": states_map,
         }
-        states += len(states_map)
     size = write_missions(SITE_DATA_DIR / "missions.js", payload)
     reporter.info(
         f"mission definitions: {len(payload['missions'])} missions,"
-        f" {states} states, {format_bytes(size)}")
-    return {"size": size, "missions": len(payload["missions"]), "states": states}
+        f" {state_count} states, {condition_count} conditions,"
+        f" {dialog_count} dialogs, {flag_count} flag changes, {format_bytes(size)}")
+    return {
+        "size": size,
+        "missions": len(payload["missions"]),
+        "states": state_count,
+        "conditions": condition_count,
+        "dialogs": dialog_count,
+        "flags": flag_count,
+    }
 
 
 def render_language(lang: str, locale: dict, node_ids: list[str],
@@ -649,7 +761,8 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     mission_items = _load_missions(reporter)
     battle_items = _load_battles(reporter)
     name_registry: labels.NameTables = {}
-    _register_mission_names(mission_items, name_registry)
+    _register_mission_names(mission_items, locale, name_registry)
+    labels.canonicalize_missions(mission_items, locale, name_registry, stat_notes)
     battle_cards = (BattleCards(battle_items, locale, name_registry, stat_notes)
                     if battle_items else None)
 
@@ -802,9 +915,21 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     mission_report = {
         "missions": missions["missions"],
         "states": missions["states"],
+        "conditions": missions["conditions"],
+        "dialogs": missions["dialogs"],
+        "flags": missions["flags"],
         "extracted": mission_manifest.get("missions", 0),
         "with_start": mission_manifest.get("with_start", 0),
-        "with_note": mission_manifest.get("with_note", 0),
+        "with_mission_note": mission_manifest.get("with_mission_note", 0),
+        "with_state_note": mission_manifest.get("with_state_note", 0),
+        "with_conditions": mission_manifest.get("with_conditions", 0),
+        "condition_gaps": mission_manifest.get("condition_gaps", 0),
+        "with_dialogs": mission_manifest.get("with_dialogs", 0),
+        "with_flags": mission_manifest.get("with_flags", 0),
+        "inactive": mission_manifest.get("inactive", 0),
+        "next_states": mission_manifest.get("next_states", 0),
+        "before_main": mission_manifest.get("before_main", 0),
+        "with_position": mission_manifest.get("with_position", 0),
         "unresolved": mission_manifest.get("unresolved", 0),
     }
     report_payload = build_report_payload(

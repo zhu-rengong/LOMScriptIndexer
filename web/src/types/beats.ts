@@ -105,7 +105,6 @@ export type MetaChip = {
   title?: string;
   seal?: MetaSeal;
   hidden?: boolean;
-  jump?: string;
 };
 
 export type ChoiceOption = OptionView & { index: number };

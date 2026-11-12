@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { checkpoints } from "../../data/checkpoints";
 import { graph } from "../../data/graph";
+import { missions } from "../../data/missions";
 import { names } from "../../data/names";
 import { chapterTitle, t } from "../../i18n";
 import { firstSayTextOf, speakerName } from "../../lib/blocks";
@@ -11,6 +12,7 @@ import type { GraphNode } from "../../types/graph";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 import CheckpointBranches from "./CheckpointBranches.vue";
+import MissionStateDetail from "./MissionStateDetail.vue";
 import { useScriptStore } from "../../stores/script";
 import { useViewStore } from "../../stores/view";
 import { usePanelsStore } from "../../stores/panels";
@@ -63,11 +65,21 @@ const displayName = computed(() =>
   kind.value === "speaker" ? speakerName(key.value) : names.label(kind.value, key.value),
 );
 
+const missionHit = computed(() =>
+  kind.value === "mission" ? missions.missionOfState(key.value) : null,
+);
+
+const missionRecord = computed(() =>
+  missionHit.value ? missions.recordOf(missionHit.value.mission) : null,
+);
+
 const title = computed(() =>
-  t("lookupTitle", {
-    name: displayName.value,
-    n: totalCount.value,
-  }),
+  kind.value === "mission"
+    ? t("missionPanelTitle", { state: key.value })
+    : t("lookupTitle", {
+        name: displayName.value,
+        n: totalCount.value,
+      }),
 );
 
 const readsEmptyText = computed(() =>
@@ -86,7 +98,9 @@ const lookupTitleKey = computed(() =>
           : "lookupStat",
 );
 
-const subText = computed(() => t(lookupTitleKey.value));
+const subText = computed(() =>
+  kind.value === "mission" ? t("missionPanelSub") : t(lookupTitleKey.value),
+);
 
 const rowOf = (node: GraphNode) => ({
   node,
@@ -187,6 +201,14 @@ onMounted(() => {
     </header>
     <p id="lookupSub" class="lookup-sub">{{ subText }}</p>
     <div id="lookupList" class="lookup-list popover-list">
+      <MissionStateDetail
+        v-if="kind === 'mission' && missionHit"
+        :mission-id="missionHit.mission"
+        :state-key="key"
+        :state="missionHit.state"
+        :record="missionRecord"
+      />
+      <template v-else>
       <CheckpointBranches
         v-if="kind === 'check' && checkpoint"
         :checkpoint="checkpoint"
@@ -274,6 +296,7 @@ onMounted(() => {
         <p v-else-if="kind === 'stat' || kind === 'rel'" class="lookup-group-note">
           {{ t(readsEmptyText) }}
         </p>
+      </template>
       </template>
     </div>
     <p class="lookup-hint">{{ t("lookupHint") }}</p>
