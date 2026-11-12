@@ -26,6 +26,19 @@ const artworkText = computed(() => {
   return artifact ? `${artifact.size[0]}×${artifact.size[1]}` : "—";
 });
 
+const sharedText = computed(() => {
+  const count = store.sharedCount;
+  if (count < 2) return "—";
+  const characters = store.sharedCharacters;
+  return `${count} uses · ${characters} character${characters === 1 ? "" : "s"}`;
+});
+
+const sharedHint = computed(() =>
+  store.sharedCount < 2
+    ? "this artwork is only used here"
+    : `apply to ${store.sharedCount} expressions across ${store.sharedCharacters} characters`,
+);
+
 const zoomText = computed(() => {
   const current = active.value;
   if (!current) return "—";
@@ -161,6 +174,15 @@ const onSlider = (event: Event): void => {
       >
         Apply to all expressions
       </button>
+      <button
+        type="button"
+        class="fx-btn"
+        :disabled="!active || store.sharedCount < 2"
+        :title="sharedHint"
+        @click="store.applyToArtwork()"
+      >
+        Apply to shared art ({{ store.sharedCount }})
+      </button>
     </div>
 
     <dl class="fx-meta">
@@ -171,6 +193,10 @@ const onSlider = (event: Event): void => {
       <div>
         <dt>Artwork</dt>
         <dd class="fx-mono">{{ artworkText }}</dd>
+      </div>
+      <div>
+        <dt>Shared</dt>
+        <dd class="fx-mono">{{ sharedText }}</dd>
       </div>
       <div>
         <dt>Output</dt>

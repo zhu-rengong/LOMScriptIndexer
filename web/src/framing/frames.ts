@@ -18,6 +18,8 @@ export type FrameMap = Record<string, Record<string, Frame>>;
 
 export type FrameBox = { x: number; y: number; w: number; h: number };
 
+export type ArtifactUse = { character: string; expression: string };
+
 export const MIN_WIDTH = 0.01;
 export const EPSILON = 0.0005;
 export const DIGITS = 5;
@@ -151,3 +153,16 @@ export const settingsText = (settings: Settings): string =>
 
 export const countFrames = (frames: FrameMap): number =>
   Object.values(frames).reduce((total, table) => total + Object.keys(table).length, 0);
+
+export const artifactUses = (index: FramingIndex): Map<string, ArtifactUse[]> => {
+  const uses = new Map<string, ArtifactUse[]>();
+  for (const [character, entry] of Object.entries(index.characters)) {
+    for (const [expression, artifactId] of Object.entries(entry.expressions)) {
+      const use = { character, expression };
+      const list = uses.get(artifactId);
+      if (list) list.push(use);
+      else uses.set(artifactId, [use]);
+    }
+  }
+  return uses;
+};

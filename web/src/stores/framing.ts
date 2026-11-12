@@ -1,8 +1,16 @@
 import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import { fetchIndex, fetchSettings, saveSettings } from "../framing/api";
-import type { Artifact, Frame, FrameMap, FramingIndex, Settings } from "../framing/frames";
+import type {
+  Artifact,
+  ArtifactUse,
+  Frame,
+  FrameMap,
+  FramingIndex,
+  Settings,
+} from "../framing/frames";
 import {
+  artifactUses,
   avatarAspect,
   buildSettings,
   clampFrame,
@@ -30,6 +38,7 @@ export type FrameSelection = {
   character: string;
   expression: string;
   label: string;
+  artifactId: string;
   artifact: Artifact;
   frame: Frame;
 };
@@ -56,21 +65,46 @@ export const useFramingStore = defineStore("framing", () => {
   const labelOf = (character: string): string =>
     index.value?.characters[character]?.label || character;
 
-  const artifactOf = (character: string, expression: string): Artifact | null => {
+  const resolveArtifact = (
+    character: string,
+    expression: string,
+  ): { id: string; artifact: Artifact } | null => {
     const data = index.value;
     const id = data?.characters[character]?.expressions[expression];
-    return (id && data?.artifacts[id]) || null;
+    const artifact = id ? data?.artifacts[id] : undefined;
+    return id && artifact ? { id, artifact } : null;
   };
 
   const current = computed<FrameSelection | null>(() => {
     const picked = selection.value;
     const data = index.value;
     if (!picked || !data) return null;
-    const artifact = artifactOf(picked.character, picked.expression);
-    if (!artifact) return null;
-    const frame = frames.value[picked.character]?.[picked.expression] ?? artifact.default;
-    return { ...picked, label: labelOf(picked.character), artifact, frame };
+    const resolved = resolveArtifact(picked.character, picked.expression);
+    if (!resolved) return null;
+    const frame = frames.value[picked.character]?.[picked.expression] ?? resolved.artifact.default;
+    return {
+      ...picked,
+      label: labelOf(picked.character),
+      artifactId: resolved.id,
+      artifact: resolved.artifact,
+      frame,
+    };
   });
+
+  const uses = computed<Map<string, ArtifactUse[]>>(() =>
+    index.value ? artifactUses(index.value) : new Map(),
+  );
+
+  const sharedUses = computed<ArtifactUse[]>(() => {
+    const active = current.value;
+    return active ? (uses.value.get(active.artifactId) ?? []) : [];
+  });
+
+  const sharedCount = computed(() => sharedUses.value.length);
+
+  const sharedCharacters = computed(
+    () => new Set(sharedUses.value.map((use) => use.character)).size,
+  );
 
   const payload = computed<Settings>(() => {
     const data = index.value;
@@ -265,6 +299,23 @@ export const useFramingStore = defineStore("framing", () => {
     notice.value = `applied framing to ${applied} expressions`;
   };
 
+  const applyToArtwork = (): void => {
+    const active = current.value;
+    const targets = sharedUses.value;
+    if (!active || targets.length < 2) return;
+    const applied = clampFrame(active.frame, active.artifact, aspect.value);
+    let expressions = 0;
+    const characters = new Set<string>();
+    for (const use of targets) {
+      const table = frames.value[use.character];
+      if (!table) continue;
+      table[use.expression] = { ...applied };
+      expressions += 1;
+      characters.add(use.character);
+    }
+    notice.value = `applied framing to ${expressions} shared expressions across ${characters.size} characters`;
+  };
+
   const importText = (text: string): boolean => {
     const data = index.value;
     if (!data) return false;
@@ -333,6 +384,8 @@ export const useFramingStore = defineStore("framing", () => {
     customizedCount,
     diskCount,
     maxWidth,
+    sharedCount,
+    sharedCharacters,
     select,
     load,
     setFrame,
@@ -340,6 +393,7 @@ export const useFramingStore = defineStore("framing", () => {
     nudge,
     zoomBy,
     applyToCharacter,
+    applyToArtwork,
     importText,
     download,
     persist,
