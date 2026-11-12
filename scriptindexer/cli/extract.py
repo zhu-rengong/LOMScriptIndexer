@@ -39,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--no-portraits", dest="with_portraits", action="store_false",
                         help="skip the character portrait export")
     parser.add_argument("--jobs", type=int, default=0,
-                        help="worker threads for portrait rendering (0 = auto)")
+                        help="worker threads for portrait rendering (1-4, 0 = auto)")
     args = parser.parse_args(argv)
 
     request = ExtractRequest(

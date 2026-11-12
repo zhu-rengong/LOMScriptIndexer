@@ -2,7 +2,7 @@ import hashlib
 import os
 import time
 from collections.abc import Mapping
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
@@ -31,7 +31,8 @@ THUMBNAIL_SIZE = AVATAR_SIZE
 PREVIEW_MAX = 1400
 PREVIEW_QUALITY = 76
 PREVIEW_METHOD = 1
-DEFAULT_JOBS = 8
+MAX_JOBS = 4
+CHUNK_SIZE = 10
 MAX_ISSUES = 200
 
 Target = tuple[str, str, Frame | None]
@@ -67,6 +68,15 @@ class Plan:
     fallback: dict[tuple[str, str], tuple[str, str]]
 
 
+@dataclass(frozen=True)
+class Job:
+    key: str
+    obj: Any
+    artifact: str
+    targets: tuple[Target, ...]
+    preview_missing: bool
+
+
 class RenderError(Exception):
     def __init__(self, reason: str, error: str) -> None:
         super().__init__(reason)
@@ -86,8 +96,9 @@ def asset_fingerprint(layout: GameLayout) -> str:
 
 def _worker_count(jobs: int) -> int:
     if jobs > 0:
-        return jobs
-    return max(1, min(DEFAULT_JOBS, os.cpu_count() or 4))
+        return max(1, min(jobs, MAX_JOBS))
+    cores = os.cpu_count() or 1
+    return max(1, min(cores // 2, MAX_JOBS))
 
 
 def _load_previous(layout: GameLayout, output: Path, preview_dir: Path) -> Previous | None:
@@ -182,6 +193,8 @@ def _fallbacks(previous: Previous | None, output: Path, preview_dir: Path) \
             if not isinstance(file, str) or not (output / file).is_file():
                 continue
             if not isinstance(name, str) or not (preview_dir / name).is_file():
+                continue
+            if not isinstance(artifact, str):
                 continue
             result[(character, expression)] = (file, artifact)
     return result
@@ -348,6 +361,23 @@ def _render_address(obj: Any, artifact: str, targets: tuple[Target, ...],
     return Render(images, artifact, record, errors)
 
 
+def _render_chunk(batch: tuple[Job, ...], output: Path, preview_dir: Path) \
+        -> list[tuple[str, Render | None, str, str]]:
+    results: list[tuple[str, Render | None, str, str]] = []
+    for job in batch:
+        try:
+            render = _render_address(job.obj, job.artifact, job.targets,
+                                     job.preview_missing, output, preview_dir)
+        except RenderError as exc:
+            results.append((job.key, None, exc.reason, exc.error))
+            continue
+        except Exception as exc:
+            results.append((job.key, None, "render_failed", type(exc).__name__))
+            continue
+        results.append((job.key, render, "", ""))
+    return results
+
+
 def _export_images(grouped: dict[Path, dict[str, list[Target]]], output: Path,
                    preview_dir: Path, issues: list[dict], reporter: Reporter,
                    jobs: int) -> Export:
@@ -355,17 +385,56 @@ def _export_images(grouped: dict[Path, dict[str, list[Target]]], output: Path,
     artifact_of: dict[tuple[str, str], str] = {}
     previews: dict[str, dict] = {}
     started = time.monotonic()
-    with ThreadPoolExecutor(max_workers=jobs) as executor:
-        for position, (bundle, targets) in enumerate(sorted(grouped.items()), 1):
+    total = len(grouped)
+    targets_total = sum(len(entries) for table in grouped.values()
+                        for entries in table.values())
+    serial = total <= 1 and targets_total <= CHUNK_SIZE
+    executor = ThreadPoolExecutor(max_workers=jobs)
+    window = max(jobs, 2)
+    pending: list[tuple[Any, list]] = []
+    completed = 0
+
+    def merge(chunk: list[tuple[str, Render | None, str, str]]) -> None:
+        for key, render, failure, detail in chunk:
+            if render is None:
+                issues.append({"address": key, "reason": failure, "error": detail})
+                continue
+            previews[render.artifact] = render.preview
+            for character, expression, digest in render.images:
+                images[(character, expression)] = digest
+                artifact_of[(character, expression)] = render.artifact
+            for character, expression, reason in render.errors:
+                entry = {"address": key, "reason": reason}
+                if character:
+                    entry["character"] = character
+                if expression:
+                    entry["expression"] = expression
+                issues.append(entry)
+
+    def note() -> None:
+        nonlocal completed
+        completed += 1
+        if completed % 20 == 0 or completed == total:
+            reporter.info(
+                f"portraits: {completed}/{total} bundles, {len(images)} images,"
+                f" {time.monotonic() - started:.1f}s")
+
+    def drain(item: tuple[Any, list]) -> None:
+        env, futures = item
+        for future in futures:
+            try:
+                merge(future.result())
+            except Exception as exc:
+                issues.append({"reason": "render_failed", "error": type(exc).__name__})
+        _dispose(env)
+        note()
+
+    try:
+        for bundle, targets in sorted(grouped.items()):
+            env: Any = None
             try:
                 env = unitypy().load(str(bundle))
                 stat = bundle.stat()
-            except Exception as exc:
-                issues.append({"bundle": bundle.name, "reason": "bundle_read_failed",
-                               "error": type(exc).__name__})
-                continue
-            prefix = f"{bundle.name}|{stat.st_size}|{stat.st_mtime_ns}"
-            try:
                 objects: dict[str, Any] = {}
                 for address, obj in sorted(
                         env.container.items(),
@@ -376,45 +445,42 @@ def _export_images(grouped: dict[Path, dict[str, list[Target]]], output: Path,
                     if obj.type.name not in ("Sprite", "Texture2D"):
                         continue
                     objects[key] = obj
-                futures: dict[str, Future[Render]] = {}
-                for key, entries in sorted(targets.items()):
-                    obj = objects.get(key)
-                    if obj is None:
-                        issues.append({"address": key, "reason": "sprite_not_found"})
-                        continue
-                    artifact = _artifact_key(prefix, key)
-                    missing = not (preview_dir / f"{artifact}.webp").is_file()
-                    futures[key] = executor.submit(
-                        _render_address, obj, artifact, tuple(entries), missing,
-                        output, preview_dir)
-                for key, future in futures.items():
-                    try:
-                        result = future.result()
-                    except RenderError as exc:
-                        issues.append({"address": key, "reason": exc.reason,
-                                       "error": exc.error})
-                        continue
-                    except Exception as exc:
-                        issues.append({"address": key, "reason": "render_failed",
-                                       "error": type(exc).__name__})
-                        continue
-                    previews[result.artifact] = result.preview
-                    for character, expression, digest in result.images:
-                        images[(character, expression)] = digest
-                        artifact_of[(character, expression)] = result.artifact
-                    for character, expression, reason in result.errors:
-                        entry = {"address": key, "reason": reason}
-                        if character:
-                            entry["character"] = character
-                        if expression:
-                            entry["expression"] = expression
-                        issues.append(entry)
-            finally:
+            except Exception as exc:
+                issues.append({"bundle": bundle.name, "reason": "bundle_read_failed",
+                               "error": type(exc).__name__})
+                if env is not None:
+                    _dispose(env)
+                note()
+                continue
+            prefix = f"{bundle.name}|{stat.st_size}|{stat.st_mtime_ns}"
+            batch: list[Job] = []
+            for key, entries in sorted(targets.items()):
+                obj = objects.get(key)
+                if obj is None:
+                    issues.append({"address": key, "reason": "sprite_not_found"})
+                    continue
+                artifact = _artifact_key(prefix, key)
+                missing = not (preview_dir / f"{artifact}.webp").is_file()
+                batch.append(Job(key, obj, artifact, tuple(entries), missing))
+            chunks = [tuple(batch[index:index + CHUNK_SIZE])
+                      for index in range(0, len(batch), CHUNK_SIZE)]
+            if serial:
+                for chunk in chunks:
+                    merge(_render_chunk(chunk, output, preview_dir))
                 _dispose(env)
-            if position % 20 == 0 or position == len(grouped):
-                reporter.info(
-                    f"portraits: {position}/{len(grouped)} bundles, {len(images)} images,"
-                    f" {time.monotonic() - started:.1f}s")
+                note()
+                continue
+            futures = [executor.submit(_render_chunk, chunk, output, preview_dir)
+                       for chunk in chunks]
+            pending.append((env, futures))
+            while len(pending) >= window:
+                drain(pending.pop(0))
+        while pending:
+            drain(pending.pop(0))
+    finally:
+        executor.shutdown(wait=True)
+        for item in pending:
+            _dispose(item[0])
     return Export(images, artifact_of, previews)
 
 
@@ -462,7 +528,8 @@ def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = Fa
         characters, index, issues = cached
     plan = _plan(characters, index, frames, previous, output, preview_dir)
     reporter.info(f"portraits: {len(plan.grouped)} bundles to render,"
-                  f" {len(plan.images)} reused, {workers} threads")
+                  f" {len(plan.images)} reused, {workers} threads,"
+                  f" {CHUNK_SIZE} per batch")
     output.mkdir(parents=True, exist_ok=True)
     preview_dir.mkdir(parents=True, exist_ok=True)
     exported = _export_images(plan.grouped, output, preview_dir, issues, reporter, workers)
