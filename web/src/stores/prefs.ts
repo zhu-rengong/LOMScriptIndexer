@@ -139,7 +139,7 @@ export const usePrefsStore = defineStore("prefs", () => {
   const groups = ref<Record<string, PrefEntry>>(defaultGroups());
   const slots = ref<Record<string, PrefEntry>>(defaultSlots());
   const measure = ref(MEASURE_DEFAULT);
-  const showPortraits = ref(false);
+  const showPortraits = ref(true);
   const portraitSize = ref(PORTRAIT_SIZE_DEFAULT);
   const customFontOpen = ref(false);
 
@@ -238,7 +238,7 @@ export const usePrefsStore = defineStore("prefs", () => {
     groups.value = defaultGroups();
     slots.value = defaultSlots();
     measure.value = MEASURE_DEFAULT;
-    showPortraits.value = false;
+    showPortraits.value = true;
     portraitSize.value = PORTRAIT_SIZE_DEFAULT;
   };
 
@@ -250,7 +250,7 @@ export const usePrefsStore = defineStore("prefs", () => {
     measure.value = Math.round(
       clampNumber(source.measure, MEASURE_MIN, MEASURE_MAX, MEASURE_DEFAULT),
     );
-    showPortraits.value = source.showPortraits === true;
+    showPortraits.value = source.showPortraits !== false;
     portraitSize.value = clampPortraitSize(source.portraitSize, PORTRAIT_SIZE_DEFAULT);
     const storedGroups = source.groups && typeof source.groups === "object" ? source.groups : null;
     if (storedGroups) {
