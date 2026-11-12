@@ -48,6 +48,57 @@ def unity_version(layout: GameLayout) -> str:
     return UNITY_VERSION_FALLBACK
 
 
+def _is_string_array_node(node: Any) -> bool:
+    children = getattr(node, "m_Children", None) or ()
+    if getattr(node, "m_Type", "") != "string" or not children:
+        return False
+    array = children[0]
+    if getattr(array, "m_Type", "") != "Array":
+        return False
+    items = getattr(array, "m_Children", None) or ()
+    return len(items) > 1 and getattr(items[1], "m_Type", "") == "string"
+
+
+def _repair_string_arrays(node: Any) -> Any:
+    flat: list[dict[str, Any]] = []
+    changed = False
+    stack = [node]
+    while stack:
+        current = stack.pop()
+        broken = _is_string_array_node(current)
+        changed = changed or broken
+        flat.append({
+            "m_Level": current.m_Level,
+            "m_Type": "vector" if broken else current.m_Type,
+            "m_Name": current.m_Name,
+            "m_MetaFlag": current.m_MetaFlag,
+        })
+        stack.extend(reversed(getattr(current, "m_Children", None) or ()))
+    if not changed:
+        return node
+    from UnityPy.helpers.TypeTreeNode import TypeTreeNode
+
+    return TypeTreeNode.from_list(flat)
+
+
+class RepairedTypeTreeGenerator:
+    def __init__(self, inner: Any) -> None:
+        self.inner = inner
+        self._nodes: dict[tuple[str, str], Any] = {}
+
+    def get_nodes_up(self, assembly: str, fullname: str) -> Any:
+        name = assembly if assembly.endswith(".dll") else f"{assembly}.dll"
+        key = (name, fullname)
+        node = self._nodes.get(key)
+        if node is None:
+            node = _repair_string_arrays(self.inner.get_nodes_up(name, fullname))
+            self._nodes[key] = node
+        return node
+
+    def __getattr__(self, item: str) -> Any:
+        return getattr(self.inner, item)
+
+
 def try_build_generator(layout: GameLayout) -> Any | None:
     if not typetree_available():
         return None
@@ -63,7 +114,7 @@ def try_build_generator(layout: GameLayout) -> Any | None:
     if assembly.is_file() and metadata.is_file():
         try:
             generator.load_il2cpp(assembly.read_bytes(), metadata.read_bytes())
-            return generator
+            return RepairedTypeTreeGenerator(generator)
         except Exception:
             pass
 
@@ -76,7 +127,7 @@ def try_build_generator(layout: GameLayout) -> Any | None:
                 loaded += 1
             except Exception:
                 continue
-    return generator if loaded else None
+    return RepairedTypeTreeGenerator(generator) if loaded else None
 
 
 @dataclass(frozen=True)

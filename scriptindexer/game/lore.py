@@ -3,7 +3,7 @@ from typing import Any
 
 from ..console import Reporter
 from .assets import AssetSession
-from .unity_fields import LORE_FIELDS
+from .unity_fields import LORE_CLASS, LORE_FIELDS
 from .unity_objects import absent_fields, count_by_reason, multiline_text
 
 GAP_NOT_FOUND = "not_found"
@@ -24,6 +24,8 @@ def probe_legend_texts(session: AssetSession, wanted_keys: set[str],
     for path, obj in session.iter_type("MonoBehaviour"):
         name = session.object_name(obj)
         if not name or name not in wanted_keys:
+            continue
+        if session.monobehaviour_class(path, obj) != LORE_CLASS:
             continue
         by_file.setdefault(path, []).append(obj)
     for path, objects in sorted(by_file.items(), key=lambda item: str(item[0])):

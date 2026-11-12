@@ -119,6 +119,7 @@ CHECKPOINT_FIELDS: dict[str, tuple[str, ...]] = {
 }
 
 STAT_FIELDS: tuple[str, ...] = ("m_Name", "_type", "_name")
+LORE_CLASS = "StoryData"
 LORE_FIELDS: tuple[str, ...] = ("_text",)
 
 HARDCODED_ENTRIES: tuple[dict[str, str], ...] = (
