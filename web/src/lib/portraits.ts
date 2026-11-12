@@ -112,4 +112,5 @@ export const pickPortrait = (character: string, expression: string): PortraitPic
   };
 };
 
-export const portraitUrl = (file: string): string => dataset.assetUrl("portrait", { file });
+export const portraitUrl = (file: string): string =>
+  new URL(dataset.assetUrl("portrait", { file }), document.baseURI).href;
