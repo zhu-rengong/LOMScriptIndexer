@@ -5,6 +5,7 @@ import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 
 const ENTRIES = [
+  { date: "2026-11-12", from: "d4c13de", to: "7aeb894", key: "changelogEntry2" },
   { date: "2026-11-07", from: "6a7e45e", to: "e3a4075", key: "changelogEntry1" },
 ];
 

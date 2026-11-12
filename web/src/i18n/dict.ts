@@ -100,6 +100,8 @@ export const dict: Record<string, Record<string, string>> = {
 - 頂欄標題下只留遊戲版本，生成時間與 build 號都已去掉，搜尋框改成對齊閱讀欄居中。
 - 天賦變化分開寫成「習得天賦」與「遺忘天賦」，等級一律顯示正數。
 - 閱讀頁標題上方與目錄條目上的「場所腳本 / 戰鬥事件」小標記，以及篩選語法裡的「來源」欄位與「系統、場所」類型，一併撤掉了。`,
+    changelogEntry2: `- 閱讀頁在說話人名稱左側新增角色頭像與表情，可在設定中開關並調整大小。
+- 新增本地取景工作台（pnpm framing）：逐角色、逐表情拖拽與縮放取景框，即時預覽鏡像頭像；調整結果寫入 data/portrait-framing.json，之後每次提取都沿用，未調整的表情仍用預設取景。`,
     helpGroupNav: "導航",
     helpGroupRead: "閱讀與浮層",
     hkHistory: "閱讀歷史前進 / 後退",
@@ -1200,6 +1202,8 @@ export const dict: Record<string, Record<string, string>> = {
 - 顶栏标题下只留游戏版本，生成时间与 build 号都已去掉，搜索框改为对齐阅读栏居中。
 - 天赋变化分开写成「习得天赋」与「遗忘天赋」，等级一律显示正数。
 - 阅读页标题上方与目录条目上的「场所脚本 / 战斗事件」小标记，以及筛选语法里的「来源」字段与「系统、场所」类型，一并撤掉了。`,
+    changelogEntry2: `- 阅读页在说话人名称左侧新增角色头像与表情，可在设置中开关并调整大小。
+- 新增本地取景工作台（pnpm framing）：逐角色、逐表情拖拽与缩放取景框，即时预览镜像头像；调整结果写入 data/portrait-framing.json，之后每次提取都沿用，未调整的表情仍用默认取景。`,
     helpGroupNav: "导航",
     helpGroupRead: "阅读与浮层",
     hkHistory: "阅读历史前进 / 后退",
@@ -2302,6 +2306,8 @@ export const dict: Record<string, Record<string, string>> = {
 - The masthead shows only the game version, dropping the generation time and build number, and the search box is centred over the reader column.
 - Talent changes read as learned or forgotten with the level always positive.
 - "Scene script / combat event" markers are gone from the reader breadcrumb and rail entries, along with the filter's source field and its system and scene kinds.`,
+    changelogEntry2: `- The reader shows a character portrait and expression left of the speaker name, with a settings toggle and size control.
+- A local framing workbench (pnpm framing) pans and zooms the avatar frame per character and expression with a live mirrored preview; the result is written to data/portrait-framing.json and reused by every extraction, while untouched expressions keep the default crop.`,
     helpGroupNav: "Navigation",
     helpGroupRead: "Reading and layers",
     hkHistory: "History forward / back",
