@@ -20,6 +20,7 @@ SITE_DIR = ROOT / "docs"
 SITE_DATA_DIR = SITE_DIR / "data"
 
 ANALYSIS_CACHE_PATH = CACHE_DIR / "analysis.pkl.gz"
+PORTRAIT_CACHE_PATH = CACHE_DIR / "portrait-bundles.json"
 PORTRAIT_PREVIEW_DIR = CACHE_DIR / "portrait-previews"
 CHECKPOINT_CACHE_PATH = CACHE_DIR / "checkpoints.json"
 ENTRY_CACHE_PATH = CACHE_DIR / "entries.json"

@@ -38,6 +38,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="also export character portrait avatars (default on)")
     parser.add_argument("--no-portraits", dest="with_portraits", action="store_false",
                         help="skip the character portrait export")
+    parser.add_argument("--jobs", type=int, default=0,
+                        help="worker threads for portrait rendering (0 = auto)")
     args = parser.parse_args(argv)
 
     request = ExtractRequest(
@@ -50,6 +52,7 @@ def main(argv: list[str] | None = None) -> int:
         with_stats=args.with_stats,
         with_battles=args.with_battles,
         with_portraits=args.with_portraits,
+        portrait_jobs=args.jobs,
     )
     result = run_extract(request, Reporter())
     if result.status == STATUS_USAGE:

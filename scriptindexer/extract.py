@@ -105,6 +105,7 @@ class ExtractRequest:
     with_stats: bool = True
     with_battles: bool = True
     with_portraits: bool = True
+    portrait_jobs: int = 0
 
 
 @dataclass(frozen=True)
@@ -568,7 +569,8 @@ def _run_extract(layout: GameLayout, langs: tuple[str, ...], request: ExtractReq
         reporter.stage(STAGE_PORTRAITS)
         try:
             export_portraits(layout, reporter, force=request.force,
-                             labels=tables[langs[0]].get("Character"))
+                             labels=tables[langs[0]].get("Character"),
+                             jobs=request.portrait_jobs)
         except Exception as exc:
             reporter.warn(f"character portraits skipped: {type(exc).__name__}: {exc}")
 
@@ -612,7 +614,8 @@ def run_extract(request: ExtractRequest, reporter: Reporter) -> ExtractResult:
             _stage_versions(request), (BATTLES_PATH,) if request.with_battles else ()):
         reporter.write("[skip] resources unchanged and outputs complete; use --force to rerun")
         if request.with_portraits:
-            export_portraits(layout, reporter, labels=character_labels(langs[0]))
+            export_portraits(layout, reporter, labels=character_labels(langs[0]),
+                             jobs=request.portrait_jobs)
         reporter.write(
             f"       {manifest.get('script_count')} scripts, "
             + ", ".join(f"{lang} {count} keys"

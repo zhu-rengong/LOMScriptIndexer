@@ -18,6 +18,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="language used for portrait preview labels")
     parser.add_argument("--force", action="store_true",
                         help="ignore the manifest cache and export again")
+    parser.add_argument("--jobs", type=int, default=0,
+                        help="worker threads for portrait rendering (0 = auto)")
     args = parser.parse_args(argv)
 
     reporter = Reporter()
@@ -27,6 +29,6 @@ def main(argv: list[str] | None = None) -> int:
         reporter.error("game directory not found")
         return EXIT_DATA
     manifest = export_portraits(layout, reporter, force=args.force,
-                                labels=character_labels(args.lang))
+                                labels=character_labels(args.lang), jobs=args.jobs)
     reporter.info(f"portraits: {len(manifest.get('characters', {}))} characters ready")
     return EXIT_OK
