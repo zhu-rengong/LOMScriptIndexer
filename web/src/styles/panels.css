@@ -459,7 +459,12 @@
     color: var(--accent);
   }
 
-  .drawer .settings-select .ft-name {
+  .type-group-title {
+    margin-top: var(--sp-3);
+  }
+
+  .type-group-pick {
+    margin-bottom: var(--sp-2);
   }
 
   .drawer .text-input {
@@ -595,7 +600,6 @@
   }
 
   .type-tree-row.is-group {
-    margin-top: var(--sp-2);
     background: var(--surface);
     color: var(--ink);
     --ts-control: 1.02;
@@ -609,10 +613,6 @@
   .type-tree-row.is-group.is-on,
   .type-tree-row.is-group.is-on:hover {
     background: var(--accent-soft);
-  }
-
-  .type-tree-row.is-group:first-child {
-    margin-top: 0;
   }
 
   .type-tree-ord {

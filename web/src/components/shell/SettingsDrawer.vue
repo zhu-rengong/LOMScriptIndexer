@@ -10,6 +10,7 @@ import FontPicker from "./FontPicker.vue";
 import ScaleSlider from "./ScaleSlider.vue";
 import SettingsPreview from "./SettingsPreview.vue";
 import TypeGroupList from "./TypeGroupList.vue";
+import TypeGroupPick from "./TypeGroupPick.vue";
 import TypeParamPanel from "./TypeParamPanel.vue";
 import { useUiStore } from "../../stores/ui";
 import { usePrefsStore } from "../../stores/prefs";
@@ -28,16 +29,15 @@ const target = computed<FontTarget>(() => {
 });
 
 const group = computed(() => {
-  if (target.value.scope === "group") return groupById(target.value.id);
+  if (target.value.scope === "group") return groupById(target.value.id) || GROUPS[0];
   const slot = slotById(target.value.id);
-  return slot ? groupById(slot.group) : GROUPS[0];
+  return (slot ? groupById(slot.group) : null) || GROUPS[0];
 });
 
 const scopeLabel = computed(() => {
-  const name = group.value ? t(group.value.label) : "";
   const leaf =
     target.value.scope === "group" ? t(prefs.labels.groupAll) : typeLabel(target.value.id);
-  return name ? `${name} → ${leaf}` : leaf;
+  return `${t(group.value.label)} → ${leaf}`;
 });
 
 const open = computed(() => overlay.isOpen("settings"));
@@ -55,7 +55,22 @@ const reset = () => {
   ui.toast(t("toastReset"));
 };
 
+const groupPickOpen = computed(() => overlay.isOpen("typeGroupPick"));
+
+const toggleGroupPick = () => {
+  if (overlay.isOpen("typeGroupPick")) {
+    overlay.close("typeGroupPick");
+    return;
+  }
+  overlay.open("typeGroupPick", {
+    trigger: byId(UI_IDS.typeGroupTrigger),
+    keep: ["settings"],
+    placement: { align: "start", gap: 6, matchWidth: true },
+  });
+};
+
 const close = () => {
+  overlay.close("typeGroupPick");
   overlay.close("fontPicker");
   overlay.close("settings");
 };
@@ -63,7 +78,7 @@ const close = () => {
 watch(open, async (value) => {
   if (!value) return;
   await nextTick();
-  byId(UI_IDS.typeFontTrigger)?.focus();
+  byId(UI_IDS.typeGroupTrigger)?.focus();
 });
 
 watch(target, () => {
@@ -133,7 +148,20 @@ onMounted(() => {
 
       <section class="settings-section">
         <p class="settings-caption">{{ t("fontTypes") }}</p>
-        <TypeGroupList />
+        <p class="sub-label type-group-title">{{ t("pref.groupTitle") }}</p>
+        <button
+          :id="UI_IDS.typeGroupTrigger"
+          class="btn select settings-select type-group-pick"
+          type="button"
+          aria-haspopup="listbox"
+          aria-controls="typeGroupPick"
+          :aria-expanded="groupPickOpen"
+          @click="toggleGroupPick"
+        >
+          <span class="ft-name">{{ t(group.label) }}</span>
+          <AppIcon name="chevron" class="caret" />
+        </button>
+        <TypeGroupList :target="target" />
         <TypeParamPanel :target="target" />
       </section>
 
@@ -151,5 +179,6 @@ onMounted(() => {
     </footer>
   </aside>
 
+  <TypeGroupPick :group-id="group.id" />
   <FontPicker />
 </template>

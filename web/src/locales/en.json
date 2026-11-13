@@ -1370,6 +1370,8 @@
   "pref.capsUpper": "Uppercase",
   "pref.capsSmall": "Small caps",
   "pref.mixGroup": "Group",
+  "pref.followShort": "Follow",
+  "pref.groupTitle": "Group",
   "pref.summaryItalic": "italic",
   "pref.summaryCapsUpper": "upper",
   "pref.summaryCapsSmall": "smcp",

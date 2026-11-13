@@ -11,5 +11,6 @@ export type OverlayKey =
   | "help"
   | "changelog"
   | "settings"
+  | "typeGroupPick"
   | "fontPicker"
   | "lookup";

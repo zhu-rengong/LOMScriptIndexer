@@ -25,6 +25,7 @@ export const UI_IDS = {
   settingsDrawer: "settingsDrawer",
   showPortraits: "showPortraits",
   portraitSize: "portraitSize",
+  typeGroupTrigger: "typeGroupTrigger",
   typeFontTrigger: "typeFontTrigger",
   typeFontCustom: "typeFontCustom",
   fontPickerList: "fontPickerList",

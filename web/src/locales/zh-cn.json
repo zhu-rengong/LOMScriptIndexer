@@ -1370,6 +1370,8 @@
   "pref.capsUpper": "全大写",
   "pref.capsSmall": "小型大写",
   "pref.mixGroup": "随组",
+  "pref.followShort": "跟随",
+  "pref.groupTitle": "大类",
   "pref.summaryItalic": "斜",
   "pref.summaryCapsUpper": "大写",
   "pref.summaryCapsSmall": "小型",
