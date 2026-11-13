@@ -1250,6 +1250,8 @@
   "metaGainCount": "获得{label}×{count}",
   "option.cond": "掷骰 {op}{value}",
   "option.need": "{label} {op} {value}",
+  "optionNeedLabel": "需求",
+  "optionCondLabel": "条件",
   "need.action": "行动次数",
   "need.contribution": "贡献度",
   "nameWithTitle": "{name}（{title}）",

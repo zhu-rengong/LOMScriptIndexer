@@ -1250,6 +1250,8 @@
   "metaGainCount": "Gained {label}×{count}",
   "option.cond": "Roll {op} {value}",
   "option.need": "{label} {op} {value}",
+  "optionNeedLabel": "Requirement",
+  "optionCondLabel": "Condition",
   "need.action": "Actions",
   "need.contribution": "Contribution",
   "nameWithTitle": "{name} ({title})",

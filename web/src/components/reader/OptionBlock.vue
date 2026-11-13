@@ -93,24 +93,32 @@ watch(() => props.option.condition, resolveCondition, { immediate: true });
         <span v-if="option.lockedText" class="option-lock">
           <AppIcon name="lock" class="lock-icon" />{{ option.lockedText }}
         </span>
-        <span v-if="requirement || detailRequirements" class="option-badges">
-          <span v-if="requirement" class="option-cond">{{ requirement }}</span>
-          <span v-if="detailRequirements" class="option-cond">{{ detailRequirements }}</span>
-        </span>
-        <span v-if="expr" class="option-cond-row">
-          <span class="option-cond" :title="hint || undefined" @click.stop>
-            <CondExpr :expr="expr" :method="check?.kind" />
-          </span>
-          <button
-            v-if="check"
-            class="cond-lookup btn btn-icon"
-            type="button"
-            :title="t('condLookup')"
-            :aria-label="t('condLookup')"
-            @click="openCheck"
-          >
-            <AppIcon name="search" />
-          </button>
+        <span v-if="requirement || detailRequirements || expr" class="option-conds">
+          <template v-if="requirement || detailRequirements">
+            <span class="option-cond-label">{{ t("optionNeedLabel") }}</span>
+            <span class="option-cond-stack">
+              <span v-if="requirement" class="option-cond">{{ requirement }}</span>
+              <span v-if="detailRequirements" class="option-cond">{{ detailRequirements }}</span>
+            </span>
+          </template>
+          <template v-if="expr">
+            <span class="option-cond-label">{{ t("optionCondLabel") }}</span>
+            <span class="option-cond-row">
+              <span class="option-cond" :title="hint || undefined" @click.stop>
+                <CondExpr :expr="expr" :method="check?.kind" />
+              </span>
+              <button
+                v-if="check"
+                class="cond-lookup btn btn-icon"
+                type="button"
+                :title="t('condLookup')"
+                :aria-label="t('condLookup')"
+                @click="openCheck"
+              >
+                <AppIcon name="search" />
+              </button>
+            </span>
+          </template>
         </span>
       </span>
     </div>
