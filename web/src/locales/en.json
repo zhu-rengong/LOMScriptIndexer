@@ -8,7 +8,7 @@
   "moreLang": "Language",
   "langBtnTitle": "Language",
   "githubBtnTitle": "Open the GitHub repository (new tab)",
-  "workbuddyBtnTitle": "Open the WorkBuddy web app (new tab)\nIts data may lag behind GitHub Pages",
+  "workbuddyBtnTitle": "Open the WorkBuddy website app (new tab)\nFaster access channel inside mainland China; data may lag behind GitHub Pages",
   "changelogBtnTitle": "Changelog (recent changes)",
   "langPickerNote": "Only the interface changes; script text always comes from the traditional Chinese data pack, and the simplified text is derived from it.",
   "condLookup": "Show related scripts",
