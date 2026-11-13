@@ -105,7 +105,7 @@ const toggle = (key: OverlayKey) => {
     <a
       id="workbuddyBtn"
       class="btn btn-icon"
-      href="https://mortal-script-search.app.workbuddy.host/?sharecode=IG6TJRF5BJ"
+      href="https://wbapp-xx74txuyeotgchq6dlrweb.app.workbuddy.host/?sharecode=BZQLRCGPP5"
       target="_blank"
       rel="noopener noreferrer"
       aria-label="WorkBuddy"
