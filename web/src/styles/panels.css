@@ -1160,6 +1160,10 @@
     letter-spacing: 0.04em;
   }
 
+  .mission-label.is-cancel {
+    color: var(--warn);
+  }
+
   .mission-value {
     margin: 0;
     min-width: 0;

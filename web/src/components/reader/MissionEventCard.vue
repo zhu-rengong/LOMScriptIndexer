@@ -34,7 +34,7 @@ const rows = computed(() =>
           </span>
           <span class="mission-value">{{ row.event.name }}</span>
         </div>
-        <MissionStateBody v-if="row.state" :state="row.state" />
+        <MissionStateBody v-if="row.state" :state="row.state" :show-tags="false" />
       </div>
     </div>
   </div>

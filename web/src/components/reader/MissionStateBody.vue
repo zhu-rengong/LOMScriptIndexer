@@ -12,7 +12,7 @@ import type {
 } from "../../types/missions";
 import CondExpr from "./CondExpr.vue";
 
-const props = defineProps<{ state: MissionState }>();
+const props = defineProps<{ state: MissionState; showTags?: boolean }>();
 
 const store = useScriptStore();
 const panels = usePanelsStore();
@@ -75,7 +75,7 @@ const go = (id: string) => {
 
 <template>
   <div class="mission-body">
-    <div v-if="!state.active || state.beforeMain" class="mission-tags">
+    <div v-if="showTags !== false && (!state.active || state.beforeMain)" class="mission-tags">
       <span v-if="!state.active" class="mission-tag is-warn">{{ t("missionPanelInactive") }}</span>
       <span v-if="state.beforeMain" class="mission-tag">{{ t("missionPanelBeforeMain") }}</span>
     </div>
