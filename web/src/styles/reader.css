@@ -1090,22 +1090,22 @@
 
   .battle-campaign,
   .battle-static,
-  .mission-trigger {
+  .mission-event {
     padding: 6px var(--sp-3) var(--sp-2);
     border: 3px double var(--line-2);
     border-radius: var(--r-sm);
     background: var(--surface);
   }
 
-  .mission-trigger {
+  .mission-event {
     margin: var(--rd-gap-3) 0 var(--rd-gap-4);
   }
 
-  .mission-trigger.is-cancel {
+  .mission-event.is-cancel {
     border-color: var(--warn);
   }
 
-  .mission-trigger.is-cancel .cx-type {
+  .mission-event.is-cancel .cx-type {
     color: var(--warn);
   }
 
@@ -1121,7 +1121,7 @@
   }
 
   .battle-static .battle-head,
-  .mission-trigger .battle-head {
+  .mission-event .battle-head {
     min-height: var(--ctl-sm);
   }
 

@@ -6,7 +6,7 @@ import { names } from "../data/names";
 import { t } from "../i18n";
 import { pinia } from "../stores";
 import { useViewStore } from "../stores/view";
-import type { CheckRef, MetaSeal, MissionTriggerView } from "../types/beats";
+import type { CheckRef, MetaSeal, MissionEventView } from "../types/beats";
 import type { CheckpointModel, ConditionNode, PositionCandidate } from "../types/condition";
 import { signedNumber } from "./browser";
 
@@ -516,9 +516,23 @@ const missionTriggerText = (key: string, value: number | null): string => {
   return name ? t("metaMissionUntriggerName", { name }) : t("metaMissionUntrigger");
 };
 
-export const missionTriggerView = (key: string, value: number | null): MissionTriggerView => {
-  const missionId = key && key !== "0" ? key : "";
-  return { active: value === 1, key: missionId, name: missionName(missionId) };
+export const missionEventView = (
+  kind: string,
+  key: string,
+  value: number | null,
+  extra: string,
+): MissionEventView => {
+  if (kind === "missionTrigger") {
+    const missionId = key && key !== "0" ? key : "";
+    return {
+      type: value === 1 ? "trigger" : "cancel",
+      code: missionId,
+      name: missionName(missionId),
+    };
+  }
+  const missionId = missions.missionIdOf(key, extra);
+  if (key === "clear") return { type: "end", code: missionId, name: missionName(missionId) };
+  return { type: "trigger", code: key, name: stateNoteOf(key) || missionName(missionId) };
 };
 
 export const metaText = (kind: string, key: string, value: number | null, extra = ""): string => {
