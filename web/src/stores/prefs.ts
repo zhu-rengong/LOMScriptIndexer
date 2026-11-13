@@ -22,7 +22,7 @@ import type {
 
 const KEY = keys.prefs;
 
-const PREFS_VERSION = 7;
+const PREFS_VERSION = 8;
 
 type StoredPrefs = PrefState & { version: number };
 

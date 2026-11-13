@@ -771,7 +771,9 @@
     gap: var(--sp-2);
   }
 
-  .preview-specimen .dtext {
+  .preview-specimen .dtext,
+  .preview-specimen .lookup-item .li-text,
+  .preview-specimen .nav-item .nav-label {
     white-space: normal;
   }
 

@@ -48,19 +48,40 @@
     font-variant-numeric: var(--rd-fn-think, normal);
   }
 
-  .lore-text .lore-p,
-  .drop-item .dtext,
-  .lookup-item .li-text,
-  .nav-item .nav-label {
-    font-family: var(--rd-ff-excerpt, var(--font-base));
-    font-size: calc(var(--rd-fs-excerpt, 16px) * var(--ts-excerpt, 1));
-    font-weight: var(--rd-fw-excerpt, 400);
-    line-height: calc(var(--rd-lh-excerpt, 1.6) * var(--tlh-excerpt, 1));
-    letter-spacing: calc(var(--rd-ls-excerpt, 0em) + var(--tls-excerpt, 0em));
-    font-style: var(--rd-fi-excerpt, normal);
-    text-transform: var(--rd-tt-excerpt, none);
-    font-variant-caps: var(--rd-fc-excerpt, normal);
-    font-variant-numeric: var(--rd-fn-excerpt, normal);
+  .lore-text .lore-p {
+    font-family: var(--rd-ff-lore, var(--font-base));
+    font-size: calc(var(--rd-fs-lore, 16px) * var(--ts-lore, 1));
+    font-weight: var(--rd-fw-lore, 400);
+    line-height: calc(var(--rd-lh-lore, 1.6) * var(--tlh-lore, 1));
+    letter-spacing: calc(var(--rd-ls-lore, 0em) + var(--tls-lore, 0em));
+    font-style: var(--rd-fi-lore, normal);
+    text-transform: var(--rd-tt-lore, none);
+    font-variant-caps: var(--rd-fc-lore, normal);
+    font-variant-numeric: var(--rd-fn-lore, normal);
+  }
+
+  .drop-item .dtext {
+    font-family: var(--rd-ff-search-snippet, var(--font-base));
+    font-size: calc(var(--rd-fs-search-snippet, 16px) * var(--ts-search-snippet, 1));
+    font-weight: var(--rd-fw-search-snippet, 400);
+    line-height: calc(var(--rd-lh-search-snippet, 1.6) * var(--tlh-search-snippet, 1));
+    letter-spacing: calc(var(--rd-ls-search-snippet, 0em) + var(--tls-search-snippet, 0em));
+    font-style: var(--rd-fi-search-snippet, normal);
+    text-transform: var(--rd-tt-search-snippet, none);
+    font-variant-caps: var(--rd-fc-search-snippet, normal);
+    font-variant-numeric: var(--rd-fn-search-snippet, normal);
+  }
+
+  .lookup-item .li-text {
+    font-family: var(--rd-ff-lookup-snippet, var(--font-base));
+    font-size: calc(var(--rd-fs-lookup-snippet, 16px) * var(--ts-lookup-snippet, 1));
+    font-weight: var(--rd-fw-lookup-snippet, 400);
+    line-height: calc(var(--rd-lh-lookup-snippet, 1.6) * var(--tlh-lookup-snippet, 1));
+    letter-spacing: calc(var(--rd-ls-lookup-snippet, 0em) + var(--tls-lookup-snippet, 0em));
+    font-style: var(--rd-fi-lookup-snippet, normal);
+    text-transform: var(--rd-tt-lookup-snippet, none);
+    font-variant-caps: var(--rd-fc-lookup-snippet, normal);
+    font-variant-numeric: var(--rd-fn-lookup-snippet, normal);
   }
 
   .ending-label,
@@ -315,6 +336,18 @@
     text-transform: var(--rd-tt-figure, none);
     font-variant-caps: var(--rd-fc-figure, normal);
     font-variant-numeric: var(--rd-fn-figure, normal);
+  }
+
+  .nav-item .nav-label {
+    font-family: var(--rd-ff-menu-title, var(--font-base));
+    font-size: calc(var(--rd-fs-menu-title, 16px) * var(--ts-menu-title, 1));
+    font-weight: var(--rd-fw-menu-title, 400);
+    line-height: calc(var(--rd-lh-menu-title, 1.6) * var(--tlh-menu-title, 1));
+    letter-spacing: calc(var(--rd-ls-menu-title, 0em) + var(--tls-menu-title, 0em));
+    font-style: var(--rd-fi-menu-title, normal);
+    text-transform: var(--rd-tt-menu-title, none);
+    font-variant-caps: var(--rd-fc-menu-title, normal);
+    font-variant-numeric: var(--rd-fn-menu-title, normal);
   }
 
   .menu-head,
