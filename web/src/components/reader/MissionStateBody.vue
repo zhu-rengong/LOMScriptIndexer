@@ -12,7 +12,11 @@ import type {
 } from "../../types/missions";
 import CondExpr from "./CondExpr.vue";
 
-const props = defineProps<{ state: MissionState; showTags?: boolean }>();
+const props = defineProps<{
+  state: MissionState;
+  showTags?: boolean;
+  lead?: { label: string; value: string; cancel?: boolean; title?: string } | null;
+}>();
 
 const store = useScriptStore();
 const panels = usePanelsStore();
@@ -81,6 +85,11 @@ const go = (id: string) => {
     </div>
 
     <dl class="mission-rows">
+      <div v-if="lead" class="mission-row" :title="lead.title || undefined">
+        <dt class="mission-label" :class="{ 'is-cancel': lead.cancel }">{{ lead.label }}</dt>
+        <dd class="mission-value">{{ lead.value }}</dd>
+      </div>
+
       <div class="mission-row">
         <dt class="mission-label">{{ t("missionPanelStart") }}</dt>
         <dd class="mission-value">
