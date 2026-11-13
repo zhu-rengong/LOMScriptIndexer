@@ -225,7 +225,7 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
       </header>
 
       <div class="filter-row">
-        <div class="filter-input-wrap">
+        <div class="filter-input-wrap" :class="{ 'is-error': !!store.filterError }">
           <input
             id="filterExpr"
             ref="exprInput"
@@ -238,7 +238,6 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
             aria-autocomplete="list"
             :aria-expanded="isSuggestOpen"
             :aria-controls="SUGGEST_KEY"
-            :class="{ 'is-error': !!store.filterError }"
             :placeholder="t('filterPlaceholder')"
             :aria-label="t('filterPlaceholder')"
             @input="onExpressionInput"

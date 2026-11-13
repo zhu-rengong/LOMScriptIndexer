@@ -74,6 +74,20 @@
     position: relative;
     flex: 1;
     min-width: 0;
+    border-bottom: 1px solid var(--line-1);
+    transition: border-color var(--t-fast) var(--ease);
+  }
+
+  .filter-input-wrap:hover {
+    border-bottom-color: var(--line-2);
+  }
+
+  .filter-input-wrap:focus-within {
+    border-bottom-color: var(--accent);
+  }
+
+  .filter-input-wrap.is-error {
+    border-bottom-color: var(--danger);
   }
 
   .filter-expr {
@@ -81,7 +95,6 @@
     height: var(--ctl-lg);
     padding: 0;
     border: 0;
-    border-bottom: 1px solid var(--line-1);
     border-radius: 0;
     background: transparent;
     color: var(--ink);
@@ -90,20 +103,10 @@
     font-weight: var(--rd-fw-code, 400);
   }
 
-  .filter-expr:hover {
-    border: 0;
-    border-bottom-color: var(--line-2);
-    background: transparent;
-  }
-
+  .filter-expr:hover,
   .filter-expr:focus {
     border: 0;
-    border-bottom-color: var(--accent);
     background: transparent;
-  }
-
-  .filter-expr.is-error {
-    border-bottom-color: var(--danger);
   }
 
   .filter-suggest {
