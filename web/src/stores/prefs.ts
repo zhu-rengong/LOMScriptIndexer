@@ -22,6 +22,10 @@ import type {
 
 const KEY = keys.prefs;
 
+const PREFS_VERSION = 7;
+
+type StoredPrefs = PrefState & { version: number };
+
 const BASE_SIZE = 16;
 const BASE_LEADING = 1.6;
 const BASE_WEIGHT = 400;
@@ -285,6 +289,7 @@ export const usePrefsStore = defineStore("prefs", () => {
 
   const persist = (): void => {
     writeJson(KEY, {
+      version: PREFS_VERSION,
       groups: groups.value,
       slots: slots.value,
       measure: measure.value,
@@ -324,9 +329,13 @@ export const usePrefsStore = defineStore("prefs", () => {
 
   const restoreFromStorage = (): void => {
     resetDefaults();
-    const saved = readJson<Partial<PrefState>>(KEY);
-    const source = saved && typeof saved === "object" ? saved : null;
-    if (!source) return;
+    const saved = readJson<StoredPrefs>(KEY);
+    if (!saved || typeof saved !== "object") return;
+    if (saved.version !== PREFS_VERSION) {
+      persist();
+      return;
+    }
+    const source = saved;
     measure.value = Math.round(
       clampNumber(source.measure, MEASURE_MIN, MEASURE_MAX, MEASURE_DEFAULT),
     );
