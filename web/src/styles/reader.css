@@ -325,6 +325,17 @@
     color: var(--ink-2);
   }
 
+  .option-cond-row {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--sp-2);
+  }
+
+  .option-cond-row .option-cond {
+    flex: 1;
+    min-width: 0;
+  }
+
   .option-lock {
     display: inline-flex;
     align-items: center;
@@ -496,6 +507,7 @@
   }
 
   .branch-head:hover .cond-lookup,
+  .option-head:hover .cond-lookup,
   .cond-lookup:focus-visible {
     opacity: 1;
   }
