@@ -194,7 +194,8 @@
 
   .choice,
   .jump-group,
-  .battle {
+  .battle,
+  .mission-event {
     position: relative;
     isolation: isolate;
     margin: var(--rd-gap-3) 0 var(--rd-gap-4);
@@ -205,7 +206,8 @@
   .branch-group::before,
   .jump-group::before,
   .battle::before,
-  .battle-event::before {
+  .battle-event::before,
+  .mission-event::before {
     content: "";
     position: absolute;
     left: 3px;
@@ -221,7 +223,8 @@
   .branch-group::after,
   .jump-group::after,
   .battle::after,
-  .battle-event::after {
+  .battle-event::after,
+  .mission-event::after {
     content: "";
     position: absolute;
     left: 1px;
@@ -254,11 +257,13 @@
   .jump-group::before,
   .battle::before,
   .battle-event::before,
+  .mission-event::before,
   .choice::after,
   .branch-group::after,
   .jump-group::after,
   .battle::after,
-  .battle-event::after {
+  .battle-event::after,
+  .mission-event::after {
     color: var(--line-2);
     transition: color var(--t-fast) var(--ease);
   }
@@ -268,11 +273,13 @@
   .jump-group:hover::before,
   .battle:hover::before,
   .battle-event:hover::before,
+  .mission-event:hover::before,
   .choice:hover::after,
   .branch-group:hover::after,
   .jump-group:hover::after,
   .battle:hover::after,
-  .battle-event:hover::after {
+  .battle-event:hover::after,
+  .mission-event:hover::after {
     color: var(--accent);
   }
 
@@ -1088,59 +1095,42 @@
     margin-top: var(--rd-gap-2);
   }
 
-  .battle-campaign,
-  .battle-static,
-  .mission-event {
-    padding: 6px var(--sp-3) var(--sp-2);
-    border: 3px double var(--line-2);
+  .battle-campaign .battle-head,
+  .battle-static .battle-head,
+  .mission-event .battle-head {
+    min-height: var(--ctl-sm);
+    border: 1px solid var(--line-1);
     border-radius: var(--r-sm);
-    background: var(--surface);
-  }
-
-  .mission-event {
-    margin: var(--rd-gap-3) 0 var(--rd-gap-4);
-  }
-
-  .mission-event.is-cancel {
-    border-color: var(--warn);
+    background: var(--surface-inset);
   }
 
   .mission-event .cx-type.is-cancel {
     color: var(--warn);
   }
 
-  .battle-campaign::before,
-  .battle-campaign::after,
-  .battle-static::before,
-  .battle-static::after {
-    display: none;
+  .mission-event.is-cancel::before,
+  .mission-event.is-cancel::after {
+    color: var(--warn);
   }
 
-  .battle-campaign .battle-head {
-    padding: 0 0 var(--sp-1);
-  }
-
-  .battle-static .battle-head,
-  .mission-event .battle-head {
-    min-height: var(--ctl-sm);
+  .mission-event.is-cancel .battle-head {
+    border-color: var(--warn);
   }
 
   .mission-event-item + .mission-event-item {
-    margin-top: var(--rd-gap-2);
-    padding-top: var(--rd-gap-2);
-    border-top: 1px solid var(--line-1);
+    margin-top: var(--sp-1);
   }
 
   .mission-event .mission-body {
     margin-top: var(--rd-gap-2);
-    padding-top: var(--rd-gap-2);
-    border-top: 1px solid var(--line-1);
+    padding: 0 var(--sp-2);
   }
 
   .battle-campaign-rows {
     display: grid;
     justify-items: start;
     gap: 2px;
+    margin-top: var(--rd-gap-2);
   }
 
   .battle-campaign-rows .cx-var {
