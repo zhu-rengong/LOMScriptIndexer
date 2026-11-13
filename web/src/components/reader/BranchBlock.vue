@@ -138,8 +138,8 @@ watch(checkSignature, resolveCondition, { immediate: true });
       <span
         v-if="isEmpty"
         class="branch-empty"
-        :title="t('previewEmpty')"
-        :aria-label="t('previewEmpty')"
+        :title="t('branchEmptyNote')"
+        :aria-label="t('branchEmptyNote')"
       >
         {{ t("branchEmpty") }}
       </span>
