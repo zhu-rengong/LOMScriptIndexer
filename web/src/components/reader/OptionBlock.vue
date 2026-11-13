@@ -39,6 +39,8 @@ const check = computed<CheckRef | null>(() => {
 
 const expr = ref<ConditionNode | null>(null);
 
+const showLabel = ref(false);
+
 const hint = computed(() => condHint(expr.value));
 
 const blocks = computed(() => buildReaderBlocks(props.option.beats));
@@ -58,18 +60,23 @@ let resolveSeq = 0;
 
 const resolveCondition = () => {
   const seq = ++resolveSeq;
-  expr.value = props.option.condition;
+  const node = props.option.condition;
+  expr.value = node;
+  showLabel.value = !!node && node.tag !== "check";
   const checkRef = check.value;
   if (!checkRef) return;
-  const expanded = checkpointExpr(checkRef);
-  if (expanded) {
-    expr.value = expanded;
+  const resolved = checkpointExpr(checkRef);
+  if (resolved) {
+    expr.value = resolved;
+    showLabel.value = true;
     return;
   }
   void checkpoints.ensure(checkRef.key).then(() => {
     if (seq !== resolveSeq) return;
     const loaded = checkpointExpr(checkRef);
-    if (loaded) expr.value = loaded;
+    if (!loaded) return;
+    expr.value = loaded;
+    showLabel.value = true;
   });
 };
 
@@ -102,10 +109,11 @@ watch(() => props.option.condition, resolveCondition, { immediate: true });
             </span>
           </template>
           <template v-if="expr">
-            <span class="option-cond-label">{{ t("optionCondLabel") }}</span>
+            <span class="option-cond-label">{{ showLabel ? t("optionCondLabel") : "" }}</span>
             <span class="option-cond-row">
               <span class="option-cond" :title="hint || undefined" @click.stop>
-                <CondExpr :expr="expr" :method="check?.kind" />
+                <CondExpr v-if="showLabel" :expr="expr" :method="check?.kind" />
+                <span v-else class="cx-var"><span class="cx-name">{{ check?.key }}</span></span>
               </span>
               <button
                 v-if="check"
