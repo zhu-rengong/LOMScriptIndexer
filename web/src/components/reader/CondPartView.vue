@@ -34,6 +34,7 @@ const onLookup = (event: Event) => {
     :title="part.title"
     :aria-label="part.title"
   >
+    <AppIcon v-if="part.icon" :name="part.icon" />
     <span v-if="part.seal" class="infer-seal" :class="`is-${part.seal}`" aria-hidden="true">
       <AppIcon :name="part.seal === 'true' ? 'check' : 'close'" />
     </span>
@@ -57,6 +58,7 @@ const onLookup = (event: Event) => {
     @keydown.enter.prevent="onLookup"
     @keydown.space.prevent="onLookup"
   >
+    <AppIcon v-if="part.icon" :name="part.icon" />
     <span v-if="part.seal" class="infer-seal" :class="`is-${part.seal}`" aria-hidden="true">
       <AppIcon :name="part.seal === 'true' ? 'check' : 'close'" />
     </span>

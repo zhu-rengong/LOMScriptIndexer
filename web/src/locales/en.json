@@ -1069,6 +1069,7 @@
   "lookupHint": "Esc to close",
   "timeStages": "early,mid,late",
   "timeFull": "{s} of month {m}, year {y}",
+  "timeNow": "Current time",
   "errorTitle": "Failed to load data",
   "errorMissing": "data/graph.js is missing. Run build.py to generate the data first.",
   "errorReload": "Reload",

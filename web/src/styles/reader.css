@@ -577,6 +577,17 @@
     font-size: 0.82em;
   }
 
+  .cx-icon {
+    display: inline-flex;
+    align-self: center;
+    color: var(--ink-2);
+  }
+
+  .cx-icon svg {
+    width: 1em;
+    height: 1em;
+  }
+
   .cx-id {
     color: var(--ink-2);
     font-size: 0.82em;
@@ -827,20 +838,15 @@
     user-select: none;
   }
 
-  .time-mark .time-label {
-    color: var(--ink-2);
-    --tls-label: -0.02em;
-  }
-
   .time-mark .time-value {
     color: var(--ink);
   }
 
-  .time-mark .time-arrow {
+  .time-mark .time-icon {
     align-self: center;
     width: 1em;
     height: 1em;
-    color: var(--accent);
+    color: var(--ink-2);
   }
 
   .battle-head {

@@ -134,11 +134,10 @@ const dateOf = (rounds: number): { year: number; month: number; period: number }
 
 const stageNames = (): string[] => String(t("timeStages")).split(",");
 
+export const timeDateText = (year: number, month: number, period: number): string =>
+  t("timeFull", { y: year, m: month, s: stageNames()[period - 1] || "" });
+
 export const timeText = (rounds: number): string => {
   const date = dateOf(rounds);
-  return t("timeFull", {
-    y: date.year,
-    m: date.month,
-    s: stageNames()[date.period - 1] || "",
-  });
+  return timeDateText(date.year, date.month, date.period);
 };

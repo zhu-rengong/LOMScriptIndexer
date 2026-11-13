@@ -1069,6 +1069,7 @@
   "lookupHint": "Esc 關閉",
   "timeStages": "上,中,下",
   "timeFull": "{y}年{m}月{s}旬",
+  "timeNow": "目前時間",
   "errorTitle": "資料載入失敗",
   "errorMissing": "找不到 data/graph.js，請先執行 build.py 產生資料。",
   "errorReload": "重新載入",
