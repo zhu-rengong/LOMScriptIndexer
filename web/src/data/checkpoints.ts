@@ -6,6 +6,18 @@ import { fetchJson } from "./load";
 const models: Record<string, CheckpointModel> = {};
 const pendingLoads = new Map<number, Promise<boolean>>();
 
+const normalize = (model: CheckpointModel): CheckpointModel => {
+  const next: CheckpointModel = { ...model };
+  if (model.candidates) {
+    next.candidates = model.candidates.map((candidate) => ({
+      ...candidate,
+      active: candidate.active !== false,
+    }));
+  }
+  if (model.variants) next.variants = model.variants.map(normalize);
+  return next;
+};
+
 const loadShard = (index: number): Promise<boolean> => {
   if (index < 0) return Promise.resolve(false);
   const pending = pendingLoads.get(index);
@@ -13,7 +25,7 @@ const loadShard = (index: number): Promise<boolean> => {
   const job = fetchJson<CheckpointDocument>(dataset.assetUrl("checkpoints", { index }))
     .then((document) => {
       for (const [key, model] of Object.entries(document.items ?? {})) {
-        models[key] = model as CheckpointModel;
+        models[key] = normalize(model as CheckpointModel);
       }
       return true;
     })
