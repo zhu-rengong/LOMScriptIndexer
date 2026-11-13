@@ -31,6 +31,8 @@ const navOpen = computed(() => overlay.isOpen("navMenu"));
 
 const inferOn = computed(() => view.inferEnabled);
 
+const condInferOn = computed(() => view.condInferEnabled);
+
 const revealOn = computed(() => view.revealOn);
 
 const chapterTitleText = computed(() =>
@@ -97,6 +99,20 @@ const toggleBookmark = () => {
           </span>
           <DisplayFilterMenu />
           <FoldToggle />
+          <span class="tip-host" :title="t('condInferBtnTitle')">
+            <button
+              id="condInferBtn"
+              class="btn btn-icon btn-sm"
+              :class="{ 'is-on': condInferOn }"
+              type="button"
+              :aria-pressed="condInferOn"
+              :title="t('condInferBtnTitle')"
+              :aria-label="t('condInferBtnTitle')"
+              @click="view.toggleCondInfer"
+            >
+              <span class="infer-toggle-mark" aria-hidden="true">析</span>
+            </button>
+          </span>
           <span class="tip-host" :title="t('inferBtnTitle')">
             <button
               id="inferBtn"

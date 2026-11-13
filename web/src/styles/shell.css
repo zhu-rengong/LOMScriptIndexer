@@ -912,7 +912,7 @@
     color: var(--accent);
   }
 
-  #inferBtn .infer-toggle-mark {
+  .reader-actions .infer-toggle-mark {
     display: inline-grid;
     place-items: center;
     flex: none;
@@ -929,7 +929,7 @@
       background-color var(--t-fast) var(--ease);
   }
 
-  #inferBtn[aria-pressed="true"] .infer-toggle-mark {
+  .reader-actions .btn[aria-pressed="true"] .infer-toggle-mark {
     background: var(--ink-2);
     color: var(--surface);
   }

@@ -10,6 +10,7 @@ from ..vocab import (
     COND_LOGIC,
     COND_VAR,
     VALUE_BOOK,
+    VALUE_BOOK_LEVEL,
     VALUE_CHRONICLE,
     VALUE_FLAG,
     VALUE_MISC,
@@ -22,6 +23,7 @@ from ..vocab import (
 _SEGMENT_SPLIT = re.compile(r"[^0-9A-Za-z]+")
 _TOKEN_SPLIT = re.compile(r"[A-Z]+(?![a-z])|[A-Z][a-z]+|[a-z]+|[0-9]+")
 _KEY_HEAD = re.compile(r"[A-Za-z0-9]+")
+_DIGIT_HEAD = re.compile(r"^[A-Za-z]+(\d+)")
 
 CHECK_NAMESPACE = "DiceHeader"
 PLAYER_INFO_NAMESPACE = "PlayerInfo"
@@ -42,6 +44,7 @@ class NameSpec:
     prefix: str = ""
     key_prefix: str = ""
     use_segments: bool = False
+    asset_digits: bool = False
 
 
 NAME_SPECS: dict[str, NameSpec] = {
@@ -49,6 +52,8 @@ NAME_SPECS: dict[str, NameSpec] = {
     VALUE_REL: NameSpec("Character", key_prefix="Relationship_", use_segments=True),
     VALUE_FLAG: NameSpec("Flag", prefix="Name/"),
     VALUE_BOOK: NameSpec("Book", prefix="Name/", use_segments=True),
+    VALUE_BOOK_LEVEL: NameSpec("Book", prefix="Name/", use_segments=True,
+                               asset_digits=True),
     VALUE_MISC: NameSpec("Misc", prefix="Name/", use_segments=True),
     VALUE_SPECIAL: NameSpec("Special", prefix="Name/", use_segments=True),
     VALUE_TALENT: NameSpec("PlayerTalent", prefix="Name/", use_segments=True),
@@ -93,6 +98,10 @@ def _candidate_keys(spec: NameSpec, asset_name: str, unity_id: str,
         segments = _segments(asset_name)
         for index in range(len(segments)):
             add(spec.prefix + "-".join(segments[index:]))
+    if spec.asset_digits and asset_name:
+        head = _DIGIT_HEAD.match(asset_name)
+        if head:
+            add(spec.prefix + head.group(1))
     return keys
 
 

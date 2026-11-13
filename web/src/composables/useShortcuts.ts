@@ -6,6 +6,7 @@ export type ShortcutHandlers = {
   help: () => void;
   search: () => void;
   infer: () => void;
+  condInfer: () => void;
   reveal: () => void;
 };
 
@@ -44,6 +45,11 @@ export const useShortcuts = (handlers: ShortcutHandlers): void => {
     if (String(event.key || "").toLowerCase() === "b") {
       event.preventDefault();
       handlers.bookmark();
+      return;
+    }
+    if (String(event.key || "").toLowerCase() === "c") {
+      event.preventDefault();
+      handlers.condInfer();
       return;
     }
     if (String(event.key || "").toLowerCase() === "f") {

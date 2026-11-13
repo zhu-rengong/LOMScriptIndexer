@@ -5,6 +5,7 @@ export const keys = {
   prefs: `${NAMESPACE}.prefs.v4`,
   bookmarks: `${NAMESPACE}.bookmarks.v1`,
   infer: `${NAMESPACE}.infer.v1`,
+  condInfer: `${NAMESPACE}.condInfer.v1`,
 };
 
 export const readRaw = (key: string): string | null => {

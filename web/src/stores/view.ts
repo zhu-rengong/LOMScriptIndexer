@@ -18,6 +18,8 @@ const CHAPTER_RAIL = "chapterRail";
 
 const storedInfer = readJson<boolean>(keys.infer);
 
+const storedCondInfer = readJson<boolean>(keys.condInfer);
+
 export const useViewStore = defineStore("view", () => {
   const layout = ref("wide");
   const railTab = ref("outline");
@@ -25,6 +27,7 @@ export const useViewStore = defineStore("view", () => {
   const fontTarget = ref<FontTarget>({ scope: "slot", id: "dialog" });
   const railOpen = ref(false);
   const inferEnabled = ref(storedInfer === null ? true : storedInfer === true);
+  const condInferEnabled = ref(storedCondInfer === null ? true : storedCondInfer === true);
   const revealOn = ref(false);
   const visibleKinds = ref<ReaderVisibility>({
     dialog: true,
@@ -90,6 +93,11 @@ export const useViewStore = defineStore("view", () => {
     writeJson(keys.infer, inferEnabled.value);
   };
 
+  const toggleCondInfer = (): void => {
+    condInferEnabled.value = !condInferEnabled.value;
+    writeJson(keys.condInfer, condInferEnabled.value);
+  };
+
   const toggleKind = (kind: ReaderVisibleKind): void => {
     visibleKinds.value = { ...visibleKinds.value, [kind]: !visibleKinds.value[kind] };
   };
@@ -123,6 +131,7 @@ export const useViewStore = defineStore("view", () => {
     fontTarget,
     railOpen,
     inferEnabled,
+    condInferEnabled,
     revealOn,
     visibleKinds,
     filtering,
@@ -136,6 +145,7 @@ export const useViewStore = defineStore("view", () => {
     closeRail,
     toggleRail,
     toggleInfer,
+    toggleCondInfer,
     toggleKind,
     toggleReveal,
     switchLang,
