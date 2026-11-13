@@ -2,7 +2,6 @@
 import { t } from "../../i18n";
 import type { BattleView } from "../../types/beats";
 import { usePanelsStore } from "../../stores/panels";
-import AppIcon from "../ui/AppIcon.vue";
 import JumpLink from "./JumpLink.vue";
 
 const panels = usePanelsStore();
@@ -121,9 +120,7 @@ const facts = computed(() =>
 
       <div v-else-if="battle.nextScene" class="mission-row">
         <dt class="mission-label">{{ t("battleAfter") }}</dt>
-        <dd class="mission-value">
-          <AppIcon name="arrow-right" class="battle-next-arrow" />{{ battle.nextScene }}
-        </dd>
+        <dd class="mission-value">{{ battle.nextScene }}</dd>
       </div>
     </template>
   </component>

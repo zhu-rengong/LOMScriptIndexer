@@ -1124,31 +1124,21 @@
     padding: 0;
     border: 0;
     background: none;
-    color: inherit;
-    font: inherit;
+    color: var(--accent-strong);
+    font-family: var(--rd-ff-code, var(--font-base));
     line-height: inherit;
     gap: 4px;
   }
 
-  .battle-rows .jump:hover,
-  .battle-rows .jump:focus-visible {
+  .battle-rows button.jump:hover,
+  .battle-rows button.jump:focus-visible {
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 2px;
   }
 
   .battle-rows .jump .arrow {
-    width: 1em;
-    height: 1em;
-    color: var(--accent);
-  }
-
-  .battle-next-arrow {
-    width: 1em;
-    height: 1em;
-    margin-right: 4px;
-    color: var(--accent);
-    vertical-align: -0.12em;
+    display: none;
   }
 
   .battle-link {

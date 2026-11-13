@@ -679,7 +679,7 @@ export const detailRequirementsText = (detail: Record<string, unknown> | null): 
         value: row.value === undefined ? "" : row.value,
       });
     })
-    .join(" · ");
+    .join(` ${t("cxAnd")} `);
 };
 
 export const optionHeadText = (text: string, detail: Record<string, unknown> | null): string => {
