@@ -13,6 +13,7 @@ import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 import CheckpointBranches from "./CheckpointBranches.vue";
 import MissionStateDetail from "./MissionStateDetail.vue";
+import NodeResultList from "./NodeResultList.vue";
 import { useScriptStore } from "../../stores/script";
 import { useViewStore } from "../../stores/view";
 import { usePanelsStore } from "../../stores/panels";
@@ -101,10 +102,18 @@ const lookupTitleKey = computed(() =>
 const subText = computed(() => (kind.value === "mission" ? "" : t(lookupTitleKey.value)));
 
 const rowOf = (node: GraphNode) => ({
-  node,
+  id: node.id,
   chapter: chapterTitle(graph.chapterOf(node)),
   first: firstSayTextOf(node),
 });
+
+const flagWriters = computed(() => (flagNodeGroups.value?.writers ?? []).map(rowOf));
+
+const flagCheckers = computed(() => (flagNodeGroups.value?.checkers ?? []).map(rowOf));
+
+const mainRows = computed(() => matchedNodes.value.map(rowOf));
+
+const readerRows = computed(() => checkpointReaders.value.map(rowOf));
 
 const close = () => {
   panels.hideLookup();
@@ -117,6 +126,11 @@ const pick = (node: GraphNode) => {
   close();
   panels.focusText(node.id, name, target);
   store.select(node.id, { history: true });
+};
+
+const pickById = (id: string) => {
+  const node = graph.nodeById.get(id);
+  if (node) pick(node);
 };
 
 const positionLookup = () => {
@@ -228,68 +242,24 @@ onMounted(() => {
             <p class="lookup-group">
               {{ t("lookupGroupWrites", { n: flagNodeGroups.writers.length }) }}
             </p>
-            <div
-              v-for="node in flagNodeGroups.writers"
-              :key="`w-${node.id}`"
-              class="lookup-item row row-tall"
-              @click="pick(node)"
-            >
-              <div class="li-top">
-                <span class="li-id">{{ node.id }}</span>
-                <span class="li-ch">{{ chapterTitle(graph.chapterOf(node)) }}</span>
-              </div>
-              <span v-if="firstSayTextOf(node)" class="li-text">{{ firstSayTextOf(node) }}</span>
-            </div>
+            <NodeResultList :items="flagWriters" @pick="pickById" />
           </template>
           <template v-if="flagNodeGroups.checkers.length">
             <p class="lookup-group">
               {{ t("lookupGroupReads", { n: flagNodeGroups.checkers.length }) }}
             </p>
-            <div
-              v-for="node in flagNodeGroups.checkers"
-              :key="`r-${node.id}`"
-              class="lookup-item row row-tall"
-              @click="pick(node)"
-            >
-              <div class="li-top">
-                <span class="li-id">{{ node.id }}</span>
-                <span class="li-ch">{{ chapterTitle(graph.chapterOf(node)) }}</span>
-              </div>
-              <span v-if="firstSayTextOf(node)" class="li-text">{{ firstSayTextOf(node) }}</span>
-            </div>
+            <NodeResultList :items="flagCheckers" @pick="pickById" />
           </template>
           <p v-else class="lookup-group-note">{{ t("lookupGroupReadsEmpty") }}</p>
         </template>
 
         <template v-else>
-          <div
-            v-for="item in matchedNodes"
-            :key="item.id"
-            class="lookup-item row row-tall"
-            @click="pick(item)"
-          >
-            <div class="li-top">
-              <span class="li-id">{{ item.id }}</span>
-              <span class="li-ch">{{ rowOf(item).chapter }}</span>
-            </div>
-            <span v-if="rowOf(item).first" class="li-text">{{ rowOf(item).first }}</span>
-          </div>
+          <NodeResultList :items="mainRows" @pick="pickById" />
           <template v-if="checkpointReaders.length">
             <p class="lookup-group">
               {{ t("lookupGroupReads", { n: checkpointReaders.length }) }}
             </p>
-            <div
-              v-for="item in checkpointReaders"
-              :key="`c-${item.id}`"
-              class="lookup-item row row-tall"
-              @click="pick(item)"
-            >
-              <div class="li-top">
-                <span class="li-id">{{ item.id }}</span>
-                <span class="li-ch">{{ rowOf(item).chapter }}</span>
-              </div>
-              <span v-if="rowOf(item).first" class="li-text">{{ rowOf(item).first }}</span>
-            </div>
+            <NodeResultList :items="readerRows" @pick="pickById" />
           </template>
           <p v-else-if="kind === 'stat' || kind === 'rel'" class="lookup-group-note">
             {{ t(readsEmptyText) }}

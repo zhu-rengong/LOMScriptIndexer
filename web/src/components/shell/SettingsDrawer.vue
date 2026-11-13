@@ -7,6 +7,7 @@ import type { FontTarget } from "../../types/font";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 import FontPicker from "./FontPicker.vue";
+import ScaleSlider from "./ScaleSlider.vue";
 import SettingsPreview from "./SettingsPreview.vue";
 import { useScriptStore } from "../../stores/script";
 import { useUiStore } from "../../stores/ui";
@@ -131,14 +132,6 @@ const openPicker = () => {
   });
 };
 
-const onScale = (event: Event) => {
-  patch({ scale: Number((event.target as HTMLInputElement).value) });
-};
-
-const onLeading = (event: Event) => {
-  patch({ leading: Number((event.target as HTMLInputElement).value) });
-};
-
 const onCustom = (event: Event) => {
   patch({ font: (event.target as HTMLInputElement).value });
 };
@@ -156,8 +149,8 @@ const togglePortraits = (value: boolean) => {
   prefs.set({ showPortraits: value });
 };
 
-const onPortraitSize = (event: Event) => {
-  prefs.set({ portraitSize: Number((event.target as HTMLInputElement).value) });
+const onPortraitSize = (value: number) => {
+  prefs.set({ portraitSize: value });
 };
 
 const reset = () => {
@@ -235,21 +228,16 @@ onMounted(() => {
           <span>{{ t("showPortraits") }}</span>
         </label>
         <p class="settings-hint">{{ t("showPortraitsHint") }}</p>
-        <div class="field-row sub-row" :hidden="!prefs.showPortraits">
-          <label class="sub-label" :for="UI_IDS.portraitSize">{{ t("portraitSize") }}</label>
-          <output class="field-value">{{ prefs.portraitSize }}px</output>
-        </div>
-        <input
+        <ScaleSlider
           :id="UI_IDS.portraitSize"
-          class="range"
-          type="range"
+          :label="t('portraitSize')"
+          :value="prefs.portraitSize"
+          :text="`${prefs.portraitSize}px`"
           :min="prefs.limits.portraitSize.min"
           :max="prefs.limits.portraitSize.max"
           :step="prefs.limits.portraitSize.step"
-          :value="prefs.portraitSize"
-          :hidden="!prefs.showPortraits"
-          :aria-label="t('portraitSize')"
-          @input="onPortraitSize"
+          :disabled="!prefs.showPortraits"
+          @update="onPortraitSize"
         />
       </section>
 
@@ -332,41 +320,27 @@ onMounted(() => {
             @input="onCustom"
           />
 
-          <div class="field-row sub-row">
-            <label class="sub-label">{{ t("typeScale") }}</label>
-            <output id="typeScaleOut" class="field-value">
-              {{ scaleText }}
-            </output>
-          </div>
-          <input
+          <ScaleSlider
             id="typeScale"
-            class="range"
-            type="range"
+            :label="t('typeScale')"
+            :value="scaleValue"
+            :text="scaleText"
             :min="prefs.limits.scale.min"
             :max="prefs.limits.scale.max"
             :step="prefs.limits.scale.step"
-            :value="scaleValue"
-            :aria-label="t('typeScale')"
-            @input="onScale"
+            @update="(value) => patch({ scale: value })"
           />
 
-          <div class="field-row sub-row" id="typeLeadingRow" :hidden="isLeadingDisabled">
-            <label class="sub-label">{{ t("lineHeight") }}</label>
-            <output id="typeLeadingOut" class="field-value">
-              {{ leadingText }}
-            </output>
-          </div>
-          <input
+          <ScaleSlider
             id="typeLeading"
-            class="range"
-            type="range"
+            :label="t('lineHeight')"
+            :value="leadingValue"
+            :text="leadingText"
             :min="prefs.limits.leading.min"
             :max="prefs.limits.leading.max"
             :step="prefs.limits.leading.step"
-            :hidden="isLeadingDisabled"
-            :value="leadingValue"
-            :aria-label="t('lineHeight')"
-            @input="onLeading"
+            :disabled="isLeadingDisabled"
+            @update="(value) => patch({ leading: value })"
           />
 
           <label class="sub-label">{{ t("typeWeight") }}</label>

@@ -133,8 +133,6 @@ const normalizeEntry = (
   };
 };
 
-const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
-
 export const usePrefsStore = defineStore("prefs", () => {
   const groups = ref<Record<string, PrefEntry>>(defaultGroups());
   const slots = ref<Record<string, PrefEntry>>(defaultSlots());
@@ -225,14 +223,13 @@ export const usePrefsStore = defineStore("prefs", () => {
     });
   };
 
-  const get = (): PrefState =>
-    clone({
-      groups: groups.value,
-      slots: slots.value,
-      measure: measure.value,
-      showPortraits: showPortraits.value,
-      portraitSize: portraitSize.value,
-    });
+  const get = (): PrefState => ({
+    groups: groups.value,
+    slots: slots.value,
+    measure: measure.value,
+    showPortraits: showPortraits.value,
+    portraitSize: portraitSize.value,
+  });
 
   const resetDefaults = (): void => {
     groups.value = defaultGroups();
