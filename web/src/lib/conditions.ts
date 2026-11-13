@@ -77,18 +77,32 @@ const singleChild = (node: ConditionNode): ConditionNode | null => {
   return items[0];
 };
 
+type SumFactIndex = { fact: SumFact; keys: Set<string> };
+
+const SUM_FACTS: SumFactIndex[] = sumFacts.map((fact) => ({
+  fact,
+  keys: new Set(fact.keys.map((key) => `${fact.kind}:${key}`)),
+}));
+
+const matchesSumFact = (entry: SumFactIndex, keys: Set<string>): boolean => {
+  if (keys.size !== entry.keys.size) return false;
+  for (const key of entry.keys) if (!keys.has(key)) return false;
+  return true;
+};
+
 const sumFactOf = (node: ConditionNode): SumFact | null => {
   if (node.tag !== "group") return null;
   if (node.negative) return null;
   if (node.op && node.op !== "sum") return null;
   const items = node.items || [];
-  if (items.length < 2) return null;
-  const name = node.name || "";
-  if (!name) return null;
-  const fact = sumFacts.find((entry) => entry.name === name);
-  if (!fact) return null;
-  const matched = items.every((item) => item.tag === "var" && item.kind === fact.kind);
-  return matched ? fact : null;
+  const keys = new Set<string>();
+  for (const item of items) {
+    if (item.tag !== "var" || item.negative || !item.key) return null;
+    keys.add(`${item.kind}:${item.key}`);
+  }
+  if (keys.size !== items.length) return null;
+  for (const entry of SUM_FACTS) if (matchesSumFact(entry, keys)) return entry.fact;
+  return null;
 };
 
 export const facetUsageCount = (kind: string, key: string): number => {
@@ -397,7 +411,14 @@ const sumFactPart = (fact: SumFact, expr: ConditionNode): ConditionPart =>
   span(
     "cx-var cx-fact",
     [span("cx-name", [textPart(t(fact.label))])],
-    [t(fact.label), condTextWith(expr, false), t("inferTip")].filter(Boolean).join("\n"),
+    [
+      t(fact.label),
+      t("sumFactAll", { n: fact.keys.length }),
+      condTextWith(expr, false),
+      t("inferTip"),
+    ]
+      .filter(Boolean)
+      .join("\n"),
   );
 
 const operandPart = (

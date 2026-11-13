@@ -124,7 +124,7 @@ const toggleBookmark = () => {
               :aria-label="t('inferBtnTitle')"
               @click="view.toggleInfer"
             >
-              <span class="infer-toggle-mark" aria-hidden="true">推</span>
+              <span class="infer-toggle-mark" aria-hidden="true">{{ t("inferMark") }}</span>
             </button>
           </span>
           <span class="tip-host" :title="t('revealBtnTitle')">
