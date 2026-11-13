@@ -2,28 +2,22 @@
 import { t, typeLabel } from "../../i18n";
 import { byId } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
-import { GROUPS, firstSlot, groupById, slotById, slotsOfGroup } from "../../lib/fontTypes";
+import { GROUPS, firstSlot, groupById, slotById } from "../../lib/fontTypes";
 import type { FontTarget } from "../../types/font";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 import FontPicker from "./FontPicker.vue";
 import ScaleSlider from "./ScaleSlider.vue";
 import SettingsPreview from "./SettingsPreview.vue";
-import { useScriptStore } from "../../stores/script";
+import TypeGroupList from "./TypeGroupList.vue";
+import TypeParamPanel from "./TypeParamPanel.vue";
 import { useUiStore } from "../../stores/ui";
 import { usePrefsStore } from "../../stores/prefs";
 import { useViewStore } from "../../stores/view";
 
-const store = useScriptStore();
 const ui = useUiStore();
 const prefs = usePrefsStore();
 const view = useViewStore();
-
-const WEIGHT_LABELS: Record<number, string> = {
-  400: "weightRegular",
-  500: "weightMedium",
-  600: "weightBold",
-};
 
 const target = computed<FontTarget>(() => {
   const current = view.fontTarget;
@@ -33,29 +27,11 @@ const target = computed<FontTarget>(() => {
   return slotById(current.id) ? current : { scope: "slot", id: firstSlot().id };
 });
 
-const prefState = computed(() => prefs.get());
-
-const prefEntry = computed(() =>
-  target.value.scope === "group"
-    ? prefState.value.groups[target.value.id]
-    : prefState.value.slots[target.value.id],
-);
-
-const resolvedEntry = computed(() => prefs.resolveEntry(target.value.scope, target.value.id));
-
-const slotPreset = computed(() =>
-  target.value.scope === "slot" ? slotById(target.value.id) : null,
-);
-
 const group = computed(() => {
   if (target.value.scope === "group") return groupById(target.value.id);
   const slot = slotById(target.value.id);
   return slot ? groupById(slot.group) : GROUPS[0];
 });
-
-const groupSlots = computed(() => (group.value ? slotsOfGroup(group.value.id) : []));
-
-const groupCount = (id: string): number => slotsOfGroup(id).length;
 
 const scopeLabel = computed(() => {
   const name = group.value ? t(group.value.label) : "";
@@ -64,86 +40,7 @@ const scopeLabel = computed(() => {
   return name ? `${name} → ${leaf}` : leaf;
 });
 
-const fontText = computed(() => t(prefs.fontLabelKeyOf(target.value)));
-
-const isLeadingDisabled = computed(
-  () => !!slotPreset.value && !!slotPreset.value.isLeadingDisabled,
-);
-
-const scaleValue = computed(() => prefEntry.value?.scale ?? 100);
-
-const leadingValue = computed(() => prefEntry.value?.leading ?? 100);
-
-const scaleText = computed(
-  () =>
-    `${scaleValue.value}% ${t("parenWrap", {
-      text: `${(resolvedEntry.value?.px ?? 0).toFixed(2)}px`,
-    })}`,
-);
-
-const leadingText = computed(
-  () =>
-    `${leadingValue.value}% ${t("parenWrap", {
-      text: (resolvedEntry.value?.lineHeight ?? 0).toFixed(2),
-    })}`,
-);
-
-const weight = computed(() => prefEntry.value?.weight ?? null);
-
-const showCustom = computed(
-  () => prefs.isCustomFont(prefEntry.value?.font || "") || prefs.customFontOpen,
-);
-
 const open = computed(() => overlay.isOpen("settings"));
-
-const setGroup = (id: string) => {
-  view.setFontTarget({ scope: "group", id });
-};
-
-const setSlot = (id: string) => {
-  view.setFontTarget({ scope: "slot", id });
-};
-
-const patch = (value: {
-  font?: string;
-  scale?: number;
-  leading?: number;
-  weight?: number | null;
-}) => {
-  const scope = target.value.scope;
-  prefs.set(
-    scope === "group"
-      ? { groups: { [target.value.id]: value } }
-      : { slots: { [target.value.id]: value } },
-  );
-};
-
-const pickerOpen = computed(() => overlay.isOpen("fontPicker"));
-
-const openPicker = () => {
-  if (overlay.isOpen("fontPicker")) {
-    overlay.close("fontPicker");
-    return;
-  }
-  overlay.open("fontPicker", {
-    trigger: byId(UI_IDS.typeFontTrigger),
-    keep: ["settings"],
-    placement: { align: "start", gap: 6, width: 300, fit: true },
-  });
-};
-
-const onCustom = (event: Event) => {
-  patch({ font: (event.target as HTMLInputElement).value });
-};
-
-const setWeight = (value: number | null) => {
-  patch({ weight: value });
-};
-
-const isWeightOn = (value: number | null) => {
-  if (value === null) return !!slotPreset.value && weight.value === null;
-  return weight.value !== null && Number(value) === Number(weight.value);
-};
 
 const togglePortraits = (value: boolean) => {
   prefs.set({ showPortraits: value });
@@ -172,13 +69,6 @@ watch(open, async (value) => {
 watch(target, () => {
   prefs.customFontOpen = false;
 });
-
-watch(
-  () => prefEntry.value?.font,
-  (font) => {
-    if (font) prefs.customFontOpen = false;
-  },
-);
 
 onMounted(() => {
   overlay.register("settings", {
@@ -243,131 +133,8 @@ onMounted(() => {
 
       <section class="settings-section">
         <p class="settings-caption">{{ t("fontTypes") }}</p>
-        <div id="typeGroups" class="settings-tabs" role="tablist" :aria-label="t('fontTypes')">
-          <button
-            v-for="item in prefs.presets.groups"
-            :key="item.id"
-            class="settings-tab"
-            :class="{ 'is-on': !!group && item.id === group.id }"
-            type="button"
-            role="tab"
-            :aria-selected="!!group && item.id === group.id"
-            @click="setGroup(item.id)"
-          >
-            <span class="settings-tab-label">{{ t(item.label) }}</span>
-            <span class="settings-tab-count">{{ groupCount(item.id) }}</span>
-          </button>
-        </div>
-
-        <div
-          v-if="group"
-          id="typeChips"
-          class="type-catalog"
-          role="group"
-          :aria-label="t('fontTypes')"
-        >
-          <button
-            class="type-row"
-            :class="{ 'is-on': target.scope === 'group' }"
-            type="button"
-            :aria-pressed="target.scope === 'group'"
-            @click="setGroup(group.id)"
-          >
-            <span class="type-row-ord">00</span>
-            <span class="type-row-label">{{ t(prefs.labels.groupAll) }}</span>
-            <span class="type-row-meta">
-              {{ t(prefs.fontLabelKeyOf({ scope: "group", id: group.id })) }}
-            </span>
-          </button>
-          <button
-            v-for="(item, index) in groupSlots"
-            :key="item.id"
-            class="type-row"
-            :class="{ 'is-on': target.scope === 'slot' && target.id === item.id }"
-            type="button"
-            :aria-pressed="target.scope === 'slot' && target.id === item.id"
-            @click="setSlot(item.id)"
-          >
-            <span class="type-row-ord">{{ String(index + 1).padStart(2, "0") }}</span>
-            <span class="type-row-label">{{ typeLabel(item.id) }}</span>
-            <span class="type-row-meta">
-              {{ t(prefs.fontLabelKeyOf({ scope: "slot", id: item.id })) }}
-            </span>
-          </button>
-        </div>
-
-        <div class="type-panel">
-          <label class="sub-label">{{ t("typeFont") }}</label>
-          <button
-            :id="UI_IDS.typeFontTrigger"
-            class="btn select font-trigger settings-select"
-            type="button"
-            aria-haspopup="listbox"
-            aria-controls="fontPicker"
-            :aria-expanded="pickerOpen"
-            @click="openPicker"
-          >
-            <span class="ft-name">{{ fontText }}</span>
-            <AppIcon name="chevron" class="caret" />
-          </button>
-          <input
-            :id="UI_IDS.typeFontCustom"
-            class="input input-sm text-input"
-            type="text"
-            :hidden="!showCustom"
-            :value="showCustom ? prefEntry?.font || '' : ''"
-            :placeholder="t('fontCustomPlaceholder')"
-            @input="onCustom"
-          />
-
-          <ScaleSlider
-            id="typeScale"
-            :label="t('typeScale')"
-            :value="scaleValue"
-            :text="scaleText"
-            :min="prefs.limits.scale.min"
-            :max="prefs.limits.scale.max"
-            :step="prefs.limits.scale.step"
-            @update="(value) => patch({ scale: value })"
-          />
-
-          <ScaleSlider
-            id="typeLeading"
-            :label="t('lineHeight')"
-            :value="leadingValue"
-            :text="leadingText"
-            :min="prefs.limits.leading.min"
-            :max="prefs.limits.leading.max"
-            :step="prefs.limits.leading.step"
-            :disabled="isLeadingDisabled"
-            @update="(value) => patch({ leading: value })"
-          />
-
-          <label class="sub-label">{{ t("typeWeight") }}</label>
-          <div class="seg seg-wide settings-weight" id="weightSeg" role="group">
-            <button
-              class="seg-btn tab"
-              type="button"
-              :hidden="!slotPreset"
-              :class="{ 'is-on': isWeightOn(null) }"
-              :aria-pressed="isWeightOn(null)"
-              @click="setWeight(null)"
-            >
-              {{ t("weightInherit") }}
-            </button>
-            <button
-              v-for="value in prefs.presets.weights"
-              :key="value"
-              class="seg-btn tab"
-              type="button"
-              :class="{ 'is-on': isWeightOn(value) }"
-              :aria-pressed="isWeightOn(value)"
-              @click="setWeight(value)"
-            >
-              {{ t(WEIGHT_LABELS[value]) }}
-            </button>
-          </div>
-        </div>
+        <TypeGroupList />
+        <TypeParamPanel :target="target" />
       </section>
 
       <section class="settings-section">

@@ -1,0 +1,425 @@
+@layer type {
+  .say .what {
+    font-family: var(--rd-ff-dialog, var(--font-base));
+    font-size: calc(var(--rd-fs-dialog, 16px) * var(--ts-dialog, 1));
+    font-weight: var(--rd-fw-dialog, 400);
+    line-height: calc(var(--rd-lh-dialog, 1.6) * var(--tlh-dialog, 1));
+    letter-spacing: calc(var(--rd-ls-dialog, 0em) + var(--tls-dialog, 0em));
+    font-style: var(--rd-fi-dialog, normal);
+    text-transform: var(--rd-tt-dialog, none);
+    font-variant-caps: var(--rd-fc-dialog, normal);
+    font-variant-numeric: var(--rd-fn-dialog, normal);
+  }
+
+  .say .who,
+  .say.think .who {
+    font-family: var(--rd-ff-speaker, var(--font-base));
+    font-size: calc(var(--rd-fs-speaker, 16px) * var(--ts-speaker, 1));
+    font-weight: var(--rd-fw-speaker, 500);
+    line-height: calc(var(--rd-lh-speaker, 1.6) * var(--tlh-speaker, 1));
+    letter-spacing: calc(var(--rd-ls-speaker, 0em) + var(--tls-speaker, 0em));
+    font-style: var(--rd-fi-speaker, normal);
+    text-transform: var(--rd-tt-speaker, none);
+    font-variant-caps: var(--rd-fc-speaker, normal);
+    font-variant-numeric: var(--rd-fn-speaker, normal);
+  }
+
+  .say.narration .what {
+    font-family: var(--rd-ff-narration, var(--font-base));
+    font-size: calc(var(--rd-fs-narration, 16px) * var(--ts-narration, 1));
+    font-weight: var(--rd-fw-narration, 400);
+    line-height: calc(var(--rd-lh-narration, 1.6) * var(--tlh-narration, 1));
+    letter-spacing: calc(var(--rd-ls-narration, 0em) + var(--tls-narration, 0em));
+    font-style: var(--rd-fi-narration, normal);
+    text-transform: var(--rd-tt-narration, none);
+    font-variant-caps: var(--rd-fc-narration, normal);
+    font-variant-numeric: var(--rd-fn-narration, normal);
+  }
+
+  .say.think .what {
+    font-family: var(--rd-ff-think, var(--font-base));
+    font-size: calc(var(--rd-fs-think, 16px) * var(--ts-think, 1));
+    font-weight: var(--rd-fw-think, 400);
+    line-height: calc(var(--rd-lh-think, 1.6) * var(--tlh-think, 1));
+    letter-spacing: calc(var(--rd-ls-think, 0em) + var(--tls-think, 0em));
+    font-style: var(--rd-fi-think, normal);
+    text-transform: var(--rd-tt-think, none);
+    font-variant-caps: var(--rd-fc-think, normal);
+    font-variant-numeric: var(--rd-fn-think, normal);
+  }
+
+  .lore-text .lore-p,
+  .drop-item .dtext,
+  .lookup-item .li-text,
+  .nav-item .nav-label {
+    font-family: var(--rd-ff-excerpt, var(--font-base));
+    font-size: calc(var(--rd-fs-excerpt, 16px) * var(--ts-excerpt, 1));
+    font-weight: var(--rd-fw-excerpt, 400);
+    line-height: calc(var(--rd-lh-excerpt, 1.6) * var(--tlh-excerpt, 1));
+    letter-spacing: calc(var(--rd-ls-excerpt, 0em) + var(--tls-excerpt, 0em));
+    font-style: var(--rd-fi-excerpt, normal);
+    text-transform: var(--rd-tt-excerpt, none);
+    font-variant-caps: var(--rd-fc-excerpt, normal);
+    font-variant-numeric: var(--rd-fn-excerpt, normal);
+  }
+
+  .ending-label,
+  .ending-title,
+  .ending-line {
+    font-family: var(--rd-ff-ending, var(--font-base));
+    font-size: calc(var(--rd-fs-ending, 16px) * var(--ts-ending, 1));
+    font-weight: var(--rd-fw-ending, 400);
+    line-height: calc(var(--rd-lh-ending, 1.6) * var(--tlh-ending, 1));
+    letter-spacing: calc(var(--rd-ls-ending, 0em) + var(--tls-ending, 0em));
+    font-style: var(--rd-fi-ending, normal);
+    text-transform: var(--rd-tt-ending, none);
+    font-variant-caps: var(--rd-fc-ending, normal);
+    font-variant-numeric: var(--rd-fn-ending, normal);
+  }
+
+  .option-text,
+  .jump-target,
+  .jump.jump-target {
+    font-family: var(--rd-ff-option, var(--font-base));
+    font-size: calc(var(--rd-fs-option, 16px) * var(--ts-option, 1));
+    font-weight: var(--rd-fw-option, 400);
+    line-height: calc(var(--rd-lh-option, 1.6) * var(--tlh-option, 1));
+    letter-spacing: calc(var(--rd-ls-option, 0em) + var(--tls-option, 0em));
+    font-style: var(--rd-fi-option, normal);
+    text-transform: var(--rd-tt-option, none);
+    font-variant-caps: var(--rd-fc-option, normal);
+    font-variant-numeric: var(--rd-fn-option, normal);
+  }
+
+  .branch-head,
+  .branch-head .cond,
+  .option-cond,
+  .battle-when,
+  .battle-logic,
+  .jump-cond-label,
+  .jump-cond-text,
+  .lc-cond,
+  .battle-when :is(.chip, .chip-stat, .meta-action, .option-cond) {
+    font-family: var(--rd-ff-condition, var(--font-base));
+    font-size: calc(var(--rd-fs-condition, 16px) * var(--ts-condition, 1));
+    font-weight: var(--rd-fw-condition, 600);
+    line-height: calc(var(--rd-lh-condition, 1.6) * var(--tlh-condition, 1));
+    letter-spacing: calc(var(--rd-ls-condition, 0em) + var(--tls-condition, 0em));
+    font-style: var(--rd-fi-condition, normal);
+    text-transform: var(--rd-tt-condition, none);
+    font-variant-caps: var(--rd-fc-condition, normal);
+    font-variant-numeric: var(--rd-fn-condition, normal);
+  }
+
+  .option-idx,
+  .cat-chap-ord,
+  .type-tree-ord,
+  .stats-ord {
+    font-family: var(--rd-ff-ordinal, var(--font-base));
+    font-size: calc(var(--rd-fs-ordinal, 16px) * var(--ts-ordinal, 1));
+    font-weight: var(--rd-fw-ordinal, 400);
+    line-height: calc(var(--rd-lh-ordinal, 1.6) * var(--tlh-ordinal, 1));
+    letter-spacing: calc(var(--rd-ls-ordinal, 0em) + var(--tls-ordinal, 0em));
+    font-style: var(--rd-fi-ordinal, normal);
+    text-transform: var(--rd-tt-ordinal, none);
+    font-variant-caps: var(--rd-fc-ordinal, normal);
+    font-variant-numeric: var(--rd-fn-ordinal, normal);
+  }
+
+  .panel-title,
+  .drawer-title,
+  .filter-title,
+  .stats-title,
+  .overlay-title,
+  .empty-state h3 {
+    font-family: var(--rd-ff-title, var(--font-base));
+    font-size: calc(var(--rd-fs-title, 16px) * var(--ts-title, 1));
+    font-weight: var(--rd-fw-title, 600);
+    line-height: calc(var(--rd-lh-title, 1.6) * var(--tlh-title, 1));
+    letter-spacing: calc(var(--rd-ls-title, 0em) + var(--tls-title, 0em));
+    font-style: var(--rd-fi-title, normal);
+    text-transform: var(--rd-tt-title, none);
+    font-variant-caps: var(--rd-fc-title, normal);
+    font-variant-numeric: var(--rd-fn-title, normal);
+  }
+
+  #nodeTitle,
+  .node-title {
+    font-family: var(--rd-ff-script-title, var(--font-base));
+    font-size: calc(var(--rd-fs-script-title, 16px) * var(--ts-script-title, 1));
+    font-weight: var(--rd-fw-script-title, 600);
+    line-height: calc(var(--rd-lh-script-title, 1.6) * var(--tlh-script-title, 1));
+    letter-spacing: calc(var(--rd-ls-script-title, 0em) + var(--tls-script-title, 0em));
+    font-style: var(--rd-fi-script-title, normal);
+    text-transform: var(--rd-tt-script-title, none);
+    font-variant-caps: var(--rd-fc-script-title, normal);
+    font-variant-numeric: var(--rd-fn-script-title, normal);
+  }
+
+  .brand-text h1,
+  .rail-title {
+    font-family: var(--rd-ff-display, var(--font-base));
+    font-size: calc(var(--rd-fs-display, 16px) * var(--ts-display, 1));
+    font-weight: var(--rd-fw-display, 600);
+    line-height: calc(var(--rd-lh-display, 1.6) * var(--tlh-display, 1));
+    letter-spacing: calc(var(--rd-ls-display, 0em) + var(--tls-display, 0em));
+    font-style: var(--rd-fi-display, normal);
+    text-transform: var(--rd-tt-display, none);
+    font-variant-caps: var(--rd-fc-display, normal);
+    font-variant-numeric: var(--rd-fn-display, normal);
+  }
+
+  .seal,
+  .infer-toggle-mark,
+  .infer-seal > span,
+  .empty-state .brush {
+    font-family: var(--rd-ff-seal, var(--font-base));
+    font-size: calc(var(--rd-fs-seal, 16px) * var(--ts-seal, 1));
+    font-weight: var(--rd-fw-seal, 600);
+    line-height: calc(var(--rd-lh-seal, 1) * var(--tlh-seal, 1));
+    letter-spacing: calc(var(--rd-ls-seal, 0em) + var(--tls-seal, 0em));
+    font-style: var(--rd-fi-seal, normal);
+    text-transform: var(--rd-tt-seal, none);
+    font-variant-caps: var(--rd-fc-seal, normal);
+    font-variant-numeric: var(--rd-fn-seal, normal);
+  }
+
+  :where(.btn, .btn-link, .tab, .seg-btn, .input, .search-input, .row),
+  .menu-item,
+  .nav-item,
+  .picker-item,
+  .type-tree-row,
+  .type-tree-name,
+  .result-item,
+  .suggest-item,
+  .filter-chip,
+  .rail-tab,
+  .cat-clear,
+  .cat-more,
+  .cat-chap-title,
+  .option-head,
+  .cat-special .cat-name,
+  .display-filter-item,
+  .display-filter-label,
+  .jump,
+  .battle-link,
+  .battle-rows .jump,
+  .stats-name,
+  .stats-kind,
+  .drop-more,
+  .lc-row,
+  .lc-add-type,
+  .lc-add-tag,
+  .li-ch,
+  .ri-ch,
+  .sg-label,
+  kbd {
+    font-family: var(--rd-ff-control, var(--font-base));
+    font-size: calc(var(--rd-fs-control, 16px) * var(--ts-control, 1));
+    font-weight: var(--rd-fw-control, 400);
+    line-height: calc(var(--rd-lh-control, 1.6) * var(--tlh-control, 1));
+    letter-spacing: calc(var(--rd-ls-control, 0em) + var(--tls-control, 0em));
+    font-style: var(--rd-fi-control, normal);
+    text-transform: var(--rd-tt-control, none);
+    font-variant-caps: var(--rd-fc-control, normal);
+    font-variant-numeric: var(--rd-fn-control, normal);
+  }
+
+  .badge,
+  .chip,
+  .chip-stat,
+  .meta-action,
+  .meta-chip,
+  .mission-tag,
+  .mission-flag,
+  .option-lock,
+  .jump-weight,
+  .jump-never,
+  .scene-switch,
+  .time-mark {
+    font-family: var(--rd-ff-mark, var(--font-base));
+    font-size: calc(var(--rd-fs-mark, 16px) * var(--ts-mark, 1));
+    font-weight: var(--rd-fw-mark, 400);
+    line-height: calc(var(--rd-lh-mark, 1.6) * var(--tlh-mark, 1));
+    letter-spacing: calc(var(--rd-ls-mark, 0em) + var(--tls-mark, 0em));
+    font-style: var(--rd-fi-mark, normal);
+    text-transform: var(--rd-tt-mark, none);
+    font-variant-caps: var(--rd-fc-mark, normal);
+    font-variant-numeric: var(--rd-fn-mark, normal);
+  }
+
+  .drop-item .did,
+  .drop-item .dmeta,
+  .nav-item .nav-id,
+  .cat-row .cat-id,
+  .cat-row .cat-meta,
+  .cat-book-main .cat-id,
+  .cat-book-main .cat-meta,
+  .cat-special .cat-code,
+  .cat-chap-count,
+  .rail-tab-count,
+  .type-tree-count,
+  .settings-select .ft-name,
+  .badge-num,
+  .filter-count,
+  .filter-expr,
+  .suggest-item .sg-value,
+  .suggest-item .sg-count,
+  .result-item .ri-id,
+  .lookup-item .li-id,
+  .mission-link,
+  .help-key,
+  .brand-build,
+  .changelog-date,
+  .changelog-range,
+  .stats-open,
+  .stats-script,
+  .stats-expand,
+  .stats-table td.num,
+  .field-value,
+  .jump-target-id,
+  .lc-add-rate,
+  .lc-sub-rate {
+    font-family: var(--rd-ff-code, var(--font-base));
+    font-size: calc(var(--rd-fs-code, 16px) * var(--ts-code, 1));
+    font-weight: var(--rd-fw-code, 400);
+    line-height: calc(var(--rd-lh-code, 1.6) * var(--tlh-code, 1));
+    letter-spacing: calc(var(--rd-ls-code, 0em) + var(--tls-code, 0em));
+    font-style: var(--rd-fi-code, normal);
+    text-transform: var(--rd-tt-code, none);
+    font-variant-caps: var(--rd-fc-code, normal);
+    font-variant-numeric: var(--rd-fn-code, normal);
+  }
+
+  .btn.btn-mono,
+  .input.input-mono,
+  kbd.search-key {
+    font-family: var(--rd-ff-code, var(--font-base));
+    font-size: calc(var(--rd-fs-code, 16px) * var(--ts-code, 1));
+    font-weight: var(--rd-fw-code, 400);
+    line-height: calc(var(--rd-lh-code, 1.6) * var(--tlh-code, 1));
+    letter-spacing: calc(var(--rd-ls-code, 0em) + var(--tls-code, 0em));
+    font-style: var(--rd-fi-code, normal);
+    text-transform: var(--rd-tt-code, none);
+    font-variant-caps: var(--rd-fc-code, normal);
+    font-variant-numeric: var(--rd-fn-code, normal);
+  }
+
+  .stat-value {
+    font-family: var(--rd-ff-figure, var(--font-base));
+    font-size: calc(var(--rd-fs-figure, 16px) * var(--ts-figure, 1));
+    font-weight: var(--rd-fw-figure, 600);
+    line-height: calc(var(--rd-lh-figure, 1.6) * var(--tlh-figure, 1));
+    letter-spacing: calc(var(--rd-ls-figure, 0em) + var(--tls-figure, 0em));
+    font-style: var(--rd-fi-figure, normal);
+    text-transform: var(--rd-tt-figure, none);
+    font-variant-caps: var(--rd-fc-figure, normal);
+    font-variant-numeric: var(--rd-fn-figure, normal);
+  }
+
+  .menu-head,
+  .sub-label,
+  .drop-scope,
+  .cat-result,
+  .lookup-group,
+  .lookup-cond-title,
+  .help-group-title,
+  .filter-label,
+  .filter-results-title,
+  .settings-caption,
+  .preview-tag,
+  .mission-label,
+  .mission-heading,
+  .lc-sub-label,
+  .scene-label,
+  .time-label,
+  .crumb,
+  .stat-card .stat-label,
+  .stats-table thead th {
+    font-family: var(--rd-ff-label, var(--font-base));
+    font-size: calc(var(--rd-fs-label, 16px) * var(--ts-label, 1));
+    font-weight: var(--rd-fw-label, 400);
+    line-height: calc(var(--rd-lh-label, 1.6) * var(--tlh-label, 1));
+    letter-spacing: calc(var(--rd-ls-label, 0em) + var(--tls-label, 0em));
+    font-style: var(--rd-fi-label, normal);
+    text-transform: var(--rd-tt-label, uppercase);
+    font-variant-caps: var(--rd-fc-label, normal);
+    font-variant-numeric: var(--rd-fn-label, normal);
+  }
+
+  .panel-hint,
+  .settings-hint,
+  .settings-summary,
+  .filter-summary,
+  .lookup-sub,
+  .lookup-hint,
+  .rail-summary,
+  .stats-note,
+  .mission-cond-note,
+  .mission-sub-label,
+  .changelog-badge,
+  .lc-result,
+  .pi-meta,
+  .type-tree-summary,
+  .menu-note,
+  .hint-line,
+  .crumb .crumb-time {
+    font-family: var(--rd-ff-caption, var(--font-base));
+    font-size: calc(var(--rd-fs-caption, 16px) * var(--ts-caption, 1));
+    font-weight: var(--rd-fw-caption, 400);
+    line-height: calc(var(--rd-lh-caption, 1.6) * var(--tlh-caption, 1));
+    letter-spacing: calc(var(--rd-ls-caption, 0em) + var(--tls-caption, 0em));
+    font-style: var(--rd-fi-caption, normal);
+    text-transform: var(--rd-tt-caption, none);
+    font-variant-caps: var(--rd-fc-caption, normal);
+    font-variant-numeric: var(--rd-fn-caption, normal);
+  }
+
+  :where(body),
+  .help-desc,
+  .battle-fact,
+  .changelog-text,
+  .mission-value,
+  .mission-dialog,
+  .lookup-group-note,
+  .lookup-cond-sub,
+  .lookup-cond-muted,
+  .lc-add-name,
+  .settings-switch,
+  .stats-table {
+    font-family: var(--rd-ff-text, var(--font-base));
+    font-size: calc(var(--rd-fs-text, 16px) * var(--ts-text, 1));
+    font-weight: var(--rd-fw-text, 400);
+    line-height: calc(var(--rd-lh-text, 1.6) * var(--tlh-text, 1));
+    letter-spacing: calc(var(--rd-ls-text, 0em) + var(--tls-text, 0em));
+    font-style: var(--rd-fi-text, normal);
+    text-transform: var(--rd-tt-text, none);
+    font-variant-caps: var(--rd-fc-text, normal);
+    font-variant-numeric: var(--rd-fn-text, normal);
+  }
+
+  .filter-status,
+  .toast,
+  .io-status,
+  .sk-caption,
+  .stats-loading,
+  .drop-empty,
+  .popover-empty,
+  .cat-empty,
+  .stats-empty,
+  .filter-results-empty,
+  .branch-empty,
+  .picker-empty,
+  .lookup-empty,
+  .menu-empty {
+    font-family: var(--rd-ff-status, var(--font-base));
+    font-size: calc(var(--rd-fs-status, 16px) * var(--ts-status, 1));
+    font-weight: var(--rd-fw-status, 400);
+    line-height: calc(var(--rd-lh-status, 1.6) * var(--tlh-status, 1));
+    letter-spacing: calc(var(--rd-ls-status, 0em) + var(--tls-status, 0em));
+    font-style: var(--rd-fi-status, normal);
+    text-transform: var(--rd-tt-status, none);
+    font-variant-caps: var(--rd-fc-status, normal);
+    font-variant-numeric: var(--rd-fn-status, normal);
+  }
+}

@@ -1,12 +1,18 @@
 export type FontScope = "group" | "slot";
 
+export type CapsMode = "none" | "upper" | "small";
+
 export type FontTarget = { scope: FontScope; id: string };
 
 export type PrefEntry = {
   font: string;
   scale: number;
   leading: number;
+  tracking: number;
   weight: number | null;
+  italic: boolean | null;
+  caps: CapsMode | null;
+  numeric: boolean | null;
 };
 
 export type PrefState = {
@@ -29,11 +35,13 @@ export type ResolvedTypeStyle = {
   scope: FontScope;
   id: string;
   group: string;
-  scale: number;
-  leading: number;
   px: number;
   lineHeight: number;
-  weight: number | null;
+  tracking: number;
+  weight: number;
+  italic: boolean;
+  caps: CapsMode;
+  numeric: boolean;
   font: string;
   fontStack: string;
 };
