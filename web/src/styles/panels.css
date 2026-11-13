@@ -1127,17 +1127,24 @@
 
   .mission-rows {
     display: grid;
-    gap: var(--sp-2);
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: var(--sp-3);
+    row-gap: var(--sp-2);
     margin: 0;
   }
 
   .mission-row {
     display: grid;
-    grid-template-columns: 5.5em minmax(0, 1fr);
-    gap: var(--sp-2);
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: var(--sp-3);
     align-items: start;
     padding-top: var(--sp-2);
     border-top: 1px solid var(--line-1);
+  }
+
+  .mission-rows > .mission-row {
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
   }
 
   .mission-row:first-child {

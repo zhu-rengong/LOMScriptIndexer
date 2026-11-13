@@ -21,6 +21,16 @@ const facts = computed(() =>
     return parts ? { label: parts[1], value: parts[2] } : { label: "", value: fact };
   }),
 );
+
+const rowGroups = computed(() => {
+  const groups: { label: string; values: string[] }[] = [];
+  for (const row of props.battle.rows) {
+    const last = groups[groups.length - 1];
+    if (last && last.label === row.label) last.values.push(row.value);
+    else groups.push({ label: row.label, values: [row.value] });
+  }
+  return groups;
+});
 </script>
 
 <template>
@@ -106,9 +116,9 @@ const facts = computed(() =>
         <dd class="mission-value">{{ fact.value }}</dd>
       </div>
 
-      <div v-for="(row, index) in battle.rows" :key="`row-${index}`" class="mission-row">
-        <dt class="mission-label">{{ row.label }}</dt>
-        <dd class="mission-value">{{ row.value }}</dd>
+      <div v-for="(group, index) in rowGroups" :key="`row-${index}`" class="mission-row">
+        <dt class="mission-label">{{ group.label }}</dt>
+        <dd class="mission-value">{{ group.values.join(` ${t("cxOr")} `) }}</dd>
       </div>
 
       <div v-if="battle.afterScript" class="mission-row">

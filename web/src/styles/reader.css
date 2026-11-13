@@ -367,28 +367,9 @@
 
   .option-badges {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
     gap: var(--rd-gap-1);
-  }
-
-  .option-badges .badge {
-    height: auto;
-    min-height: var(--ctl-sm);
-    padding: 2px var(--sp-2);
-    border: 1px solid var(--line-1);
-    border-radius: var(--r-sm);
-    background: var(--surface);
-    color: var(--ink-2);
-    font-family: var(--rd-ff-badge, var(--font-base));
-    font-size: var(--rd-fs-badge, 16px);
-    font-weight: var(--rd-fw-badge, 400);
-    line-height: var(--rd-lh-badge, 1.6);
-    letter-spacing: 0;
-    cursor: default;
-  }
-
-  .option-badges .badge-danger {
-    color: var(--danger);
   }
 
   .option-cond {
@@ -1177,6 +1158,10 @@
     margin-top: var(--sp-2);
     padding-top: var(--sp-2);
     border-top: 1px solid var(--line-1);
+  }
+
+  .mission-event-panel .mission-tags {
+    display: none;
   }
 
   .battle-campaign-events {

@@ -52,7 +52,7 @@ const toggle = () => {
         </span>
         <span v-if="condition || requirement || detailRequirements" class="option-badges">
           <span v-if="requirement" class="option-cond">{{ requirement }}</span>
-          <span v-if="detailRequirements" class="badge">{{ detailRequirements }}</span>
+          <span v-if="detailRequirements" class="option-cond">{{ detailRequirements }}</span>
           <span v-if="condition" class="option-cond" :title="condition" @click.stop>
             <CondExpr :expr="option.condition" />
           </span>
