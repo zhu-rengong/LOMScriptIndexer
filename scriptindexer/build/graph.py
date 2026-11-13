@@ -1,11 +1,12 @@
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
-from typing import Any
 
 from ..game.unity_fields import HARDCODED_ENTRIES
-from ..script_model import Edge, Facets, NodeFlags, NodeRecord, ScriptAnalysis
-from ..versions import MAX_EDGE_LABEL
+from ..schema import EdgeRow, Facets, NodeFlags, NodeRow, SystemEntryRow
+from ..script_model import Edge, ScriptAnalysis
 from ..vocab import EDGE_POSITION
+
+MAX_EDGE_LABEL = 60
 
 
 @dataclass(frozen=True)
@@ -63,15 +64,15 @@ def position_target_map(edges: Iterable[Edge]) -> dict[str, tuple[str, ...]]:
         if edge.kind != EDGE_POSITION or not edge.label:
             continue
         found.setdefault(edge.label, set()).add(edge.target)
-    return {
-        name: tuple(sorted(targets)) for name, targets in sorted(found.items())
-    }
+    return {name: tuple(sorted(targets)) for name, targets in sorted(found.items())}
 
 
-def expand_positions(required_positions: Mapping[str, list[str]], ids: Sequence[str],
-                     adjacency: dict[str, set[str]],
-                     position_targets: Mapping[str, Sequence[str]] | None = None
-                     ) -> tuple[list[Edge], dict[str, Any]]:
+def expand_positions(
+    required_positions: Mapping[str, list[str]],
+    ids: Sequence[str],
+    adjacency: dict[str, set[str]],
+    position_targets: Mapping[str, Sequence[str]] | None = None,
+) -> tuple[list[Edge], dict[str, object]]:
     edges: list[Edge] = []
     resolved: dict[str, int] = {}
     exact_names: list[str] = []
@@ -113,38 +114,58 @@ def expand_positions(required_positions: Mapping[str, list[str]], ids: Sequence[
 
 @dataclass
 class SystemEntries:
-    hardcoded: list[dict[str, str]]
+    hardcoded: list[SystemEntryRow]
     absent_hardcoded_ids: list[str]
 
 
 def build_system_entries(ids: Iterable[str]) -> SystemEntries:
     id_set = set(ids)
-    hardcoded = [dict(item) for item in HARDCODED_ENTRIES if item["id"] in id_set]
+    hardcoded = [
+        SystemEntryRow(id=item["id"], label=item["label"], origin=item["origin"])
+        for item in HARDCODED_ENTRIES
+        if item["id"] in id_set
+    ]
     absent = [item["id"] for item in HARDCODED_ENTRIES if item["id"] not in id_set]
     return SystemEntries(hardcoded, absent)
 
 
-def assemble_nodes(node_ids: Sequence[str], models: Mapping[str, ScriptAnalysis],
-                   chapter_index_by_script: Mapping[str, int],
-                   out_degree: Mapping[str, int], in_degree: Mapping[str, int],
-                   facets: Mapping[str, Facets], empty_ids: set[str], simplified_ids: set[str],
-                   time_by_script: Mapping[str, int]) -> list[NodeRecord]:
-    nodes: list[NodeRecord] = []
+def assemble_nodes(
+    node_ids: Sequence[str],
+    models: Mapping[str, ScriptAnalysis],
+    chapter_index_by_script: Mapping[str, int],
+    out_degree: Mapping[str, int],
+    in_degree: Mapping[str, int],
+    facets: Mapping[str, Facets],
+    empty_ids: set[str],
+    simplified_ids: set[str],
+    time_by_script: Mapping[str, int],
+) -> list[NodeRow]:
+    nodes: list[NodeRow] = []
     for sid in node_ids:
-        flags = NodeFlags(
-            is_empty=sid in empty_ids,
-            is_simplified_only=sid in simplified_ids,
-            has_no_outgoing=out_degree.get(sid, 0) == 0,
-            has_no_incoming=in_degree.get(sid, 0) == 0,
+        nodes.append(
+            NodeRow(
+                id=sid,
+                chapter_index=chapter_index_by_script.get(sid, 0),
+                out_degree=out_degree.get(sid, 0),
+                in_degree=in_degree.get(sid, 0),
+                say_count=models[sid].say_count,
+                flags=NodeFlags(
+                    is_empty=sid in empty_ids,
+                    is_simplified_only=sid in simplified_ids,
+                    has_no_outgoing=out_degree.get(sid, 0) == 0,
+                    has_no_incoming=in_degree.get(sid, 0) == 0,
+                ),
+                facets=facets.get(sid, Facets()),
+                time=time_by_script.get(sid),
+            )
         )
-        nodes.append(NodeRecord(
-            id=sid,
-            chapter_index=chapter_index_by_script.get(sid, 0),
-            out_degree=out_degree.get(sid, 0),
-            in_degree=in_degree.get(sid, 0),
-            say_count=models[sid].say_count,
-            flags=flags,
-            facets=facets.get(sid, Facets()),
-            time=time_by_script.get(sid),
-        ))
     return nodes
+
+
+def edge_rows(edges: Sequence[Edge]) -> list[EdgeRow]:
+    return [
+        EdgeRow(
+            index=index, source=edge.source, target=edge.target, kind=edge.kind, label=edge.label
+        )
+        for index, edge in enumerate(edges)
+    ]

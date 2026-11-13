@@ -30,15 +30,32 @@ STAT_CLASS = "GameStat"
 MISSION_CLASS = "MissionData"
 MISSION_MANAGER_CLASS = "MissionManagerData"
 SUB_MISSIONS_CLASS = "SubMissionsData"
-MISSION_CLASSES = frozenset({
-    MISSION_CLASS, MISSION_MANAGER_CLASS, SUB_MISSIONS_CLASS,
-})
+MISSION_CLASSES = frozenset(
+    {
+        MISSION_CLASS,
+        MISSION_MANAGER_CLASS,
+        SUB_MISSIONS_CLASS,
+    }
+)
 MISSION_DATA_FIELDS: tuple[str, ...] = ("_name", "_desc", "_initKey", "_missions")
 MISSION_STATE_FIELDS: tuple[str, ...] = (
-    "_active", "_desc", "_position", "_conditions", "_beforeMainMission",
-    "_dayCheck", "_timeCheckType", "_specificTime", "_minTime", "_maxTime",
-    "_periodStage", "_startScript", "_nextStateName", "_startDialogs",
-    "_alertDialogs", "_modifyFlagsWhenTrue", "_modifyFlagsWhenFalse",
+    "_active",
+    "_desc",
+    "_position",
+    "_conditions",
+    "_beforeMainMission",
+    "_dayCheck",
+    "_timeCheckType",
+    "_specificTime",
+    "_minTime",
+    "_maxTime",
+    "_periodStage",
+    "_startScript",
+    "_nextStateName",
+    "_startDialogs",
+    "_alertDialogs",
+    "_modifyFlagsWhenTrue",
+    "_modifyFlagsWhenFalse",
 )
 
 POSITION_CODES: dict[int, str] = {

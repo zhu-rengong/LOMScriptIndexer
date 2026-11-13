@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any
 
 from ..console import Reporter
+from ..schema import LoreDocument, source_version
 from .assets import AssetSession
 from .unity_fields import LORE_CLASS, LORE_FIELDS
 from .unity_objects import absent_fields, count_by_reason, multiline_text
@@ -11,8 +12,9 @@ GAP_EMPTY_TEXT = "empty_text"
 GAP_PARSE_ERROR = "parse_error"
 
 
-def probe_legend_texts(session: AssetSession, wanted_keys: set[str],
-                       reporter: Reporter) -> tuple[dict[str, str], list[dict[str, str]]]:
+def probe_legend_texts(
+    session: AssetSession, wanted_keys: set[str], reporter: Reporter
+) -> tuple[dict[str, str], list[dict[str, str]]]:
     if not wanted_keys:
         return {}, []
     if session.generator is None:
@@ -41,8 +43,8 @@ def probe_legend_texts(session: AssetSession, wanted_keys: set[str],
             if missing:
                 session.warn_once(
                     ("fields", "LegendInfo", *missing),
-                    f"LegendInfo is missing {', '.join(missing)};"
-                    " lore texts may be incomplete")
+                    f"LegendInfo is missing {', '.join(missing)}; lore texts may be incomplete",
+                )
             text = multiline_text(tree.get("_text"))
             if not text:
                 continue
@@ -64,8 +66,16 @@ def probe_legend_texts(session: AssetSession, wanted_keys: set[str],
     return dict(sorted(items.items())), gaps
 
 
-def summarize(wanted_keys: set[str], resolved_texts: dict[str, str],
-              gaps: list[dict[str, str]], elapsed: float) -> dict[str, Any]:
+def document(items: dict[str, str]) -> LoreDocument:
+    return LoreDocument(schema=source_version("lore"), items=items)
+
+
+def summarize(
+    wanted_keys: set[str],
+    resolved_texts: dict[str, str],
+    gaps: list[dict[str, str]],
+    elapsed: float,
+) -> dict[str, Any]:
     return {
         "wanted": len(wanted_keys),
         "resolved": len(resolved_texts),

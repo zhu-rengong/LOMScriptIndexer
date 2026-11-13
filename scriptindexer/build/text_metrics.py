@@ -21,8 +21,10 @@ def measure_text(text: str) -> WordCount:
     clean = strip_markup(text)
     if not clean:
         return 0, 0
-    return (len(_CJK.findall(clean)) + len(_CJK_EXT.findall(clean)),
-            len(_LATIN_WORD.findall(clean)))
+    return (
+        len(_CJK.findall(clean)) + len(_CJK_EXT.findall(clean)),
+        len(_LATIN_WORD.findall(clean)),
+    )
 
 
 class TextCounter:

@@ -74,8 +74,9 @@ def character_labels(lang: str) -> dict[str, str]:
     return table if isinstance(table, dict) else {}
 
 
-def merge_tables_into(target: dict[str, dict[str, str]],
-                      incoming: dict[str, dict[str, str]]) -> int:
+def merge_tables_into(
+    target: dict[str, dict[str, str]], incoming: dict[str, dict[str, str]]
+) -> int:
     added = 0
     for namespace, entries in incoming.items():
         bucket = target.setdefault(namespace, {})
@@ -103,13 +104,19 @@ def _locale_assets(session: AssetSession) -> list[tuple[Any, str | None]]:
     return candidates
 
 
-def extract_locales(session: AssetSession, langs: tuple[str, ...],
-                    reporter: Reporter
-                    ) -> tuple[dict[str, dict[str, dict[str, str]]], dict[str, Any]]:
+def extract_locales(
+    session: AssetSession, langs: tuple[str, ...], reporter: Reporter
+) -> tuple[dict[str, dict[str, dict[str, str]]], dict[str, Any]]:
     started = time.time()
     tables: dict[str, dict[str, dict[str, str]]] = {lang: {} for lang in langs}
-    stats: dict[str, Any] = {"source_files": 0, "lines": 0, "skipped": 0, "skipped_lang": 0,
-                             "unknown_lang": 0, "detected": 0}
+    stats: dict[str, Any] = {
+        "source_files": 0,
+        "lines": 0,
+        "skipped": 0,
+        "skipped_lang": 0,
+        "unknown_lang": 0,
+        "detected": 0,
+    }
     for obj, lang in _locale_assets(session):
         text = session.read_text(obj)
         if " = " not in text:

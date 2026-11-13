@@ -1,67 +1,48 @@
-import argparse
 from pathlib import Path
 
+from cyclopts import App
+
 from ..console import Reporter
-from ..extract import STATUS_DATA_ERROR, STATUS_USAGE, ExtractRequest, run_extract
-from ..game.layout import GAME_ENV
+from ..extract import ExtractRequest, run_extract
 from ..languages import LOCALE_LANGS
-from .common import EXIT_DATA, EXIT_OK, EXIT_USAGE, split_langs
+from .common import run_app, split_langs
+
+app = App(
+    name="scriptindexer-extract",
+    help="Extract script Lua files and locale tables from the game assets (read only)",
+)
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Extract script Lua files and locale tables from the game assets (read only)")
-    parser.add_argument("--game", default=None, help=f"game root directory (defaults to ${GAME_ENV})")
-    parser.add_argument("--langs", default=",".join(LOCALE_LANGS),
-                        help="locale tables to export, comma separated")
-    parser.add_argument("--force", action="store_true", help="ignore caches and extract again")
-    parser.add_argument("--checkpoints", dest="with_checkpoints", action="store_true",
-                        default=True)
-    parser.add_argument("--no-checkpoints", dest="with_checkpoints", action="store_false")
-    parser.add_argument("--entries", dest="with_entries", action="store_true", default=True,
-                        help="also probe system entries (default on)")
-    parser.add_argument("--no-entries", dest="with_entries", action="store_false",
-                        help="skip the system entry probe")
-    parser.add_argument("--lore", dest="with_lore", action="store_true", default=True,
-                        help="also extract StoryData lore fallback texts (default on)")
-    parser.add_argument("--no-lore", dest="with_lore", action="store_false",
-                        help="skip the StoryData lore fallback extraction")
-    parser.add_argument("--stats", dest="with_stats", action="store_true", default=True,
-                        help="also extract stat asset names and notes (default on)")
-    parser.add_argument("--no-stats", dest="with_stats", action="store_false",
-                        help="skip the stat asset extraction")
-    parser.add_argument("--missions", dest="with_missions", action="store_true", default=True,
-                        help="also extract mission definitions and start scripts (default on)")
-    parser.add_argument("--no-missions", dest="with_missions", action="store_false",
-                        help="skip the mission definition extraction")
-    parser.add_argument("--battles", dest="with_battles", action="store_true", default=True,
-                        help="also extract battle and combat levels (default on)")
-    parser.add_argument("--no-battles", dest="with_battles", action="store_false",
-                        help="skip the battle level extraction")
-    parser.add_argument("--portraits", dest="with_portraits", action="store_true", default=True,
-                        help="also export character portrait avatars (default on)")
-    parser.add_argument("--no-portraits", dest="with_portraits", action="store_false",
-                        help="skip the character portrait export")
-    parser.add_argument("--jobs", type=int, default=0,
-                        help="worker threads for portrait rendering (1-4, 0 = auto)")
-    args = parser.parse_args(argv)
-
+@app.default
+def main(
+    game: Path | None = None,
+    langs: str = ",".join(LOCALE_LANGS),
+    *,
+    force: bool = False,
+    checkpoints: bool = True,
+    entries: bool = True,
+    lore: bool = True,
+    stats: bool = True,
+    missions: bool = True,
+    battles: bool = True,
+    portraits: bool = True,
+    jobs: int = 0,
+) -> None:
     request = ExtractRequest(
-        game=Path(args.game).expanduser() if args.game else None,
-        langs=split_langs(args.langs),
-        force=args.force,
-        with_checkpoints=args.with_checkpoints,
-        with_entries=args.with_entries,
-        with_lore=args.with_lore,
-        with_stats=args.with_stats,
-        with_missions=args.with_missions,
-        with_battles=args.with_battles,
-        with_portraits=args.with_portraits,
-        portrait_jobs=args.jobs,
+        game=game.expanduser() if game is not None else None,
+        langs=split_langs(langs),
+        force=force,
+        checkpoints=checkpoints,
+        entries=entries,
+        lore=lore,
+        stats=stats,
+        missions=missions,
+        battles=battles,
+        portraits=portraits,
+        portrait_jobs=jobs,
     )
-    result = run_extract(request, Reporter())
-    if result.status == STATUS_USAGE:
-        return EXIT_USAGE
-    if result.status == STATUS_DATA_ERROR:
-        return EXIT_DATA
-    return EXIT_OK
+    run_extract(request, Reporter())
+
+
+def cli() -> None:
+    run_app(app)

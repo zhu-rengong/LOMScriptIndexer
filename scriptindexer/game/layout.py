@@ -29,7 +29,8 @@ def _data_dir(root: Path) -> Path | None:
     if not base.is_dir():
         return None
     candidates = sorted(
-        path for path in base.iterdir() if path.is_dir() and path.name.endswith(DATA_SUFFIX))
+        path for path in base.iterdir() if path.is_dir() and path.name.endswith(DATA_SUFFIX)
+    )
     return candidates[0] if candidates else None
 
 

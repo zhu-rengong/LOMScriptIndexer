@@ -1,9 +1,11 @@
 [project]
 name = "scriptindexer"
-version = "2.0.0"
+version = "3.0.0"
 description = "Extract, analyze and browse Legend of Mortal script assets"
 requires-python = ">=3.14"
 dependencies = [
+  "cyclopts>=5.4",
+  "msgspec>=0.22",
   "pillow>=12.0",
   "unitypy>=1.25.2",
   "typetreegeneratorapi>=0.0.10",
@@ -12,9 +14,17 @@ dependencies = [
 ]
 
 [project.scripts]
-scriptindexer-extract = "scriptindexer.cli.extract:main"
-scriptindexer-build = "scriptindexer.cli.build:main"
-scriptindexer-portraits = "scriptindexer.cli.portraits:main"
+scriptindexer = "scriptindexer.cli.app:main"
+scriptindexer-extract = "scriptindexer.cli.extract:cli"
+scriptindexer-build = "scriptindexer.cli.build:cli"
+scriptindexer-portraits = "scriptindexer.cli.portraits:cli"
+scriptindexer-schema = "scriptindexer.schema.export:cli"
+
+[dependency-groups]
+dev = [
+  "pyright>=1.1.400",
+  "ruff>=0.14",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -23,3 +33,26 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["scriptindexer"]
 
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"scriptindexer/game/*.py" = ["E501"]
+
+[tool.pyright]
+include = ["scriptindexer"]
+exclude = ["**/__pycache__"]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "basic"
+pythonVersion = "3.14"
+reportMissingTypeStubs = false
+reportUnknownMemberType = false
+reportUnknownArgumentType = false
+reportUnknownVariableType = false
+reportUnknownParameterType = false
+reportMissingParameterType = false

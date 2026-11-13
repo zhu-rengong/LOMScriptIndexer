@@ -1,30 +1,13 @@
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any
 
-from ..script_model import BranchBeat, ChoiceBeat, Facets, MetaBeat, SayBeat, SceneBeat
-from ..vocab import COND_CHECK, COND_COMPARE, COND_GROUP, COND_LOGIC, DEATH_SCENE
-
-_CHECK_TAGS = (COND_CHECK, COND_COMPARE, COND_LOGIC, COND_GROUP)
+from ..schema import CheckCondition, Facets, walk_conditions
+from ..script_model import BranchBeat, ChoiceBeat, MetaBeat, SayBeat, SceneBeat
+from ..vocab import DEATH_SCENE
 
 
-def _walk_checks(node: Any, out: set[str]) -> None:
-    if not isinstance(node, dict):
-        return
-    if node.get("tag") == COND_CHECK:
-        key = str(node.get("key") or "")
-        if key:
-            out.add(key)
-        return
-    if node.get("tag") not in _CHECK_TAGS:
-        return
-    for item in (node.get("left"), node.get("right")):
-        _walk_checks(item, out)
-    for item in node.get("items") or []:
-        _walk_checks(item, out)
-
-
-def collect_facets(beats: Sequence[object],
-                   extra_check_keys: Iterable[str] | None = None) -> Facets:
+def collect_facets(
+    beats: Sequence[object], extra_check_keys: Iterable[str] | None = None
+) -> Facets:
     speakers: set[str] = set()
     flags: set[str] = set()
     checks: set[str] = set()
@@ -34,6 +17,10 @@ def collect_facets(beats: Sequence[object],
     option_count = 0
     lock_count = 0
     dice_check_count = 0
+
+    def on_check(item: CheckCondition) -> None:
+        if item.key:
+            checks.add(item.key)
 
     def walk(rows: Sequence[object]) -> None:
         nonlocal option_count, lock_count, dice_check_count
@@ -56,7 +43,7 @@ def collect_facets(beats: Sequence[object],
             elif isinstance(beat, BranchBeat):
                 if beat.check:
                     checks.add(beat.check.key)
-                _walk_checks(beat.cond, checks)
+                walk_conditions(beat.cond, on_check=on_check)
                 walk(beat.beats)
             elif isinstance(beat, ChoiceBeat):
                 option_count += len(beat.options)
@@ -64,20 +51,19 @@ def collect_facets(beats: Sequence[object],
                     if option.lock:
                         lock_count += 1
                     walk(option.beats)
-            elif isinstance(beat, SceneBeat):
-                if beat.scene == DEATH_SCENE and beat.scene_key:
-                    endings.add(beat.scene_key)
+            elif isinstance(beat, SceneBeat) and beat.scene == DEATH_SCENE and beat.scene_key:
+                endings.add(beat.scene_key)
 
     walk(beats)
     if extra_check_keys:
         checks.update(key for key in extra_check_keys if key)
     return Facets(
-        speakers=tuple(sorted(speakers)),
-        flags=tuple(sorted(flags)),
-        checks=tuple(sorted(checks)),
-        stats=tuple(sorted(stats)),
-        relations=tuple(sorted(relations)),
-        endings=tuple(sorted(endings)),
+        speakers=sorted(speakers),
+        flags=sorted(flags),
+        checks=sorted(checks),
+        stats=sorted(stats),
+        relations=sorted(relations),
+        endings=sorted(endings),
         option_count=option_count,
         lock_count=lock_count,
         dice_check_count=dice_check_count,
@@ -88,10 +74,8 @@ def merge(base: Facets, battle_facets: Mapping[str, Iterable[str]] | None) -> Fa
     if not battle_facets:
         return base
 
-    def combine(values: Iterable[str], field: str) -> tuple[str, ...]:
-        merged = set(values)
-        merged.update(value for value in battle_facets.get(field) or () if value)
-        return tuple(sorted(merged))
+    def combine(values: list[str], field: str) -> list[str]:
+        return sorted(set(values) | {item for item in battle_facets.get(field) or () if item})
 
     return Facets(
         speakers=combine(base.speakers, "speakers"),

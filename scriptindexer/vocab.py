@@ -1,4 +1,4 @@
-from typing import Any
+from .schema import VocabPayload
 
 BEAT_SAY = "say"
 BEAT_CHOICE = "choice"
@@ -9,8 +9,17 @@ BEAT_LORE = "lore"
 BEAT_SCENE = "scene"
 BEAT_ENDING = "ending"
 BEAT_BATTLE = "battle"
-BEAT_TAGS = (BEAT_SAY, BEAT_CHOICE, BEAT_BRANCH, BEAT_JUMP, BEAT_META, BEAT_LORE,
-             BEAT_SCENE, BEAT_ENDING, BEAT_BATTLE)
+BEAT_TAGS = (
+    BEAT_SAY,
+    BEAT_CHOICE,
+    BEAT_BRANCH,
+    BEAT_JUMP,
+    BEAT_META,
+    BEAT_LORE,
+    BEAT_SCENE,
+    BEAT_ENDING,
+    BEAT_BATTLE,
+)
 BATTLE_LIKE_SCENE_NAMES = ("Battle", "Combat")
 DEATH_SCENE = "GameOver"
 
@@ -29,8 +38,17 @@ EDGE_GROUP_BY_KIND = {
 }
 
 FACET_LIST_FIELDS = ("speakers", "flags", "checks", "stats", "relations", "endings")
-FACET_KINDS = ("speakers", "flags", "checks", "stats", "relations", "endings",
-               "optionCount", "lockCount", "diceCheckCount")
+FACET_KINDS = (
+    "speakers",
+    "flags",
+    "checks",
+    "stats",
+    "relations",
+    "endings",
+    "optionCount",
+    "lockCount",
+    "diceCheckCount",
+)
 
 CHECK_SWITCH = "switch"
 CHECK_DICE = "dice"
@@ -48,10 +66,19 @@ COND_COMPARE = "compare"
 COND_LOGIC = "logic"
 COND_CHECK = "check"
 COND_RAW = "raw"
-COND_TAGS = frozenset({
-    COND_CONST, COND_RANDOM, COND_DICE, COND_VAR,
-    COND_GROUP, COND_COMPARE, COND_LOGIC, COND_CHECK, COND_RAW,
-})
+COND_TAGS = frozenset(
+    {
+        COND_CONST,
+        COND_RANDOM,
+        COND_DICE,
+        COND_VAR,
+        COND_GROUP,
+        COND_COMPARE,
+        COND_LOGIC,
+        COND_CHECK,
+        COND_RAW,
+    }
+)
 
 VALUE_CONST = "const"
 VALUE_STAT = "stat"
@@ -71,31 +98,73 @@ VALUE_BOOK_MASTER = "bookMaster"
 VALUE_CHRONICLE = "chronicle"
 VALUE_CONDITION = "condition"
 VALUE_KINDS = (
-    VALUE_CONST, VALUE_STAT, VALUE_REL, VALUE_FLAG, VALUE_BOOK, VALUE_MISC, VALUE_SPECIAL,
-    VALUE_RANDOM, VALUE_GROUP, VALUE_TIME, VALUE_TALENT, VALUE_BOOK_LEVEL, VALUE_UPGRADE,
-    VALUE_UPGRADE_LEVEL, VALUE_BOOK_MASTER, VALUE_CHRONICLE, VALUE_CONDITION,
+    VALUE_CONST,
+    VALUE_STAT,
+    VALUE_REL,
+    VALUE_FLAG,
+    VALUE_BOOK,
+    VALUE_MISC,
+    VALUE_SPECIAL,
+    VALUE_RANDOM,
+    VALUE_GROUP,
+    VALUE_TIME,
+    VALUE_TALENT,
+    VALUE_BOOK_LEVEL,
+    VALUE_UPGRADE,
+    VALUE_UPGRADE_LEVEL,
+    VALUE_BOOK_MASTER,
+    VALUE_CHRONICLE,
+    VALUE_CONDITION,
 )
 VALUE_KIND_BY_CODE = {index: kind for index, kind in enumerate(VALUE_KINDS)}
 
 COMPARE_OP_SYMBOL = {0: "=", 1: "≠", 2: "<", 3: "≤", 4: ">", 5: "≥"}
 COMPARE_SYMBOLS = tuple(COMPARE_OP_SYMBOL.values())
 COMPARE_TOKEN_SYMBOLS = (
-    ("<=", "≤"), (">=", "≥"), ("==", "="), ("≠", "≠"), ("≤", "≤"), ("≥", "≥"),
-    ("<", "<"), (">", ">"), ("=", "="),
+    ("<=", "≤"),
+    (">=", "≥"),
+    ("==", "="),
+    ("≠", "≠"),
+    ("≤", "≤"),
+    ("≥", "≥"),
+    ("<", "<"),
+    (">", ">"),
+    ("=", "="),
 )
 LOGIC_OP_KIND = {0: "and", 1: "or"}
 GROUP_OP_KIND = {1: "sum", 2: "max", 3: "min", 4: "product", 5: "all", 6: "any"}
 GROUP_KINDS = tuple(GROUP_OP_KIND.values())
 
 META_KINDS = (
-    "stat", "rel", "flag", "setstat", "setrel", "setflag", "settitle", "setlover",
-    "book", "misc", "special", "talent", "library", "story",
-    "mission", "missionTrigger", "dice", "time",
+    "stat",
+    "rel",
+    "flag",
+    "setstat",
+    "setrel",
+    "setflag",
+    "settitle",
+    "setlover",
+    "book",
+    "misc",
+    "special",
+    "talent",
+    "library",
+    "story",
+    "mission",
+    "missionTrigger",
+    "dice",
+    "time",
 )
 
-ITEM_KINDS = frozenset({
-    VALUE_BOOK, VALUE_MISC, VALUE_SPECIAL, VALUE_TALENT, VALUE_CHRONICLE,
-})
+ITEM_KINDS = frozenset(
+    {
+        VALUE_BOOK,
+        VALUE_MISC,
+        VALUE_SPECIAL,
+        VALUE_TALENT,
+        VALUE_CHRONICLE,
+    }
+)
 
 CHAPTER_PROLOGUE = "prologue"
 CHAPTER_CHAPTER = "chapter"
@@ -109,30 +178,32 @@ CHAPTER_SECTION = "section"
 CHAPTER_MISC = "misc"
 CHAPTER_OTHER = "other"
 CHAPTER_KINDS = (
-    CHAPTER_PROLOGUE, CHAPTER_CHAPTER, CHAPTER_ACT, CHAPTER_EVENT, CHAPTER_SCENE,
-    CHAPTER_WORK, CHAPTER_TRAVEL, CHAPTER_FREE, CHAPTER_SECTION, CHAPTER_MISC, CHAPTER_OTHER,
+    CHAPTER_PROLOGUE,
+    CHAPTER_CHAPTER,
+    CHAPTER_ACT,
+    CHAPTER_EVENT,
+    CHAPTER_SCENE,
+    CHAPTER_WORK,
+    CHAPTER_TRAVEL,
+    CHAPTER_FREE,
+    CHAPTER_SECTION,
+    CHAPTER_MISC,
+    CHAPTER_OTHER,
 )
 
-GLOBAL_GRAPH = "SR_DATA"
-GLOBAL_TEXT = "SR_TEXT"
-GLOBAL_CHECKPOINTS = "SR_CHECKPOINTS"
-GLOBAL_VAR_READS = "SR_VARREADS"
-GLOBAL_WORDCOUNT = "SR_WORDCOUNT"
-GLOBAL_MISSIONS = "SR_MISSIONS"
 
-
-def wire_payload() -> dict[str, Any]:
-    return {
-        "beatTags": list(BEAT_TAGS),
-        "sayModes": list(SAY_MODES),
-        "edgeKinds": list(EDGE_KINDS),
-        "edgeGroupByKind": dict(EDGE_GROUP_BY_KIND),
-        "facetKinds": list(FACET_KINDS),
-        "checkKinds": list(CHECK_KINDS),
-        "valueKinds": list(VALUE_KINDS),
-        "compareSymbols": list(COMPARE_SYMBOLS),
-        "groupKinds": list(GROUP_KINDS),
-        "metaKinds": list(META_KINDS),
-        "itemKinds": sorted(ITEM_KINDS),
-        "chapterKinds": list(CHAPTER_KINDS),
-    }
+def payload() -> VocabPayload:
+    return VocabPayload(
+        beat_tags=list(BEAT_TAGS),
+        say_modes=list(SAY_MODES),
+        edge_kinds=list(EDGE_KINDS),
+        edge_group_by_kind=dict(EDGE_GROUP_BY_KIND),
+        facet_kinds=list(FACET_KINDS),
+        check_kinds=list(CHECK_KINDS),
+        value_kinds=list(VALUE_KINDS),
+        compare_symbols=list(COMPARE_SYMBOLS),
+        group_kinds=list(GROUP_KINDS),
+        meta_kinds=list(META_KINDS),
+        item_kinds=sorted(ITEM_KINDS),
+        chapter_kinds=list(CHAPTER_KINDS),
+    )

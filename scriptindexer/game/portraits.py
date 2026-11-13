@@ -115,7 +115,7 @@ def game_fingerprint(layout: GameLayout) -> str:
 
 
 def asset_fingerprint(game: str) -> str:
-    return hashlib.sha256(f"{PORTRAIT_VERSION}|{game}".encode("utf-8")).hexdigest()[:16]
+    return hashlib.sha256(f"{PORTRAIT_VERSION}|{game}".encode()).hexdigest()[:16]
 
 
 def _worker_count(jobs: int) -> int:
@@ -149,8 +149,11 @@ def _valid_manifest(manifest: Any, asset: str) -> bool:
     if manifest.get("fingerprint") != asset or manifest.get("columns") != ATLAS_COLUMNS:
         return False
     pages = manifest.get("pages")
-    if not isinstance(pages, list) or not pages or not all(
-            isinstance(name, str) and Path(name).name == name for name in pages):
+    if (
+        not isinstance(pages, list)
+        or not pages
+        or not all(isinstance(name, str) and Path(name).name == name for name in pages)
+    ):
         return False
     characters = manifest.get("characters")
     if not isinstance(characters, dict):
@@ -169,8 +172,7 @@ def _valid_manifest(manifest: Any, asset: str) -> bool:
     return True
 
 
-def _load_previous(output: Path, preview_dir: Path, game: str,
-                   asset: str) -> Previous | None:
+def _load_previous(output: Path, preview_dir: Path, game: str, asset: str) -> Previous | None:
     manifest = read_json(output / "manifest.json")
     valid = _valid_manifest(manifest, asset)
     previews = _load_previews(preview_dir, game)
@@ -184,7 +186,8 @@ def _load_previous(output: Path, preview_dir: Path, game: str,
 def _complete(previous: Previous, output: Path, preview_dir: Path) -> bool:
     pages = previous.manifest.get("pages")
     if not isinstance(pages, list) or not all(
-            (output / name).is_file() for name in pages if isinstance(name, str)):
+        (output / name).is_file() for name in pages if isinstance(name, str)
+    ):
         return False
     artifacts = previous.previews.get("artifacts")
     if not isinstance(artifacts, dict):
@@ -196,8 +199,14 @@ def _complete(previous: Previous, output: Path, preview_dir: Path) -> bool:
     return True
 
 
-def _reusable(previous: Previous, character: str, expression: str, address: str,
-              override: Frame | None, preview_dir: Path) -> dict | None:
+def _reusable(
+    previous: Previous,
+    character: str,
+    expression: str,
+    address: str,
+    override: Frame | None,
+    preview_dir: Path,
+) -> dict | None:
     table = previous.crops.get(character) if previous.crops else None
     record = table.get(expression) if isinstance(table, dict) else None
     if not isinstance(record, dict) or record.get("address") != address:
@@ -225,8 +234,9 @@ def _special_id(segment: str) -> str | None:
     return pieces[1]
 
 
-def _anchors(expressions: dict[str, str], index: dict[str, Path]) \
-        -> dict[tuple[str, str], set[str]]:
+def _anchors(
+    expressions: dict[str, str], index: dict[str, Path]
+) -> dict[tuple[str, str], set[str]]:
     groups: dict[tuple[str, str], set[str]] = {}
     for address in expressions.values():
         if address not in index:
@@ -247,8 +257,12 @@ def _stem_index(index: dict[str, Path]) -> dict[str, list[str]]:
     return stems
 
 
-def _resolve(address: str, index: dict[str, Path], stems: dict[str, list[str]],
-             anchors: dict[tuple[str, str], set[str]]) -> str | None:
+def _resolve(
+    address: str,
+    index: dict[str, Path],
+    stems: dict[str, list[str]],
+    anchors: dict[tuple[str, str], set[str]],
+) -> str | None:
     if address in index:
         return address
     if "/" not in address:
@@ -260,7 +274,7 @@ def _resolve(address: str, index: dict[str, Path], stems: dict[str, list[str]],
         if ident is None:
             continue
         parent = "/".join(parts[:depth])
-        tail = "/".join(parts[depth + 1:])
+        tail = "/".join(parts[depth + 1 :])
         matches: list[str] = []
         for folder in anchors.get((parent, ident), ()):
             candidate = f"{parent}/{folder}/{tail}" if parent else f"{folder}/{tail}"
@@ -271,9 +285,13 @@ def _resolve(address: str, index: dict[str, Path], stems: dict[str, list[str]],
     return None
 
 
-def _plan(characters: dict[str, dict[str, str]], index: dict[str, Path],
-          frames: dict[str, dict[str, Frame]], previous: Previous | None,
-          preview_dir: Path) -> Plan:
+def _plan(
+    characters: dict[str, dict[str, str]],
+    index: dict[str, Path],
+    frames: dict[str, dict[str, Frame]],
+    previous: Previous | None,
+    preview_dir: Path,
+) -> Plan:
     grouped: dict[Path, dict[str, list[Target]]] = {}
     missing: list[dict] = []
     crops: dict[tuple[str, str], dict] = {}
@@ -285,15 +303,15 @@ def _plan(characters: dict[str, dict[str, str]], index: dict[str, Path],
         for expression, address in sorted(expressions.items()):
             resolved = _resolve(address, index, stems, anchors)
             if resolved is None:
-                missing.append({"character": character, "expression": expression,
-                                "address": address})
+                missing.append(
+                    {"character": character, "expression": expression, "address": address}
+                )
                 continue
             if resolved != address:
                 recovered += 1
             override = table.get(expression)
             if previous is not None:
-                reused = _reusable(previous, character, expression, resolved,
-                                   override, preview_dir)
+                reused = _reusable(previous, character, expression, resolved, override, preview_dir)
                 if reused is not None:
                     crops[(character, expression)] = reused
                     continue
@@ -326,15 +344,24 @@ def character_expressions(session: AssetSession) -> tuple[dict[str, dict[str, st
         for item in record.get("_portraitResourceList") or []:
             expression = (data_scope.typetree(item.get("_mapping")) or {}).get("Value")
             address = item.get("_addressKey")
-            if not isinstance(expression, str) or not expression \
-                    or not isinstance(address, str) or not address:
+            if (
+                not isinstance(expression, str)
+                or not expression
+                or not isinstance(address, str)
+                or not address
+            ):
                 issues.append({"character": character, "reason": "missing_portrait_mapping"})
                 continue
             normalized = address.replace("\\", "/")
             known = expressions.get(expression)
             if known is not None and known != normalized:
-                issues.append({"character": character, "expression": expression,
-                               "reason": "conflicting_address"})
+                issues.append(
+                    {
+                        "character": character,
+                        "expression": expression,
+                        "reason": "conflicting_address",
+                    }
+                )
                 continue
             expressions[expression] = normalized
     return characters, issues
@@ -356,8 +383,10 @@ def bundle_index(layout: GameLayout, reporter: Reporter) -> dict[str, Path]:
             finally:
                 _dispose(env)
         if number % 25 == 0 or number == len(files):
-            reporter.info(f"portraits: indexed {number}/{len(files)} bundles,"
-                          f" {time.monotonic() - started:.1f}s")
+            reporter.info(
+                f"portraits: indexed {number}/{len(files)} bundles,"
+                f" {time.monotonic() - started:.1f}s"
+            )
     return index
 
 
@@ -412,11 +441,17 @@ def preview(picture: Any) -> bytes:
 
 
 def _artifact_key(prefix: str, address: str) -> str:
-    return hashlib.sha256(f"{prefix}|{address}".encode("utf-8")).hexdigest()[:24]
+    return hashlib.sha256(f"{prefix}|{address}".encode()).hexdigest()[:24]
 
 
-def _render_address(address: str, obj: Any, artifact: str, targets: tuple[Target, ...],
-                    preview_missing: bool, preview_dir: Path) -> Render:
+def _render_address(
+    address: str,
+    obj: Any,
+    artifact: str,
+    targets: tuple[Target, ...],
+    preview_missing: bool,
+    preview_dir: Path,
+) -> Render:
     try:
         with _READ_LOCK:
             image = obj.read().image
@@ -453,13 +488,15 @@ def _render_address(address: str, obj: Any, artifact: str, targets: tuple[Target
     return Render(artifact, crops, record, errors)
 
 
-def _render_chunk(batch: tuple[Job, ...], preview_dir: Path) \
-        -> list[tuple[str, Render | None, str, str]]:
+def _render_chunk(
+    batch: tuple[Job, ...], preview_dir: Path
+) -> list[tuple[str, Render | None, str, str]]:
     results: list[tuple[str, Render | None, str, str]] = []
     for job in batch:
         try:
-            render = _render_address(job.key, job.obj, job.artifact, job.targets,
-                                     job.preview_missing, preview_dir)
+            render = _render_address(
+                job.key, job.obj, job.artifact, job.targets, job.preview_missing, preview_dir
+            )
         except RenderError as exc:
             results.append((job.key, None, exc.reason, exc.error))
             continue
@@ -470,15 +507,19 @@ def _render_chunk(batch: tuple[Job, ...], preview_dir: Path) \
     return results
 
 
-def _export_crops(grouped: dict[Path, dict[str, list[Target]]], preview_dir: Path,
-                  issues: list[dict], reporter: Reporter, jobs: int,
-                  force_previews: bool) -> Export:
+def _export_crops(
+    grouped: dict[Path, dict[str, list[Target]]],
+    preview_dir: Path,
+    issues: list[dict],
+    reporter: Reporter,
+    jobs: int,
+    force_previews: bool,
+) -> Export:
     crops: list[Crop] = []
     previews: dict[str, dict] = {}
     started = time.monotonic()
     total = len(grouped)
-    targets_total = sum(len(entries) for table in grouped.values()
-                        for entries in table.values())
+    targets_total = sum(len(entries) for table in grouped.values() for entries in table.values())
     serial = jobs <= 1 or (total <= 1 and targets_total <= CHUNK_SIZE)
     executor = ThreadPoolExecutor(max_workers=jobs)
     window = 1
@@ -506,7 +547,8 @@ def _export_crops(grouped: dict[Path, dict[str, list[Target]]], preview_dir: Pat
         if completed % 20 == 0 or completed == total:
             reporter.info(
                 f"portraits: {completed}/{total} bundles, {len(crops)} crops,"
-                f" {time.monotonic() - started:.1f}s")
+                f" {time.monotonic() - started:.1f}s"
+            )
 
     def drain(item: tuple[Any, list]) -> None:
         env, futures = item
@@ -526,8 +568,8 @@ def _export_crops(grouped: dict[Path, dict[str, list[Target]]], preview_dir: Pat
                 stat = bundle.stat()
                 objects: dict[str, Any] = {}
                 for address, obj in sorted(
-                        env.container.items(),
-                        key=lambda pair: pair[1].type.name != "Sprite"):
+                    env.container.items(), key=lambda pair: pair[1].type.name != "Sprite"
+                ):
                     key = address.replace("\\", "/")
                     if key not in targets or key in objects:
                         continue
@@ -535,8 +577,13 @@ def _export_crops(grouped: dict[Path, dict[str, list[Target]]], preview_dir: Pat
                         continue
                     objects[key] = obj
             except Exception as exc:
-                issues.append({"bundle": bundle.name, "reason": "bundle_read_failed",
-                               "error": type(exc).__name__})
+                issues.append(
+                    {
+                        "bundle": bundle.name,
+                        "reason": "bundle_read_failed",
+                        "error": type(exc).__name__,
+                    }
+                )
                 if env is not None:
                     _dispose(env)
                 note()
@@ -551,16 +598,17 @@ def _export_crops(grouped: dict[Path, dict[str, list[Target]]], preview_dir: Pat
                 artifact = _artifact_key(prefix, key)
                 missing = force_previews or not (preview_dir / f"{artifact}.webp").is_file()
                 batch.append(Job(key, obj, artifact, tuple(entries), missing))
-            chunks = [tuple(batch[index:index + CHUNK_SIZE])
-                      for index in range(0, len(batch), CHUNK_SIZE)]
+            chunks = [
+                tuple(batch[index : index + CHUNK_SIZE])
+                for index in range(0, len(batch), CHUNK_SIZE)
+            ]
             if serial:
                 for chunk in chunks:
                     merge(_render_chunk(chunk, preview_dir))
                 _dispose(env)
                 note()
                 continue
-            futures = [executor.submit(_render_chunk, chunk, preview_dir)
-                       for chunk in chunks]
+            futures = [executor.submit(_render_chunk, chunk, preview_dir) for chunk in chunks]
             pending.append((env, futures))
             while len(pending) >= window:
                 drain(pending.pop(0))
@@ -574,14 +622,14 @@ def _export_crops(grouped: dict[Path, dict[str, list[Target]]], preview_dir: Pat
 
 
 def _page_key(cells: list[str]) -> str:
-    digest = hashlib.sha256(
-        f"{PORTRAIT_VERSION}|{ATLAS_COLUMNS}|{ATLAS_CELLS}|".encode("ascii"))
+    digest = hashlib.sha256(f"{PORTRAIT_VERSION}|{ATLAS_COLUMNS}|{ATLAS_CELLS}|".encode("ascii"))
     digest.update("|".join(cells).encode("ascii"))
     return digest.hexdigest()[:24]
 
 
-def _paginate(cells: dict[tuple[str, str], str]) \
-        -> tuple[list[list[str]], dict[tuple[str, str], list[int]]]:
+def _paginate(
+    cells: dict[tuple[str, str], str],
+) -> tuple[list[list[str]], dict[tuple[str, str], list[int]]]:
     tables: dict[str, dict[str, str]] = {}
     for (character, expression), cell in cells.items():
         tables.setdefault(character, {})[expression] = cell
@@ -619,8 +667,9 @@ def _write_page(path: Path, cells: list[str]) -> None:
         for index, cell in enumerate(cells):
             crop = Image.open(crop_file(cell))
             try:
-                page.paste(crop, ((index % ATLAS_COLUMNS) * width,
-                                  (index // ATLAS_COLUMNS) * height))
+                page.paste(
+                    crop, ((index % ATLAS_COLUMNS) * width, (index // ATLAS_COLUMNS) * height)
+                )
             finally:
                 crop.close()
         output = BytesIO()
@@ -634,21 +683,30 @@ def _sweep(directory: Path, keep: set[str], suffixes: tuple[str, ...]) -> None:
     for stale in directory.iterdir():
         if not stale.is_file() or stale.suffix not in suffixes:
             continue
-        if len(stale.stem) == 24 and all(char in "0123456789abcdef" for char in stale.stem) \
-                and stale.name not in keep:
+        if (
+            len(stale.stem) == 24
+            and all(char in "0123456789abcdef" for char in stale.stem)
+            and stale.name not in keep
+        ):
             stale.unlink()
 
 
 def _trim_issues(issues: list[dict]) -> list[dict]:
     if len(issues) <= MAX_ISSUES:
         return issues
-    return issues[:MAX_ISSUES] + [{"reason": "issues_truncated",
-                                   "count": len(issues) - MAX_ISSUES}]
+    return issues[:MAX_ISSUES] + [{"reason": "issues_truncated", "count": len(issues) - MAX_ISSUES}]
 
 
-def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = False,
-                     output: Path = PORTRAIT_DIR, preview_dir: Path = PORTRAIT_PREVIEW_DIR,
-                     labels: Mapping[str, str] | None = None, jobs: int = 0) -> dict:
+def export_portraits(
+    layout: GameLayout,
+    reporter: Reporter,
+    *,
+    force: bool = False,
+    output: Path = PORTRAIT_DIR,
+    preview_dir: Path = PORTRAIT_PREVIEW_DIR,
+    labels: Mapping[str, str] | None = None,
+    jobs: int = 0,
+) -> dict:
     started = time.monotonic()
     workers = _worker_count(jobs)
     game = game_fingerprint(layout)
@@ -656,12 +714,16 @@ def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = Fa
     previous = None if force else _load_previous(output, preview_dir, game, asset)
     frames = load_frames()
     snapshot = settings_snapshot(frames)
-    if previous is not None and previous.manifest.get("version") == PORTRAIT_VERSION \
-            and previous.manifest.get("fingerprint") == asset \
-            and same_settings_snapshot(previous.manifest.get("settings"), snapshot) \
-            and _complete(previous, output, preview_dir):
-        reporter.info(f"portraits: {len(previous.manifest.get('characters', {}))}"
-                      f" characters from cache")
+    if (
+        previous is not None
+        and previous.manifest.get("version") == PORTRAIT_VERSION
+        and previous.manifest.get("fingerprint") == asset
+        and same_settings_snapshot(previous.manifest.get("settings"), snapshot)
+        and _complete(previous, output, preview_dir)
+    ):
+        reporter.info(
+            f"portraits: {len(previous.manifest.get('characters', {}))} characters from cache"
+        )
         return previous.manifest
     cached = load_bundle_cache(layout, game)
     if cached is None:
@@ -675,15 +737,16 @@ def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = Fa
     else:
         characters, index, issues = cached
     plan = _plan(characters, index, frames, previous, preview_dir)
-    reporter.info(f"portraits: {len(plan.grouped)} bundles to render,"
-                  f" {len(plan.crops)} reused, {plan.recovered} addresses resolved,"
-                  f" {workers} threads, {CHUNK_SIZE} per batch")
+    reporter.info(
+        f"portraits: {len(plan.grouped)} bundles to render,"
+        f" {len(plan.crops)} reused, {plan.recovered} addresses resolved,"
+        f" {workers} threads, {CHUNK_SIZE} per batch"
+    )
     output.mkdir(parents=True, exist_ok=True)
     preview_dir.mkdir(parents=True, exist_ok=True)
     PORTRAIT_CROP_DIR.mkdir(parents=True, exist_ok=True)
     force_previews = previous is None or not previous.previews
-    exported = _export_crops(plan.grouped, preview_dir, issues, reporter, workers,
-                             force_previews)
+    exported = _export_crops(plan.grouped, preview_dir, issues, reporter, workers, force_previews)
     records: dict[tuple[str, str], dict] = dict(plan.crops)
     for crop in exported.crops:
         records[(crop.character, crop.expression)] = {
@@ -718,8 +781,10 @@ def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = Fa
             used.add(record["artifact"])
         if table:
             available[character] = table
-            preview_characters[character] = {"label": names.get(character) or character,
-                                             "expressions": variants}
+            preview_characters[character] = {
+                "label": names.get(character) or character,
+                "expressions": variants,
+            }
     previews: dict[str, dict] = {}
     if previous is not None:
         stored = previous.previews.get("artifacts")
@@ -739,27 +804,35 @@ def export_portraits(layout: GameLayout, reporter: Reporter, *, force: bool = Fa
         "issues": _trim_issues(issues),
     }
     write_json(output / "manifest.json", manifest, indent=None)
-    write_json(preview_dir / "index.json", {
-        "version": PREVIEW_VERSION,
-        "avatar": list(THUMBNAIL_SIZE),
-        "head_band": HEAD_BAND,
-        "assets": game,
-        "settings": framing_digest(),
-        "artifacts": dict(sorted(previews.items())),
-        "characters": preview_characters,
-    }, indent=None)
+    write_json(
+        preview_dir / "index.json",
+        {
+            "version": PREVIEW_VERSION,
+            "avatar": list(THUMBNAIL_SIZE),
+            "head_band": HEAD_BAND,
+            "assets": game,
+            "settings": framing_digest(),
+            "artifacts": dict(sorted(previews.items())),
+            "characters": preview_characters,
+        },
+        indent=None,
+    )
     nested: dict[str, dict[str, dict]] = {}
     for (character, expression), record in records.items():
         nested.setdefault(character, {})[expression] = record
     save_crop_index(game, nested)
     _sweep(output, set(page_files), (".dds", ".webp"))
     _sweep(PORTRAIT_CROP_DIR, {f"{cell}.png" for cell in cells.values()}, (".png",))
-    _sweep(preview_dir, {entry["file"] for entry in previews.values()
-                         if isinstance(entry.get("file"), str)}, (".webp",))
+    _sweep(
+        preview_dir,
+        {entry["file"] for entry in previews.values() if isinstance(entry.get("file"), str)},
+        (".webp",),
+    )
     elapsed = time.monotonic() - started
     reporter.info(
         f"portraits: {len(available)} characters, {len(page_files)} pages,"
         f" {len(previews)} previews, {len(plan.crops)} reused,"
         f" {len(exported.crops)} rendered, {len(plan.grouped)} bundles,"
-        f" {len(plan.missing)} missing, {len(issues)} issues, {elapsed:.1f}s")
+        f" {len(plan.missing)} missing, {len(issues)} issues, {elapsed:.1f}s"
+    )
     return manifest

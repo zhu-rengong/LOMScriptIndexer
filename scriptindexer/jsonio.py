@@ -1,3 +1,4 @@
+import contextlib
 import json
 import os
 import tempfile
@@ -16,16 +17,15 @@ def _atomic(path: Path, write: Callable[[Path], None]) -> None:
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
     handle, temp_name = tempfile.mkstemp(
-        dir=str(target.parent), prefix=f".{target.name}.", suffix=".tmp")
+        dir=str(target.parent), prefix=f".{target.name}.", suffix=".tmp"
+    )
     os.close(handle)
     try:
         write(Path(temp_name))
         os.replace(temp_name, target)
     except BaseException:
-        try:
+        with contextlib.suppress(OSError):
             os.unlink(temp_name)
-        except OSError:
-            pass
         raise
 
 
@@ -49,11 +49,12 @@ def atomic_write_bytes(path: Path, payload: bytes) -> int:
 def read_json(path: Path) -> Any | None:
     try:
         return json.loads(Path(path).read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return None
 
 
 def write_json(path: Path, payload: Any, indent: int | None = 2) -> int:
-    text = json.dumps(payload, ensure_ascii=False, indent=indent,
-                      separators=None if indent else (",", ":"))
+    text = json.dumps(
+        payload, ensure_ascii=False, indent=indent, separators=None if indent else (",", ":")
+    )
     return atomic_write_text(path, text + "\n")

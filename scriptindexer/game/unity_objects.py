@@ -11,7 +11,7 @@ def coerce_int(value: Any, default: int = 0) -> int:
         return int(value)
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return default
 
 
@@ -68,8 +68,7 @@ def as_ref_dict(ref: Any) -> dict[str, Any] | None:
     return {"m_FileID": file_id, "m_PathID": path_id}
 
 
-def count_by_reason(items: Iterable[Mapping[str, Any]],
-                    key: str = "reason") -> dict[str, int]:
+def count_by_reason(items: Iterable[Mapping[str, Any]], key: str = "reason") -> dict[str, int]:
     counts: dict[str, int] = {}
     for item in items:
         reason = str(item.get(key) or "?")

@@ -1,15 +1,16 @@
 from typing import Any
 
 from .. import lua
-from ..script_model import CheckMark, LockedOption, MetaBeat, TextRef, Unevaluated
-from ..vocab import (
-    COND_CHECK,
-    COND_COMPARE,
-    COND_CONST,
-    COND_LOGIC,
-    COND_RAW,
-    COND_VAR,
+from ..schema import (
+    CheckCondition,
+    CompareCondition,
+    ConditionNode,
+    ConstCondition,
+    LogicCondition,
+    RawCondition,
+    VarCondition,
 )
+from ..script_model import CheckMark, LockedOption, MetaBeat, TextRef, Unevaluated
 from .calls import callee
 from .state import ChoiceDraft, EvalState, number_text, source_snippet, unwrap_text
 
@@ -21,8 +22,6 @@ _COMPARE_SYMBOL = {
     ">": ">",
     ">=": "≥",
 }
-
-_INDEX_KINDS = ("dot_index_expression", "bracket_index_expression")
 
 
 class ExpressionEvaluator:
@@ -48,7 +47,7 @@ class ExpressionEvaluator:
         if kind == "identifier":
             name = lua.render_source(expr)
             return state.env.get(name, Unevaluated(name))
-        if kind in _INDEX_KINDS:
+        if kind in lua.INDEX_KINDS:
             return self._index(expr, state)
         if kind == "table_constructor":
             return self._table(expr, state)
@@ -66,8 +65,9 @@ class ExpressionEvaluator:
     def _index(self, expr: lua.Node, state: EvalState) -> Any:
         base = self.eval(expr.child_by_field_name("table"), state)
         field = expr.child_by_field_name("field")
-        key = (lua.index_key(expr) or unwrap_text(self.eval(field, state))
-               or lua.render_source(field))
+        key = (
+            lua.index_key(expr) or unwrap_text(self.eval(field, state)) or lua.render_source(field)
+        )
         if isinstance(base, dict):
             return base.get(key, Unevaluated(lua.render_source(expr)))
         return Unevaluated(lua.render_source(expr))
@@ -92,8 +92,11 @@ class ExpressionEvaluator:
 
     def _unary(self, expr: lua.Node, state: EvalState) -> Any:
         operand = self.eval(expr.child_by_field_name("operand"), state)
-        if lua.operator_token(expr) == "-" and isinstance(operand, int) \
-                and not isinstance(operand, bool):
+        if (
+            lua.operator_token(expr) == "-"
+            and isinstance(operand, int)
+            and not isinstance(operand, bool)
+        ):
             return -operand
         return Unevaluated(lua.render_source(expr))
 
@@ -108,10 +111,12 @@ class ExpressionEvaluator:
                 return TextRef(left + right)
             return Unevaluated(lua.render_source(expr))
         if op == "or":
-            if left_node.type == "binary_expression" \
-                    and lua.operator_token(left_node) == "and" \
-                    and right_node.type == "string" \
-                    and lua.string_value(right_node).startswith("~"):
+            if (
+                left_node.type == "binary_expression"
+                and lua.operator_token(left_node) == "and"
+                and right_node.type == "string"
+                and lua.string_value(right_node).startswith("~")
+            ):
                 guard = left_node.child_by_field_name("left")
                 return LockedOption(
                     shown_text=self.eval(left_node.child_by_field_name("right"), state),
@@ -124,16 +129,22 @@ class ExpressionEvaluator:
             return self.eval(right_node, state)
         return Unevaluated(lua.render_source(expr))
 
-    def eval_stmt_value(self, expr: lua.Node, state: EvalState,
-                        beats: list[Any]) -> tuple[Any, ChoiceDraft | None]:
+    def eval_stmt_value(
+        self, expr: lua.Node, state: EvalState, beats: list[Any]
+    ) -> tuple[Any, ChoiceDraft | None]:
         if expr.type == "dot_index_expression":
             table = expr.child_by_field_name("table")
-            if table is not None and table.type == "identifier" \
-                    and lua.render_source(table) == self.semantics.dice_object \
-                    and lua.index_key(expr) == self.semantics.dice_result_field:
+            if (
+                table is not None
+                and table.type == "identifier"
+                and lua.render_source(table) == self.semantics.dice_object
+                and lua.index_key(expr) == self.semantics.dice_result_field
+            ):
                 beats.append(None)
-                return (Unevaluated(lua.render_source(expr)),
-                        ChoiceDraft(len(beats) - 1, "", list(state.menu_options)))
+                return (
+                    Unevaluated(lua.render_source(expr)),
+                    ChoiceDraft(len(beats) - 1, "", list(state.menu_options)),
+                )
         if expr.type == "function_call":
             obj, method = callee(expr)
             args = lua.arguments(expr)
@@ -141,7 +152,8 @@ class ExpressionEvaluator:
                 options = self.analyzer.calls.option_list(self.eval(args[0], state))
                 beats.append(None)
                 return Unevaluated(lua.render_source(expr)), ChoiceDraft(
-                    len(beats) - 1, "", options)
+                    len(beats) - 1, "", options
+                )
             if obj == self.semantics.check_object and method in self.semantics.check_methods:
                 value = self.eval(expr, state)
                 if isinstance(value, CheckMark) and method == "Dice":
@@ -150,53 +162,52 @@ class ExpressionEvaluator:
             return self.eval(expr, state), None
         return self.eval(expr, state), None
 
-    def cond_node(self, cond: lua.Node, state: EvalState) -> dict[str, Any]:
+    def cond_node(self, cond: lua.Node, state: EvalState) -> ConditionNode:
         kind = cond.type
         if kind == "function_call":
             obj, method = callee(cond)
             args = lua.arguments(cond)
-            if obj == self.semantics.stat_object \
-                    and method.startswith(self.semantics.stat_getter_prefix) and args:
-                key = unwrap_text(self.eval(args[0], state)) \
-                    or lua.render_source(args[0]).strip("\"'")
-                return {"tag": COND_VAR, "kind": "stat", "key": key}
+            if (
+                obj == self.semantics.stat_object
+                and method.startswith(self.semantics.stat_getter_prefix)
+                and args
+            ):
+                key = unwrap_text(self.eval(args[0], state)) or lua.render_source(args[0]).strip(
+                    "\"'"
+                )
+                return VarCondition(kind="stat", key=key)
             value = self.eval(cond, state)
             if isinstance(value, CheckMark):
-                return {"tag": COND_CHECK, "kind": value.kind, "key": value.key}
-            return {"tag": COND_RAW, "text": source_snippet(cond)}
+                return CheckCondition(kind=value.kind, key=value.key)
+            return RawCondition(text=source_snippet(cond))
         if kind == "binary_expression":
             op = lua.operator_token(cond)
             left_node = cond.child_by_field_name("left")
             right_node = cond.child_by_field_name("right")
             if op in ("and", "or"):
-                return {
-                    "tag": COND_LOGIC,
-                    "op": op,
-                    "items": [self.cond_node(left_node, state),
-                              self.cond_node(right_node, state)],
-                }
-            return {
-                "tag": COND_COMPARE,
-                "op": _COMPARE_SYMBOL.get(op, op),
-                "left": self.cond_node(left_node, state),
-                "right": self.cond_node(right_node, state),
-            }
+                return LogicCondition(
+                    op=op,
+                    items=[self.cond_node(left_node, state), self.cond_node(right_node, state)],
+                )
+            return CompareCondition(
+                op=_COMPARE_SYMBOL.get(op, op),
+                left=self.cond_node(left_node, state),
+                right=self.cond_node(right_node, state),
+            )
         if kind == "identifier":
             value = state.env.get(lua.render_source(cond))
             if isinstance(value, CheckMark):
-                return {"tag": COND_CHECK, "kind": value.kind, "key": value.key}
+                return CheckCondition(kind=value.kind, key=value.key)
             if isinstance(value, (str, int)) and not isinstance(value, bool):
-                return {"tag": COND_CONST, "value": value}
-            return {"tag": COND_RAW, "text": lua.render_source(cond)}
+                return ConstCondition(value=value)
+            return RawCondition(text=lua.render_source(cond))
         if kind == "string":
-            return {"tag": COND_CONST, "value": lua.string_value(cond)}
+            return ConstCondition(value=lua.string_value(cond))
         if kind == "number":
-            return {"tag": COND_CONST, "value": number_text(lua.number_value(cond))}
+            return ConstCondition(value=number_text(lua.number_value(cond)))
         if kind == "unary_expression" and lua.operator_token(cond) == "-":
             operand = cond.child_by_field_name("operand")
             if operand is not None and operand.type == "number":
-                return {"tag": COND_CONST, "value": number_text(-lua.number_value(operand))}
-            return {"tag": COND_RAW, "text": source_snippet(cond)}
-        if kind in _INDEX_KINDS:
-            return {"tag": COND_RAW, "text": source_snippet(cond)}
-        return {"tag": COND_RAW, "text": source_snippet(cond)}
+                return ConstCondition(value=number_text(-lua.number_value(operand)))
+            return RawCondition(text=source_snippet(cond))
+        return RawCondition(text=source_snippet(cond))

@@ -30,7 +30,7 @@ def resource_container_rows(session: AssetSession) -> list[tuple[str, int]]:
         try:
             name, info = item
             rows.append((str(name), int(info["m_PathID"])))
-        except (TypeError, ValueError, KeyError):
+        except TypeError, ValueError, KeyError:
             continue
     return rows
 
@@ -41,9 +41,7 @@ def _file_name(path: str) -> str:
 
 def extract_scripts(session: AssetSession, reporter: Reporter) -> ScriptCorpus:
     started = time.time()
-    container_rows = [
-        (name.lower(), path_id) for name, path_id in resource_container_rows(session)
-    ]
+    container_rows = [(name.lower(), path_id) for name, path_id in resource_container_rows(session)]
     reporter.info(f"{len(container_rows)} resource paths")
 
     traditional: list[tuple[int, str]] = []
@@ -55,11 +53,11 @@ def extract_scripts(session: AssetSession, reporter: Reporter) -> ScriptCorpus:
             simplified.append((path_id, _file_name(name)))
 
     expected_by_path_id = {path_id: name for path_id, name in traditional}
-    expected_by_path_id.update({
-        path_id: name for path_id, name in simplified if path_id not in expected_by_path_id
-    })
+    expected_by_path_id.update(
+        {path_id: name for path_id, name in simplified if path_id not in expected_by_path_id}
+    )
     resolved_texts: dict[int, tuple[str, str]] = {}
-    for path, obj in session.iter_type("TextAsset"):
+    for _path, obj in session.iter_type("TextAsset"):
         path_id = int(getattr(obj, "path_id", 0) or 0)
         expected = expected_by_path_id.get(path_id)
         if expected is None:
@@ -105,7 +103,8 @@ def extract_scripts(session: AssetSession, reporter: Reporter) -> ScriptCorpus:
     corpus.stats = {
         "text_assets": len(resolved_texts),
         "traditional": sum(
-            1 for value in corpus.origin_lang.values() if value == ORIGIN_TRADITIONAL),
+            1 for value in corpus.origin_lang.values() if value == ORIGIN_TRADITIONAL
+        ),
         "simplified_only": len(simplified_only_names),
     }
     corpus.anomalies = {
@@ -122,10 +121,12 @@ def extract_scripts(session: AssetSession, reporter: Reporter) -> ScriptCorpus:
     )
     if simplified_only_names:
         reporter.info(
-            f"simplified only (unreachable in game): {', '.join(simplified_only_names[:6])}")
+            f"simplified only (unreachable in game): {', '.join(simplified_only_names[:6])}"
+        )
     if empty_names:
         reporter.info(f"{len(empty_names)} empty scripts: {', '.join(empty_names[:6])}")
     if missing_names:
         reporter.warn(
-            f"{len(missing_names)} paths present but resources missing: {missing_names[:3]}")
+            f"{len(missing_names)} paths present but resources missing: {missing_names[:3]}"
+        )
     return corpus

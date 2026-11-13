@@ -46,9 +46,11 @@ class Frame:
         }
 
     def matches(self, other: Frame) -> bool:
-        return (abs(self.x - other.x) <= FRAME_TOLERANCE
-                and abs(self.y - other.y) <= FRAME_TOLERANCE
-                and abs(self.w - other.w) <= FRAME_TOLERANCE)
+        return (
+            abs(self.x - other.x) <= FRAME_TOLERANCE
+            and abs(self.y - other.y) <= FRAME_TOLERANCE
+            and abs(self.w - other.w) <= FRAME_TOLERANCE
+        )
 
 
 def default_frame(size: tuple[int, int], focus: Box | None) -> Frame:
@@ -67,7 +69,7 @@ def parse_frame(value: Any) -> Frame | None:
         x = float(value["x"])
         y = float(value["y"])
         w = float(value["w"])
-    except (KeyError, TypeError, ValueError):
+    except KeyError, TypeError, ValueError:
         return None
     if not all(math.isfinite(item) for item in (x, y, w)):
         return None

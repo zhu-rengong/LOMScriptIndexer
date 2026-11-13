@@ -16,7 +16,7 @@ $root = Split-Path -Parent $here
 $site = Join-Path $root "docs"
 $index = Join-Path $site "index.html"
 $dataDir = Join-Path $site "data"
-$graph = Join-Path $dataDir "graph.js"
+$graph = Join-Path $dataDir "graph.json"
 $web = Join-Path $root "web"
 
 if (-not (Test-Path (Join-Path $web "package.json"))) { throw "web/package.json not found" }
@@ -30,9 +30,9 @@ try {
 
 if (-not (Test-Path $index)) { throw "docs/index.html not found" }
 if (-not (Test-Path (Join-Path $site "assets"))) { throw "docs/assets not found" }
-if (-not (Test-Path $graph)) { throw "docs/data/graph.js not found; run run.ps1 or uv run scriptindexer-extract plus scriptindexer-build first" }
-$heads = @(Get-ChildItem -Path $dataDir -Filter "text-*-head.js" -File -ErrorAction SilentlyContinue)
-if (-not $heads.Count) { throw "docs/data/text-*-head.js not found; run uv run scriptindexer-build first" }
+if (-not (Test-Path $graph)) { throw "docs/data/graph.json not found; run run.ps1 or uv run scriptindexer-extract plus scriptindexer-build first" }
+$heads = @(Get-ChildItem -Path $dataDir -Filter "text-*-head.json" -File -ErrorAction SilentlyContinue)
+if (-not $heads.Count) { throw "docs/data/text-*-head.json not found; run uv run scriptindexer-build first" }
 
 $remoteUrl = git -C $root remote get-url $Remote 2>$null
 if ($LASTEXITCODE -ne 0 -or -not $remoteUrl) { throw "remote '$Remote' is not configured in $root" }

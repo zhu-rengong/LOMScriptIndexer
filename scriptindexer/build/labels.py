@@ -1,14 +1,18 @@
 import re
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
 from typing import Any
 
+from ..schema import (
+    CheckCondition,
+    CheckpointCondition,
+    ConditionNode,
+    GroupCondition,
+    MissionDocument,
+    VarCondition,
+    children,
+    walk_conditions,
+)
 from ..vocab import (
-    COND_CHECK,
-    COND_COMPARE,
-    COND_GROUP,
-    COND_LOGIC,
-    COND_VAR,
     VALUE_BOOK,
     VALUE_BOOK_LEVEL,
     VALUE_CHRONICLE,
@@ -35,16 +39,51 @@ STAT_ALIASES: dict[str, str] = {
     "Faction_Level": "faction",
 }
 
-type NameTables = dict[str, dict[str, str]]
+NAME_ENDING = "ending"
+NAME_CHECK = "check"
+NAME_STAT = VALUE_STAT
+NAME_MISSION = "mission"
+NAME_MISSION_STATE = "missionState"
+NAME_MISSION_DIALOG = "missionDialog"
+NAME_MISSION_POSITION = "missionPosition"
 
 
-@dataclass(frozen=True)
+class NameRegistry:
+    def __init__(self) -> None:
+        self._tables: dict[str, dict[str, str]] = {}
+
+    def register(self, kind: str, key: str, display: str) -> None:
+        if not kind or not key or not display:
+            return
+        self._tables.setdefault(kind, {}).setdefault(key, display)
+
+    def lookup(self, kind: str, key: str) -> str:
+        return self._tables.get(kind, {}).get(key, "")
+
+    def table(self) -> dict[str, dict[str, str]]:
+        return {
+            kind: {key: table[key] for key in sorted(table)}
+            for kind, table in sorted(self._tables.items())
+            if table
+        }
+
+
 class NameSpec:
-    namespace: str
-    prefix: str = ""
-    key_prefix: str = ""
-    use_segments: bool = False
-    asset_digits: bool = False
+    __slots__ = ("namespace", "prefix", "key_prefix", "use_segments", "asset_digits")
+
+    def __init__(
+        self,
+        namespace: str,
+        prefix: str = "",
+        key_prefix: str = "",
+        use_segments: bool = False,
+        asset_digits: bool = False,
+    ) -> None:
+        self.namespace = namespace
+        self.prefix = prefix
+        self.key_prefix = key_prefix
+        self.use_segments = use_segments
+        self.asset_digits = asset_digits
 
 
 NAME_SPECS: dict[str, NameSpec] = {
@@ -52,8 +91,7 @@ NAME_SPECS: dict[str, NameSpec] = {
     VALUE_REL: NameSpec("Character", key_prefix="Relationship_", use_segments=True),
     VALUE_FLAG: NameSpec("Flag", prefix="Name/"),
     VALUE_BOOK: NameSpec("Book", prefix="Name/", use_segments=True),
-    VALUE_BOOK_LEVEL: NameSpec("Book", prefix="Name/", use_segments=True,
-                               asset_digits=True),
+    VALUE_BOOK_LEVEL: NameSpec("Book", prefix="Name/", use_segments=True, asset_digits=True),
     VALUE_MISC: NameSpec("Misc", prefix="Name/", use_segments=True),
     VALUE_SPECIAL: NameSpec("Special", prefix="Name/", use_segments=True),
     VALUE_TALENT: NameSpec("PlayerTalent", prefix="Name/", use_segments=True),
@@ -76,8 +114,7 @@ def _segments(name: str) -> list[str]:
     return segments
 
 
-def _candidate_keys(spec: NameSpec, asset_name: str, unity_id: str,
-                    alias: str = "") -> list[str]:
+def _candidate_keys(spec: NameSpec, asset_name: str, unity_id: str, alias: str = "") -> list[str]:
     keys: list[str] = []
     seen: set[str] = set()
 
@@ -87,8 +124,7 @@ def _candidate_keys(spec: NameSpec, asset_name: str, unity_id: str,
             keys.append(value)
 
     add(alias)
-    values = [unity_id, asset_name]
-    for value in values:
+    for value in (unity_id, asset_name):
         if not value:
             continue
         if spec.prefix and not value.startswith(spec.prefix):
@@ -112,16 +148,20 @@ def _stat_note(stat_notes: Mapping[str, str] | None, key: str) -> str:
     return note.strip() if isinstance(note, str) else ""
 
 
-def _match(spec: NameSpec, asset_name: str, unity_id: str, alias: str,
-           locale: Mapping[str, Any]) -> tuple[str, str]:
+def _match(
+    spec: NameSpec, asset_name: str, unity_id: str, alias: str, locale: Mapping[str, Any]
+) -> tuple[str, str]:
     table = locale.get(spec.namespace) or {}
     if not isinstance(table, dict):
         return "", ""
     for candidate in _candidate_keys(spec, asset_name, unity_id, alias):
         value = table.get(candidate)
         if value:
-            canonical = (candidate[len(spec.prefix):]
-                         if spec.prefix and candidate.startswith(spec.prefix) else candidate)
+            canonical = (
+                candidate[len(spec.prefix) :]
+                if spec.prefix and candidate.startswith(spec.prefix)
+                else candidate
+            )
             return canonical, str(value)
     return "", ""
 
@@ -131,7 +171,7 @@ def _fallback_key(spec: NameSpec, asset_name: str, unity_id: str) -> str:
         return unity_id
     prefix = spec.key_prefix
     if prefix and asset_name.startswith(prefix):
-        rest = asset_name[len(prefix):]
+        rest = asset_name[len(prefix) :]
         head = _KEY_HEAD.match(rest)
         if head:
             rest = head.group(0)
@@ -139,8 +179,9 @@ def _fallback_key(spec: NameSpec, asset_name: str, unity_id: str) -> str:
     return asset_name
 
 
-def canonical_key_for(kind: str, asset_name: str, unity_id: str,
-                      locale: Mapping[str, Any], alias: str = "") -> str:
+def canonical_key_for(
+    kind: str, asset_name: str, unity_id: str, locale: Mapping[str, Any], alias: str = ""
+) -> str:
     spec = NAME_SPECS.get(kind)
     if spec is None:
         return unity_id or asset_name
@@ -148,9 +189,14 @@ def canonical_key_for(kind: str, asset_name: str, unity_id: str,
     return canonical or _fallback_key(spec, asset_name, unity_id)
 
 
-def canonical_key(kind: str, asset_name: str, unity_id: str, locale: Mapping[str, Any],
-                  name_registry: NameTables,
-                  stat_notes: Mapping[str, str] | None = None) -> str:
+def canonical_key(
+    kind: str,
+    asset_name: str,
+    unity_id: str,
+    locale: Mapping[str, Any],
+    registry: NameRegistry,
+    stat_notes: Mapping[str, str] | None = None,
+) -> str:
     spec = NAME_SPECS.get(kind)
     if spec is None:
         return unity_id or asset_name
@@ -159,16 +205,14 @@ def canonical_key(kind: str, asset_name: str, unity_id: str, locale: Mapping[str
     canonical = canonical or _fallback_key(spec, asset_name, unity_id)
     if not canonical:
         return ""
-    bucket = name_registry.setdefault(kind, {})
-    if canonical in bucket:
+    if registry.lookup(kind, canonical):
         return canonical
     if kind == VALUE_STAT:
         note = _stat_note(stat_notes, canonical) or _stat_note(stat_notes, unity_id or asset_name)
         if note:
-            bucket[canonical] = note
+            registry.register(kind, canonical, note)
             return canonical
-    if display:
-        bucket[canonical] = display
+    registry.register(kind, canonical, display)
     return canonical
 
 
@@ -183,197 +227,164 @@ def stat_value_name(locale: Mapping[str, Any], stat: str, value: int) -> str:
     return str(name) if name else ""
 
 
-def record_check_display_name(key: str, locale: Mapping[str, Any],
-                              name_registry: NameTables) -> None:
+def record_check_display_name(key: str, locale: Mapping[str, Any], registry: NameRegistry) -> None:
     if not key:
         return
     table = locale.get(CHECK_NAMESPACE) or {}
     if isinstance(table, dict) and table.get(key):
-        name_registry.setdefault("check", {})[key] = str(table[key])
+        registry.register(NAME_CHECK, key, str(table[key]))
 
 
-def _seed_group(node: Mapping[str, Any], name_registry: NameTables,
-                locale: Mapping[str, Any]) -> None:
-    if node.get("op") not in (None, "", "sum"):
+def _seed_group(node: GroupCondition, registry: NameRegistry, locale: Mapping[str, Any]) -> None:
+    if node.op not in ("", "sum"):
         return
-    items = node.get("items") or []
-    if len(items) != 1:
+    if len(node.items) != 1:
         return
-    child = items[0]
-    if not isinstance(child, Mapping) or child.get("tag") != COND_VAR:
+    child = node.items[0]
+    if not isinstance(child, VarCondition) or child.kind != VALUE_STAT:
         return
-    if child.get("kind") != VALUE_STAT:
+    if not node.name.startswith(STAT_GROUP_PREFIX):
         return
-    name = node.get("name")
-    if not isinstance(name, str) or not name.startswith(STAT_GROUP_PREFIX):
-        return
-    label = name[len(STAT_GROUP_PREFIX):].strip()
+    label = node.name[len(STAT_GROUP_PREFIX) :].strip()
     if not label or "_" in label:
         return
-    key = str(child.get("name") or "")
-    unity_id = str(child.get("id") or "")
-    alias = STAT_ALIASES.get(key, "")
-    canonical = canonical_key_for(VALUE_STAT, key, unity_id, locale, alias) or unity_id or key
+    alias = STAT_ALIASES.get(child.name, "")
+    canonical = (
+        canonical_key_for(VALUE_STAT, child.name, child.id, locale, alias) or child.id or child.name
+    )
     if canonical:
-        name_registry.setdefault(VALUE_STAT, {}).setdefault(canonical, label)
+        registry.register(VALUE_STAT, canonical, label)
 
 
-def _seed_expression(node: Any, name_registry: NameTables, locale: Mapping[str, Any]) -> None:
-    if not isinstance(node, Mapping):
+def _seed_expression(
+    node: ConditionNode | None, registry: NameRegistry, locale: Mapping[str, Any]
+) -> None:
+    if node is None:
         return
-    tag = node.get("tag")
-    if tag == COND_GROUP:
-        _seed_group(node, name_registry, locale)
-        for item in node.get("items") or []:
-            _seed_expression(item, name_registry, locale)
-        return
-    if tag in (COND_COMPARE, COND_LOGIC):
-        _seed_expression(node.get("left"), name_registry, locale)
-        _seed_expression(node.get("right"), name_registry, locale)
-        for item in node.get("items") or []:
-            _seed_expression(item, name_registry, locale)
+    if isinstance(node, GroupCondition):
+        _seed_group(node, registry, locale)
+    for child in children(node):
+        _seed_expression(child, registry, locale)
 
 
-def _candidate_conditions(checkpoint: Mapping[str, Any]) -> list[Any]:
-    out: list[Any] = []
-    for candidate in checkpoint.get("candidates") or []:
-        if not isinstance(candidate, Mapping):
-            continue
-        out.append(candidate.get("activeCondition"))
-        for adjustment in candidate.get("adjustments") or []:
-            if isinstance(adjustment, Mapping):
-                out.append(adjustment.get("condition"))
+def _canonicalize_expression(
+    node: ConditionNode | None,
+    locale: Mapping[str, Any],
+    registry: NameRegistry,
+    stat_notes: Mapping[str, str] | None = None,
+) -> None:
+    def on_var(item: VarCondition) -> None:
+        canonical = canonical_key(item.kind, item.name, item.id, locale, registry, stat_notes)
+        item.key = canonical
+        item.name = ""
+        item.id = ""
+
+    def on_check(item: CheckCondition) -> None:
+        record_check_display_name(item.key, locale, registry)
+
+    walk_conditions(node, on_var, on_check)
+
+
+def _candidate_expressions(checkpoint: CheckpointCondition) -> list[ConditionNode | None]:
+    out: list[ConditionNode | None] = []
+    for candidate in checkpoint.candidates:
+        out.append(candidate.active_condition)
+        for adjustment in candidate.adjustments:
+            out.append(adjustment.condition)
     return out
 
 
-def _seed_checkpoint(checkpoint: Mapping[str, Any], name_registry: NameTables,
-                     locale: Mapping[str, Any]) -> None:
-    for branch in checkpoint.get("branches") or []:
-        if isinstance(branch, Mapping):
-            _seed_expression(branch.get("expr"), name_registry, locale)
-    for variant in checkpoint.get("variants") or []:
-        if isinstance(variant, Mapping):
-            _seed_checkpoint(variant, name_registry, locale)
-    for item in checkpoint.get("countItems") or []:
-        _seed_expression(item, name_registry, locale)
-    for node in _candidate_conditions(checkpoint):
-        _seed_expression(node, name_registry, locale)
+def _seed_checkpoint(
+    checkpoint: CheckpointCondition, registry: NameRegistry, locale: Mapping[str, Any]
+) -> None:
+    for branch in checkpoint.branches:
+        _seed_expression(branch.expr, registry, locale)
+    for variant in checkpoint.variants:
+        _seed_checkpoint(variant, registry, locale)
+    for node in _candidate_expressions(checkpoint):
+        _seed_expression(node, registry, locale)
 
 
-def _walk_expression(node: Any, locale: Mapping[str, Any], name_registry: NameTables,
-                     stat_notes: Mapping[str, str] | None = None) -> None:
-    if not isinstance(node, dict):
-        return
-    tag = node.get("tag")
-    if tag == COND_VAR:
-        kind = str(node.get("kind") or "")
-        key = str(node.get("name") or "")
-        unity_id = str(node.get("id") or "")
-        canonical = canonical_key(kind, key, unity_id, locale, name_registry, stat_notes)
-        node["key"] = canonical
-        node.pop("name", None)
-        node.pop("id", None)
-        return
-    if tag == COND_CHECK:
-        record_check_display_name(str(node.get("key") or ""), locale, name_registry)
-        return
-    if tag in (COND_COMPARE, COND_LOGIC):
-        _walk_expression(node.get("left"), locale, name_registry, stat_notes)
-        _walk_expression(node.get("right"), locale, name_registry, stat_notes)
-        for item in node.get("items") or []:
-            _walk_expression(item, locale, name_registry, stat_notes)
-        return
-    if tag == COND_GROUP:
-        for item in node.get("items") or []:
-            _walk_expression(item, locale, name_registry, stat_notes)
+def _walk_checkpoint(
+    checkpoint: CheckpointCondition,
+    locale: Mapping[str, Any],
+    registry: NameRegistry,
+    stat_notes: Mapping[str, str] | None = None,
+) -> None:
+    for branch in checkpoint.branches:
+        _canonicalize_expression(branch.expr, locale, registry, stat_notes)
+    for addition in checkpoint.additions:
+        addition.key = canonical_key(
+            addition.kind, addition.name, addition.id, locale, registry, stat_notes
+        )
+        addition.name = ""
+        addition.id = ""
+    for variant in checkpoint.variants:
+        _walk_checkpoint(variant, locale, registry, stat_notes)
+    for node in _candidate_expressions(checkpoint):
+        _canonicalize_expression(node, locale, registry, stat_notes)
 
 
-def _walk_checkpoint(checkpoint: dict[str, Any], locale: Mapping[str, Any],
-                      name_registry: NameTables,
-                      stat_notes: Mapping[str, str] | None = None) -> None:
-    for branch in checkpoint.get("branches") or []:
-        if isinstance(branch, dict):
-            _walk_expression(branch.get("expr"), locale, name_registry, stat_notes)
-    for addition in checkpoint.get("additions") or []:
-        if not isinstance(addition, dict):
-            continue
-        kind = str(addition.get("kind") or "")
-        key = str(addition.get("name") or "")
-        unity_id = str(addition.get("id") or "")
-        canonical = canonical_key(kind, key, unity_id, locale, name_registry, stat_notes)
-        addition["key"] = canonical
-        addition.pop("name", None)
-        addition.pop("id", None)
-    for variant in checkpoint.get("variants") or []:
-        if isinstance(variant, dict):
-            _walk_checkpoint(variant, locale, name_registry, stat_notes)
-    for item in checkpoint.get("countItems") or []:
-        if isinstance(item, dict):
-            _walk_expression(item, locale, name_registry, stat_notes)
-    for node in _candidate_conditions(checkpoint):
-        _walk_expression(node, locale, name_registry, stat_notes)
-
-
-def canonicalize_checkpoints(checkpoints: Mapping[str, dict[str, Any]],
-                             locale: Mapping[str, Any], name_registry: NameTables,
-                             stat_notes: Mapping[str, str] | None = None) -> None:
+def canonicalize_checkpoints(
+    checkpoints: Mapping[str, CheckpointCondition],
+    locale: Mapping[str, Any],
+    registry: NameRegistry,
+    stat_notes: Mapping[str, str] | None = None,
+) -> None:
     for checkpoint in checkpoints.values():
-        if isinstance(checkpoint, dict):
-            _seed_checkpoint(checkpoint, name_registry, locale)
+        _seed_checkpoint(checkpoint, registry, locale)
     for checkpoint in checkpoints.values():
-        if isinstance(checkpoint, dict):
-            _walk_checkpoint(checkpoint, locale, name_registry, stat_notes)
+        _walk_checkpoint(checkpoint, locale, registry, stat_notes)
 
 
-def _mission_states(missions: Mapping[str, dict[str, Any]]) -> Iterable[Mapping[str, Any]]:
-    for record in missions.values():
-        if not isinstance(record, Mapping):
-            continue
-        states = record.get("states")
-        if not isinstance(states, Mapping):
-            continue
-        for state in states.values():
-            if isinstance(state, Mapping):
-                yield state
-
-
-def canonicalize_missions(missions: Mapping[str, dict[str, Any]],
-                          locale: Mapping[str, Any], name_registry: NameTables,
-                          stat_notes: Mapping[str, str] | None = None) -> None:
-    for state in _mission_states(missions):
-        for item in state.get("conditions") or []:
-            if not isinstance(item, Mapping):
+def canonicalize_missions(
+    missions: MissionDocument,
+    locale: Mapping[str, Any],
+    registry: NameRegistry,
+    stat_notes: Mapping[str, str] | None = None,
+) -> None:
+    states = [state for record in missions.items.values() for state in record.states.values()]
+    for state in states:
+        for item in state.conditions:
+            _seed_expression(item.expr, registry, locale)
+    for state in states:
+        for item in state.conditions:
+            _canonicalize_expression(item.expr, locale, registry, stat_notes)
+        for change in (*state.modify_flags_true, *state.modify_flags_false):
+            if not change.key:
                 continue
-            expr = item.get("expr")
-            if isinstance(expr, dict):
-                _seed_expression(expr, name_registry, locale)
-    for state in _mission_states(missions):
-        for item in state.get("conditions") or []:
-            if not isinstance(item, Mapping):
-                continue
-            expr = item.get("expr")
-            if isinstance(expr, dict):
-                _walk_expression(expr, locale, name_registry, stat_notes)
-        for field in ("modifyFlagsTrue", "modifyFlagsFalse"):
-            for change in state.get(field) or []:
-                if not isinstance(change, dict):
-                    continue
-                key = str(change.get("key") or "")
-                if not key:
-                    continue
-                canonical = canonical_key(
-                    VALUE_FLAG, key, "", locale, name_registry, stat_notes)
-                if canonical:
-                    change["key"] = canonical
+            canonical = canonical_key(VALUE_FLAG, change.key, "", locale, registry, stat_notes)
+            if canonical:
+                change.key = canonical
 
 
-def finalize_registry(tables: NameTables,
-                      kinds: Iterable[str] | None = None) -> dict[str, dict[str, str]]:
-    allowed = set(kinds) if kinds is not None else None
-    out: dict[str, dict[str, str]] = {}
-    for kind, table in tables.items():
-        if allowed is not None and kind not in allowed:
-            continue
-        if table:
-            out[kind] = {key: table[key] for key in sorted(table)}
-    return out
+def register_mission_names(
+    missions: MissionDocument, locale: Mapping[str, Any], registry: NameRegistry
+) -> None:
+    raw_position = locale.get("Position")
+    position_locale = raw_position if isinstance(raw_position, dict) else {}
+    positions_done: set[str] = set()
+    for mission_id, record in missions.items.items():
+        registry.register(NAME_MISSION, mission_id, record.desc)
+        for state_key, state in record.states.items():
+            registry.register(NAME_MISSION_STATE, state_key, state.desc)
+            code = state.position_code
+            if code and code not in positions_done:
+                text = position_locale.get(f"Name/{code}")
+                if isinstance(text, str) and text:
+                    registry.register(NAME_MISSION_POSITION, code, text)
+                positions_done.add(code)
+            for dialog in (*state.start_dialogs, *state.alert_dialogs):
+                text = position_locale.get(f"Dialog/{dialog.key}")
+                if isinstance(dialog.key, str) and dialog.key and isinstance(text, str) and text:
+                    registry.register(NAME_MISSION_DIALOG, dialog.key, text)
+
+
+def finalize_registry(
+    registry: NameRegistry, kinds: Iterable[str] | None = None
+) -> dict[str, dict[str, str]]:
+    table = registry.table()
+    if kinds is None:
+        return table
+    allowed = set(kinds)
+    return {kind: values for kind, values in table.items() if kind in allowed}

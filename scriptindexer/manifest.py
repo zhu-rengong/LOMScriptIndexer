@@ -13,10 +13,15 @@ def save_manifest(path: Path, manifest: dict[str, Any]) -> None:
     write_json(path, manifest, indent=2)
 
 
-def manifest_matches(manifest: dict[str, Any], fingerprint: str, langs: tuple[str, ...],
-                     lua_dir: Path, locale_dir: Path,
-                     stage_versions: dict[str, int],
-                     required: tuple[Path, ...] = ()) -> bool:
+def manifest_matches(
+    manifest: dict[str, Any],
+    fingerprint: str,
+    langs: tuple[str, ...],
+    lua_dir: Path,
+    locale_dir: Path,
+    stage_versions: dict[str, str],
+    required: tuple[Path, ...] = (),
+) -> bool:
     if not manifest or manifest.get("fingerprint") != fingerprint:
         return False
     if manifest.get("langs") != list(langs):

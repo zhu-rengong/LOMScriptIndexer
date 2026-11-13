@@ -1,30 +1,39 @@
 import re
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from typing import Any
 
+from ..schema import (
+    BattleRow,
+    BeatNode,
+    BranchRow,
+    CheckRef,
+    ChoiceOption,
+    ChoiceRow,
+    EndingRow,
+    JumpRow,
+    LoreRow,
+    MetaRow,
+    OptionDetail,
+    Requirement,
+    RequirementItem,
+    SayRow,
+    SceneRow,
+)
 from ..script_model import (
     BranchBeat,
-    CheckRef,
     ChoiceBeat,
     JumpBeat,
     LoreBeat,
     MetaBeat,
-    Requirement,
     SayBeat,
     SceneBeat,
-    TextRef,
+)
+from ..script_model import (
+    CheckRef as CheckRefModel,
 )
 from ..vocab import (
     BATTLE_LIKE_SCENE_NAMES,
-    BEAT_BATTLE,
-    BEAT_BRANCH,
-    BEAT_CHOICE,
-    BEAT_ENDING,
-    BEAT_JUMP,
-    BEAT_LORE,
-    BEAT_META,
-    BEAT_SAY,
-    BEAT_SCENE,
     DEATH_SCENE,
 )
 from . import labels
@@ -37,55 +46,78 @@ LORE_SAMPLE_LIMIT = 120
 TITLE_PLACEHOLDERS = frozenset({"(title)", "{title}", "title", "（title）"})
 
 
-def requirement_to_wire(requirement: Requirement | None) -> dict[str, Any] | None:
-    if requirement is None:
-        return None
-    return {"op": requirement.op, "operand": requirement.operand}
+@dataclass(frozen=True)
+class RenderMetrics:
+    options: int = 0
+    locked: int = 0
+    rich: int = 0
+    think: int = 0
+    think_named: int = 0
+    lore: int = 0
+    lore_fallback: int = 0
+    lore_missing: int = 0
+    lore_missing_samples: tuple[str, ...] = ()
+    missing: int = 0
+    battles: int = 0
+    battle_missing: int = 0
 
 
-def check_to_wire(check: CheckRef | None) -> dict[str, Any] | None:
+@dataclass(frozen=True)
+class LanguageRender:
+    lang: str
+    script_rows: dict[str, list[BeatNode]]
+    word_counts: dict[str, list[list[int]]]
+    chapter_counts: dict[str, list[list[int]]]
+    characters: dict[str, str]
+    titles: dict[str, str]
+    edge_labels: dict[str, str]
+    metrics: RenderMetrics
+    missing: list[str]
+    seconds: float
+
+
+def check_to_schema(check: CheckRefModel | None) -> CheckRef | None:
     if check is None:
         return None
-    payload: dict[str, Any] = {"kind": check.kind, "key": check.key}
-    if check.expected_result is not None:
-        payload["expectedResult"] = check.expected_result
-    return payload
+    return CheckRef(kind=check.kind, key=check.key, expected_result=check.expected_result)
 
 
-def condition_to_wire(node: dict[str, Any] | None) -> dict[str, Any] | None:
-    if not node:
+def requirement_to_schema(requirement: Any) -> Requirement | None:
+    if requirement is None:
         return None
-    tag = node.get("tag")
-    if tag == "compare":
-        left = condition_to_wire(node.get("left"))
-        right = condition_to_wire(node.get("right"))
-        if left is None or right is None:
-            return None
-        return {"tag": "compare", "op": node.get("op") or "", "left": left, "right": right}
-    if tag == "logic":
-        items = [condition_to_wire(item) for item in node.get("items") or []]
-        if not items or any(item is None for item in items):
-            return None
-        return {"tag": "logic", "op": node.get("op") or "", "items": items}
-    if tag in ("var", "check", "const"):
-        return dict(node)
-    return None
+    return Requirement(op=requirement.op, operand=requirement.operand)
+
+
+def _requirement_items(view: OptionView) -> list[RequirementItem]:
+    items: list[RequirementItem] = []
+    for item in view.requirements:
+        items.append(
+            RequirementItem(
+                kind=str(item.get("kind") or ""),
+                op=str(item.get("op") or ""),
+                value=item.get("value"),
+            )
+        )
+    return items
 
 
 class Renderer:
-    def __init__(self, locale: dict[str, dict[str, str]],
-                 lore_fallback: dict[str, str] | None = None,
-                 name_registry: labels.NameTables | None = None,
-                 stat_notes: dict[str, str] | None = None,
-                 battles: Any = None,
-                 position_targets: Mapping[str, Sequence[str]] | None = None) -> None:
+    def __init__(
+        self,
+        locale: dict[str, dict[str, str]],
+        lore_fallback: dict[str, str] | None = None,
+        registry: labels.NameRegistry | None = None,
+        stat_notes: dict[str, str] | None = None,
+        battles: Any = None,
+        position_targets: Mapping[str, Sequence[str]] | None = None,
+    ) -> None:
         self.counter = TextCounter()
         self.locale = locale
         self.battles = battles
         self.position_targets = position_targets or {}
         self.battle_count = 0
         self.battle_missing = 0
-        self.name_registry = name_registry if name_registry is not None else {}
+        self.registry = registry if registry is not None else labels.NameRegistry()
         self.stat_notes = stat_notes or {}
         self.lore_fallback = lore_fallback or {}
         self.story_table = locale.get("Story", {})
@@ -114,7 +146,7 @@ class Renderer:
                 self.missing.append(key)
         return text
 
-    def _ref(self, ref: TextRef | None) -> str:
+    def _ref(self, ref: Any) -> str:
         if ref is None:
             return ""
         if ref.is_locale_key:
@@ -125,12 +157,12 @@ class Renderer:
             return text
         return ref.text
 
-    def _option(self, ref: TextRef) -> OptionView:
+    def _option(self, ref: Any) -> OptionView:
         if ref.is_locale_key:
             return OptionView(self._ref(ref))
         return decode_option(ref.text, self.story_table)
 
-    def _locked_label(self, ref: TextRef | None) -> str:
+    def _locked_label(self, ref: Any) -> str:
         if ref is None:
             return ""
         if ref.is_locale_key:
@@ -142,79 +174,39 @@ class Renderer:
         self.locked_count += 1
         return text
 
-    def _ending(self, key: str) -> list[Any] | None:
+    def _ending(self, key: str) -> EndingRow | None:
         if not key:
             return None
         title = self.library.get(f"Title/{key}") or key
         desc = self.library.get(f"Desc/{key}") or ""
-        self.name_registry.setdefault("ending", {})[key] = title
-        return [BEAT_ENDING, key, title, desc]
+        self.registry.register(labels.NAME_ENDING, key, title)
+        return EndingRow(key=key, title=title, desc=desc)
 
-    def render_rows(self, beats: Sequence[object]) -> list[list[Any]]:
-        out: list[list[Any]] = []
+    def render_rows(self, beats: Sequence[object]) -> list[BeatNode]:
+        out: list[BeatNode] = []
         for beat in beats:
             if isinstance(beat, SayBeat):
                 out.append(self._say(beat))
             elif isinstance(beat, ChoiceBeat):
                 out.append(self._choice(beat))
             elif isinstance(beat, BranchBeat):
-                out.append([
-                    BEAT_BRANCH,
-                    check_to_wire(beat.check),
-                    beat.cond,
-                    beat.source,
-                    self.render_rows(beat.beats),
-                    beat.group,
-                ])
+                out.append(
+                    BranchRow(
+                        check=check_to_schema(beat.check),
+                        condition=beat.cond,
+                        source=beat.source,
+                        rows=self.render_rows(beat.beats),
+                        group=beat.group,
+                    )
+                )
             elif isinstance(beat, JumpBeat):
-                if beat.position:
-                    out.append(self._position_jump(beat))
-                    continue
-                out.append([BEAT_JUMP, beat.target or "", beat.dynamic_source or ""])
+                out.append(self._jump(beat))
             elif isinstance(beat, MetaBeat):
-                if beat.kind == "story":
-                    self._legend(beat.key, out)
-                    continue
-                if beat.kind == "time":
-                    out.append([BEAT_META, beat.kind, "", beat.value])
-                    continue
-                key = beat.key
-                if beat.kind == "dice":
-                    labels.record_check_display_name(beat.key, self.locale, self.name_registry)
-                elif beat.kind != "mission":
-                    value_kind = labels.META_VALUE_KIND.get(beat.kind, beat.kind)
-                    key = labels.canonical_key(
-                        value_kind, beat.key, "", self.locale, self.name_registry, self.stat_notes)
-                if beat.kind == "setstat" and key in labels.STAT_VALUE_PREFIXES:
-                    self._stat_value(key, beat.value, out)
-                    continue
-                row: list[Any] = [BEAT_META, beat.kind, key, beat.value]
-                if beat.hidden or beat.extra:
-                    row.append(beat.hidden)
-                if beat.extra:
-                    row.append(beat.extra)
-                out.append(row)
+                self._meta(beat, out)
             elif isinstance(beat, LoreBeat):
                 self._legend(beat.key, out)
             elif isinstance(beat, SceneBeat):
-                if beat.scene == DEATH_SCENE:
-                    ending = self._ending(beat.scene_key)
-                    if ending is not None:
-                        out.append(ending)
-                        continue
-                if beat.scene in BATTLE_LIKE_SCENE_NAMES and self.battles is not None:
-                    card = self.battles.card(
-                        beat.scene, beat.scene_key, beat.next_scene, beat.after_script)
-                    if card is not None:
-                        self.battle_count += 1
-                        for speaker in self._battle_speakers(card):
-                            self.character_ids.add(speaker)
-                        out.append([BEAT_BATTLE, beat.scene, beat.scene_key, beat.next_scene,
-                                    card, beat.after_script])
-                        continue
-                    self.battle_missing += 1
-                out.append([BEAT_SCENE, beat.scene, beat.scene_key, beat.next_scene,
-                            beat.after_script])
+                self._scene(beat, out)
         return out
 
     @staticmethod
@@ -234,13 +226,19 @@ class Renderer:
                     out.add(value)
         return out
 
-    def _position_jump(self, beat: JumpBeat) -> list[Any]:
+    def _jump(self, beat: JumpBeat) -> JumpRow:
+        if not beat.position:
+            return JumpRow(target=beat.target or "", dynamic=beat.dynamic_source or "")
         targets = list(self.position_targets.get(beat.position, ()))
         target = targets[0] if len(targets) == 1 else ""
-        return [BEAT_JUMP, target, beat.dynamic_source or "",
-                {"position": beat.position, "targets": targets}]
+        return JumpRow(
+            target=target,
+            dynamic=beat.dynamic_source or "",
+            position=beat.position,
+            targets=targets,
+        )
 
-    def _say(self, beat: SayBeat) -> list[Any]:
+    def _say(self, beat: SayBeat) -> SayRow:
         speaker = beat.speaker or ""
         if speaker:
             self.character_ids.add(speaker)
@@ -252,10 +250,15 @@ class Renderer:
             if speaker:
                 self.think_named_count += 1
         self.counter.add_text(beat.mode if beat.mode in TEXT_KINDS else "dialog", text)
-        return [BEAT_SAY, speaker, text, beat.mode, beat.expression if speaker else ""]
+        return SayRow(
+            speaker=speaker,
+            text=text,
+            mode=beat.mode,
+            expression=beat.expression if speaker else "",
+        )
 
-    def _choice(self, beat: ChoiceBeat) -> list[Any]:
-        options: list[list[Any]] = []
+    def _choice(self, beat: ChoiceBeat) -> ChoiceRow:
+        options: list[ChoiceOption] = []
         for option in beat.options:
             view = self._option(option.ref)
             text = view.text
@@ -265,27 +268,54 @@ class Renderer:
             self.counter.add_text("option", text)
             detail = None
             if view.action or view.requirements:
-                detail = {
-                    "action": view.action,
-                    "requirements": [dict(item) for item in view.requirements],
-                }
-            options.append([
-                text,
-                requirement_to_wire(view.requirement or option.requirement),
-                self.render_rows(option.beats),
-                self._locked_label(option.lock),
-                detail,
-                condition_to_wire(option.condition),
-            ])
-        return [BEAT_CHOICE, options]
+                detail = OptionDetail(action=view.action, requirements=_requirement_items(view))
+            options.append(
+                ChoiceOption(
+                    text=text,
+                    requirement=requirement_to_schema(view.requirement or option.requirement),
+                    rows=self.render_rows(option.beats),
+                    lock=self._locked_label(option.lock),
+                    detail=detail,
+                    condition=option.condition,
+                )
+            )
+        return ChoiceRow(options=options)
 
-    def _stat_value(self, stat: str, value: int | None, out: list[list[Any]]) -> None:
+    def _meta(self, beat: MetaBeat, out: list[BeatNode]) -> None:
+        if beat.kind == "story":
+            self._legend(beat.key, out)
+            return
+        if beat.kind == "time":
+            out.append(MetaRow(kind=beat.kind, value=beat.value))
+            return
+        key = beat.key
+        if beat.kind == "dice":
+            labels.record_check_display_name(beat.key, self.locale, self.registry)
+        elif beat.kind != "mission":
+            value_kind = labels.META_VALUE_KIND.get(beat.kind, beat.kind)
+            key = labels.canonical_key(
+                value_kind, beat.key, "", self.locale, self.registry, self.stat_notes
+            )
+        if beat.kind == "setstat" and key in labels.STAT_VALUE_PREFIXES:
+            self._stat_value(key, beat.value, out)
+            return
+        out.append(
+            MetaRow(
+                kind=beat.kind,
+                key=key,
+                value=beat.value,
+                hidden=beat.hidden,
+                extra=beat.extra,
+            )
+        )
+
+    def _stat_value(self, stat: str, value: int | None, out: list[BeatNode]) -> None:
         name = labels.stat_value_name(self.locale, stat, value) if value is not None else ""
         if name:
-            self.name_registry.setdefault(stat, {})[str(value)] = name
-        out.append([BEAT_META, f"set{stat}", stat, value])
+            self.registry.register(stat, str(value), name)
+        out.append(MetaRow(kind=f"set{stat}", key=stat, value=value))
 
-    def _legend(self, key: str, out: list[list[Any]]) -> None:
+    def _legend(self, key: str, out: list[BeatNode]) -> None:
         text = self.legend_info.get(key) or ""
         if not text:
             fallback = self.lore_fallback.get(key) or ""
@@ -299,7 +329,39 @@ class Renderer:
                 return
         self.counter.add_text("lore", text)
         self.lore_count += 1
-        out.append([BEAT_LORE, text])
+        out.append(LoreRow(text=text))
+
+    def _scene(self, beat: SceneBeat, out: list[BeatNode]) -> None:
+        if beat.scene == DEATH_SCENE:
+            ending = self._ending(beat.scene_key)
+            if ending is not None:
+                out.append(ending)
+                return
+        if beat.scene in BATTLE_LIKE_SCENE_NAMES and self.battles is not None:
+            card = self.battles.card(beat.scene, beat.scene_key, beat.next_scene, beat.after_script)
+            if card is not None:
+                self.battle_count += 1
+                for speaker in self._battle_speakers(card):
+                    self.character_ids.add(speaker)
+                out.append(
+                    BattleRow(
+                        scene=beat.scene,
+                        scene_key=beat.scene_key,
+                        next_scene=beat.next_scene,
+                        card=card,
+                        after_script=beat.after_script,
+                    )
+                )
+                return
+            self.battle_missing += 1
+        out.append(
+            SceneRow(
+                scene=beat.scene,
+                scene_key=beat.scene_key,
+                next_scene=beat.next_scene,
+                after_script=beat.after_script,
+            )
+        )
 
     def edge_label(self, joined_labels: str) -> str:
         if not joined_labels:
@@ -327,3 +389,19 @@ class Renderer:
                 continue
             out[character_id] = title
         return out
+
+    def metrics(self) -> RenderMetrics:
+        return RenderMetrics(
+            options=self.option_count,
+            locked=self.locked_count,
+            rich=self.rich_count,
+            think=self.think_count,
+            think_named=self.think_named_count,
+            lore=self.lore_count,
+            lore_fallback=self.lore_fallback_count,
+            lore_missing=self.lore_missing_count,
+            lore_missing_samples=tuple(self.lore_missing[:40]),
+            missing=self.missing_count,
+            battles=self.battle_count,
+            battle_missing=self.battle_missing,
+        )

@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from ..script_model import GameInfo
+from ..schema import GameInfo
 from .assets import AssetSession
 
 ACF_FIELD_PATTERN = r'"{field}"\s+"([^"]*)"'
@@ -48,14 +48,13 @@ def read_steam_manifest(steamapps: Path, install_folder: str) -> dict[str, str |
         if stamp and stamp.isdigit():
             try:
                 metadata["updated"] = datetime.fromtimestamp(int(stamp)).strftime("%Y-%m-%d")
-            except (OverflowError, OSError, ValueError):
+            except OverflowError, OSError, ValueError:
                 metadata["updated"] = None
         break
     return metadata
 
 
-def read_build_info(session: AssetSession, steamapps: Path | None,
-                    install_folder: str) -> GameInfo:
+def read_build_info(session: AssetSession, steamapps: Path | None, install_folder: str) -> GameInfo:
     version = read_bundle_version(session)
     if steamapps is None:
         return GameInfo(version)

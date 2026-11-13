@@ -4,6 +4,12 @@ from typing import Any
 
 from .. import lua
 from ..calendar import rounds_of
+from ..schema import (
+    CheckCondition,
+    CompareCondition,
+    ConditionNode,
+    ConstCondition,
+)
 from ..script_model import (
     CharRef,
     CheckMark,
@@ -31,7 +37,6 @@ from .state import (
 
 HIDDEN_PREFIX = "~"
 _LITERAL = re.compile(r'"([^"]*)"')
-_INDEX_KINDS = ("dot_index_expression", "bracket_index_expression")
 
 
 def callee(expr: lua.Node) -> tuple[str, str]:
@@ -41,8 +46,10 @@ def callee(expr: lua.Node) -> tuple[str, str]:
     if name.type == "identifier":
         return "", lua.render_source(name)
     if name.type == "method_index_expression":
-        return (_receiver(name.child_by_field_name("table")),
-                lua.render_source(name.child_by_field_name("method")))
+        return (
+            _receiver(name.child_by_field_name("table")),
+            lua.render_source(name.child_by_field_name("method")),
+        )
     if name.type == "dot_index_expression":
         receiver = _receiver(name.child_by_field_name("table"))
         if receiver:
@@ -73,8 +80,7 @@ def dialog_style_of(arg: Any, table_name: str) -> str:
     if arg.type != "dot_index_expression":
         return ""
     table = arg.child_by_field_name("table")
-    if table is not None and table.type == "identifier" \
-            and lua.render_source(table) == table_name:
+    if table is not None and table.type == "identifier" and lua.render_source(table) == table_name:
         return lua.index_key(arg) or ""
     return ""
 
@@ -92,30 +98,33 @@ class CallHandler:
         args = lua.arguments(expr)
         if method == self.semantics.story_getter and args:
             key = unwrap_text(self.analyzer.expressions.eval(args[0], state))
-            return TextRef(key, is_locale_key=True) if key else Unevaluated(
-                lua.render_source(expr))
-        if obj == self.semantics.character_object and method == self.semantics.character_get \
-                and args:
+            return TextRef(key, is_locale_key=True) if key else Unevaluated(lua.render_source(expr))
+        if (
+            obj == self.semantics.character_object
+            and method == self.semantics.character_get
+            and args
+        ):
             character_id = unwrap_text(self.analyzer.expressions.eval(args[0], state))
             return CharRef(character_id) if character_id else Unevaluated(lua.render_source(expr))
-        if obj == self.semantics.character_object \
-                and method == self.semantics.character_portrait and args:
-            character_id = unwrap_text(
-                self.analyzer.expressions.eval(args[0], state)) or ""
-            portrait_id = (unwrap_text(self.analyzer.expressions.eval(args[1], state))
-                           if len(args) > 1 else "")
+        if (
+            obj == self.semantics.character_object
+            and method == self.semantics.character_portrait
+            and args
+        ):
+            character_id = unwrap_text(self.analyzer.expressions.eval(args[0], state)) or ""
+            portrait_id = (
+                unwrap_text(self.analyzer.expressions.eval(args[1], state)) if len(args) > 1 else ""
+            )
             return CharRef(f"{character_id}:{portrait_id}")
         if obj == self.semantics.check_object and method in self.semantics.check_methods and args:
             key = unwrap_text(self.analyzer.expressions.eval(args[0], state))
-            self.analyzer.context.add_check(
-                self.semantics.check_methods[method], key or "")
+            self.analyzer.context.add_check(self.semantics.check_methods[method], key or "")
             if key and method == "Position":
                 self.analyzer.context.add_position(key)
             return CheckMark(self.semantics.check_methods[method], key or lua.render_source(expr))
         return Unevaluated(lua.render_source(expr))
 
-    def handle_call(self, call: lua.Node, state: EvalState,
-                    beats: list[Any]) -> ChoiceDraft | None:
+    def handle_call(self, call: lua.Node, state: EvalState, beats: list[Any]) -> ChoiceDraft | None:
         obj, method = callee(call)
         args = lua.arguments(call)
 
@@ -123,11 +132,14 @@ class CallHandler:
             if arg.type == "function_call":
                 inner_obj, inner_method = callee(arg)
                 inner_args = lua.arguments(arg)
-                if inner_obj == self.semantics.dice_object \
-                        and inner_method == self.semantics.dice_roll_methods[0] \
-                        and inner_args:
+                if (
+                    inner_obj == self.semantics.dice_object
+                    and inner_method == self.semantics.dice_roll_methods[0]
+                    and inner_args
+                ):
                     state.menu_options = self.option_list(
-                        self.analyzer.expressions.eval(inner_args[0], state))
+                        self.analyzer.expressions.eval(inner_args[0], state)
+                    )
 
         if method == self.semantics.say_method and not obj:
             self._say(state, args, beats)
@@ -136,14 +148,16 @@ class CallHandler:
         if method == self.semantics.speaker_method and not obj:
             if args:
                 value = self.analyzer.expressions.eval(args[0], state)
-                state.speaker = (
-                    value.id.split(":")[0] if isinstance(value, CharRef) else None)
+                state.speaker = value.id.split(":")[0] if isinstance(value, CharRef) else None
                 if len(args) > 1:
                     self.apply_portrait(state, self.analyzer.expressions.eval(args[1], state))
             return None
 
-        if obj == self.semantics.character_object \
-                and method == self.semantics.character_load_portrait and len(args) > 1:
+        if (
+            obj == self.semantics.character_object
+            and method == self.semantics.character_load_portrait
+            and len(args) > 1
+        ):
             character = unwrap_text(self.analyzer.expressions.eval(args[0], state))
             expression = unwrap_text(self.analyzer.expressions.eval(args[1], state))
             if character and expression:
@@ -162,9 +176,8 @@ class CallHandler:
 
         if method == self.semantics.dialog_method and not obj:
             dialog_style = dialog_style_of(args[0], "saydialogs") if args else ""
-            if not dialog_style and args and args[0].type in _INDEX_KINDS:
-                dialog_style = unwrap_text(
-                    self.analyzer.expressions.eval(args[0], state)) or ""
+            if not dialog_style and args and args[0].type in lua.INDEX_KINDS:
+                dialog_style = unwrap_text(self.analyzer.expressions.eval(args[0], state)) or ""
             if dialog_style:
                 state.dialog_style = dialog_style
                 state.is_think = dialog_style in self.semantics.think_dialogs
@@ -193,8 +206,11 @@ class CallHandler:
             return None
 
         if obj == self.semantics.check_object:
-            key = unwrap_text(self.analyzer.expressions.eval(args[0], state)) \
-                if method in self.semantics.check_methods and args else None
+            key = (
+                unwrap_text(self.analyzer.expressions.eval(args[0], state))
+                if method in self.semantics.check_methods and args
+                else None
+            )
             if key:
                 kind = self.semantics.check_methods[method]
                 self.analyzer.context.add_check(kind, key)
@@ -209,7 +225,8 @@ class CallHandler:
         if obj == self.semantics.dice_object and method in self.semantics.dice_roll_methods:
             if method == self.semantics.dice_roll_methods[0] and args:
                 state.menu_options = self.option_list(
-                    self.analyzer.expressions.eval(args[0], state))
+                    self.analyzer.expressions.eval(args[0], state)
+                )
             return None
 
         if not obj and method == self.semantics.choice_method and args:
@@ -255,8 +272,9 @@ class CallHandler:
         beats.append(SayBeat(speaker, ref, mode, expression))
         self.analyzer.context.say_count += 1
 
-    def apply_effect(self, method: str, args: Sequence[lua.Node], state: EvalState,
-                     beats: list[Any]) -> None:
+    def apply_effect(
+        self, method: str, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> None:
         spec = self.semantics.effects.get(method)
         if spec is None or not args:
             return
@@ -290,12 +308,14 @@ class CallHandler:
             self.analyzer.context.add_lore_key(key)
         beats.append(MetaBeat(spec.kind, key, value, hidden, extra))
 
-    def emit_jump(self, method: str, args: Sequence[lua.Node], state: EvalState,
-                  beats: list[Any]) -> None:
+    def emit_jump(
+        self, method: str, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> None:
         target_expr = args[-1] if args else None
         kind = self.semantics.jumps[method]
-        value = (self.analyzer.expressions.eval(target_expr, state)
-                 if target_expr is not None else None)
+        value = (
+            self.analyzer.expressions.eval(target_expr, state) if target_expr is not None else None
+        )
         if isinstance(value, CheckMark) and value.kind == CHECK_POSITION:
             beats.append(JumpBeat(None, "", value.key))
             return
@@ -310,12 +330,10 @@ class CallHandler:
         beats.append(JumpBeat(target, ""))
         self.analyzer.context.add_edge(target, kind, "")
 
-    def emit_scene(self, args: Sequence[lua.Node], state: EvalState,
-                   beats: list[Any]) -> None:
+    def emit_scene(self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]) -> None:
         values = ["", "", ""]
         for index in range(min(len(args), self.semantics.scene_arg_count)):
-            values[index] = unwrap_text(
-                self.analyzer.expressions.eval(args[index], state)) or ""
+            values[index] = unwrap_text(self.analyzer.expressions.eval(args[index], state)) or ""
         after_script = ""
         if values[2].lower() == "story" and state.pending_story_script:
             after_script = state.pending_story_script
@@ -339,8 +357,11 @@ class CallHandler:
         for key in sorted(table, key=lua_key_sort_key):
             value = table[key]
             if isinstance(value, LockedOption):
-                ref = value.shown_text if isinstance(value.shown_text, TextRef) else TextRef(
-                    unwrap_text(value.shown_text) or "")
+                ref = (
+                    value.shown_text
+                    if isinstance(value.shown_text, TextRef)
+                    else TextRef(unwrap_text(value.shown_text) or "")
+                )
                 if not ref.text or ref.text.startswith(HIDDEN_PREFIX):
                     continue
                 lock = value.locked_text if isinstance(value.locked_text, TextRef) else None
@@ -370,8 +391,9 @@ class CallHandler:
 
     @staticmethod
     def option_branch(option: OptionDraft, sub: list[Any]) -> ChoiceOption:
-        return ChoiceOption(option.ref, option.requirement, option.lock, tuple(sub),
-                            option.condition)
+        return ChoiceOption(
+            option.ref, option.requirement, option.lock, tuple(sub), option.condition
+        )
 
     def if_uses_choice(self, stmt: lua.Node, result_var: str) -> bool:
         for cond, _ in lua.if_clauses(stmt):
@@ -387,19 +409,24 @@ class CallHandler:
         right = cond.child_by_field_name("right")
         if left is None or right is None:
             return None
-        if left.type == "identifier" and lua.render_source(left) == result_var \
-                and right.type == "number":
+        if (
+            left.type == "identifier"
+            and lua.render_source(left) == result_var
+            and right.type == "number"
+        ):
             return int(lua.number_value(right))
-        if right.type == "identifier" and lua.render_source(right) == result_var \
-                and left.type == "number":
+        if (
+            right.type == "identifier"
+            and lua.render_source(right) == result_var
+            and left.type == "number"
+        ):
             return int(lua.number_value(left))
         return None
 
-    def fill_choice(self, pending: ChoiceDraft, stmt: lua.Node, state: EvalState,
-                    beats: list[Any]) -> None:
-        option_map = {
-            index: option for index, option in enumerate(pending.options, start=1)
-        }
+    def fill_choice(
+        self, pending: ChoiceDraft, stmt: lua.Node, state: EvalState, beats: list[Any]
+    ) -> None:
+        option_map = {index: option for index, option in enumerate(pending.options, start=1)}
         branches: list[ChoiceOption] = []
         for cond, body in lua.if_clauses(stmt):
             if cond is None:
@@ -416,25 +443,20 @@ class CallHandler:
 
     def close_incomplete(self, pending: ChoiceDraft, beats: list[Any]) -> None:
         beats[pending.index] = ChoiceBeat(
-            tuple(self.option_branch(option, []) for option in pending.options))
+            tuple(self.option_branch(option, []) for option in pending.options)
+        )
 
 
-def check_ref_of(node: dict[str, Any] | None) -> CheckRef | None:
-    if not isinstance(node, dict):
+def check_ref_of(node: ConditionNode | None) -> CheckRef | None:
+    if isinstance(node, CheckCondition):
+        return CheckRef(node.kind, node.key)
+    if not isinstance(node, CompareCondition):
         return None
-    tag = node.get("tag")
-    if tag == "check":
-        return CheckRef(str(node.get("kind") or ""), str(node.get("key") or ""))
-    if tag != "compare":
-        return None
-    for side, other in ((node.get("left"), node.get("right")),
-                        (node.get("right"), node.get("left"))):
-        if isinstance(side, dict) and side.get("tag") == "check" \
-                and isinstance(other, dict) and other.get("tag") == "const":
-            result = _int_value(other.get("value"))
+    for side, other in ((node.left, node.right), (node.right, node.left)):
+        if isinstance(side, CheckCondition) and isinstance(other, ConstCondition):
+            result = _int_value(other.value)
             if result is not None:
-                return CheckRef(
-                    str(side.get("kind") or ""), str(side.get("key") or ""), result)
+                return CheckRef(side.kind, side.key, result)
     return None
 
 
@@ -445,5 +467,5 @@ def _int_value(value: Any) -> int | None:
         return value
     try:
         return int(str(value))
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None

@@ -62,7 +62,7 @@ def source_snippet(expr: lua.Node, limit: int = 120) -> str:
 def number_text(value: Any) -> str:
     try:
         number = float(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return str(value)
     if number.is_integer():
         return str(int(number))

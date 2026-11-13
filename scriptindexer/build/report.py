@@ -2,21 +2,32 @@ from pathlib import Path
 from typing import Any
 
 from ..jsonio import write_json
-from ..versions import SCHEMA_VERSION
+from ..schema.index import contract_version
 
 
-def build_report_payload(*, generated: str, script_count: int, edge_counts: dict[str, int],
-                         node_counts: dict[str, int], system_entries: dict[str, Any],
-                         facets: dict[str, Any], checkpoints: dict[str, Any],
-                         battles: dict[str, Any], lore: dict[str, Any],
-                         missions: dict[str, Any],
-                         wordcount: dict[str, Any], time_stats: dict[str, Any],
-                         chapters: list[dict[str, Any]], text_artifact: dict[str, Any],
-                         languages: dict[str, Any], unresolved_jumps: list[str],
-                         analysis: dict[str, Any],
-                         artifacts: list[dict[str, Any]]) -> dict[str, Any]:
+def build_report_payload(
+    *,
+    generated: str,
+    script_count: int,
+    edge_counts: dict[str, int],
+    node_counts: dict[str, int],
+    system_entries: dict[str, Any],
+    facets: dict[str, Any],
+    checkpoints: dict[str, Any],
+    battles: dict[str, Any],
+    lore: dict[str, Any],
+    missions: dict[str, Any],
+    wordcount: dict[str, Any],
+    time_stats: dict[str, Any],
+    chapters: list[dict[str, Any]],
+    text_artifact: dict[str, Any],
+    languages: dict[str, Any],
+    unresolved_jumps: list[str],
+    analysis: dict[str, Any],
+    artifacts: list[dict[str, Any]],
+) -> dict[str, Any]:
     return {
-        "schema": SCHEMA_VERSION,
+        "schema": contract_version(),
         "generated": generated,
         "scripts": script_count,
         "edges": edge_counts,

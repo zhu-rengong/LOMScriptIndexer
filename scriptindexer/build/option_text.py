@@ -31,7 +31,7 @@ def split_requirement(value: str) -> tuple[str, Requirement | None]:
         return head, None
     for token, symbol in COMPARE_TOKEN_SYMBOLS:
         if tail.startswith(token):
-            return head, Requirement(symbol, tail[len(token):].strip())
+            return head, Requirement(symbol, tail[len(token) :].strip())
     return head, Requirement("", tail)
 
 
@@ -51,13 +51,21 @@ def decode_composite_option(value: str, story_table: Mapping[str, str]) -> Optio
         action_count = coerce_int(parts[2])
         contribution = coerce_int(parts[3])
         if action_count > 0:
-            requirements.append({
-                "kind": REQUIREMENT_ACTION, "op": MINIMUM_OPERATOR, "value": action_count,
-            })
+            requirements.append(
+                {
+                    "kind": REQUIREMENT_ACTION,
+                    "op": MINIMUM_OPERATOR,
+                    "value": action_count,
+                }
+            )
         if contribution > 0:
-            requirements.append({
-                "kind": REQUIREMENT_CONTRIBUTION, "op": MINIMUM_OPERATOR, "value": contribution,
-            })
+            requirements.append(
+                {
+                    "kind": REQUIREMENT_CONTRIBUTION,
+                    "op": MINIMUM_OPERATOR,
+                    "value": contribution,
+                }
+            )
     return OptionView(title, None, action, tuple(requirements))
 
 

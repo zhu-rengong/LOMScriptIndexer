@@ -1,34 +1,35 @@
-import argparse
 from pathlib import Path
 
+from cyclopts import App
+
 from ..console import Reporter
-from ..game.layout import GAME_ENV, discover, game_root
+from ..errors import UsageError
+from ..game.layout import discover, game_root
 from ..game.locale_tables import character_labels
 from ..game.portraits import export_portraits
 from ..languages import DEFAULT_LANG
-from .common import EXIT_DATA, EXIT_OK
+from .common import run_app
+
+app = App(
+    name="scriptindexer-portraits",
+    help="Export character portrait avatars as paged WebP atlases (read only)",
+)
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Export character portrait avatars as paged WebP atlases (read only)")
-    parser.add_argument("--game", default=None,
-                        help=f"game root directory (defaults to ${GAME_ENV})")
-    parser.add_argument("--lang", default=DEFAULT_LANG,
-                        help="language used for portrait preview labels")
-    parser.add_argument("--force", action="store_true",
-                        help="ignore the manifest cache and export again")
-    parser.add_argument("--jobs", type=int, default=0,
-                        help="worker threads for portrait rendering (1-4, 0 = auto)")
-    args = parser.parse_args(argv)
-
+@app.default
+def main(
+    game: Path | None = None, lang: str = DEFAULT_LANG, *, force: bool = False, jobs: int = 0
+) -> None:
     reporter = Reporter()
-    root = Path(args.game).expanduser() if args.game else game_root()
+    root = game.expanduser() if game is not None else game_root()
     layout = discover(root)
     if layout is None:
-        reporter.error("game directory not found")
-        return EXIT_DATA
-    manifest = export_portraits(layout, reporter, force=args.force,
-                                labels=character_labels(args.lang), jobs=args.jobs)
+        raise UsageError("game directory not found")
+    manifest = export_portraits(
+        layout, reporter, force=force, labels=character_labels(lang), jobs=jobs
+    )
     reporter.info(f"portraits: {len(manifest.get('characters', {}))} characters ready")
-    return EXIT_OK
+
+
+def cli() -> None:
+    run_app(app)

@@ -6,6 +6,8 @@ from tree_sitter import Language, Node, Parser
 _LANGUAGE = Language(tree_sitter_lua.language())
 _PARSER = Parser(_LANGUAGE)
 
+INDEX_KINDS = ("dot_index_expression", "bracket_index_expression")
+
 _ESCAPES = {
     "a": "\a",
     "b": "\b",
@@ -41,19 +43,26 @@ def parse(source: str) -> LuaChunk:
 def statements(node: Node | None) -> list[Node]:
     if node is None or node.type not in ("chunk", "block"):
         return []
-    return [child for child in node.named_children
-            if child.type not in ("comment", "hash_bang_line")]
+    return [
+        child for child in node.named_children if child.type not in ("comment", "hash_bang_line")
+    ]
 
 
 def if_clauses(node: Node) -> list[tuple[Node | None, list[Node]]]:
     result: list[tuple[Node | None, list[Node]]] = [
-        (node.child_by_field_name("condition"),
-         statements(node.child_by_field_name("consequence"))),
+        (
+            node.child_by_field_name("condition"),
+            statements(node.child_by_field_name("consequence")),
+        ),
     ]
     for alternative in node.children_by_field_name("alternative"):
         if alternative.type == "elseif_statement":
-            result.append((alternative.child_by_field_name("condition"),
-                           statements(alternative.child_by_field_name("consequence"))))
+            result.append(
+                (
+                    alternative.child_by_field_name("condition"),
+                    statements(alternative.child_by_field_name("consequence")),
+                )
+            )
         else:
             result.append((None, statements(alternative.child_by_field_name("body"))))
     return result
@@ -150,22 +159,30 @@ def render_source(node: Node | None) -> str:
     if kind in ("number", "identifier", "true", "false", "nil"):
         return raw_text(node)
     if kind == "dot_index_expression":
-        return (f'{render_source(node.child_by_field_name("table"))}'
-                f'["{raw_text(node.child_by_field_name("field"))}"]')
+        return (
+            f"{render_source(node.child_by_field_name('table'))}"
+            f'["{raw_text(node.child_by_field_name("field"))}"]'
+        )
     if kind == "bracket_index_expression":
-        return (f"{render_source(node.child_by_field_name('table'))}"
-                f"[{render_source(node.child_by_field_name('field'))}]")
+        return (
+            f"{render_source(node.child_by_field_name('table'))}"
+            f"[{render_source(node.child_by_field_name('field'))}]"
+        )
     if kind == "method_index_expression":
-        return (f"{render_source(node.child_by_field_name('table'))}"
-                f":{raw_text(node.child_by_field_name('method'))}")
+        return (
+            f"{render_source(node.child_by_field_name('table'))}"
+            f":{raw_text(node.child_by_field_name('method'))}"
+        )
     if kind == "function_call":
         return f"{render_source(node.child_by_field_name('name'))}({_render_arguments(node)})"
     if kind == "table_constructor":
         return "{...}"
     if kind == "binary_expression":
-        return (f"{render_source(node.child_by_field_name('left'))} "
-                f"{operator_token(node)} "
-                f"{render_source(node.child_by_field_name('right'))}")
+        return (
+            f"{render_source(node.child_by_field_name('left'))} "
+            f"{operator_token(node)} "
+            f"{render_source(node.child_by_field_name('right'))}"
+        )
     if kind == "unary_expression":
         return f"{operator_token(node)}{render_source(node.child_by_field_name('operand'))}"
     if kind == "parenthesized_expression":
@@ -220,17 +237,17 @@ def _unescape(raw: str) -> str:
             cursor = index + 1
             while cursor < size and cursor < index + 4 and raw[cursor].isdigit():
                 cursor += 1
-            out.append(int(raw[index + 1:cursor]) & 0xFF)
+            out.append(int(raw[index + 1 : cursor]) & 0xFF)
             index = cursor
             continue
         if nxt == "x" and index + 3 < size:
-            out.append(int(raw[index + 2:index + 4], 16))
+            out.append(int(raw[index + 2 : index + 4], 16))
             index += 4
             continue
         if nxt == "u" and raw.startswith("u{", index + 1):
             end = raw.find("}", index + 3)
             if end >= 0:
-                out.extend(chr(int(raw[index + 3:end], 16)).encode("utf-8"))
+                out.extend(chr(int(raw[index + 3 : end], 16)).encode("utf-8"))
                 index = end + 1
                 continue
         if nxt == "z":

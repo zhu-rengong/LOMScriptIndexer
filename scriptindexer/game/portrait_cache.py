@@ -18,7 +18,11 @@ def bundle_dir(layout: GameLayout) -> Path:
 def frame_value(frame: Frame | None) -> list[float] | None:
     if frame is None:
         return None
-    return [round(frame.x, FRAME_DIGITS), round(frame.y, FRAME_DIGITS), round(frame.w, FRAME_DIGITS)]
+    return [
+        round(frame.x, FRAME_DIGITS),
+        round(frame.y, FRAME_DIGITS),
+        round(frame.w, FRAME_DIGITS),
+    ]
 
 
 def settings_snapshot(frames: dict[str, dict[str, Frame]]) -> dict[str, dict[str, list[float]]]:
@@ -83,8 +87,9 @@ def same_settings_snapshot(left: Any, right: Any) -> bool:
     return True
 
 
-def load_bundle_cache(layout: GameLayout, fingerprint: str) \
-        -> tuple[dict[str, dict[str, str]], dict[str, Path], list[dict]] | None:
+def load_bundle_cache(
+    layout: GameLayout, fingerprint: str
+) -> tuple[dict[str, dict[str, str]], dict[str, Path], list[dict]] | None:
     payload = read_json(PORTRAIT_CACHE_PATH)
     if not isinstance(payload, dict) or payload.get("version") != CACHE_VERSION:
         return None
@@ -117,13 +122,19 @@ def load_bundle_cache(layout: GameLayout, fingerprint: str) \
     return parsed, index, issues if isinstance(issues, list) else []
 
 
-def save_bundle_cache(fingerprint: str, characters: dict[str, dict[str, str]],
-                      index: dict[str, Path], issues: list[dict]) -> None:
+def save_bundle_cache(
+    fingerprint: str,
+    characters: dict[str, dict[str, str]],
+    index: dict[str, Path],
+    issues: list[dict],
+) -> None:
     payload = {
         "version": CACHE_VERSION,
         "fingerprint": fingerprint,
-        "characters": {character: dict(sorted(table.items()))
-                       for character, table in sorted(characters.items())},
+        "characters": {
+            character: dict(sorted(table.items()))
+            for character, table in sorted(characters.items())
+        },
         "addresses": {address: path.name for address, path in sorted(index.items())},
         "issues": list(issues),
     }
@@ -154,8 +165,11 @@ def load_crop_index(fingerprint: str) -> dict[str, dict[str, dict]] | None:
             address = record.get("address")
             cell = record.get("cell")
             artifact = record.get("artifact")
-            if not isinstance(address, str) or not isinstance(cell, str) \
-                    or not isinstance(artifact, str):
+            if (
+                not isinstance(address, str)
+                or not isinstance(cell, str)
+                or not isinstance(artifact, str)
+            ):
                 continue
             if Path(cell).name != cell or not crop_file(cell).is_file():
                 continue

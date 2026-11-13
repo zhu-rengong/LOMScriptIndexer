@@ -4,8 +4,7 @@ from typing import TextIO
 
 
 class Reporter:
-    def __init__(self, stream: TextIO | None = None,
-                 stages: Sequence[str] = ()) -> None:
+    def __init__(self, stream: TextIO | None = None, stages: Sequence[str] = ()) -> None:
         self.stream = stream or sys.stdout
         self._indent = 6
         self._stages: list[str] = list(stages)

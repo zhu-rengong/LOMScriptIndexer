@@ -62,7 +62,7 @@ class RefCache:
 
 
 def _class_suffix(name: str, prefix: str) -> str:
-    return name[len(prefix):] if name.startswith(prefix) else ""
+    return name[len(prefix) :] if name.startswith(prefix) else ""
 
 
 def _stat_value(reader: RefCache, path: Path, ref: Any) -> int:
@@ -79,10 +79,15 @@ def _stat_value(reader: RefCache, path: Path, ref: Any) -> int:
 
 
 def _team_label(name: str, ident: str) -> str:
-    for prefix in (f"Enemy_{ident}_", f"Neutral_{ident}_", f"Player_{ident}_",
-                   "Enemy_", "Neutral_"):
+    for prefix in (
+        f"Enemy_{ident}_",
+        f"Neutral_{ident}_",
+        f"Player_{ident}_",
+        "Enemy_",
+        "Neutral_",
+    ):
         if name.startswith(prefix):
-            return name[len(prefix):]
+            return name[len(prefix) :]
     return ""
 
 
@@ -135,14 +140,13 @@ def _forces(reader: RefCache, path: Path, tree: dict[str, Any]) -> dict[str, dic
         ("neutral", "_neutralUsePeople", "_neutralPeople", "_neutralConfig"),
     ):
         payload: dict[str, Any] = {}
-        if coerce_int(tree.get(use_field)):
-            payload["people"] = coerce_int(tree.get(people_field))
-        elif side == "neutral":
+        if coerce_int(tree.get(use_field)) or side == "neutral":
             payload["people"] = coerce_int(tree.get(people_field))
         teams = _teams(reader, path, tree.get(config_field))
         labels = [
             {"id": team["id"], "note": team["note"], "label": team["label"]}
-            for team in teams if team["id"]
+            for team in teams
+            if team["id"]
         ]
         if labels:
             payload["teams"] = labels
@@ -197,9 +201,10 @@ def _battle_event(reader: RefCache, path: Path, ref: Any) -> dict[str, Any] | No
             note = collapse_text((condition["tree"] or {}).get("_devNote"))
             event["condition"] = note or condition["name"]
     actions = [
-        action for action in (
-            _battle_action(reader, hit["path"], item)
-            for item in tree.get("_actions") or [])
+        action
+        for action in (
+            _battle_action(reader, hit["path"], item) for item in tree.get("_actions") or []
+        )
         if action is not None
     ]
     if actions:
@@ -229,9 +234,8 @@ def _battle_level(reader: RefCache, path: Path, tree: dict[str, Any]) -> dict[st
     if forces:
         entry["forces"] = forces
     events = [
-        event for event in (
-            _battle_event(reader, path, ref)
-            for ref in tree.get("_events") or [])
+        event
+        for event in (_battle_event(reader, path, ref) for ref in tree.get("_events") or [])
         if event is not None
     ]
     if events:
@@ -269,13 +273,16 @@ def _dialog_lines(reader: RefCache, path: Path, tree: dict[str, Any]) -> list[di
             mapping = reader.resolve_ref(path, item.get("_characterKey"))
             if mapping is not None and mapping["tree"] is not None:
                 character = collapse_text(mapping["tree"].get("Value")) or collapse_text(
-                    mapping["tree"].get("Key"))
-        lines.append({
-            "side": side,
-            "id": character,
-            "key": collapse_text(item.get("_key")),
-            "text": collapse_text(item.get("_text")),
-        })
+                    mapping["tree"].get("Key")
+                )
+        lines.append(
+            {
+                "side": side,
+                "id": character,
+                "key": collapse_text(item.get("_key")),
+                "text": collapse_text(item.get("_text")),
+            }
+        )
     return lines
 
 
@@ -386,7 +393,11 @@ def _combat_condition(reader: RefCache, path: Path, ref: Any) -> dict[str, Any] 
     tree = hit["tree"] or {}
     name = _class_suffix(hit["class_name"], COMBAT_CONDITION_CLASS)
     if name == "Round":
-        return {"kind": "round", "op": coerce_int(tree.get("_op")), "value": coerce_int(tree.get("_round"))}
+        return {
+            "kind": "round",
+            "op": coerce_int(tree.get("_op")),
+            "value": coerce_int(tree.get("_round")),
+        }
     if name == "Stat":
         return {
             "kind": "stat",
@@ -455,8 +466,8 @@ def _actions(reader: RefCache, path: Path, refs: Any) -> list[dict[str, Any]]:
     if not isinstance(refs, list):
         return []
     return [
-        action for action in (
-            _combat_action(reader, path, ref) for ref in refs)
+        action
+        for action in (_combat_action(reader, path, ref) for ref in refs)
         if action is not None
     ]
 
@@ -465,8 +476,8 @@ def _conditions(reader: RefCache, path: Path, refs: Any) -> list[dict[str, Any]]
     if not isinstance(refs, list):
         return []
     return [
-        condition for condition in (
-            _combat_condition(reader, path, ref) for ref in refs)
+        condition
+        for condition in (_combat_condition(reader, path, ref) for ref in refs)
         if condition is not None
     ]
 
@@ -516,11 +527,13 @@ def _condition_flags(reader: RefCache, path: Path, items: Any) -> list[dict[str,
         flags = _flag_entries(reader, path, item.get("_flags"))
         if not flags:
             continue
-        out.append({
-            "logic": coerce_int(item.get("_logic")),
-            "conditions": _conditions(reader, path, item.get("_conditions")),
-            "flags": flags,
-        })
+        out.append(
+            {
+                "logic": coerce_int(item.get("_logic")),
+                "conditions": _conditions(reader, path, item.get("_conditions")),
+                "flags": flags,
+            }
+        )
     return out
 
 
@@ -588,8 +601,9 @@ def _combat_level(reader: RefCache, path: Path, tree: dict[str, Any]) -> dict[st
     return entry
 
 
-def extract(session: AssetSession,
-            reporter: Reporter) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+def extract(
+    session: AssetSession, reporter: Reporter
+) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
     started = time.time()
     warnings = session.warnings
     reader = RefCache(session)
@@ -605,7 +619,7 @@ def extract(session: AssetSession,
         if not name.startswith(prefix):
             failed += 1
             continue
-        asset_key = name[len(prefix):]
+        asset_key = name[len(prefix) :]
         battle_id = f"{scene}:{asset_key}"
         if battle_id in items:
             duplicates += 1
@@ -631,8 +645,8 @@ def extract(session: AssetSession,
     )
     if failed or reader.failures:
         reporter.info(
-            f"battle levels: {failed} unreadable assets,"
-            f" {reader.failures} unresolved references")
+            f"battle levels: {failed} unreadable assets, {reader.failures} unresolved references"
+        )
     if session.warnings > warnings:
         reporter.warn(f"battle levels: {session.warnings - warnings} read warnings")
     return dict(sorted(items.items())), stats

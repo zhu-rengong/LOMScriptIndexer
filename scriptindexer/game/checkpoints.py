@@ -3,7 +3,16 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+import msgspec
+
 from ..console import Reporter
+from ..schema import (
+    Branch,
+    CheckpointCondition,
+    CountItem,
+    PositionAdjustment,
+    PositionCandidate,
+)
 from ..script_model import ScriptAnalysis
 from ..vocab import COMPARE_OP_SYMBOL
 from .assets import AssetSession, FileScope
@@ -35,20 +44,21 @@ def collect_kind_hints(analyses: Mapping[str, ScriptAnalysis]) -> dict[str, set[
     return kind_hints
 
 
-def pick_condition(conditions: list[dict[str, Any]],
-                   kind_hints: set[str] | None = None) -> dict[str, Any]:
+def pick_condition(
+    conditions: list[CheckpointCondition], kind_hints: set[str] | None = None
+) -> CheckpointCondition:
     if kind_hints:
         for condition in conditions:
-            if condition.get("kind") in kind_hints:
+            if condition.kind in kind_hints:
                 return condition
     return conditions[0]
 
 
-def _distinct_conditions(conditions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _distinct_conditions(conditions: list[CheckpointCondition]) -> list[CheckpointCondition]:
     seen: set[str] = set()
-    out: list[dict[str, Any]] = []
+    out: list[CheckpointCondition] = []
     for condition in conditions:
-        kind = str(condition.get("kind") or "")
+        kind = condition.kind or ""
         if not kind or kind in seen:
             continue
         seen.add(kind)
@@ -56,20 +66,20 @@ def _distinct_conditions(conditions: list[dict[str, Any]]) -> list[dict[str, Any
     return out
 
 
-def _condition_with_variants(conditions: list[dict[str, Any]],
-                             kind_hints: set[str] | None = None) -> dict[str, Any]:
+def _condition_with_variants(
+    conditions: list[CheckpointCondition], kind_hints: set[str] | None = None
+) -> CheckpointCondition:
     distinct = _distinct_conditions(conditions)
     primary = pick_condition(distinct, kind_hints)
     variants = [condition for condition in distinct if condition is not primary]
     if not variants:
         return primary
-    merged = dict(primary)
-    merged["variants"] = variants
-    return merged
+    return msgspec.structs.replace(primary, variants=variants)
 
 
-def locate_checkpoint_assets(session: AssetSession, wanted_keys: set[str],
-                             reporter: Reporter) -> dict[str, list[Path]]:
+def locate_checkpoint_assets(
+    session: AssetSession, wanted_keys: set[str], reporter: Reporter
+) -> dict[str, list[Path]]:
     located: dict[str, list[Path]] = {}
     by_file: dict[Path, list[str]] = {}
     for path, obj in session.iter_type("MonoBehaviour"):
@@ -85,59 +95,55 @@ def locate_checkpoint_assets(session: AssetSession, wanted_keys: set[str],
     return located
 
 
-def _branch(expected_result: int, expression: dict[str, Any] | None) -> dict[str, Any]:
-    branch: dict[str, Any] = {"result": expected_result}
-    if expression:
-        branch["expr"] = expression
-    return branch
+def _branch(expected_result: int, expression: Any) -> Branch:
+    return Branch(result=expected_result, expr=expression)
 
 
-def _parse_switch(tree: dict[str, Any], scope: FileScope) -> dict[str, Any]:
+def _parse_switch(tree: dict[str, Any], scope: FileScope) -> CheckpointCondition:
     branches = [
         _branch(index + 1, condition_node(item, scope))
         for index, item in enumerate(tree.get("_items") or [])
     ]
     count_items = tree.get("_countItems") or []
-    return {
-        "kind": "switch",
-        "useCount": bool(tree.get("_useCount", 0)),
-        "note": (tree.get("_devNote") or "").strip(),
-        "branches": branches,
-        "fallback": len(branches) + 1,
-        "countItems": [
-            {"op": COMPARE_OP_SYMBOL.get(item.get("_compareOp", 0), "?"),
-             "value": item.get("_value"), "result": index + 1}
+    return CheckpointCondition(
+        kind="switch",
+        use_count=bool(tree.get("_useCount", 0)),
+        note=(tree.get("_devNote") or "").strip(),
+        branches=branches,
+        fallback=len(branches) + 1,
+        count_items=[
+            CountItem(
+                op=COMPARE_OP_SYMBOL.get(item.get("_compareOp", 0), "?"),
+                value=item.get("_value"),
+                result=index + 1,
+            )
             for index, item in enumerate(count_items)
         ],
-    }
+    )
 
 
-def _parse_condition(tree: dict[str, Any], scope: FileScope) -> dict[str, Any]:
-    branches = [
-        _branch(1, condition_node(item, scope)) for item in tree.get("_items") or []
-    ]
-    return {
-        "kind": "condition",
-        "note": (tree.get("_devNote") or "").strip(),
-        "branches": branches,
-    }
+def _parse_condition(tree: dict[str, Any], scope: FileScope) -> CheckpointCondition:
+    branches = [_branch(1, condition_node(item, scope)) for item in tree.get("_items") or []]
+    return CheckpointCondition(
+        kind="condition",
+        note=(tree.get("_devNote") or "").strip(),
+        branches=branches,
+    )
 
 
-def _parse_dice(tree: dict[str, Any], scope: FileScope) -> dict[str, Any]:
-    additions = [
-        dice_addition(item, scope) for item in tree.get("_propertyItems") or []
-    ]
+def _parse_dice(tree: dict[str, Any], scope: FileScope) -> CheckpointCondition:
+    additions = [dice_addition(item, scope) for item in tree.get("_propertyItems") or []]
     branches = [
         _branch(index + 1, dice_branch_node(item))
         for index, item in enumerate(tree.get("_resultItems") or [])
     ]
-    return {
-        "kind": "dice",
-        "note": (tree.get("_devNote") or "").strip(),
-        "additions": additions,
-        "branches": branches,
-        "fallback": len(branches) + 1,
-    }
+    return CheckpointCondition(
+        kind="dice",
+        note=(tree.get("_devNote") or "").strip(),
+        additions=additions,
+        branches=branches,
+        fallback=len(branches) + 1,
+    )
 
 
 def _int_field(value: Any) -> int:
@@ -147,7 +153,7 @@ def _int_field(value: Any) -> int:
         return value
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 0
 
 
@@ -155,7 +161,7 @@ def _has_items(node: Any) -> bool:
     return isinstance(node, dict) and bool(node.get("_items") or [])
 
 
-def _position_candidate(event: dict[str, Any], scope: FileScope) -> dict[str, Any] | None:
+def _position_candidate(event: dict[str, Any], scope: FileScope) -> PositionCandidate | None:
     mapping = scope.typetree(event.get("_config"))
     name = str((mapping or {}).get("Value") or "").strip()
     if not name:
@@ -163,28 +169,30 @@ def _position_candidate(event: dict[str, Any], scope: FileScope) -> dict[str, An
     active = bool(event.get("_toggleCondition", 1))
     active_tree = event.get("_activeCondition")
     active_tree = active_tree if isinstance(active_tree, dict) else {}
-    adjustments: list[dict[str, Any]] = []
+    adjustments: list[PositionAdjustment] = []
     for item in event.get("_eventRateItem") or []:
         if not isinstance(item, dict):
             continue
         condition = item.get("_condition")
         if not _has_items(condition):
             continue
-        adjustments.append({
-            "rate": _int_field(item.get("_rate")),
-            "condition": condition_node(condition, scope),
-        })
-    return {
-        "name": name,
-        "rate": _int_field(event.get("_defaultRate")),
-        "active": active,
-        "activeCondition": condition_node(active_tree, scope) if active else None,
-        "activeEmpty": active and not _has_items(active_tree),
-        "adjustments": adjustments,
-    }
+        adjustments.append(
+            PositionAdjustment(
+                rate=_int_field(item.get("_rate")),
+                condition=condition_node(condition, scope),
+            )
+        )
+    return PositionCandidate(
+        name=name,
+        rate=_int_field(event.get("_defaultRate")),
+        active=active,
+        active_condition=condition_node(active_tree, scope) if active else None,
+        active_empty=active and not _has_items(active_tree),
+        adjustments=adjustments,
+    )
 
 
-def _parse_position(tree: dict[str, Any], scope: FileScope) -> dict[str, Any]:
+def _parse_position(tree: dict[str, Any], scope: FileScope) -> CheckpointCondition:
     candidates = []
     for ref in tree.get("_list") or []:
         event = scope.typetree(ref)
@@ -193,20 +201,20 @@ def _parse_position(tree: dict[str, Any], scope: FileScope) -> dict[str, Any]:
         candidate = _position_candidate(event, scope)
         if candidate is not None:
             candidates.append(candidate)
-    return {
-        "kind": "position",
-        "note": (tree.get("_devNote") or "").strip(),
-        "prefix": tree.get("_scriptPrefix") or "",
-        "candidates": candidates,
-    }
+    return CheckpointCondition(
+        kind="position",
+        note=(tree.get("_devNote") or "").strip(),
+        prefix=tree.get("_scriptPrefix") or "",
+        candidates=candidates,
+    )
 
 
-def _parse_flag(tree: dict[str, Any], scope: FileScope) -> dict[str, Any]:
-    return {
-        "kind": "flag",
-        "note": (tree.get("_devNote") or "").strip(),
-        "default": tree.get("_default", 0),
-    }
+def _parse_flag(tree: dict[str, Any], scope: FileScope) -> CheckpointCondition:
+    return CheckpointCondition(
+        kind="flag",
+        note=(tree.get("_devNote") or "").strip(),
+        default=_int_field(tree.get("_default", 0)),
+    )
 
 
 PARSERS = {
@@ -218,9 +226,12 @@ PARSERS = {
 }
 
 
-def extract(session: AssetSession, located: dict[str, list[Path]], reporter: Reporter,
-            kind_hints: dict[str, set[str]]
-            ) -> tuple[dict[str, dict[str, Any]], list[dict[str, Any]]]:
+def extract(
+    session: AssetSession,
+    located: dict[str, list[Path]],
+    reporter: Reporter,
+    kind_hints: dict[str, set[str]],
+) -> tuple[dict[str, CheckpointCondition], list[dict[str, Any]]]:
     if not located:
         return {}, []
     by_file: dict[Path, list[str]] = {}
@@ -228,8 +239,8 @@ def extract(session: AssetSession, located: dict[str, list[Path]], reporter: Rep
         for path in paths:
             by_file.setdefault(path, []).append(key)
 
-    conditions: dict[str, dict[str, Any]] = {}
-    parsed_by_key: dict[str, list[dict[str, Any]]] = {}
+    conditions: dict[str, CheckpointCondition] = {}
+    parsed_by_key: dict[str, list[CheckpointCondition]] = {}
     reasons_by_key: dict[str, list[str]] = {}
     gaps: list[dict[str, Any]] = []
     started = time.time()
@@ -266,7 +277,8 @@ def extract(session: AssetSession, located: dict[str, list[Path]], reporter: Rep
                     session.warn_once(
                         ("fields", kind, *missing),
                         f"{kind} checkpoint is missing {', '.join(missing)};"
-                        " its conditions may render empty")
+                        " its conditions may render empty",
+                    )
                 try:
                     parsed = PARSERS[kind](tree, scope)
                 except Exception as exc:
@@ -284,25 +296,31 @@ def extract(session: AssetSession, located: dict[str, list[Path]], reporter: Rep
     by_reason = count_by_reason(gaps)
     reporter.info(
         f"checkpoint conditions: {len(conditions)} resolved, {len(gaps)} failed"
-        + (f" ({', '.join(f'{key} {value}' for key, value in sorted(by_reason.items()))})"
-           if gaps else "")
+        + (
+            f" ({', '.join(f'{key} {value}' for key, value in sorted(by_reason.items()))})"
+            if gaps
+            else ""
+        )
         + f", {time.time() - started:.1f}s"
     )
     for gap in gaps[:8]:
-        reporter.info(f"gap {gap['key']}: {gap['reason']}"
-                      + (f" ({gap['detail']})" if gap.get("detail") else ""))
+        reporter.info(
+            f"gap {gap['key']}: {gap['reason']}"
+            + (f" ({gap['detail']})" if gap.get("detail") else "")
+        )
     if len(gaps) > 8:
         reporter.info(f"... {len(gaps) - 8} more gaps, see data/checkpoints.json")
     return conditions, gaps
 
 
-def summarize(conditions: dict[str, dict[str, Any]], wanted_count: int,
-              gaps: list[dict[str, Any]]) -> dict[str, Any]:
+def summarize(
+    conditions: dict[str, CheckpointCondition], wanted_count: int, gaps: list[dict[str, Any]]
+) -> dict[str, Any]:
     by_kind: dict[str, int] = {}
     variant_count = 0
     for condition in conditions.values():
-        by_kind[condition["kind"]] = by_kind.get(condition["kind"], 0) + 1
-        variant_count += len(condition.get("variants") or [])
+        by_kind[condition.kind] = by_kind.get(condition.kind, 0) + 1
+        variant_count += len(condition.variants)
     return {
         "resolved": len(conditions),
         "wanted": wanted_count,

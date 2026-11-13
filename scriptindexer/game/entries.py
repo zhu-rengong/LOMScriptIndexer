@@ -2,7 +2,7 @@ import time
 from typing import Any
 
 from ..console import Reporter
-from ..versions import ENTRY_VERSION
+from ..schema import EntriesDocument, EntryStats, source_version
 from .assets import AssetSession, FileScope
 from .unity_fields import POSITION_CLASS
 from .unity_objects import absent_fields
@@ -28,8 +28,9 @@ def _referred_typetree(scope: FileScope, ref: Any) -> dict[str, Any] | None:
     return target_scope.session.typetree(target_scope.path, obj)
 
 
-def _position_script_targets(scope: FileScope, tree: dict[str, Any],
-                             known_ids: set[str], folded: dict[str, str]) -> list[str]:
+def _position_script_targets(
+    scope: FileScope, tree: dict[str, Any], known_ids: set[str], folded: dict[str, str]
+) -> list[str]:
     prefix = (tree.get("_scriptPrefix") or "").strip()
     if not prefix:
         return []
@@ -50,29 +51,23 @@ def _position_script_targets(scope: FileScope, tree: dict[str, Any],
     return sorted(found)
 
 
-def probe_positions(session: AssetSession, ids: set[str],
-                    reporter: Reporter) -> dict[str, Any]:
+def probe_positions(session: AssetSession, ids: set[str], reporter: Reporter) -> EntriesDocument:
     started = time.time()
     warnings = session.warnings
     known_ids = set(ids)
     folded = {sid.lower(): sid for sid in sorted(known_ids)}
-    payload: dict[str, Any] = {
-        "version": ENTRY_VERSION,
-        "fingerprint": session.layout.fingerprint(),
-        "generated": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "position_targets": {},
-        "unresolved": [],
-        "stats": {"ok": False, "reason": "", "classes": {}, "positions": 0,
-                  "position_targets": 0, "positions_unresolved": 0,
-                  "warnings": 0, "elapsed": 0.0},
-    }
-    stats = payload["stats"]
+    stats = EntryStats()
+    document = EntriesDocument(
+        schema=source_version("entries"),
+        fingerprint=session.layout.fingerprint(),
+        generated=time.strftime("%Y-%m-%d %H:%M:%S"),
+        stats=stats,
+    )
 
     if session.generator is None:
-        stats["reason"] = (
-            "TypeTreeGeneratorAPI is not installed or its .NET runtime is unavailable")
-        reporter.warn(stats["reason"])
-        return payload
+        stats.reason = "TypeTreeGeneratorAPI is not installed or its .NET runtime is unavailable"
+        reporter.warn(stats.reason)
+        return document
 
     position_targets: dict[str, list[str]] = {}
     unresolved: list[str] = []
@@ -91,51 +86,55 @@ def probe_positions(session: AssetSession, ids: set[str],
         if missing:
             session.warn_once(
                 ("fields", cls, *missing),
-                f"{cls} is missing {', '.join(missing)}; position probes may be incomplete")
+                f"{cls} is missing {', '.join(missing)}; position probes may be incomplete",
+            )
         position_name = (tree.get("m_Name") or "").strip()
         if not position_name:
             continue
-        targets = _position_script_targets(
-            session.file_scope(path), tree, known_ids, folded)
+        targets = _position_script_targets(session.file_scope(path), tree, known_ids, folded)
         position_targets[position_name] = targets
         if not targets:
             unresolved.append(position_name)
 
-    stats.update({
-        "ok": True,
-        "reason": "",
-        "classes": classes,
-        "positions": len(position_targets),
-        "position_targets": sum(len(targets) for targets in position_targets.values()),
-        "positions_unresolved": len(unresolved),
-        "warnings": session.warnings - warnings,
-        "elapsed": round(time.time() - started, 1),
-    })
-    payload["position_targets"] = {
-        name: position_targets[name] for name in sorted(position_targets)
-    }
-    payload["unresolved"] = sorted(unresolved)[:60]
-
+    document.position_targets = {name: position_targets[name] for name in sorted(position_targets)}
+    document.unresolved = sorted(unresolved)[:60]
+    document.stats = EntryStats(
+        ok=True,
+        reason="",
+        classes=classes,
+        positions=len(position_targets),
+        position_targets=sum(len(targets) for targets in position_targets.values()),
+        positions_unresolved=len(unresolved),
+        warnings=session.warnings - warnings,
+        elapsed=round(time.time() - started, 1),
+    )
     reporter.info(
         f"system positions: {len(position_targets)} names"
-        f" -> {stats['position_targets']} targets, {stats['elapsed']}s"
+        f" -> {document.stats.position_targets} targets, {document.stats.elapsed}s"
     )
-    return payload
+    return document
 
 
-def summarize(payload: dict[str, Any] | None) -> dict[str, Any]:
-    stats = dict((payload or {}).get("stats") or {})
-    summary = {
-        "ok": bool(stats.get("ok")),
-        "reason": stats.get("reason", ""),
-        "version": (payload or {}).get("version"),
-        "classes": stats.get("classes") or {},
-        "positions": stats.get("positions", 0),
-        "position_targets": stats.get("position_targets", 0),
-        "positions_unresolved": stats.get("positions_unresolved", 0),
-        "elapsed": stats.get("elapsed", 0.0),
+def summarize(document: EntriesDocument | None) -> dict[str, Any]:
+    if document is None:
+        return {
+            "ok": False,
+            "reason": "asset probe not run (missing data/entries.json)",
+            "version": None,
+            "classes": {},
+            "positions": 0,
+            "position_targets": 0,
+            "positions_unresolved": 0,
+            "elapsed": 0.0,
+        }
+    stats = document.stats
+    return {
+        "ok": stats.ok,
+        "reason": stats.reason,
+        "version": document.schema,
+        "classes": stats.classes,
+        "positions": stats.positions,
+        "position_targets": stats.position_targets,
+        "positions_unresolved": stats.positions_unresolved,
+        "elapsed": stats.elapsed,
     }
-    if not payload:
-        summary["ok"] = False
-        summary["reason"] = "asset probe not run (missing data/entries.json)"
-    return summary

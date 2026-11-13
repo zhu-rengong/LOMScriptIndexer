@@ -1,10 +1,12 @@
+import contextlib
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .layout import GameLayout, UNITY_VERSION_FALLBACK
-from .unity_objects import as_ref_dict, object_name as unity_object_name
+from .layout import UNITY_VERSION_FALLBACK, GameLayout
+from .unity_objects import as_ref_dict
+from .unity_objects import object_name as unity_object_name
 
 
 def unitypy() -> Any:
@@ -15,7 +17,7 @@ def unitypy() -> Any:
 
 def typetree_available() -> bool:
     try:
-        import TypeTreeGeneratorAPI
+        pass
     except Exception:
         return False
     return True
@@ -36,17 +38,13 @@ def _release_item(item: Any, seen: set[int]) -> None:
     objects = getattr(item, "objects", None)
     if isinstance(objects, dict):
         objects.clear()
-    try:
+    with contextlib.suppress(Exception):
         item.environment = None
-    except Exception:
-        pass
     for target in (getattr(item, "reader", None), item):
         dispose = getattr(target, "dispose", None)
         if callable(dispose):
-            try:
+            with contextlib.suppress(Exception):
                 dispose()
-            except Exception:
-                pass
 
 
 def _dispose(env: Any) -> None:
@@ -95,12 +93,14 @@ def _repair_string_arrays(node: Any) -> Any:
         current = stack.pop()
         broken = _is_string_array_node(current)
         changed = changed or broken
-        flat.append({
-            "m_Level": current.m_Level,
-            "m_Type": "vector" if broken else current.m_Type,
-            "m_Name": current.m_Name,
-            "m_MetaFlag": current.m_MetaFlag,
-        })
+        flat.append(
+            {
+                "m_Level": current.m_Level,
+                "m_Type": "vector" if broken else current.m_Type,
+                "m_Name": current.m_Name,
+                "m_MetaFlag": current.m_MetaFlag,
+            }
+        )
         stack.extend(reversed(getattr(current, "m_Children", None) or ()))
     if not changed:
         return node
@@ -185,8 +185,9 @@ class FileScope:
 
 
 class AssetSession:
-    def __init__(self, layout: GameLayout, generator: Any | None = None,
-                 log: Callable[[str], None] = print) -> None:
+    def __init__(
+        self, layout: GameLayout, generator: Any | None = None, log: Callable[[str], None] = print
+    ) -> None:
         self.layout = layout
         self.generator = generator
         self.log = log
@@ -226,7 +227,8 @@ class AssetSession:
             self._failed.add(target)
             self.warn_once(
                 ("open", target.name, type(exc).__name__),
-                f"failed to open {target.name}: {type(exc).__name__}")
+                f"failed to open {target.name}: {type(exc).__name__}",
+            )
             raise
         if self.generator is not None:
             env.typetree_generator = self.generator
@@ -259,7 +261,7 @@ class AssetSession:
                 files = getattr(env, "files", {}) or {}
                 serialized = next(iter(files.values()), None)
             names = []
-            for external in (getattr(serialized, "externals", None) or []):
+            for external in getattr(serialized, "externals", None) or []:
                 name = Path(str(getattr(external, "path", "") or "")).name
                 names.append(name)
             self._externals[target] = names
@@ -296,7 +298,8 @@ class AssetSession:
         except Exception as exc:
             self.warn_once(
                 ("resolve", target.name, type(exc).__name__),
-                f"failed to resolve {target.name}: {type(exc).__name__}")
+                f"failed to resolve {target.name}: {type(exc).__name__}",
+            )
             return None
         return (obj, file_scope) if obj is not None else None
 
@@ -311,7 +314,8 @@ class AssetSession:
         except Exception as exc:
             self.warn_once(
                 ("scripts", target.name, type(exc).__name__),
-                f"failed to read scripts from {target.name}: {type(exc).__name__}")
+                f"failed to read scripts from {target.name}: {type(exc).__name__}",
+            )
             self._scripts[target] = table
             return table
         for obj in objects:
@@ -341,7 +345,8 @@ class AssetSession:
             if resolved is not None:
                 script, file_scope = resolved
                 value = file_scope.session.monoscript_class_table(file_scope.path).get(
-                    int(getattr(script, "path_id", 0) or 0), "")
+                    int(getattr(script, "path_id", 0) or 0), ""
+                )
         self._classes[cache_key] = value
         return value
 
@@ -353,13 +358,15 @@ class AssetSession:
             data = obj.read()
         except Exception as exc:
             self.warn_once(
-                ("text", type(exc).__name__),
-                f"failed to read TextAsset: {type(exc).__name__}")
+                ("text", type(exc).__name__), f"failed to read TextAsset: {type(exc).__name__}"
+            )
             return ""
         text = getattr(data, "m_Script", None)
         if text is None:
             raw = getattr(data, "script", b"")
-            text = raw.decode("utf-8", "replace") if isinstance(raw, (bytes, bytearray)) else str(raw)
+            text = (
+                raw.decode("utf-8", "replace") if isinstance(raw, (bytes, bytearray)) else str(raw)
+            )
         return str(text).lstrip("\ufeff")
 
     def typetree(self, path: Path, obj: Any) -> dict[str, Any] | None:
@@ -371,7 +378,8 @@ class AssetSession:
             self.warn_once(
                 ("tree", Path(path).name, type(exc).__name__),
                 f"failed to read typetree of {Path(path).name}"
-                f" {getattr(obj, 'path_id', '?')}: {type(exc).__name__}")
+                f" {getattr(obj, 'path_id', '?')}: {type(exc).__name__}",
+            )
             return None
 
     def _ensure_index(self) -> None:
@@ -385,7 +393,8 @@ class AssetSession:
             except Exception as exc:
                 self.warn_once(
                     ("open", path.name, type(exc).__name__),
-                    f"failed to open {path.name}: {type(exc).__name__}")
+                    f"failed to open {path.name}: {type(exc).__name__}",
+                )
                 continue
             for obj in objects:
                 type_name = obj.type.name
@@ -400,8 +409,7 @@ class AssetSession:
 
     def iter_type(self, type_name: str) -> Iterator[tuple[Path, Any]]:
         self._ensure_index()
-        for path, obj in self._type_index.get(type_name, ()):
-            yield path, obj
+        yield from self._type_index.get(type_name, ())
 
     def find_type(self, type_name: str) -> tuple[Path, Any] | None:
         self._ensure_index()

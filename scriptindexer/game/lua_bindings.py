@@ -12,9 +12,16 @@ from ..vocab import (
 LUA_BINDINGS = Semantics(
     narration_dialogs=frozenset({"center", "center2", "narrative"}),
     think_dialogs=frozenset({"think"}),
-    speaker_sentinels=frozenset({
-        "narrative", "narrator", "none", "center", "center2", "think",
-    }),
+    speaker_sentinels=frozenset(
+        {
+            "narrative",
+            "narrator",
+            "none",
+            "center",
+            "center2",
+            "think",
+        }
+    ),
     jumps={
         "SetNextScript": EDGE_JUMP,
         "SetCurrentStoryScript": EDGE_JUMP,

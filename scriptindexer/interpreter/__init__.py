@@ -22,12 +22,22 @@ class AnalysisOutcome:
 def analyze_job(job: AnalyzeJob) -> AnalysisOutcome:
     try:
         return AnalysisOutcome(
-            job.script_id, False, analyze(job.script_id, job.source, job.semantics))
+            job.script_id, False, analyze(job.script_id, job.source, job.semantics)
+        )
     except Exception as exc:
         return AnalysisOutcome(
-            job.script_id, True,
-            ScriptAnalysis(id=job.script_id, error=f"{type(exc).__name__}: {exc}"))
+            job.script_id,
+            True,
+            ScriptAnalysis(id=job.script_id, error=f"{type(exc).__name__}: {exc}"),
+        )
 
 
-__all__ = ["AnalysisOutcome", "AnalyzeJob", "Analyzer", "CallSpec", "Semantics",
-           "analyze", "analyze_job"]
+__all__ = [
+    "AnalysisOutcome",
+    "AnalyzeJob",
+    "Analyzer",
+    "CallSpec",
+    "Semantics",
+    "analyze",
+    "analyze_job",
+]
