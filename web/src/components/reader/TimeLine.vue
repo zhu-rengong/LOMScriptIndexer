@@ -7,7 +7,7 @@ defineProps<{ rounds: number }>();
 
 <template>
   <div class="time-mark">
-    <AppIcon name="calendar" class="time-icon" />
+    <AppIcon name="clock" class="time-icon" />
     <span class="time-value">{{ timeText(rounds) }}</span>
   </div>
 </template>

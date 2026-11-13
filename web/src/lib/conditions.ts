@@ -359,7 +359,7 @@ const chipPart = (node: Extract<ConditionNode, { tag: "var" | "check" }>): Condi
   const type = isCheck ? checkKindText(node.kind) : kindText(kind);
   const time = kind === "time";
   const children: ConditionPart[] = time
-    ? [iconPart("calendar")]
+    ? [iconPart("clock")]
     : [span("cx-type", [textPart(type)])];
   children.push(span("cx-name", [textPart(label)]));
   if ((kind === "flag" || kind === "check") && key && key !== label) {
