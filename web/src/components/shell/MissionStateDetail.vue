@@ -23,7 +23,7 @@ const note = computed(() => {
 });
 
 const heading = computed(() =>
-  note.value ? `${missionName.value} · ${note.value}` : missionName.value,
+  note.value ? `${missionName.value} → ${note.value}` : missionName.value,
 );
 </script>
 

@@ -51,7 +51,7 @@ const initials = (label: string): string => {
       </label>
       <div class="fx-list-meta">
         <span>{{ store.rows.length }} characters</span>
-        <span class="fx-sep">·</span>
+        <span class="fx-sep">/</span>
         <span class="fx-mono">{{ store.customizedCount }} custom</span>
       </div>
     </div>

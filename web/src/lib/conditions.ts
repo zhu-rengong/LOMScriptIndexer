@@ -684,7 +684,8 @@ export const metaDisplay = (
     const missionId =
       kind === "mission" ? missions.missionIdOf(key, extra) : key && key !== "0" ? key : "";
     const name = missionName(missionId);
-    return { text: raw, title: [name, key].filter(Boolean).join(" · ") };
+    const code = key ? t("parenWrap", { text: key }) : "";
+    return { text: raw, title: [name, code].filter(Boolean).join(" ") };
   }
   if (!view().inferEnabled || (kind !== "setflag" && kind !== "flag")) {
     return { text: raw, title: fallbackTitle };

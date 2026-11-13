@@ -62,7 +62,7 @@ const toggleBookmark = () => {
             <template v-if="selectedScript">
               {{ chapterTitleText
               }}<span v-if="typeof selectedScript.time === 'number'" class="crumb-time">{{
-                ` · ${timeText(selectedScript.time)}`
+                `${t("sepPair")}${timeText(selectedScript.time)}`
               }}</span>
             </template>
           </p>

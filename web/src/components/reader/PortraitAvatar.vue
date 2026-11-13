@@ -32,7 +32,7 @@ const failed = computed(() => !!src.value && failedPage.value === src.value);
 const label = computed(() => {
   const parts = [speakerName(props.character), props.expression || t("portraitUnknown")];
   if (pick.value?.fallback) parts.push(t("portraitDefault"));
-  return parts.filter(Boolean).join(" · ");
+  return parts.filter(Boolean).join(t("sepPair"));
 });
 
 const style = computed<Record<string, string | number>>(() => ({

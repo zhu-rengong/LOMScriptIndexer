@@ -83,7 +83,7 @@ onBeforeUnmount(() => {
       <span v-if="!store.current" class="fx-portrait-empty">no selection</span>
     </div>
     <figcaption class="fx-mono">
-      {{ store.avatarSize[0] }}×{{ store.avatarSize[1] }} · mirrored
+      {{ store.avatarSize[0] }}×{{ store.avatarSize[1] }}, mirrored
     </figcaption>
   </figure>
 </template>

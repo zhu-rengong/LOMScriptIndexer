@@ -60,7 +60,7 @@ const scopeLabel = computed(() => {
   const name = group.value ? t(group.value.label) : "";
   const leaf =
     target.value.scope === "group" ? t(prefs.labels.groupAll) : typeLabel(target.value.id);
-  return name ? `${name} · ${leaf}` : leaf;
+  return name ? `${name} → ${leaf}` : leaf;
 });
 
 const fontText = computed(() => t(prefs.fontLabelKeyOf(target.value)));
@@ -72,6 +72,20 @@ const isLeadingDisabled = computed(
 const scaleValue = computed(() => prefEntry.value?.scale ?? 100);
 
 const leadingValue = computed(() => prefEntry.value?.leading ?? 100);
+
+const scaleText = computed(
+  () =>
+    `${scaleValue.value}% ${t("parenWrap", {
+      text: `${(resolvedEntry.value?.px ?? 0).toFixed(2)}px`,
+    })}`,
+);
+
+const leadingText = computed(
+  () =>
+    `${leadingValue.value}% ${t("parenWrap", {
+      text: (resolvedEntry.value?.lineHeight ?? 0).toFixed(2),
+    })}`,
+);
 
 const weight = computed(() => prefEntry.value?.weight ?? null);
 
@@ -321,7 +335,7 @@ onMounted(() => {
           <div class="field-row sub-row">
             <label class="sub-label">{{ t("typeScale") }}</label>
             <output id="typeScaleOut" class="field-value">
-              {{ `${scaleValue}% · ${(resolvedEntry?.px ?? 0).toFixed(2)}px` }}
+              {{ scaleText }}
             </output>
           </div>
           <input
@@ -339,7 +353,7 @@ onMounted(() => {
           <div class="field-row sub-row" id="typeLeadingRow" :hidden="isLeadingDisabled">
             <label class="sub-label">{{ t("lineHeight") }}</label>
             <output id="typeLeadingOut" class="field-value">
-              {{ `${leadingValue}% · ${(resolvedEntry?.lineHeight ?? 0).toFixed(2)}` }}
+              {{ leadingText }}
             </output>
           </div>
           <input

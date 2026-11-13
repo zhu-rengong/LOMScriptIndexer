@@ -26,14 +26,14 @@ watch(
 
 const frameText = computed(() => {
   const current = store.current;
-  if (!current) return "x — · y — · w —";
+  if (!current) return "x — / y — / w —";
   const zoom = current.artifact.default.w / current.frame.w;
   return [
     `x ${(current.frame.x * 100).toFixed(2)}%`,
     `y ${(current.frame.y * 100).toFixed(2)}%`,
     `w ${(current.frame.w * 100).toFixed(2)}%`,
     `${zoom.toFixed(2)}×`,
-  ].join(" · ");
+  ].join(" / ");
 });
 
 const pickFile = (): void => file.value?.click();
@@ -111,7 +111,7 @@ onBeforeUnmount(() => {
         <div class="fx-brand-text">
           <strong>Portrait Framing</strong>
           <small
-            >local workbench · {{ store.avatarSize[0] }}×{{ store.avatarSize[1] }} avatars</small
+            >local workbench, {{ store.avatarSize[0] }}×{{ store.avatarSize[1] }} avatars</small
           >
         </div>
       </div>
@@ -189,7 +189,7 @@ onBeforeUnmount(() => {
       <div class="fx-status-mid fx-mono">{{ frameText }}</div>
       <div class="fx-status-right fx-mono">
         <span>{{ store.expressionCount }} expressions</span>
-        <span class="fx-sep">·</span>
+        <span class="fx-sep">/</span>
         <span v-if="store.dirty" class="fx-warn">unsaved changes</span>
         <span v-else class="fx-ok">in sync</span>
       </div>

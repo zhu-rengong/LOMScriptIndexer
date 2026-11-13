@@ -143,7 +143,7 @@ const onWheel = (event: WheelEvent): void => {
         <span class="fx-stage-expr">{{ active.expression }}</span>
       </span>
       <span class="fx-stage-meta fx-mono">
-        {{ active.artifact.size[0] }}×{{ active.artifact.size[1] }} · {{ zoomLabel }}
+        {{ active.artifact.size[0] }}×{{ active.artifact.size[1] }}, {{ zoomLabel }}
       </span>
     </header>
 
@@ -191,17 +191,17 @@ const onWheel = (event: WheelEvent): void => {
           <circle cx="32" cy="30" r="5" />
         </svg>
         <p>Select an expression to start framing</p>
-        <small>Drag the frame to pan · scroll to zoom</small>
+        <small>Drag the frame to pan; scroll to zoom</small>
       </div>
     </div>
 
     <footer class="fx-stage-foot fx-mono">
       <span>drag pan</span>
-      <span class="fx-sep">·</span>
+      <span class="fx-sep">/</span>
       <span>wheel zoom</span>
-      <span class="fx-sep">·</span>
+      <span class="fx-sep">/</span>
       <span>shift fine</span>
-      <span class="fx-sep">·</span>
+      <span class="fx-sep">/</span>
       <span>R reset</span>
     </footer>
   </section>

@@ -191,12 +191,12 @@ const renderRows = (input: unknown, indent: string): string[] => {
       const meta = beatRows.parseMeta(row);
       if (meta.kind === "time") {
         if (typeof meta.value === "number") {
-          out.push(`${indent}· ${t("metaTimeLabel")} → ${timeText(meta.value)}`);
+          out.push(`${indent}- ${t("metaTimeLabel")} → ${timeText(meta.value)}`);
         }
         continue;
       }
       const text = metaText(meta.kind, meta.key, meta.value, meta.extra);
-      if (text) out.push(`${indent}· ${text}`);
+      if (text) out.push(`${indent}- ${text}`);
       continue;
     }
 

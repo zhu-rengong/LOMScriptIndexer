@@ -844,7 +844,7 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
 
     game_info = _game_info(manifest)
     if game_info.version or game_info.build:
-        reporter.info("game version: " + " · ".join(piece for piece in (
+        reporter.info("game version: " + ", ".join(piece for piece in (
             f"v{game_info.version}" if game_info.version else "",
             f"build {game_info.build}" if game_info.build else "",
             f"updated {game_info.updated}" if game_info.updated else "",

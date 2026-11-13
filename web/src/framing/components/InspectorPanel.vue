@@ -30,7 +30,7 @@ const sharedText = computed(() => {
   const count = store.sharedCount;
   if (count < 2) return "—";
   const characters = store.sharedCharacters;
-  return `${count} uses · ${characters} character${characters === 1 ? "" : "s"}`;
+  return `${count} uses, ${characters} character${characters === 1 ? "" : "s"}`;
 });
 
 const sharedHint = computed(() =>
@@ -225,7 +225,7 @@ const onSlider = (event: Event): void => {
     <ul class="fx-keys">
       <li><kbd>drag</kbd><span>pan the frame</span></li>
       <li><kbd>wheel</kbd><span>zoom at cursor</span></li>
-      <li><kbd>arrows</kbd><span>nudge · shift coarse</span></li>
+      <li><kbd>arrows</kbd><span>nudge, shift coarse</span></li>
       <li><kbd>+ / −</kbd><span>step zoom</span></li>
       <li><kbd>Ctrl C / V</kbd><span>copy / paste framing</span></li>
       <li><kbd>R</kbd><span>reset to default</span></li>

@@ -26,7 +26,9 @@ const rows = computed<EventRow[]>(() =>
   props.events.map((event) => ({
     event,
     cancel: event.type === "cancel",
-    title: [event.name, event.code].filter(Boolean).join(" · "),
+    title: [event.name, event.code ? t("parenWrap", { text: event.code }) : ""]
+      .filter(Boolean)
+      .join(" "),
     state: event.type === "trigger" ? (missions.missionOfState(event.code)?.state ?? null) : null,
   })),
 );
