@@ -8,6 +8,7 @@
   "moreLang": "语言",
   "langBtnTitle": "语言",
   "githubBtnTitle": "打开 GitHub 仓库（新标签页）",
+  "workbuddyBtnTitle": "打开 WorkBuddy 网页应用（新标签页）\n该网站的数据可能落后于 GitHub Pages",
   "changelogBtnTitle": "更新日志（查看近期改动）",
   "langPickerNote": "界面语言可切换，剧本正文一律取自繁体数据包，简体正文由繁体转换而来。",
   "condLookup": "查看相关剧本",

@@ -198,6 +198,12 @@
     border-left: 1px solid var(--line-1);
   }
 
+  .workbuddy-ico {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+  }
+
   .more-wrap {
     display: none;
   }

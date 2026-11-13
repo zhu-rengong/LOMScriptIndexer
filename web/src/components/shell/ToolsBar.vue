@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import workbuddyIcon from "../../assets/workbuddy.png";
 import { langShort, t } from "../../i18n";
 import { overlay } from "../../lib/overlay";
 import type { OverlayKey } from "../../lib/overlayKeys";
@@ -99,6 +100,18 @@ const toggle = (key: OverlayKey) => {
       :title="t('githubBtnTitle')"
     >
       <AppIcon name="github" />
+    </a>
+
+    <a
+      id="workbuddyBtn"
+      class="btn btn-icon"
+      href="https://mortal-script-search.app.workbuddy.host/?sharecode=IG6TJRF5BJ"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="WorkBuddy"
+      :title="t('workbuddyBtnTitle')"
+    >
+      <img class="workbuddy-ico" :src="workbuddyIcon" alt="" width="16" height="16" />
     </a>
 
     <button

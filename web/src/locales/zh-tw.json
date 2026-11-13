@@ -8,6 +8,7 @@
   "moreLang": "語言",
   "langBtnTitle": "語言",
   "githubBtnTitle": "開啟 GitHub 倉庫（新分頁）",
+  "workbuddyBtnTitle": "開啟 WorkBuddy 網頁應用（新分頁）\n該站資料可能落後於 GitHub Pages",
   "changelogBtnTitle": "更新日誌（檢視近期改動）",
   "langPickerNote": "介面語言可切換，劇本正文一律取自繁體資料包，簡體正文由繁體轉換而來。",
   "condLookup": "查看相關劇本",
