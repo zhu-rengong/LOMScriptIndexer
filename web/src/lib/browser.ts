@@ -49,16 +49,6 @@ export const signedNumber = (value: number): string => (value > 0 ? `+${value}` 
 export const nearBottom = (node: HTMLElement, threshold: number): boolean =>
   node.scrollHeight - node.scrollTop - node.clientHeight < threshold;
 
-export const loadScript = (src: string): Promise<boolean> =>
-  new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = src;
-    script.async = true;
-    script.onload = () => resolve(true);
-    script.onerror = () => reject(new Error(`failed to load ${src}`));
-    document.head.appendChild(script);
-  });
-
 export const focusableElements = (root: HTMLElement): HTMLElement[] => {
   const selector =
     'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';

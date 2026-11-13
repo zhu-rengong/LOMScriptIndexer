@@ -3,6 +3,7 @@ import { textStore } from "../data/text";
 import { t } from "../i18n";
 
 import type {
+  BeatNode,
   BeatRow,
   BranchView,
   MetaChip,
@@ -200,9 +201,8 @@ const builders: Record<BeatKind, Builder> = {
 
 export const buildReaderBlocks = (input: unknown): ReaderBlock[] => {
   const buffer = new BlockBuffer();
-  for (const row of beatRows.asList<unknown>(input)) {
-    if (!Array.isArray(row) || !row.length) continue;
-    const tag = row[0];
+  for (const row of beatRows.asList<BeatNode>(input)) {
+    const tag = beatRows.asRecord(row)?.t;
     if (typeof tag !== "string" || !Object.hasOwn(builders, tag)) continue;
     builders[tag as BeatKind](buffer, row);
   }

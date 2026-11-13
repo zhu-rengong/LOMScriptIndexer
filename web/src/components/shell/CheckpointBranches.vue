@@ -107,7 +107,7 @@ const openAddition = (item: DiceAddition, event: Event) => {
             :key="`count-${index}`"
             :result="t('lookupCondResult', { n: item.result })"
           >
-            {{ t("lookupCondCountRow", { n: item.threshold, op: item.op }) }}
+            {{ t("lookupCondCountRow", { n: item.value ?? "", op: item.op }) }}
           </CondRow>
         </template>
       </template>

@@ -1,15 +1,9 @@
-import { dict, languageMeta } from "../i18n/dict";
-import { readRaw, keys, writeRaw } from "./storage";
+import { LANGS, messageOf } from "../i18n";
+import { languageMeta } from "../i18n/meta";
+import { keys, readRaw, writeRaw } from "./storage";
 
 const KEY = keys.lang;
 const DEFAULT = "zh-tw";
-
-const LANGS: string[] = (() => {
-  const out: string[] = [];
-  for (const id of Object.keys(languageMeta)) if (out.indexOf(id) < 0) out.push(id);
-  for (const id of Object.keys(dict)) if (out.indexOf(id) < 0) out.push(id);
-  return out;
-})();
 
 const has = (id: unknown): id is string => typeof id === "string" && LANGS.indexOf(id) >= 0;
 
@@ -49,7 +43,7 @@ const pin = (id: string): boolean => {
 
 const htmlOf = (id: string): string => languageMeta[id]?.html || String(id || DEFAULT);
 
-const titleOf = (id: string): string => dict[id]?.appTitle || "";
+const titleOf = (id: string): string => messageOf(id, "appTitle");
 
 const applyDocument = (id?: string): string => {
   const value = id && has(id) ? id : initial();

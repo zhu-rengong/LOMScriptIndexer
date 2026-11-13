@@ -1,12 +1,13 @@
 export type ConditionNode =
   | { tag: "const"; value: unknown }
-  | { tag: "random"; min: number; max: number }
-  | { tag: "dice" }
-  | { tag: "var"; kind: string; key: string; negative?: boolean }
+  | { tag: "random"; min?: number; max?: number }
+  | { tag: "dice"; negative?: boolean }
+  | { tag: "var"; kind: string; key: string; name?: string; negative?: boolean }
   | { tag: "check"; kind: string; key: string; negative?: boolean }
   | { tag: "group"; op?: string; name?: string; items?: ConditionNode[]; negative?: boolean }
   | { tag: "compare"; op?: string; left?: ConditionNode; right?: ConditionNode }
-  | { tag: "logic"; op?: string; items?: ConditionNode[] };
+  | { tag: "logic"; op?: string; items?: ConditionNode[] }
+  | { tag: "raw"; text?: string };
 
 export type CheckpointBranch = {
   result?: number | null;
@@ -16,13 +17,14 @@ export type CheckpointBranch = {
 export type DiceAddition = {
   kind?: string;
   key?: string;
+  name?: string;
   rate?: number;
   negative?: boolean;
   hide?: boolean;
 };
 
 export type CountItem = {
-  threshold: number;
+  value?: number | null;
   op: string;
   result: number;
 };
@@ -34,7 +36,7 @@ export type PositionAdjustment = {
 
 export type PositionCandidate = {
   name?: string;
-  rate: number;
+  rate?: number;
   active?: boolean;
   activeCondition?: ConditionNode | null;
   activeEmpty?: boolean;
@@ -42,7 +44,7 @@ export type PositionCandidate = {
 };
 
 export type CheckpointModel = {
-  kind: string;
+  kind?: string;
   branches?: CheckpointBranch[];
   fallback?: number | null;
   additions?: DiceAddition[];
@@ -50,6 +52,6 @@ export type CheckpointModel = {
   countItems?: CountItem[];
   prefix?: string;
   candidates?: PositionCandidate[];
-  default?: unknown;
+  default?: number | null;
   variants?: CheckpointModel[];
 };

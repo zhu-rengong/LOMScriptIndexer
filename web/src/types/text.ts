@@ -1,4 +1,4 @@
-import type { BeatRow } from "./beats";
+import type { BeatNode } from "./beats";
 
 export type NameTable = Record<string, Record<string, string>>;
 
@@ -20,7 +20,7 @@ export type WordCountPack = {
 };
 
 export type TextPack = {
-  schema?: number;
+  schema?: string;
   lang?: string;
   missingKeyCount?: number;
   missingKeys?: string[];
@@ -29,7 +29,7 @@ export type TextPack = {
   titles: Record<string, string>;
   names: NameTable;
   edgeLabels: Record<string, string>;
-  scripts: Record<string, BeatRow[]>;
+  scripts: Record<string, BeatNode[]>;
 };
 
 export type TextProgress = {

@@ -1,4 +1,4 @@
-import { languageMeta } from "../i18n/dict";
+import { languageMeta } from "../i18n/meta";
 import type { OpenccConfig } from "../i18n/types";
 import type { BeatRow } from "../types/beats";
 

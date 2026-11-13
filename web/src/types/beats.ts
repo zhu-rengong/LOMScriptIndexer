@@ -1,13 +1,35 @@
+import type {
+  BattleRow as BattleWireRow,
+  BranchRow,
+  ChoiceRow,
+  EndingRow,
+  JumpRow,
+  LoreRow,
+  MetaRow,
+  SayRow,
+  SceneRow,
+} from "./generated";
 import type { ConditionNode } from "./condition";
 
-export type BeatRow = unknown[];
+export type BeatNode =
+  | SayRow
+  | ChoiceRow
+  | BranchRow
+  | JumpRow
+  | MetaRow
+  | LoreRow
+  | SceneRow
+  | BattleWireRow
+  | EndingRow;
+
+export type BeatRow = BeatNode;
 
 export type CheckRef = { key: string; kind: string; expectedResult?: number | null };
 
 export type OptionView = {
   text: string;
   requirement: Record<string, unknown> | null;
-  beats: BeatRow[];
+  beats: BeatNode[];
   lockedText: string;
   detail: Record<string, unknown> | null;
   condition: ConditionNode | null;
@@ -17,7 +39,7 @@ export type BranchView = {
   check: CheckRef | null;
   condition: ConditionNode | null;
   source: string;
-  beats: BeatRow[];
+  beats: BeatNode[];
   group: number;
   blocks?: ReaderBlock[];
 };
@@ -76,7 +98,7 @@ export type BattleEvent = {
   lines: BattleLine[];
 };
 
-export type BattleRow = {
+export type BattleTableRow = {
   label: string;
   value: string;
 };
@@ -92,7 +114,7 @@ export type BattleView = {
   note: string;
   goals: string[];
   facts: string[];
-  rows: BattleRow[];
+  rows: BattleTableRow[];
   events: BattleEvent[];
 };
 

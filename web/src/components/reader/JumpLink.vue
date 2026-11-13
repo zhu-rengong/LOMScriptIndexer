@@ -53,21 +53,26 @@ const rows = computed<PositionRow[]>(() => {
     return {
       id,
       candidate,
-      weight: candidate ? candidate.rate : 0,
+      weight: candidate ? (candidate.rate ?? 0) : 0,
       never: candidate ? positionNeverReachable(candidate) : false,
     };
   });
 });
 
 const totalWeight = computed(() =>
-  rows.value.reduce((sum, row) => sum + (row.candidate ? Math.max(0, row.candidate.rate) : 0), 0),
+  rows.value.reduce(
+    (sum, row) => sum + (row.candidate ? Math.max(0, row.candidate.rate ?? 0) : 0),
+    0,
+  ),
 );
 
 const percentOf = (candidate: PositionCandidate): number =>
-  totalWeight.value > 0 ? Math.round((Math.max(0, candidate.rate) / totalWeight.value) * 100) : 0;
+  totalWeight.value > 0
+    ? Math.round((Math.max(0, candidate.rate ?? 0) / totalWeight.value) * 100)
+    : 0;
 
 const weightText = (candidate: PositionCandidate): string =>
-  t("jumpWeightShare", { n: candidate.rate, p: percentOf(candidate) });
+  t("jumpWeightShare", { n: candidate.rate ?? 0, p: percentOf(candidate) });
 
 const hasConditions = (candidate: PositionCandidate): boolean =>
   candidate.active || (candidate.adjustments || []).length > 0;

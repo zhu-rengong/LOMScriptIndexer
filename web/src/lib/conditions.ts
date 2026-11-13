@@ -522,7 +522,8 @@ export const positionTargetId = (prefix: string, name: string): string =>
 
 export const positionMaxWeight = (candidate: PositionCandidate): number => {
   if (candidate.active && candidate.activeEmpty) return 0;
-  let total = Number.isFinite(candidate.rate) ? candidate.rate : 0;
+  const rate = typeof candidate.rate === "number" ? candidate.rate : 0;
+  let total = Number.isFinite(rate) ? rate : 0;
   for (const item of candidate.adjustments || []) {
     if (item && item.rate > 0) total += item.rate;
   }

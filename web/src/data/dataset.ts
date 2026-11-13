@@ -1,6 +1,17 @@
-import { fillTemplate } from "../lib/template";
+import { DATA_SCHEMA } from "../types/contract";
 import type {
-  Assets,
+  CalendarInfo,
+  CheckpointDocument,
+  DataIndex,
+  Facets as WireFacets,
+  FlagFactsPayload,
+  GraphPayload,
+  MissionDocument,
+  NodeFlags as WireNodeFlags,
+  NodeRow,
+  VarReadsPayload,
+} from "../types/generated";
+import type {
   Chapter,
   Dataset,
   Facets,
@@ -8,20 +19,11 @@ import type {
   GraphEdge,
   GraphMeta,
   GraphNode,
-  RawGraph,
   ScriptFlags,
   Shard,
-  VarReads,
   Vocab,
 } from "../types/graph";
-import {
-  readCheckpointModels,
-  readRawGraph,
-  readTextPacks,
-  readVarReads,
-  readWordCountPack,
-} from "./globals";
-import { DATA_SCHEMA } from "./schema";
+import { assetUrl, fetchJson, loadIndex } from "./load";
 
 const DEFAULT_CHAPTER_COLOR = "#8A8578";
 
@@ -45,139 +47,124 @@ const EMPTY_FACETS: Facets = {
   diceCheckCount: 0,
 };
 
-const asArray = <T>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
+const list = <T>(value: T[] | undefined | null): T[] => (Array.isArray(value) ? value : []);
 
-const asNumber = (value: unknown, fallback: number): number =>
-  typeof value === "number" && Number.isFinite(value) ? value : fallback;
-
-const asString = (value: unknown, fallback = ""): string =>
-  typeof value === "string" && value ? value : fallback;
-
-const asRecord = (value: unknown): Record<string, unknown> =>
-  value && typeof value === "object" ? (value as Record<string, unknown>) : {};
-
-const normalizeFacets = (value: unknown): Facets => {
-  if (!value || typeof value !== "object") return { ...EMPTY_FACETS };
-  const raw = value as Record<string, unknown>;
-  return {
-    speakers: asArray<string>(raw.speakers),
-    flags: asArray<string>(raw.flags),
-    checks: asArray<string>(raw.checks),
-    stats: asArray<string>(raw.stats),
-    relations: asArray<string>(raw.relations),
-    endings: asArray<string>(raw.endings),
-    optionCount: asNumber(raw.optionCount, 0),
-    lockCount: asNumber(raw.lockCount, 0),
-    diceCheckCount: asNumber(raw.diceCheckCount, 0),
-  };
-};
-
-const normalizeFlags = (value: unknown): ScriptFlags => {
-  const raw = asRecord(value);
-  return {
-    isEmpty: raw.isEmpty === true,
-    isSimplifiedOnly: raw.isSimplifiedOnly === true,
-    hasNoOutgoing: raw.hasNoOutgoing === true,
-    hasNoIncoming: raw.hasNoIncoming === true,
-  };
-};
-
-const normalizeReads = (value: unknown): Record<string, string[]> => {
-  const out: Record<string, string[]> = {};
-  for (const [key, list] of Object.entries(asRecord(value))) {
-    if (!key) continue;
-    const keys = asArray<string>(list).filter((item) => typeof item === "string" && item);
-    if (keys.length) out[key] = keys;
-  }
-  return out;
-};
-
-const normalizeVarReads = (value: Record<string, unknown>): VarReads => ({
-  flag: normalizeReads(value.flag),
-  stat: normalizeReads(value.stat),
-  rel: normalizeReads(value.rel),
+const normalizeFacets = (value: WireFacets | null | undefined): Facets => ({
+  speakers: list(value?.speakers),
+  flags: list(value?.flags),
+  checks: list(value?.checks),
+  stats: list(value?.stats),
+  relations: list(value?.relations),
+  endings: list(value?.endings),
+  optionCount: value?.optionCount ?? 0,
+  lockCount: value?.lockCount ?? 0,
+  diceCheckCount: value?.diceCheckCount ?? 0,
 });
 
-const normalizeChapter = (chapter: Record<string, unknown>): Chapter => ({
-  id: String(chapter.id ?? ""),
-  kind: asString(chapter.kind, "other"),
-  number: typeof chapter.number === "number" ? chapter.number : null,
-  color: asString(chapter.color, DEFAULT_CHAPTER_COLOR),
-  scriptCount: asNumber(chapter.scriptCount, 0),
+const normalizeFlags = (value: WireNodeFlags | null | undefined): ScriptFlags => ({
+  isEmpty: value?.isEmpty === true,
+  isSimplifiedOnly: value?.isSimplifiedOnly === true,
+  hasNoOutgoing: value?.hasNoOutgoing === true,
+  hasNoIncoming: value?.hasNoIncoming === true,
 });
 
-const normalizeEdge = (edge: Record<string, unknown>): GraphEdge => ({
-  index: asNumber(edge.index, 0),
-  source: String(edge.source ?? ""),
-  target: String(edge.target ?? ""),
-  kind: asString(edge.kind, "jump"),
-  label: asString(edge.label),
-});
-
-const normalizeNode = (node: Record<string, unknown>): GraphNode => ({
-  id: String(node.id ?? ""),
-  chapterIndex: asNumber(node.chapterIndex, 0),
-  outDegree: asNumber(node.outDegree, 0),
-  inDegree: asNumber(node.inDegree, 0),
-  sayCount: asNumber(node.sayCount, 0),
+const normalizeNode = (node: NodeRow): GraphNode => ({
+  id: node.id ?? "",
+  chapterIndex: node.chapterIndex ?? 0,
+  outDegree: node.outDegree ?? 0,
+  inDegree: node.inDegree ?? 0,
+  sayCount: node.sayCount ?? 0,
   flags: normalizeFlags(node.flags),
-  facets: normalizeFacets(node.facets),
+  facets: node.facets ? normalizeFacets(node.facets) : { ...EMPTY_FACETS },
   time: typeof node.time === "number" ? node.time : null,
 });
 
-const buildMeta = (raw: RawGraph): GraphMeta => {
-  const source = asRecord(raw.meta);
-  const langs = asArray<string>(source.langs);
+const normalizeEdge = (edge: GraphEdge): GraphEdge => ({
+  index: edge.index ?? 0,
+  source: edge.source ?? "",
+  target: edge.target ?? "",
+  kind: edge.kind ?? "jump",
+  label: edge.label ?? "",
+});
+
+const normalizeChapter = (chapter: Chapter): Chapter => ({
+  id: chapter.id ?? "",
+  kind: chapter.kind ?? "other",
+  number: typeof chapter.number === "number" ? chapter.number : null,
+  color: chapter.color || DEFAULT_CHAPTER_COLOR,
+  scriptCount: chapter.scriptCount ?? 0,
+});
+
+const normalizeShard = (shard: Shard): Shard => ({
+  key: shard.key ?? "",
+  nodeCount: shard.nodeCount ?? 0,
+  bytes: shard.bytes ?? 0,
+  chapterIds: list(shard.chapterIds),
+});
+
+const buildMeta = (graph: GraphPayload): GraphMeta => {
+  const meta = graph.meta ?? {};
+  const shards = list(meta.shards).map((shard) => normalizeShard(shard as Shard));
   return {
-    generated: asString(source.generated),
-    game: asRecord(source.game) as GameInfo,
-    langs,
-    defaultLang: asString(source.defaultLang),
-    sourceLang: asString(source.sourceLang, langs[0] || ""),
-    vocab: asRecord(source.vocab) as Vocab,
-    assets: asRecord(source.assets) as Assets,
-    calendar: asRecord(source.calendar) as GraphMeta["calendar"],
-    counts: asRecord(source.counts) as Record<string, number>,
-    shards: asArray<Shard>(source.shards),
-    systemEntries: asArray<unknown>(source.systemEntries),
-    shardByNode: asRecord(source.shardByNode) as Record<string, string>,
-    checkpointShardByKey: asRecord(source.checkpointShardByKey) as Record<string, number>,
+    generated: meta.generated ?? "",
+    game: (meta.game ?? {}) as GameInfo,
+    langs: list(meta.langs),
+    defaultLang: meta.defaultLang ?? "",
+    sourceLang: meta.sourceLang ?? list(meta.langs)[0] ?? "",
+    vocab: (meta.vocab ?? {}) as Vocab,
+    calendar: (meta.calendar ?? {}) as CalendarInfo,
+    counts: (meta.counts ?? {}) as unknown as Record<string, number>,
+    shards,
+    systemEntries: list(meta.systemEntries).map((entry) => ({
+      id: entry.id ?? "",
+      label: entry.label ?? "",
+      origin: entry.origin ?? "",
+    })),
+    shardByNode: meta.shardByNode ?? {},
+    checkpointShardByKey: meta.checkpointShardByKey ?? {},
   };
 };
 
-const build = (): Dataset => {
-  const graph = readRawGraph();
-  if (!graph || typeof graph !== "object") {
-    throw new Error("window.SR_DATA is missing; run build.py and load data/graph.js");
-  }
-  if (graph.schema !== DATA_SCHEMA) {
+export let dataset = undefined as unknown as Dataset;
+
+export const loadDataset = async (): Promise<Dataset> => {
+  const index: DataIndex = await loadIndex();
+  if (index.schema !== DATA_SCHEMA) {
     throw new Error(
-      `unsupported data schema ${graph.schema}; expected ${DATA_SCHEMA},` +
+      `unsupported data schema ${index.schema}; expected ${DATA_SCHEMA},` +
         " rebuild the data and hard refresh to clear cached data",
     );
   }
+  const [graph, varReads, missions, flagFacts] = await Promise.all([
+    fetchJson<GraphPayload>(assetUrl(index, "graph")),
+    fetchJson<VarReadsPayload>(assetUrl(index, "varReads")),
+    fetchJson<MissionDocument>(assetUrl(index, "missions")),
+    fetchJson<FlagFactsPayload>(assetUrl(index, "flagFacts")),
+  ]);
   const meta = buildMeta(graph);
-  return {
+  const emptyCheckpoints: CheckpointDocument = { schema: "", items: {} };
+  dataset = {
+    index,
+    schema: index.schema,
     meta,
     vocab: meta.vocab,
-    assets: meta.assets,
     calendar: meta.calendar,
-    nodes: asArray<Record<string, unknown>>(graph.nodes).map(normalizeNode),
-    edges: asArray<Record<string, unknown>>(graph.edges).map(normalizeEdge),
-    chapters: asArray<Record<string, unknown>>(graph.chapters).map(normalizeChapter),
-    varReads: normalizeVarReads(readVarReads()),
+    nodes: list(graph.nodes).map((node) => normalizeNode(node)),
+    edges: list(graph.edges).map((edge) => normalizeEdge(edge as GraphEdge)),
+    chapters: list(graph.chapters).map((chapter) => normalizeChapter(chapter as Chapter)),
+    varReads: {
+      flag: varReads.flag ?? {},
+      stat: varReads.stat ?? {},
+      rel: varReads.rel ?? {},
+    },
+    missions,
+    flagFacts,
+    checkpoints: emptyCheckpoints,
     langs: meta.langs,
     systemEntries: meta.systemEntries,
     shardByNode: meta.shardByNode,
     checkpointShardByKey: meta.checkpointShardByKey,
-    assetUrl: (key, vars) => {
-      const url = fillTemplate(meta.assets[key] || "", vars);
-      return meta.generated ? `${url}?v=${encodeURIComponent(meta.generated)}` : url;
-    },
-    getTextPack: readTextPacks,
-    getCheckpoints: readCheckpointModels,
-    getWordCount: readWordCountPack,
+    assetUrl: (name, vars) => assetUrl(index, name, vars),
   };
+  return dataset;
 };
-
-export const dataset: Dataset = build();

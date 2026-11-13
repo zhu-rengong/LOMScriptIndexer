@@ -50,10 +50,11 @@ export type MissionState = {
 export type MissionRecord = {
   main: boolean;
   init: string;
+  desc?: string;
   states: Record<string, MissionState>;
 };
 
 export type MissionPack = {
-  schema?: number;
-  missions?: Record<string, MissionRecord>;
+  schema?: string;
+  items?: Record<string, MissionRecord>;
 };

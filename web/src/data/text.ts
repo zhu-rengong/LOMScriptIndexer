@@ -1,15 +1,16 @@
+import type { TextShardPayload, TextHeadPayload } from "../types/generated";
+import type { BeatRow } from "../types/beats";
+import type { ShardState, TextPack, TextProgress } from "../types/text";
 import { t } from "../i18n";
-import { loadScript } from "../lib/browser";
 import { pinia } from "../stores";
 import { useUiStore } from "../stores/ui";
+import { convert } from "./convert";
+import { dataset } from "./dataset";
+import { fetchJson } from "./load";
 
 let uiHandle: ReturnType<typeof useUiStore> | null = null;
 
 const ui = (): ReturnType<typeof useUiStore> => (uiHandle ??= useUiStore(pinia));
-import type { BeatRow } from "../types/beats";
-import type { ShardState, TextPack, TextProgress } from "../types/text";
-import { convert } from "./convert";
-import { dataset } from "./dataset";
 
 const SHARD_TIMEOUT = 30000;
 
@@ -24,6 +25,7 @@ const shardProgress = reactive({
   shardError: "",
 });
 
+let pack: TextPack | null = null;
 let headPromise: Promise<boolean> | null = null;
 const pendingShards = new Map<string, Promise<boolean>>();
 
@@ -57,9 +59,9 @@ const cacheOf = (lang: string): LangCache => {
   return cache;
 };
 
-const sourcePack = (): TextPack | null => dataset.getTextPack()[sourceLang] || null;
+const sourcePack = (): TextPack | null => pack;
 
-const sourceBeatRows = (): Record<string, BeatRow[]> | null => sourcePack()?.scripts || null;
+const sourceBeatRows = (): Record<string, BeatRow[]> | null => pack?.scripts || null;
 
 const hasConverted = (lang: string): boolean => lang !== sourceLang && convert.hasConverter(lang);
 
@@ -71,9 +73,20 @@ const ensureConvert = (lang: string): Promise<boolean> => {
 
 const loadHead = (): Promise<boolean> => {
   shardProgress.headState = "loading";
-  headPromise = loadScript(dataset.assetUrl("textHead", { lang: sourceLang }))
-    .then(() => {
-      if (!sourcePack()) throw new Error(`text pack ${sourceLang} is empty`);
+  headPromise = fetchJson<TextHeadPayload>(dataset.assetUrl("textHead", { lang: sourceLang }))
+    .then((head) => {
+      pack = {
+        schema: head.schema,
+        lang: head.lang,
+        missingKeyCount: head.missingKeyCount ?? 0,
+        missingKeys: head.missingKeys ?? [],
+        shardKeys: head.shardKeys ?? [],
+        characters: head.characters ?? {},
+        titles: head.titles ?? {},
+        names: head.names ?? {},
+        edgeLabels: head.edgeLabels ?? {},
+        scripts: {},
+      };
       shardProgress.headState = "ready";
       shardProgress.headError = "";
       return true;
@@ -110,8 +123,13 @@ const ensureShard = (lang: string, key: string): Promise<boolean> => {
   const pending = pendingShards.get(key);
   if (pending) return pending;
   shardProgress.shards[key] = "loading";
-  const job = loadScript(dataset.assetUrl("textShard", { lang: sourceLang, key }))
-    .then(() => {
+  const job = fetchJson<TextShardPayload>(dataset.assetUrl("textShard", { lang: sourceLang, key }))
+    .then((shard) => {
+      if (pack) {
+        for (const [id, rows] of Object.entries(shard.scripts ?? {})) {
+          pack.scripts[id] = rows as BeatRow[];
+        }
+      }
       shardProgress.shards[key] = "ready";
       pendingShards.delete(key);
       return true;
@@ -209,18 +227,18 @@ const textPackOf = (lang: string): TextPack | null => {
       scripts: cache.beatRowsById,
     };
   }
-  const pack = cache.pack;
-  pack.characters = characters(lang);
-  pack.titles = titles(lang);
-  pack.names = names(lang);
-  pack.edgeLabels = edgeLabels(lang);
+  const converted = cache.pack;
+  converted.characters = characters(lang);
+  converted.titles = titles(lang);
+  converted.names = names(lang);
+  converted.edgeLabels = edgeLabels(lang);
   const rows = raw.scripts || {};
   for (const id of Object.keys(rows)) {
     if (cache.beatRowsById[id] === undefined) {
       cache.beatRowsById[id] = convert.beatRows(lang, rows[id]) || [];
     }
   }
-  return pack;
+  return converted;
 };
 
 const progress = (): TextProgress => {

@@ -1,4 +1,6 @@
-import { byId, focusableElements, scheduleFrame } from "./browser";
+import { autoUpdate, computePosition, flip, offset, shift, size } from "@floating-ui/dom";
+import type { Middleware, Placement as FloatingPlacement, VirtualElement } from "@floating-ui/dom";
+import { byId, focusableElements } from "./browser";
 import type { OverlayKey } from "./overlayKeys";
 
 const MARGIN = 12;
@@ -14,7 +16,6 @@ export type Placement = {
   gap?: number;
   side?: "top";
   margin?: number;
-  _settled?: boolean;
 };
 
 export type OverlayDef = {
@@ -32,6 +33,7 @@ export type OverlayDef = {
 const defs = new Map<OverlayKey, OverlayDef>();
 const openState = reactive<Record<string, boolean>>({});
 const stack: { key: OverlayKey; trigger: HTMLElement | null; focusInside: boolean }[] = [];
+const cleanups = new Map<OverlayKey, () => void>();
 
 const panelOf = (def: OverlayDef | undefined): HTMLElement | null => (def ? byId(def.id) : null);
 
@@ -40,116 +42,87 @@ const triggerOf = (
   explicit?: HTMLElement | null,
 ): HTMLElement | null => explicit || (def && def.trigger) || null;
 
-const fixedOrigin = (panel: HTMLElement): { x: number; y: number } => {
-  let node: HTMLElement | null = panel.parentElement;
-  while (node && node !== document.documentElement) {
-    const style = getComputedStyle(node);
-    const blocks =
-      (style.transform && style.transform !== "none") ||
-      (style.filter && style.filter !== "none") ||
-      (style.backdropFilter && style.backdropFilter !== "none") ||
-      (style.perspective && style.perspective !== "none") ||
-      (style.contain && /paint|layout|strict|content/.test(style.contain)) ||
-      (style.willChange && /transform|filter/.test(style.willChange));
-    if (blocks) {
-      const rect = node.getBoundingClientRect();
-      return {
-        x: rect.left + (parseFloat(style.borderLeftWidth) || 0),
-        y: rect.top + (parseFloat(style.borderTopWidth) || 0),
-      };
-    }
-    node = node.parentElement;
-  }
-  return { x: 0, y: 0 };
+const floatingSide = (options: Placement): FloatingPlacement => {
+  const side = options.side === "top" ? "top" : "bottom";
+  const align = options.align === "start" ? "start" : options.align === "center" ? "" : "end";
+  return (align ? `${side}-${align}` : side) as FloatingPlacement;
 };
 
-const place = (
+const virtualAnchor = (margin: number): VirtualElement => ({
+  getBoundingClientRect: () => {
+    const width = document.documentElement.clientWidth || window.innerWidth;
+    return {
+      x: margin,
+      y: margin,
+      top: margin,
+      left: margin,
+      right: width - margin,
+      bottom: margin,
+      width: width - margin * 2,
+      height: 0,
+    };
+  },
+});
+
+const sizeMiddleware = (options: Placement, margin: number): Middleware =>
+  size({
+    padding: margin,
+    apply({ rects, elements, availableWidth, availableHeight }) {
+      let width = 0;
+      if (options.width) width = Math.min(options.width, availableWidth);
+      else if (options.matchWidth) width = Math.min(rects.reference.width, availableWidth);
+      elements.floating.style.width = width ? `${Math.round(width)}px` : "";
+      elements.floating.style.maxHeight = options.fit
+        ? `${Math.max(120, Math.round(availableHeight))}px`
+        : "";
+    },
+  });
+
+const place = async (
   panel: HTMLElement | null,
   trigger: HTMLElement | null,
   options?: Placement,
-): { left: number; top: number; width: number; height: number } | null => {
-  if (!panel) return null;
+): Promise<void> => {
+  if (!panel) return;
   const opts = options || {};
   const margin = opts.margin == null ? MARGIN : opts.margin;
   const gap = opts.gap == null ? GAP : opts.gap;
-  const vw = document.documentElement.clientWidth || window.innerWidth;
-  const vh = document.documentElement.clientHeight || window.innerHeight;
-
-  const anchor =
-    trigger && trigger.getBoundingClientRect
-      ? trigger.getBoundingClientRect()
-      : { left: margin, right: margin, top: margin, bottom: margin, width: vw - margin * 2 };
-
-  const below = vh - anchor.bottom - gap - margin;
-  const above = anchor.top - gap - margin;
-  let preferTop = opts.side === "top";
-  let maxHeight = 0;
-
-  if (opts.fit) {
-    maxHeight = Math.max(120, preferTop ? above : below);
-    if (!preferTop && below < 220 && above > below) {
-      preferTop = true;
-      maxHeight = Math.max(120, above);
-    }
-    if (preferTop && above < 220 && below > above) {
-      preferTop = false;
-      maxHeight = Math.max(120, below);
-    }
-    if (maxHeight < 160) maxHeight = Math.max(120, vh - margin * 2);
-  }
-
-  const presetWidth = opts.width
-    ? Math.round(Math.min(opts.width, vw - margin * 2))
-    : opts.matchWidth
-      ? Math.round(Math.min(anchor.width, vw - margin * 2))
-      : 0;
-
+  const middleware: Middleware[] = [
+    offset(gap),
+    flip({ padding: margin }),
+    shift({ padding: margin }),
+  ];
+  if (opts.fit || opts.width || opts.matchWidth) middleware.push(sizeMiddleware(opts, margin));
   panel.classList.add("is-overlay");
-  panel.style.cssText =
-    "position:fixed;right:auto;bottom:auto;left:0;top:0" +
-    (presetWidth ? `;width:${presetWidth}px` : "") +
-    (maxHeight ? `;max-height:${maxHeight}px` : "");
-
-  const width = Math.round(panel.offsetWidth) || Math.min(240, vw - margin * 2);
-  const height = Math.round(panel.offsetHeight) || 200;
-  const maxX = Math.max(margin, vw - width - margin);
-  const maxY = Math.max(margin, vh - height - margin);
-
-  let x: number;
-  if (opts.align === "start") x = anchor.left;
-  else if (opts.align === "center") x = anchor.left + anchor.width / 2 - width / 2;
-  else x = anchor.right - width;
-  x = Math.min(Math.max(margin, x), maxX);
-
-  let y = preferTop ? anchor.top - height - gap : anchor.bottom + gap;
-  y = Math.min(Math.max(margin, y), maxY);
-
-  const origin = fixedOrigin(panel);
-  panel.style.cssText =
-    "position:fixed;right:auto;bottom:auto;left:" +
-    `${Math.round(x - origin.x)}px;top:${Math.round(y - origin.y)}px;width:${width}px` +
-    (maxHeight ? `;max-height:${maxHeight}px` : "");
-
-  if (!opts._settled) {
-    requestAnimationFrame(() => {
-      if (panel.hidden) return;
-      place(panel, trigger, { ...opts, _settled: true });
-    });
-  }
-  return { left: x, top: y, width, height };
+  panel.style.position = "fixed";
+  panel.style.margin = "0";
+  const anchor = trigger ?? virtualAnchor(margin);
+  const result = await computePosition(anchor, panel, {
+    strategy: "fixed",
+    placement: floatingSide(opts),
+    middleware,
+  });
+  panel.style.left = `${Math.round(result.x)}px`;
+  panel.style.top = `${Math.round(result.y)}px`;
 };
 
-const reposition = (key: OverlayKey): void => {
+const stopPlacement = (key: OverlayKey): void => {
+  const stop = cleanups.get(key);
+  cleanups.delete(key);
+  if (stop) stop();
+};
+
+const startPlacement = (key: OverlayKey): void => {
   const def = defs.get(key);
-  if (!def || !def.placement) return;
   const panel = panelOf(def);
-  if (!panel || panel.hidden) return;
-  place(panel, triggerOf(def), def.placement);
+  if (!def || !panel || !def.placement) return;
+  stopPlacement(key);
+  const anchor = triggerOf(def) ?? virtualAnchor(def.placement.margin ?? MARGIN);
+  const update = () => {
+    void place(panel, triggerOf(def), def.placement);
+  };
+  cleanups.set(key, autoUpdate(anchor, panel, update));
 };
-
-const refresh = scheduleFrame(() => {
-  for (const layer of stack) reposition(layer.key);
-});
 
 let focusRingSuppressor: { clear: () => void } | null = null;
 
@@ -240,11 +213,8 @@ const open = (
   }
 
   const placement = opts.placement || def.placement;
-  if (placement) {
-    def.placement = placement;
-    place(panel, trigger, placement);
-    void nextTick(() => reposition(key));
-  }
+  if (placement) def.placement = placement;
+  startPlacement(key);
 
   if (!existing) {
     const autofocus = opts.autofocus || def.autofocus;
@@ -265,6 +235,7 @@ const open = (
 
 const close = (key: OverlayKey, options?: { restoreFocus?: boolean }): boolean => {
   const opts = options || {};
+  stopPlacement(key);
   const index = stack.findIndex((layer) => layer.key === key);
   if (index < 0) {
     hideLayer(key);
@@ -351,9 +322,6 @@ document.addEventListener("click", (event) => {
     if (kept) return;
   }
 });
-
-window.addEventListener("resize", refresh);
-document.addEventListener("scroll", refresh, true);
 
 export const overlay = {
   register: (key: OverlayKey, def: OverlayDef): void => {

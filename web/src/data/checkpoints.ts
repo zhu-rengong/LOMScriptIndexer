@@ -1,14 +1,23 @@
+import type { CheckpointDocument } from "../types/generated";
 import type { CheckpointModel } from "../types/condition";
-import { loadScript } from "../lib/browser";
 import { dataset } from "./dataset";
+import { fetchJson } from "./load";
 
+const models: Record<string, CheckpointModel> = {};
 const pendingLoads = new Map<number, Promise<boolean>>();
 
 const loadShard = (index: number): Promise<boolean> => {
   if (index < 0) return Promise.resolve(false);
   const pending = pendingLoads.get(index);
   if (pending) return pending;
-  const job = loadScript(dataset.assetUrl("checkpoint", { index })).catch(() => false);
+  const job = fetchJson<CheckpointDocument>(dataset.assetUrl("checkpoints", { index }))
+    .then((document) => {
+      for (const [key, model] of Object.entries(document.items ?? {})) {
+        models[key] = model as CheckpointModel;
+      }
+      return true;
+    })
+    .catch(() => false);
   pendingLoads.set(index, job);
   return job;
 };
@@ -29,8 +38,7 @@ const loadAll = (): Promise<boolean> => {
 };
 
 const getByKey = (key: string, kind?: string): CheckpointModel | null => {
-  const all = dataset.getCheckpoints();
-  const checkpoint = all && key ? all[key] : null;
+  const checkpoint = key ? models[key] : null;
   if (!checkpoint) return null;
   if (!kind || checkpoint.kind === kind) return checkpoint;
   const variants = Array.isArray(checkpoint.variants) ? checkpoint.variants : [];

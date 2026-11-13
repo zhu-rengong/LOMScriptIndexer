@@ -2,10 +2,10 @@ import type {
   BattleEvent,
   BattleLine,
   BattlePart,
-  BattleRow,
+  BattleTableRow,
   BattleView,
   BattleWhen,
-  BeatRow,
+  BeatNode,
   BranchView,
   CheckRef,
   EndingView,
@@ -46,16 +46,19 @@ export const asNumber = (value: unknown, fallback: number): number =>
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
 
 export const isBeat = (row: unknown, kind: BeatKind): boolean =>
-  Array.isArray(row) && row.length > 0 && row[0] === BEAT_TAG[kind];
+  asRecord(row)?.t === BEAT_TAG[kind];
 
 export const parseSay = (
-  row: BeatRow,
-): { speaker: string; text: string; mode: string; expression: string } => ({
-  speaker: asString(row[1]),
-  text: asString(row[2]),
-  mode: asString(row[3]) || "dialog",
-  expression: asString(row[4]),
-});
+  row: BeatNode,
+): { speaker: string; text: string; mode: string; expression: string } => {
+  const record = asRecord(row) || {};
+  return {
+    speaker: asString(record.speaker),
+    text: asString(record.text),
+    mode: asString(record.mode) || "dialog",
+    expression: asString(record.expression),
+  };
+};
 
 export const sayKindOf = (mode: string): SayKind => {
   if (mode === "dialog") return "dialog";
@@ -73,65 +76,76 @@ export const parseCheck = (value: unknown): CheckRef | null => {
 };
 
 export const parseOption = (item: unknown): OptionView => {
-  const row = asList(item);
+  const record = asRecord(item) || {};
   return {
-    text: asString(row[0]),
-    requirement: asRecord(row[1]),
-    beats: asList<BeatRow>(row[2]),
-    lockedText: asString(row[3]),
-    detail: asRecord(row[4]),
-    condition: asRecord(row[5]) as ConditionNode | null,
+    text: asString(record.text),
+    requirement: asRecord(record.requirement),
+    beats: asList<BeatNode>(record.rows),
+    lockedText: asString(record.lock),
+    detail: asRecord(record.detail),
+    condition: (asRecord(record.condition) as ConditionNode | null) ?? null,
   };
 };
 
-export const parseChoice = (row: BeatRow): OptionView[] =>
-  asList<unknown>(row[1]).filter(Array.isArray).map(parseOption);
+export const parseChoice = (row: BeatNode): OptionView[] =>
+  asList<unknown>((asRecord(row) || {}).options).map(parseOption);
 
-export const parseBranch = (row: BeatRow): BranchView => ({
-  check: parseCheck(row[1]),
-  condition: asRecord(row[2]) as ConditionNode | null,
-  source: asString(row[3]),
-  beats: asList<BeatRow>(row[4]),
-  group: asNumber(row[5], 0),
-});
-
-export const parseJump = (row: BeatRow): JumpView => {
-  const view: JumpView = {
-    target: asString(row[1]),
-    dynamicSource: asString(row[2]),
+export const parseBranch = (row: BeatNode): BranchView => {
+  const record = asRecord(row) || {};
+  return {
+    check: parseCheck(record.check),
+    condition: (asRecord(record.condition) as ConditionNode | null) ?? null,
+    source: asString(record.source),
+    beats: asList<BeatNode>(record.rows),
+    group: asNumber(record.group, 0),
   };
-  const meta = asRecord(row[3]);
-  if (!meta) return view;
-  const position = asString(meta.position);
+};
+
+export const parseJump = (row: BeatNode): JumpView => {
+  const record = asRecord(row) || {};
+  const view: JumpView = {
+    target: asString(record.target),
+    dynamicSource: asString(record.dynamic),
+  };
+  const position = asString(record.position);
   if (!position) return view;
   view.position = position;
-  view.targets = asList<unknown>(meta.targets).map(asString).filter(Boolean);
+  view.targets = asList<unknown>(record.targets).map(asString).filter(Boolean);
   return view;
 };
 
-export const parseScene = (row: BeatRow): SceneView => ({
-  scene: asString(row[1]),
-  sceneKey: asString(row[2]),
-  nextScene: asString(row[3]),
-  afterScript: asString(row[4]),
-});
+export const parseScene = (row: BeatNode): SceneView => {
+  const record = asRecord(row) || {};
+  return {
+    scene: asString(record.scene),
+    sceneKey: asString(record.sceneKey),
+    nextScene: asString(record.nextScene),
+    afterScript: asString(record.afterScript),
+  };
+};
 
-export const parseEnding = (row: BeatRow): EndingView => ({
-  key: asString(row[1]),
-  title: asString(row[2]),
-  desc: asString(row[3])
-    .split(/\n+/)
-    .map((line) => line.trim())
-    .filter(Boolean),
-});
+export const parseEnding = (row: BeatNode): EndingView => {
+  const record = asRecord(row) || {};
+  return {
+    key: asString(record.key),
+    title: asString(record.title),
+    desc: asString(record.desc)
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean),
+  };
+};
 
-export const parseMeta = (row: BeatRow): MetaView => ({
-  kind: asString(row[1]),
-  key: asString(row[2]),
-  value: typeof row[3] === "number" ? (row[3] as number) : null,
-  hidden: row[4] === true,
-  extra: asString(row[5]),
-});
+export const parseMeta = (row: BeatNode): MetaView => {
+  const record = asRecord(row) || {};
+  return {
+    kind: asString(record.kind),
+    key: asString(record.key),
+    value: typeof record.value === "number" ? record.value : null,
+    hidden: record.hidden === true,
+    extra: asString(record.extra),
+  };
+};
 
 const parseBattleLine = (value: unknown): BattleLine => {
   const row = asRecord(value) || {};
@@ -163,13 +177,14 @@ const parseBattleWhen = (value: unknown): BattleWhen => {
   return { logic: asString(row.logic), parts: asList<unknown>(row.parts).map(parseBattlePart) };
 };
 
-export const parseBattle = (row: BeatRow): BattleView => {
-  const info = asRecord(row[4]) || {};
+export const parseBattle = (row: BeatNode): BattleView => {
+  const outer = asRecord(row) || {};
+  const info = asRecord(outer.card) || {};
   return {
-    scene: asString(row[1]),
-    sceneKey: asString(row[2]),
-    nextScene: asString(row[3]),
-    afterScript: asString(row[5]),
+    scene: asString(outer.scene),
+    sceneKey: asString(outer.sceneKey),
+    nextScene: asString(outer.nextScene),
+    afterScript: asString(outer.afterScript),
     kind: asString(info.kind),
     title: asString(info.title),
     speaker: asString(info.speaker),
@@ -181,7 +196,7 @@ export const parseBattle = (row: BeatRow): BattleView => {
       return {
         label: asString(record.label),
         value: tightenCjk(asString(record.value)),
-      } as BattleRow;
+      } as BattleTableRow;
     }),
     events: asList<unknown>(info.events).map((item) => {
       const record = asRecord(item) || {};
@@ -193,11 +208,11 @@ export const parseBattle = (row: BeatRow): BattleView => {
   };
 };
 
-export const parseLore = (row: BeatRow): string => asString(row[1]);
+export const parseLore = (row: BeatNode): string => asString((asRecord(row) || {}).text);
 
-export const walkRows = (rows: unknown, visit: (row: BeatRow) => void): void => {
-  for (const row of asList<BeatRow>(rows)) {
-    if (!Array.isArray(row) || !row.length) continue;
+export const walkRows = (rows: unknown, visit: (row: BeatNode) => void): void => {
+  for (const row of asList<BeatNode>(rows)) {
+    if (!asRecord(row)?.t) continue;
     visit(row);
     if (isBeat(row, "choice")) {
       for (const item of parseChoice(row)) walkRows(item.beats, visit);

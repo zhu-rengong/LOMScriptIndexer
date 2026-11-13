@@ -1,0 +1,7 @@
+node_modules/
+dist/
+schema.json
+src/types/generated.ts
+src/types/contract.ts
+src/auto-imports.d.ts
+src/components.d.ts

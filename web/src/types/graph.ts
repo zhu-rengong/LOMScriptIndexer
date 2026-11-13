@@ -1,5 +1,14 @@
-import type { CheckpointModel } from "./condition";
-import type { TextPack, WordCountPack } from "./text";
+import type {
+  CalendarInfo,
+  CheckpointDocument,
+  DataIndex,
+  FlagFactsPayload,
+  MissionDocument,
+  VarReadsPayload,
+  VocabPayload,
+} from "./generated";
+
+export type { CalendarInfo, DataIndex, FlagFactsPayload, MissionDocument, VarReadsPayload };
 
 export type Facets = {
   speakers: string[];
@@ -55,28 +64,12 @@ export type Shard = {
 };
 
 export type GameInfo = {
-  version?: string;
-  build?: string;
-  updated?: string;
+  version?: string | null;
+  build?: string | null;
+  updated?: string | null;
 };
 
-export type Assets = Record<string, string>;
-
-export type Vocab = {
-  beatTags: string[];
-  sayModes: string[];
-  edgeKinds: string[];
-  edgeGroupByKind: Record<string, string>;
-  facetKinds: string[];
-  checkKinds: string[];
-  valueKinds: string[];
-  compareSymbols: string[];
-  groupKinds: string[];
-  metaKinds: string[];
-  itemKinds: string[];
-  chapterKinds: string[];
-  [key: string]: unknown;
-};
+export type Vocab = VocabPayload & { [key: string]: unknown };
 
 export type GraphMeta = {
   generated?: string;
@@ -85,22 +78,12 @@ export type GraphMeta = {
   defaultLang: string;
   sourceLang: string;
   vocab: Vocab;
-  assets: Assets;
-  calendar: { roundsPerYear?: number; roundsPerMonth?: number };
+  calendar: CalendarInfo;
   counts: Record<string, number>;
   shards: Shard[];
-  systemEntries: unknown[];
+  systemEntries: { id: string; label: string; origin: string }[];
   shardByNode: Record<string, string>;
   checkpointShardByKey: Record<string, number>;
-  [key: string]: unknown;
-};
-
-export type RawGraph = {
-  schema: number;
-  meta: Record<string, unknown>;
-  nodes: Record<string, unknown>[];
-  edges: Record<string, unknown>[];
-  chapters: Record<string, unknown>[];
 };
 
 export type VarReads = {
@@ -110,20 +93,21 @@ export type VarReads = {
 };
 
 export type Dataset = {
+  index: DataIndex;
+  schema: string;
   meta: GraphMeta;
   vocab: Vocab;
-  assets: Assets;
-  calendar: { roundsPerYear?: number; roundsPerMonth?: number };
+  calendar: CalendarInfo;
   nodes: GraphNode[];
   edges: GraphEdge[];
   chapters: Chapter[];
   varReads: VarReads;
+  missions: MissionDocument;
+  flagFacts: FlagFactsPayload;
+  checkpoints: CheckpointDocument;
   langs: string[];
-  systemEntries: unknown[];
+  systemEntries: { id: string; label: string; origin: string }[];
   shardByNode: Record<string, string>;
   checkpointShardByKey: Record<string, number>;
-  assetUrl: (key: string, vars?: Record<string, string | number>) => string;
-  getTextPack: () => Record<string, TextPack>;
-  getCheckpoints: () => Record<string, CheckpointModel>;
-  getWordCount: () => WordCountPack;
+  assetUrl: (name: string, vars?: Record<string, string | number>) => string;
 };

@@ -1,11 +1,5 @@
-import type {
-  MissionPack,
-  MissionRecord,
-  MissionState,
-  MissionTimeRule,
-} from "../types/missions";
-import { readMissions } from "./globals";
-import { DATA_SCHEMA } from "./schema";
+import type { MissionPack, MissionRecord, MissionState, MissionTimeRule } from "../types/missions";
+import { dataset } from "./dataset";
 
 export type MissionLookup = { mission: string; state: MissionState };
 
@@ -18,9 +12,8 @@ const EMPTY_TIME: MissionTimeRule = {
   period: 0,
 };
 
-const pack: MissionPack = readMissions();
-const records: Record<string, MissionRecord> =
-  pack.schema === DATA_SCHEMA ? pack.missions || {} : {};
+const pack = dataset.missions as unknown as MissionPack;
+const records: Record<string, MissionRecord> = pack.items || {};
 
 const normalizeState = (state: MissionState): MissionState => ({
   ...state,

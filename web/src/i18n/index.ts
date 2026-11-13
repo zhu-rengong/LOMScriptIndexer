@@ -1,26 +1,35 @@
+import { createI18n } from "vue-i18n";
+import type { Composer } from "vue-i18n";
+import en from "../locales/en.json";
+import zhCn from "../locales/zh-cn.json";
+import zhTw from "../locales/zh-tw.json";
 import { dataset } from "../data/dataset";
 import { slotById } from "../lib/fontTypes";
-import { scriptStore as script } from "../lib/scriptStore";
-import { fillTemplate } from "../lib/template";
-import { dict, languageMeta } from "./dict";
+import { languageMeta } from "./meta";
+
+export type TranslationKey = keyof typeof zhTw;
 
 const FALLBACK = "zh-tw";
 
-const CHAPTER_KEYS: Record<string, string> = {
-  prologue: "chPrologue",
-  chapter: "chN",
-  act: "actN",
-  event: "eventN",
-  scene: "chScene",
-  work: "chWork",
-  travel: "chTravel",
-  free: "chFree",
-  section: "chSection",
-  misc: "chMisc",
-  other: "chOther",
+const messages = {
+  "zh-tw": zhTw,
+  "zh-cn": zhCn,
+  en,
 };
 
-export const LANGS = Object.keys(dict).length ? Object.keys(dict) : [FALLBACK];
+export const i18n = createI18n({
+  legacy: false,
+  locale: FALLBACK,
+  fallbackLocale: FALLBACK,
+  messages,
+  flatJson: true,
+  missingWarn: import.meta.env.DEV,
+  fallbackWarn: false,
+});
+
+const composer = i18n.global as Composer;
+
+export const LANGS = Object.keys(messages);
 
 const ORDER: string[] = (() => {
   const out: string[] = [];
@@ -29,23 +38,27 @@ const ORDER: string[] = (() => {
   return out;
 })();
 
-const rawOf = (lang: string, key: string): string | undefined => {
-  const table = dict[lang] || {};
-  if (table[key] !== undefined) return table[key];
-  return (dict[FALLBACK] || {})[key];
+export const syncLocale = (lang: string): void => {
+  if (LANGS.indexOf(lang) >= 0 && composer.locale.value !== lang) composer.locale.value = lang;
 };
 
-export const t = (key: string, vars?: Record<string, unknown>): string => {
-  const text = rawOf(script().lang, key);
-  if (text !== undefined) return vars ? fillTemplate(text, vars) : text;
+export const t = (
+  key: TranslationKey | (string & Record<never, never>),
+  vars?: Record<string, unknown>,
+): string => {
+  const text = String(composer.t(key, vars || {}));
+  if (text !== key) return text;
   if (vars && vars.defaultValue !== undefined) return String(vars.defaultValue);
   return key;
 };
 
-export const all = (key: string): string[] => {
+export const tDynamic = (key: string, vars?: Record<string, unknown>): string =>
+  t(key as TranslationKey, vars);
+
+export const all = (key: TranslationKey | (string & Record<never, never>)): string[] => {
   const out: string[] = [];
   for (const id of LANGS) {
-    const raw = dict[id] && dict[id][key];
+    const raw = (messages[id as keyof typeof messages] as Record<string, string>)[key];
     if (typeof raw !== "string") continue;
     for (const part of raw.split(",")) {
       const value = part.trim();
@@ -55,8 +68,13 @@ export const all = (key: string): string[] => {
   return out;
 };
 
+export const messageOf = (lang: string, key: TranslationKey): string => {
+  const table = messages[lang as keyof typeof messages] as Record<string, string> | undefined;
+  return table?.[key] ?? "";
+};
+
 export const languages = (): { id: string; native: string; label: string; html: string }[] =>
-  ORDER.filter((id) => dict[id] && Object.keys(dict[id]).length).map((id) => ({
+  ORDER.filter((id) => messages[id as keyof typeof messages]).map((id) => ({
     id,
     native: languageMeta[id]?.native || id,
     label: languageMeta[id]?.label || id,
@@ -69,6 +87,20 @@ export const langShort = (id: string): string =>
 export const typeLabel = (slotId: string): string => {
   const slot = slotById(slotId);
   return slot ? t(slot.label) : String(slotId || "");
+};
+
+const CHAPTER_KEYS: Record<string, TranslationKey> = {
+  prologue: "chPrologue",
+  chapter: "chN",
+  act: "actN",
+  event: "eventN",
+  scene: "chScene",
+  work: "chWork",
+  travel: "chTravel",
+  free: "chFree",
+  section: "chSection",
+  misc: "chMisc",
+  other: "chOther",
 };
 
 export const chapterTitle = (
@@ -86,9 +118,8 @@ export const chapterTitle = (
   return t(key);
 };
 
-const calendar = dataset.calendar || {};
-
 const dateOf = (rounds: number): { year: number; month: number; period: number } => {
+  const calendar = dataset.calendar || {};
   const perYear = calendar.roundsPerYear || 36;
   const perMonth = calendar.roundsPerMonth || 3;
   const index = Math.max(0, Math.floor(rounds) - 1);

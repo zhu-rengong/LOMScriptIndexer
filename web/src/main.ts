@@ -1,6 +1,14 @@
-import { DATA_SCHEMA } from "./data/schema";
-import { dict, languageMeta } from "./i18n/dict";
-import { loadScript } from "./lib/browser";
+import { loadDataset } from "./data/dataset";
+import { languageMeta } from "./i18n/meta";
+import en from "./locales/en.json";
+import zhCn from "./locales/zh-cn.json";
+import zhTw from "./locales/zh-tw.json";
+
+const tables: Record<string, Record<string, string>> = {
+  "zh-tw": zhTw,
+  "zh-cn": zhCn,
+  en,
+};
 
 const langOf = (): string => {
   const html = String(document.documentElement.lang || "").toLowerCase();
@@ -15,7 +23,7 @@ const langOf = (): string => {
 const showFatal = (error: unknown) => {
   const body = document.body;
   const message = error instanceof Error ? error.message : String(error);
-  const table = dict[langOf()] || dict["zh-tw"] || {};
+  const table = tables[langOf()] || tables["zh-tw"] || {};
   body.replaceChildren();
   const panel = document.createElement("div");
   panel.style.cssText =
@@ -38,23 +46,9 @@ const showFatal = (error: unknown) => {
   body.appendChild(panel);
 };
 
-window.addEventListener(
-  "error",
-  (event) => {
-    const target = event.target as HTMLScriptElement | null;
-    if (target && target.tagName === "SCRIPT" && target.src && /\/data\//.test(target.src)) {
-      const table = dict[langOf()] || dict["zh-tw"] || {};
-      showFatal(new Error(`${table.errorMissing || "Failed to load"}: ${target.src}`));
-    }
-  },
-  true,
-);
-
 const boot = async () => {
   try {
-    if (!window.SR_DATA) await loadScript(`data/graph.js?v=${DATA_SCHEMA}`);
-    if (!window.SR_VARREADS) await loadScript(`data/var-reads.js?v=${DATA_SCHEMA}`);
-    if (!window.SR_MISSIONS) await loadScript(`data/missions.js?v=${DATA_SCHEMA}`);
+    await loadDataset();
     const { start } = await import("./bootstrap");
     start();
   } catch (error) {
