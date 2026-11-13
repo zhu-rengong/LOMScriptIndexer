@@ -81,7 +81,7 @@ export const TYPE_SLOTS: TypeSlot[] = [
     id: "narration",
     group: "prose",
     label: "pref.type.narration",
-    font: "FOLLOW_GROUP",
+    font: FOLLOW_GROUP,
     scale: 200,
     leading: 90,
     tracking: 0.02,
