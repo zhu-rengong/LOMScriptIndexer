@@ -72,11 +72,11 @@ const onHeadKey = (event: KeyboardEvent) => {
       <BattleEvent v-for="(event, index) in battle.events" :key="index" :event="event" />
     </div>
 
-    <div v-if="battle.afterScript" class="scene-switch">
+    <div v-if="isExpandable && battle.afterScript" class="scene-switch">
       <span class="scene-label">{{ t("battleAfterStory") }}</span>
       <JumpLink :jump="{ target: battle.afterScript, dynamicSource: '' }" />
     </div>
-    <div v-else-if="battle.nextScene" class="scene-switch">
+    <div v-else-if="isExpandable && battle.nextScene" class="scene-switch">
       <span class="scene-label">{{ t("battleAfter") }}</span>
       <AppIcon name="arrow-right" class="scene-arrow" />
       <span class="scene-next">{{ battle.nextScene }}</span>

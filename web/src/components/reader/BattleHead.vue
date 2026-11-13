@@ -2,6 +2,8 @@
 import { t } from "../../i18n";
 import type { BattleView } from "../../types/beats";
 import { usePanelsStore } from "../../stores/panels";
+import AppIcon from "../ui/AppIcon.vue";
+import JumpLink from "./JumpLink.vue";
 
 const panels = usePanelsStore();
 
@@ -108,6 +110,20 @@ const facts = computed(() =>
       <div v-for="(row, index) in battle.rows" :key="`row-${index}`" class="mission-row">
         <dt class="mission-label">{{ row.label }}</dt>
         <dd class="mission-value">{{ row.value }}</dd>
+      </div>
+
+      <div v-if="battle.afterScript" class="mission-row">
+        <dt class="mission-label">{{ t("battleAfterStory") }}</dt>
+        <dd class="mission-value">
+          <JumpLink :jump="{ target: battle.afterScript, dynamicSource: '' }" />
+        </dd>
+      </div>
+
+      <div v-else-if="battle.nextScene" class="mission-row">
+        <dt class="mission-label">{{ t("battleAfter") }}</dt>
+        <dd class="mission-value">
+          <AppIcon name="arrow-right" class="battle-next-arrow" />{{ battle.nextScene }}
+        </dd>
       </div>
     </template>
   </component>
