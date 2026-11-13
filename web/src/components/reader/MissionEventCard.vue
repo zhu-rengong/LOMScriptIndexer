@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { missions } from "../../data/missions";
 import { t } from "../../i18n";
 import type { MissionEventType, MissionEventView } from "../../types/beats";
+import MissionStateBody from "./MissionStateBody.vue";
 
 const LABELS: Record<MissionEventType, string> = {
   trigger: "missionEventTrigger",
@@ -9,6 +11,10 @@ const LABELS: Record<MissionEventType, string> = {
 };
 
 const props = defineProps<{ event: MissionEventView }>();
+
+const hit = computed(() =>
+  props.event.type === "trigger" ? missions.missionOfState(props.event.code) : null,
+);
 
 const title = computed(() => [props.event.name, props.event.code].filter(Boolean).join(" · "));
 </script>
@@ -29,5 +35,6 @@ const title = computed(() => [props.event.name, props.event.code].filter(Boolean
         </div>
       </div>
     </div>
+    <MissionStateBody v-if="hit" :state="hit.state" />
   </div>
 </template>
