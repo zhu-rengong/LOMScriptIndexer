@@ -121,7 +121,7 @@ export type ReaderBlock =
   | { kind: "say"; mode: string; speaker: string; text: string; expression?: string }
   | { kind: "time"; rounds: number }
   | { kind: "meta"; chips: MetaChip[] }
-  | { kind: "missionEvent"; event: MissionEventView }
+  | { kind: "missionEvent"; events: MissionEventView[] }
   | { kind: "dice"; chips: MetaChip[] }
   | { kind: "choice"; options: ChoiceOption[]; diceChips: MetaChip[] }
   | { kind: "branches"; branches: BranchView[] }

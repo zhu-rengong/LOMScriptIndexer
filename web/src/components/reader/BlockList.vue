@@ -56,7 +56,7 @@ const blockProps = (block: ReaderBlock, index: number): Record<string, unknown> 
     case "meta":
       return { chips: block.chips };
     case "missionEvent":
-      return { event: block.event };
+      return { events: block.events };
     case "dice":
       return { chips: block.chips, dice: true };
     case "choice":

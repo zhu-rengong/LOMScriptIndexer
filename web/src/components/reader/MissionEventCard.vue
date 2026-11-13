@@ -10,31 +10,36 @@ const LABELS: Record<MissionEventType, string> = {
   end: "missionEventEnd",
 };
 
-const props = defineProps<{ event: MissionEventView }>();
+const props = defineProps<{ events: MissionEventView[] }>();
 
-const hit = computed(() =>
-  props.event.type === "trigger" ? missions.missionOfState(props.event.code) : null,
+const allCancel = computed(() => props.events.every((event) => event.type === "cancel"));
+
+const rows = computed(() =>
+  props.events.map((event) => ({
+    event,
+    cancel: event.type === "cancel",
+    title: [event.name, event.code].filter(Boolean).join(" · "),
+    state: event.type === "trigger" ? (missions.missionOfState(event.code)?.state ?? null) : null,
+  })),
 );
-
-const title = computed(() => [props.event.name, props.event.code].filter(Boolean).join(" · "));
 </script>
 
 <template>
-  <div
-    class="mission-event"
-    :class="{ 'is-cancel': event.type === 'cancel' }"
-    :title="title || undefined"
-  >
-    <div class="battle-head">
-      <div class="battle-head-main">
-        <div class="battle-head-line">
-          <span class="cx-var">
-            <span class="cx-type">{{ t(LABELS[event.type]) }}</span>
-            <span v-if="event.name" class="cx-name">{{ event.name }}</span>
-          </span>
+  <div class="mission-event" :class="{ 'is-cancel': allCancel }">
+    <div v-for="(row, index) in rows" :key="index" class="mission-event-item">
+      <div class="battle-head">
+        <div class="battle-head-main">
+          <div class="battle-head-line" :title="row.title || undefined">
+            <span class="cx-var">
+              <span class="cx-type" :class="{ 'is-cancel': row.cancel }">
+                {{ t(LABELS[row.event.type]) }}
+              </span>
+              <span v-if="row.event.name" class="cx-name">{{ row.event.name }}</span>
+            </span>
+          </div>
         </div>
       </div>
+      <MissionStateBody v-if="row.state" :state="row.state" />
     </div>
-    <MissionStateBody v-if="hit" :state="hit.state" />
   </div>
 </template>

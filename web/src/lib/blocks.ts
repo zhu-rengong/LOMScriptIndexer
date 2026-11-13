@@ -2,7 +2,14 @@ import { names } from "../data/names";
 import { textStore } from "../data/text";
 import { t } from "../i18n";
 
-import type { BeatRow, BranchView, MetaChip, MetaView, ReaderBlock } from "../types/beats";
+import type {
+  BeatRow,
+  BranchView,
+  MetaChip,
+  MetaView,
+  MissionEventView,
+  ReaderBlock,
+} from "../types/beats";
 import type { GraphEdge, GraphNode } from "../types/graph";
 import type { BeatKind } from "./beatRows";
 import * as beatRows from "./beatRows";
@@ -64,6 +71,15 @@ class BlockBuffer {
 
   push(block: ReaderBlock): void {
     this.blocks.push(block);
+  }
+
+  pushMissionEvent(event: MissionEventView): void {
+    const last = this.blocks[this.blocks.length - 1];
+    if (last && last.kind === "missionEvent") {
+      last.events.push(event);
+      return;
+    }
+    this.blocks.push({ kind: "missionEvent", events: [event] });
   }
 
   takeDice(): MetaChip[] {
@@ -134,10 +150,7 @@ const builders: Record<BeatKind, Builder> = {
     if (meta.kind === "mission" || meta.kind === "missionTrigger") {
       buffer.flushMeta();
       buffer.flushDice();
-      buffer.push({
-        kind: "missionEvent",
-        event: missionEventView(meta.kind, meta.key, meta.value, meta.extra),
-      });
+      buffer.pushMissionEvent(missionEventView(meta.kind, meta.key, meta.value, meta.extra));
       return;
     }
     buffer.metaQueue.push(meta);
