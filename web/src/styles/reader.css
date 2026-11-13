@@ -1095,16 +1095,33 @@
     margin-top: var(--rd-gap-2);
   }
 
-  .battle-campaign .battle-head,
-  .battle-static .battle-head,
-  .mission-event .battle-head {
-    min-height: var(--ctl-sm);
+  .battle-rows,
+  .mission-event-panel {
+    padding: var(--sp-2) var(--sp-3);
     border: 1px solid var(--line-1);
     border-radius: var(--r-sm);
-    background: var(--surface-inset);
+    background: var(--surface);
   }
 
-  .mission-event .cx-type.is-cancel {
+  .battle-link {
+    display: inline;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .battle-link:hover,
+  .battle-link:focus-visible {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
+
+  .mission-event .mission-label.is-cancel {
     color: var(--warn);
   }
 
@@ -1113,33 +1130,20 @@
     color: var(--warn);
   }
 
-  .mission-event.is-cancel .battle-head {
+  .mission-event.is-cancel .mission-event-panel {
     border-color: var(--warn);
   }
 
   .mission-event-item + .mission-event-item {
-    margin-top: var(--sp-1);
+    margin-top: var(--sp-2);
+    padding-top: var(--sp-2);
+    border-top: 1px solid var(--line-1);
   }
 
-  .mission-event .mission-body {
-    margin-top: var(--rd-gap-2);
-    padding: 0 var(--sp-2);
-  }
-
-  .battle-campaign-rows {
-    display: grid;
-    justify-items: start;
-    gap: 2px;
-    margin-top: var(--rd-gap-2);
-  }
-
-  .battle-campaign-rows .cx-var {
-    margin: 0;
-    font-family: var(--rd-ff-battle-fact, var(--font-base));
-    font-size: var(--rd-fs-battle-fact, 16px);
-    font-weight: var(--rd-fw-battle-fact, 400);
-    line-height: var(--rd-lh-battle-fact, 1.6);
-    letter-spacing: 0.02em;
+  .mission-event-item .mission-body {
+    margin-top: var(--sp-2);
+    padding-top: var(--sp-2);
+    border-top: 1px solid var(--line-1);
   }
 
   .battle-campaign-events {

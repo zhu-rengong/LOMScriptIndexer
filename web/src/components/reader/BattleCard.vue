@@ -64,13 +64,6 @@ const onHeadKey = (event: KeyboardEvent) => {
       @keydown="onHeadKey"
     />
 
-    <div v-if="isCampaign && battle.rows.length" class="battle-campaign-rows">
-      <span v-for="(row, index) in battle.rows" :key="index" class="cx-var">
-        <span class="cx-type">{{ row.label }}</span>
-        <span class="cx-name">{{ row.value }}</span>
-      </span>
-    </div>
-
     <div v-if="isCampaign && battle.events.length" class="battle-campaign-events">
       <BattleEvent v-for="(event, index) in battle.events" :key="index" :event="event" />
     </div>

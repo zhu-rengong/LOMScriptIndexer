@@ -26,20 +26,16 @@ const rows = computed(() =>
 
 <template>
   <div class="mission-event" :class="{ 'is-cancel': allCancel }">
-    <div v-for="(row, index) in rows" :key="index" class="mission-event-item">
-      <div class="battle-head">
-        <div class="battle-head-main">
-          <div class="battle-head-line" :title="row.title || undefined">
-            <span class="cx-var">
-              <span class="cx-type" :class="{ 'is-cancel': row.cancel }">
-                {{ t(LABELS[row.event.type]) }}
-              </span>
-              <span v-if="row.event.name" class="cx-name">{{ row.event.name }}</span>
-            </span>
-          </div>
+    <div class="mission-event-panel">
+      <div v-for="(row, index) in rows" :key="index" class="mission-event-item">
+        <div class="mission-row" :title="row.title || undefined">
+          <span class="mission-label" :class="{ 'is-cancel': row.cancel }">
+            {{ t(LABELS[row.event.type]) }}
+          </span>
+          <span class="mission-value">{{ row.event.name }}</span>
         </div>
+        <MissionStateBody v-if="row.state" :state="row.state" />
       </div>
-      <MissionStateBody v-if="row.state" :state="row.state" />
     </div>
   </div>
 </template>

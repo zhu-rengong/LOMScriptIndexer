@@ -146,9 +146,16 @@ const parseBattleLine = (value: unknown): BattleLine => {
   };
 };
 
+const tightenCjk = (text: string): string =>
+  text.replace(/(?<=[\u4e00-\u9fff])\s+(?=\d)|(?<=\d)\s+(?=[\u4e00-\u9fff])/g, "");
+
 const parseBattlePart = (value: unknown): BattlePart => {
   const item = asRecord(value) || {};
-  return { text: asString(item.text), kind: asString(item.kind), key: asString(item.key) };
+  return {
+    text: tightenCjk(asString(item.text)),
+    kind: asString(item.kind),
+    key: asString(item.key),
+  };
 };
 
 const parseBattleWhen = (value: unknown): BattleWhen => {
@@ -171,7 +178,10 @@ export const parseBattle = (row: BeatRow): BattleView => {
     facts: asList<unknown>(info.facts).map(asString),
     rows: asList<unknown>(info.rows).map((item) => {
       const record = asRecord(item) || {};
-      return { label: asString(record.label), value: asString(record.value) } as BattleRow;
+      return {
+        label: asString(record.label),
+        value: tightenCjk(asString(record.value)),
+      } as BattleRow;
     }),
     events: asList<unknown>(info.events).map((item) => {
       const record = asRecord(item) || {};
