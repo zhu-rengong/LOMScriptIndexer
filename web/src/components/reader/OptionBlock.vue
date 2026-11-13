@@ -111,7 +111,7 @@ watch(() => props.option.condition, resolveCondition, { immediate: true });
           <template v-if="expr">
             <span class="option-cond-label">{{ t("optionCondLabel") }}</span>
             <span class="option-cond-row">
-              <span class="option-cond" :title="hint || undefined" @click.stop>
+              <span class="option-cond" :title="hint || undefined">
                 <CondExpr v-if="expanded" :expr="expr" :method="check?.kind" />
                 <span v-else class="cx-var"><span class="cx-name">{{ check?.key }}</span></span>
               </span>
