@@ -18,6 +18,8 @@ export const MONO =
 
 export const BASE_FONT = SERIF;
 
+export const BASE_FONT_ID = "serif";
+
 export type FontPreset = { id: string; label: string; stack: string };
 
 export const FONTS: FontPreset[] = [

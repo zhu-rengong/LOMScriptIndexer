@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import {
   BASE_FONT,
+  BASE_FONT_ID,
   FONTS,
   FOLLOW_BASE,
   FOLLOW_GROUP,
@@ -256,6 +257,20 @@ export const usePrefsStore = defineStore("prefs", () => {
   const resolveEntry = (scope: FontScope, id: string): ResolvedTypeStyle | null =>
     scope === "group" ? groupStyle(id) : slotStyle(id);
 
+  const familyKeyOf = (font: string): string =>
+    fontLabelKey(!font || font === FOLLOW_BASE ? BASE_FONT_ID : font);
+
+  const resolvedFontKey = (target: FontTarget): string => {
+    const raw =
+      target.scope === "group"
+        ? groups.value[target.id]?.font || FOLLOW_BASE
+        : slots.value[target.id]?.font || FOLLOW_GROUP;
+    if (raw !== FOLLOW_GROUP) return familyKeyOf(raw);
+    const slot = slotById(target.id);
+    if (!slot) return familyKeyOf(FOLLOW_BASE);
+    return familyKeyOf(groups.value[slot.group]?.font || FOLLOW_BASE);
+  };
+
   const capsTokens = (caps: CapsMode): [string, string] => {
     if (caps === "upper") return ["uppercase", "normal"];
     if (caps === "small") return ["none", "small-caps"];
@@ -432,6 +447,7 @@ export const usePrefsStore = defineStore("prefs", () => {
     portraitSize,
     customFontOpen,
     resolveEntry,
+    resolvedFontKey,
     get,
     set,
     reset,

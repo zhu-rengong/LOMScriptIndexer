@@ -1,40 +1,101 @@
 <script setup lang="ts">
 import { t, typeLabel } from "../../i18n";
 import { slotsOfGroup } from "../../lib/fontTypes";
-import type { FontTarget } from "../../types/font";
+import type { FontScope, FontTarget } from "../../types/font";
 import { usePrefsStore } from "../../stores/prefs";
 import { useViewStore } from "../../stores/view";
+
+type TreeMetrics = {
+  face: string;
+  size: string;
+  leading: string;
+  tracking: string;
+  weight: string;
+  marks: string;
+  marksTitle: string;
+};
+
+type TreeRow = {
+  key: string;
+  scope: FontScope;
+  id: string;
+  label: string;
+  ord: string;
+  count: number | null;
+  metrics: TreeMetrics | null;
+};
 
 const prefs = usePrefsStore();
 const view = useViewStore();
 
 const treeEl = ref<HTMLElement | null>(null);
 
-const summaryOf = (target: FontTarget): string => {
+const metricsOf = (target: FontTarget): TreeMetrics | null => {
   const style = prefs.resolveEntry(target.scope, target.id);
-  if (!style) return "";
-  const parts = [
-    t(prefs.fontLabelKeyOf(target)),
-    `${style.px.toFixed(1)}px`,
-    style.lineHeight.toFixed(2),
-    `${style.tracking > 0 ? "+" : ""}${style.tracking.toFixed(2)}em`,
-    String(style.weight),
-  ];
-  if (style.italic) parts.push(t("pref.summaryItalic"));
-  if (style.caps === "upper") parts.push(t("pref.summaryCapsUpper"));
-  if (style.caps === "small") parts.push(t("pref.summaryCapsSmall"));
-  if (style.numeric) parts.push(t("pref.summaryNumeric"));
-  return parts.join(" · ");
+  if (!style) return null;
+  const marks: string[] = [];
+  const names: string[] = [];
+  if (style.italic) {
+    marks.push("i");
+    names.push(t("pref.summaryItalic"));
+  }
+  if (style.caps === "upper") {
+    marks.push("A");
+    names.push(t("pref.summaryCapsUpper"));
+  }
+  if (style.caps === "small") {
+    marks.push("S");
+    names.push(t("pref.summaryCapsSmall"));
+  }
+  if (style.numeric) {
+    marks.push("T");
+    names.push(t("pref.summaryNumeric"));
+  }
+  return {
+    face: t(prefs.resolvedFontKey(target)),
+    size: `${style.px.toFixed(1)}px`,
+    leading: style.lineHeight.toFixed(2),
+    tracking: `${style.tracking > 0 ? "+" : ""}${style.tracking.toFixed(2)}em`,
+    weight: String(style.weight),
+    marks: marks.join(""),
+    marksTitle: names.join(" · "),
+  };
 };
 
-const isOn = (target: FontTarget): boolean =>
-  view.fontTarget.scope === target.scope && view.fontTarget.id === target.id;
+const rows = computed<TreeRow[]>(() => {
+  const out: TreeRow[] = [];
+  for (const group of prefs.presets.groups) {
+    const slots = slotsOfGroup(group.id);
+    out.push({
+      key: group.id,
+      scope: "group",
+      id: group.id,
+      label: t(group.label),
+      ord: "",
+      count: slots.length,
+      metrics: metricsOf({ scope: "group", id: group.id }),
+    });
+    slots.forEach((slot, index) => {
+      out.push({
+        key: slot.id,
+        scope: "slot",
+        id: slot.id,
+        label: typeLabel(slot.id),
+        ord: String(index + 1).padStart(2, "0"),
+        count: null,
+        metrics: metricsOf({ scope: "slot", id: slot.id }),
+      });
+    });
+  }
+  return out;
+});
 
-const pick = (target: FontTarget) => {
-  view.setFontTarget(target);
+const isOn = (row: TreeRow): boolean =>
+  view.fontTarget.scope === row.scope && view.fontTarget.id === row.id;
+
+const pick = (row: TreeRow) => {
+  view.setFontTarget({ scope: row.scope, id: row.id });
 };
-
-const ord = (index: number): string => String(index + 1).padStart(2, "0");
 
 const onKeydown = (event: KeyboardEvent) => {
   if (["ArrowDown", "ArrowUp", "Home", "End"].indexOf(event.key) < 0) return;
@@ -55,33 +116,33 @@ const onKeydown = (event: KeyboardEvent) => {
 
 <template>
   <div ref="treeEl" class="type-tree" role="tree" @keydown="onKeydown">
-    <template v-for="group in prefs.presets.groups" :key="group.id">
-      <button
-        class="type-tree-row is-group"
-        :class="{ 'is-on': isOn({ scope: 'group', id: group.id }) }"
-        type="button"
-        role="treeitem"
-        :aria-selected="isOn({ scope: 'group', id: group.id })"
-        @click="pick({ scope: 'group', id: group.id })"
-      >
-        <span class="type-tree-name">{{ t(group.label) }}</span>
-        <span class="type-tree-count">{{ slotsOfGroup(group.id).length }}</span>
-        <span class="type-tree-summary">{{ summaryOf({ scope: "group", id: group.id }) }}</span>
-      </button>
-      <button
-        v-for="(slot, index) in slotsOfGroup(group.id)"
-        :key="slot.id"
-        class="type-tree-row is-leaf"
-        :class="{ 'is-on': isOn({ scope: 'slot', id: slot.id }) }"
-        type="button"
-        role="treeitem"
-        :aria-selected="isOn({ scope: 'slot', id: slot.id })"
-        @click="pick({ scope: 'slot', id: slot.id })"
-      >
-        <span class="type-tree-ord">{{ ord(index) }}</span>
-        <span class="type-tree-name">{{ typeLabel(slot.id) }}</span>
-        <span class="type-tree-summary">{{ summaryOf({ scope: "slot", id: slot.id }) }}</span>
-      </button>
-    </template>
+    <button
+      v-for="row in rows"
+      :key="row.key"
+      class="type-tree-row"
+      :class="{ 'is-on': isOn(row), 'is-group': row.scope === 'group' }"
+      type="button"
+      role="treeitem"
+      :aria-selected="isOn(row)"
+      @click="pick(row)"
+    >
+      <span class="type-tree-ord" aria-hidden="true">{{ row.ord }}</span>
+      <span class="type-tree-name">
+        <span class="type-tree-label">{{ row.label }}</span>
+        <span v-if="row.count !== null" class="type-tree-count">{{ row.count }}</span>
+      </span>
+      <span v-if="row.metrics" class="type-tree-metrics">
+        <span class="type-tree-face" :title="row.metrics.face">{{ row.metrics.face }}</span>
+        <span class="type-tree-size" :title="t('typeScale')">{{ row.metrics.size }}</span>
+        <span class="type-tree-leading" :title="t('lineHeight')">{{ row.metrics.leading }}</span>
+        <span class="type-tree-tracking" :title="t('pref.tracking')">
+          {{ row.metrics.tracking }}
+        </span>
+        <span class="type-tree-weight" :title="t('typeWeight')">{{ row.metrics.weight }}</span>
+        <span class="type-tree-marks" :title="row.metrics.marksTitle || t('pref.glyphs')">
+          {{ row.metrics.marks }}
+        </span>
+      </span>
+    </button>
   </div>
 </template>
