@@ -1380,9 +1380,5 @@
   "pref.mixGroup": "Group",
   "pref.followShort": "Follow",
   "pref.groupTitle": "Group",
-  "pref.summaryItalic": "italic",
-  "pref.summaryCapsUpper": "upper",
-  "pref.summaryCapsSmall": "smcp",
-  "pref.summaryNumeric": "tnum",
   "pref.caps": "Letter case"
 }

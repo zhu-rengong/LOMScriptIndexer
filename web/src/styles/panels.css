@@ -543,7 +543,7 @@
   .type-tree-row {
     position: relative;
     display: grid;
-    grid-template-columns: 18px minmax(0, 1fr) 236px;
+    grid-template-columns: 18px minmax(0, 1fr) 112px;
     column-gap: 4px;
     align-items: baseline;
     width: 100%;
@@ -641,9 +641,9 @@
 
   .type-tree-metrics {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 44px 32px 52px 22px 26px;
+    grid-template-columns: minmax(0, 1fr) 44px;
     gap: 4px;
-    width: 236px;
+    width: 112px;
     --ts-code: 0.78;
     --ts-caption: 0.78;
     --tlh-code: 0.9;
@@ -657,22 +657,17 @@
     white-space: nowrap;
   }
 
-  .type-tree-metrics > :nth-child(2),
-  .type-tree-metrics > :nth-child(3),
-  .type-tree-metrics > :nth-child(4),
-  .type-tree-metrics > :nth-child(5) {
+  .type-tree-metrics > :nth-child(2) {
     text-align: right;
   }
 
-  .type-tree-face,
-  .type-tree-marks {
+  .type-tree-face {
     color: var(--ink-think);
   }
 
   .type-tree-row.is-on .type-tree-ord,
   .type-tree-row.is-on .type-tree-count,
-  .type-tree-row.is-on .type-tree-face,
-  .type-tree-row.is-on .type-tree-marks {
+  .type-tree-row.is-on .type-tree-face {
     color: var(--accent);
   }
 

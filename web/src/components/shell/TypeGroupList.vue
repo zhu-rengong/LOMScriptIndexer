@@ -8,11 +8,6 @@ import { useViewStore } from "../../stores/view";
 type TreeMetrics = {
   face: string;
   size: string;
-  leading: string;
-  tracking: string;
-  weight: string;
-  marks: string;
-  marksTitle: string;
 };
 
 type TreeRow = {
@@ -41,32 +36,9 @@ const faceOf = (target: FontTarget): string => {
 const metricsOf = (target: FontTarget): TreeMetrics | null => {
   const style = prefs.resolveEntry(target.scope, target.id);
   if (!style) return null;
-  const marks: string[] = [];
-  const names: string[] = [];
-  if (style.italic) {
-    marks.push("i");
-    names.push(t("pref.summaryItalic"));
-  }
-  if (style.caps === "upper") {
-    marks.push("A");
-    names.push(t("pref.summaryCapsUpper"));
-  }
-  if (style.caps === "small") {
-    marks.push("S");
-    names.push(t("pref.summaryCapsSmall"));
-  }
-  if (style.numeric) {
-    marks.push("T");
-    names.push(t("pref.summaryNumeric"));
-  }
   return {
     face: faceOf(target),
     size: `${style.px.toFixed(1)}px`,
-    leading: style.lineHeight.toFixed(2),
-    tracking: `${style.tracking > 0 ? "+" : ""}${style.tracking.toFixed(2)}em`,
-    weight: String(style.weight),
-    marks: marks.join(""),
-    marksTitle: names.join(" · "),
   };
 };
 
@@ -87,7 +59,7 @@ const rows = computed<TreeRow[]>(() => {
       scope: "group",
       id: group.id,
       label: t(prefs.labels.groupAll),
-      ord: "",
+      ord: "00",
       count: slots.length,
       metrics: metricsOf({ scope: "group", id: group.id }),
     },
@@ -148,16 +120,8 @@ const onKeydown = (event: KeyboardEvent) => {
         <span v-if="row.count !== null" class="type-tree-count">{{ row.count }}</span>
       </span>
       <span v-if="row.metrics" class="type-tree-metrics">
-        <span class="type-tree-face" :title="row.metrics.face">{{ row.metrics.face }}</span>
+        <span class="type-tree-face" :title="t('typeFont')">{{ row.metrics.face }}</span>
         <span class="type-tree-size" :title="t('typeScale')">{{ row.metrics.size }}</span>
-        <span class="type-tree-leading" :title="t('lineHeight')">{{ row.metrics.leading }}</span>
-        <span class="type-tree-tracking" :title="t('pref.tracking')">
-          {{ row.metrics.tracking }}
-        </span>
-        <span class="type-tree-weight" :title="t('typeWeight')">{{ row.metrics.weight }}</span>
-        <span class="type-tree-marks" :title="row.metrics.marksTitle || t('pref.glyphs')">
-          {{ row.metrics.marks }}
-        </span>
       </span>
     </button>
   </div>
