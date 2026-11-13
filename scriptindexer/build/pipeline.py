@@ -586,6 +586,7 @@ def _stage_output(context: BuildContext) -> None:
                 url="data/flag-facts.json", schema=version_of("flagFacts"), count=len(flags.flags)
             ),
             "portraitManifest": ArtifactEntry(url="data/portraits/manifest.json", schema=""),
+            "portrait": ArtifactEntry(url="data/portraits/{file}", schema=""),
         },
     )
     name, size = write("index", index)

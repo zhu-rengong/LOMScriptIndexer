@@ -79,8 +79,6 @@ from .missions import (
 )
 from .registry import (
     ARTIFACTS,
-    PORTRAIT_MANIFEST_URL,
-    PORTRAIT_URL,
     SOURCES,
     Artifact,
     Source,
@@ -95,8 +93,6 @@ from .text import TextHeadPayload, TextShardPayload, WordCountLang, WordCountPay
 
 __all__ = [
     "ARTIFACTS",
-    "PORTRAIT_MANIFEST_URL",
-    "PORTRAIT_URL",
     "SOURCES",
     "Artifact",
     "ArtifactEntry",

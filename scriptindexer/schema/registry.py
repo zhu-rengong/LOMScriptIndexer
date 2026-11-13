@@ -84,9 +84,6 @@ ARTIFACTS: dict[str, Artifact] = {
     "flagFacts": Artifact("flagFacts", FlagFactsPayload, "data/flag-facts.json"),
 }
 
-PORTRAIT_MANIFEST_URL = "data/portraits/manifest.json"
-PORTRAIT_URL = "data/portraits/{file}"
-
 
 def version_of(name: str) -> str:
     artifact = ARTIFACTS.get(name)
