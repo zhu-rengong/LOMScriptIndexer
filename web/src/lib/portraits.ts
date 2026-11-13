@@ -20,7 +20,7 @@ export type PortraitPick = {
   fallback: boolean;
 };
 
-const VERSION = 6;
+const VERSION = 7;
 
 export const portraitManifest = shallowRef<PortraitManifest | null>(null);
 
