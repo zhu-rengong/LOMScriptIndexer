@@ -543,7 +543,7 @@
   .type-tree-row {
     position: relative;
     display: grid;
-    grid-template-columns: 18px minmax(0, 1fr) 112px;
+    grid-template-columns: 18px minmax(0, 1fr) 124px;
     column-gap: 4px;
     align-items: baseline;
     width: 100%;
@@ -620,13 +620,6 @@
     color: var(--ink-think);
   }
 
-  .type-tree-name {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-    min-width: 0;
-  }
-
   .type-tree-label {
     min-width: 0;
     overflow: hidden;
@@ -634,16 +627,11 @@
     white-space: nowrap;
   }
 
-  .type-tree-count {
-    flex: none;
-    color: var(--ink-think);
-  }
-
   .type-tree-metrics {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 44px;
+    grid-template-columns: 64px 56px;
     gap: 4px;
-    width: 112px;
+    width: 124px;
     --ts-code: 0.78;
     --ts-caption: 0.78;
     --tlh-code: 0.9;
@@ -666,7 +654,6 @@
   }
 
   .type-tree-row.is-on .type-tree-ord,
-  .type-tree-row.is-on .type-tree-count,
   .type-tree-row.is-on .type-tree-face {
     color: var(--accent);
   }

@@ -16,7 +16,6 @@ type TreeRow = {
   id: string;
   label: string;
   ord: string;
-  count: number | null;
   metrics: TreeMetrics | null;
 };
 
@@ -60,7 +59,6 @@ const rows = computed<TreeRow[]>(() => {
       id: group.id,
       label: t(prefs.labels.groupAll),
       ord: "00",
-      count: slots.length,
       metrics: metricsOf({ scope: "group", id: group.id }),
     },
   ];
@@ -71,7 +69,6 @@ const rows = computed<TreeRow[]>(() => {
       id: slot.id,
       label: typeLabel(slot.id),
       ord: String(index + 1).padStart(2, "0"),
-      count: null,
       metrics: metricsOf({ scope: "slot", id: slot.id }),
     });
   });
@@ -115,10 +112,7 @@ const onKeydown = (event: KeyboardEvent) => {
       @click="pick(row)"
     >
       <span class="type-tree-ord" aria-hidden="true">{{ row.ord }}</span>
-      <span class="type-tree-name">
-        <span class="type-tree-label">{{ row.label }}</span>
-        <span v-if="row.count !== null" class="type-tree-count">{{ row.count }}</span>
-      </span>
+      <span class="type-tree-label">{{ row.label }}</span>
       <span v-if="row.metrics" class="type-tree-metrics">
         <span class="type-tree-face" :title="t('typeFont')">{{ row.metrics.face }}</span>
         <span class="type-tree-size" :title="t('typeScale')">{{ row.metrics.size }}</span>
