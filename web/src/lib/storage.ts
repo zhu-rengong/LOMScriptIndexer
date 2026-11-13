@@ -2,7 +2,7 @@ const NAMESPACE = "legend-of-mortal.scriptindexer";
 
 export const keys = {
   lang: `${NAMESPACE}.lang.v1`,
-  prefs: `${NAMESPACE}.prefs.v5`,
+  prefs: `${NAMESPACE}.prefs.v6`,
   bookmarks: `${NAMESPACE}.bookmarks.v1`,
   infer: `${NAMESPACE}.infer.v1`,
   condInfer: `${NAMESPACE}.condInfer.v1`,

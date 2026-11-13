@@ -99,7 +99,7 @@ const clampScale = (value: unknown, fallback: number): number =>
   roundTo(clampNumber(value, SCALE_MIN, SCALE_MAX, fallback), SCALE_STEP);
 
 const clampLeading = (value: unknown, fallback: number): number =>
-  roundTo(clampNumber(value, LEADING_MIN, LEADING_MAX, fallback), LEADING_STEP);
+  Math.round(clampNumber(value, LEADING_MIN, LEADING_MAX, fallback) * 10) / 10;
 
 const clampTracking = (value: unknown, fallback: number): number =>
   Math.round(clampNumber(value, TRACKING_MIN, TRACKING_MAX, fallback) * 100) / 100;
