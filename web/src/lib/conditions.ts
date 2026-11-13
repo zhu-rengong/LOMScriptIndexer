@@ -6,7 +6,7 @@ import { names } from "../data/names";
 import { t } from "../i18n";
 import { pinia } from "../stores";
 import { useViewStore } from "../stores/view";
-import type { CheckRef, MetaSeal } from "../types/beats";
+import type { CheckRef, MetaSeal, MissionTriggerView } from "../types/beats";
 import type { CheckpointModel, ConditionNode, PositionCandidate } from "../types/condition";
 import { signedNumber } from "./browser";
 
@@ -516,12 +516,12 @@ const missionTriggerText = (key: string, value: number | null): string => {
   return name ? t("metaMissionUntriggerName", { name }) : t("metaMissionUntrigger");
 };
 
-export const metaText = (
-  kind: string,
-  key: string,
-  value: number | null,
-  extra = "",
-): string => {
+export const missionTriggerView = (key: string, value: number | null): MissionTriggerView => {
+  const missionId = key && key !== "0" ? key : "";
+  return { active: value === 1, key: missionId, name: missionName(missionId) };
+};
+
+export const metaText = (kind: string, key: string, value: number | null, extra = ""): string => {
   if (kind === "stat") {
     const name = displayNameOf("stat", key);
     const delta = signed(value);

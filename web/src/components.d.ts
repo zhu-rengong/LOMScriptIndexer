@@ -43,6 +43,7 @@ declare module 'vue' {
     LoreLines: typeof import('./components/reader/LoreLines.vue')['default']
     MetaChips: typeof import('./components/reader/MetaChips.vue')['default']
     MissionStateDetail: typeof import('./components/shell/MissionStateDetail.vue')['default']
+    MissionTriggerCard: typeof import('./components/reader/MissionTriggerCard.vue')['default']
     MoreMenu: typeof import('./components/shell/MoreMenu.vue')['default']
     NavMenu: typeof import('./components/reader/NavMenu.vue')['default']
     OptionBlock: typeof import('./components/reader/OptionBlock.vue')['default']

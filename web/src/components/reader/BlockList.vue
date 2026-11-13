@@ -9,6 +9,7 @@ import EndingBlock from "./EndingBlock.vue";
 import JumpLink from "./JumpLink.vue";
 import LoreLines from "./LoreLines.vue";
 import MetaChips from "./MetaChips.vue";
+import MissionTriggerCard from "./MissionTriggerCard.vue";
 import SayLine from "./SayLine.vue";
 import SceneSwitch from "./SceneSwitch.vue";
 import TimeLine from "./TimeLine.vue";
@@ -24,6 +25,7 @@ const components: Record<ReaderBlock["kind"], Component> = {
   say: SayLine,
   time: TimeLine,
   meta: MetaChips,
+  missionTrigger: MissionTriggerCard,
   dice: MetaChips,
   choice: ChoiceBlock,
   branches: BranchGroup,
@@ -53,6 +55,8 @@ const blockProps = (block: ReaderBlock, index: number): Record<string, unknown> 
       return { rounds: block.rounds };
     case "meta":
       return { chips: block.chips };
+    case "missionTrigger":
+      return { trigger: block.trigger };
     case "dice":
       return { chips: block.chips, dice: true };
     case "choice":

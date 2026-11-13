@@ -1089,11 +1089,24 @@
   }
 
   .battle-campaign,
-  .battle-static {
+  .battle-static,
+  .mission-trigger {
     padding: 6px var(--sp-3) var(--sp-2);
     border: 3px double var(--line-2);
     border-radius: var(--r-sm);
     background: var(--surface);
+  }
+
+  .mission-trigger {
+    margin: var(--rd-gap-3) 0 var(--rd-gap-4);
+  }
+
+  .mission-trigger.is-cancel {
+    border-color: var(--warn);
+  }
+
+  .mission-trigger.is-cancel .cx-type {
+    color: var(--warn);
   }
 
   .battle-campaign::before,
@@ -1107,7 +1120,8 @@
     padding: 0 0 var(--sp-1);
   }
 
-  .battle-static .battle-head {
+  .battle-static .battle-head,
+  .mission-trigger .battle-head {
     min-height: var(--ctl-sm);
   }
 

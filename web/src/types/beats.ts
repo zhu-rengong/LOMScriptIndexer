@@ -96,6 +96,12 @@ export type BattleView = {
   events: BattleEvent[];
 };
 
+export type MissionTriggerView = {
+  active: boolean;
+  key: string;
+  name: string;
+};
+
 export type MetaSeal = "infer" | "true" | "false";
 
 export type MetaChip = {
@@ -113,6 +119,7 @@ export type ReaderBlock =
   | { kind: "say"; mode: string; speaker: string; text: string; expression?: string }
   | { kind: "time"; rounds: number }
   | { kind: "meta"; chips: MetaChip[] }
+  | { kind: "missionTrigger"; trigger: MissionTriggerView }
   | { kind: "dice"; chips: MetaChip[] }
   | { kind: "choice"; options: ChoiceOption[]; diceChips: MetaChip[] }
   | { kind: "branches"; branches: BranchView[] }

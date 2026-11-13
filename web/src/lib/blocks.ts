@@ -6,7 +6,7 @@ import type { BeatRow, BranchView, MetaChip, MetaView, ReaderBlock } from "../ty
 import type { GraphEdge, GraphNode } from "../types/graph";
 import type { BeatKind } from "./beatRows";
 import * as beatRows from "./beatRows";
-import { condText, metaDisplay, metaTarget } from "./conditions";
+import { condText, metaDisplay, metaTarget, missionTriggerView } from "./conditions";
 import { stripMarkup } from "./richText";
 import { scriptStore as script } from "./scriptStore";
 
@@ -129,6 +129,12 @@ const builders: Record<BeatKind, Builder> = {
       buffer.flushMeta();
       buffer.flushDice();
       buffer.push({ kind: "time", rounds: meta.value });
+      return;
+    }
+    if (meta.kind === "missionTrigger") {
+      buffer.flushMeta();
+      buffer.flushDice();
+      buffer.push({ kind: "missionTrigger", trigger: missionTriggerView(meta.key, meta.value) });
       return;
     }
     buffer.metaQueue.push(meta);
