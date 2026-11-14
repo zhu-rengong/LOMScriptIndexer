@@ -13,6 +13,7 @@ const props = defineProps<{
   speaker: string;
   text: string;
   expression?: string;
+  offstage?: boolean;
   showPortrait?: boolean;
   inBattle?: boolean;
 }>();
@@ -31,6 +32,12 @@ const showWho = computed(() => {
 
 const showAvatar = computed(() => !!props.showPortrait && showWho.value && !!props.expression);
 
+const showOffstage = computed(
+  () => !!props.showPortrait && showWho.value && !showAvatar.value && !!props.offstage,
+);
+
+const hasSlot = computed(() => showAvatar.value || showOffstage.value);
+
 const open = (event: Event) => {
   event.stopPropagation();
   panels.openLookup("speaker", props.speaker, event.currentTarget as HTMLElement);
@@ -38,8 +45,21 @@ const open = (event: Event) => {
 </script>
 
 <template>
-  <div :class="[className, { 'has-portrait': showAvatar }]">
+  <div :class="[className, { 'has-portrait': hasSlot }]">
     <PortraitAvatar v-if="showAvatar" :character="speaker" :expression="expression || ''" />
+    <span
+      v-else-if="showOffstage"
+      class="portrait-offstage"
+      role="img"
+      :aria-label="t('offstageHint')"
+      :title="t('offstageHint')"
+    >
+      <svg viewBox="0 0 40 46" aria-hidden="true">
+        <path d="M7 18h5l6-5v20l-6-5H7z" />
+        <path d="M25 16a9 9 0 0 1 0 14" />
+        <path d="M30 11a16 16 0 0 1 0 24" />
+      </svg>
+    </span>
     <div class="say-body">
       <span v-if="showWho" class="who is-link" :title="t('lookupSpeaker')" @click="open">
         {{ speakerName(speaker) }}

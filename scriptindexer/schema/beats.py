@@ -46,6 +46,7 @@ class SayRow(BeatRow, tag="say"):
     text: str = ""
     mode: str = ""
     expression: str = ""
+    offstage: bool = False
 
 
 class ChoiceRow(BeatRow, tag="choice"):

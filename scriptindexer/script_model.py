@@ -51,6 +51,7 @@ class SayBeat(BeatBase, tag="say", frozen=True):
     ref: TextRef = msgspec.field(default_factory=TextRef)
     mode: str = ""
     expression: str = ""
+    offstage: bool = False
 
 
 class ChoiceOption(msgspec.Struct, **BASE):

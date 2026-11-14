@@ -121,6 +121,7 @@
   "showPortraitsHint": "在說話人名稱左側顯示劇本設定的人物頭像，關閉時不載入任何頭像資源。",
   "portraitUnknown": "未知表情",
   "portraitDefault": "預設頭像",
+  "offstageHint": "角色不在畫面中",
   "portraitSize": "頭像大小",
   "fontTypes": "文本類型",
   "typeFont": "字體",

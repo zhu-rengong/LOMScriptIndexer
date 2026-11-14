@@ -255,6 +255,7 @@ class Renderer:
             text=text,
             mode=beat.mode,
             expression=beat.expression if speaker else "",
+            offstage=beat.offstage if speaker else False,
         )
 
     def _choice(self, beat: ChoiceBeat) -> ChoiceRow:

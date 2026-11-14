@@ -99,6 +99,27 @@
     opacity: 0.45;
   }
 
+  .portrait-offstage {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: var(--rd-portrait-w, 56px);
+    height: calc(var(--rd-portrait-w, 56px) * 1.15);
+    border: 1px dashed var(--line-2);
+    border-radius: var(--r-sm);
+  }
+
+  .portrait-offstage svg {
+    width: 58%;
+    height: 58%;
+    fill: none;
+    stroke: var(--ink-2);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.5;
+  }
+
   @media (max-width: 600px) {
     .say.has-portrait {
       gap: 8px;

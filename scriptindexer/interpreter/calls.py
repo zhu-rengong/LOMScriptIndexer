@@ -323,7 +323,7 @@ class CallHandler:
         if index is None:
             return
         beat = pending.beat
-        beats[index] = SayBeat(beat.speaker, beat.ref, beat.mode, pending.expression)
+        beats[index] = SayBeat(beat.speaker, beat.ref, beat.mode, pending.expression, beat.offstage)
 
     def discard_pending(self, state: EvalState, character: str, beats: list[Any]) -> None:
         pending = state.pending_says.get(character)
@@ -356,10 +356,11 @@ class CallHandler:
         if speaker in self.semantics.speaker_sentinels:
             speaker = None
         portrait = state.portraits.get(speaker, "") if speaker else ""
-        deferred = False
-        if speaker and portrait and not self.visible(state, speaker):
-            deferred = True
-        beat = SayBeat(speaker, ref, mode, "" if deferred else portrait)
+        offstage = False
+        if speaker and not self.visible(state, speaker):
+            offstage = True
+        deferred = offstage and bool(portrait)
+        beat = SayBeat(speaker, ref, mode, "" if deferred else portrait, offstage)
         beats.append(beat)
         if deferred and speaker:
             state.pending_says[speaker] = PendingSay(beats, beat, portrait)

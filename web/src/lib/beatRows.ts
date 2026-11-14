@@ -50,13 +50,14 @@ export const isBeat = (row: unknown, kind: BeatKind): boolean =>
 
 export const parseSay = (
   row: BeatNode,
-): { speaker: string; text: string; mode: string; expression: string } => {
+): { speaker: string; text: string; mode: string; expression: string; offstage: boolean } => {
   const record = asRecord(row) || {};
   return {
     speaker: asString(record.speaker),
     text: asString(record.text),
     mode: asString(record.mode) || "dialog",
     expression: asString(record.expression),
+    offstage: record.offstage === true,
   };
 };
 

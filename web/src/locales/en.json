@@ -121,6 +121,7 @@
   "showPortraitsHint": "Show the portrait set by the script beside the speaker name. No portrait assets are loaded while this is off.",
   "portraitUnknown": "Unknown expression",
   "portraitDefault": "Default portrait",
+  "offstageHint": "The speaker is not on screen",
   "portraitSize": "Portrait size",
   "fontTypes": "Text types",
   "typeFont": "Font",

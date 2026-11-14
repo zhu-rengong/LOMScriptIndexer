@@ -49,6 +49,7 @@ const blockProps = (block: ReaderBlock, index: number): Record<string, unknown> 
         speaker: block.speaker,
         text: block.text,
         expression: block.expression || "",
+        offstage: block.offstage === true,
         showPortrait: prefs.showPortraits,
       };
     case "time":

@@ -140,7 +140,14 @@ export type MetaChip = {
 export type ChoiceOption = OptionView & { index: number };
 
 export type ReaderBlock =
-  | { kind: "say"; mode: string; speaker: string; text: string; expression?: string }
+  | {
+      kind: "say";
+      mode: string;
+      speaker: string;
+      text: string;
+      expression?: string;
+      offstage?: boolean;
+    }
   | { kind: "time"; rounds: number }
   | { kind: "meta"; chips: MetaChip[] }
   | { kind: "missionEvent"; events: MissionEventView[] }

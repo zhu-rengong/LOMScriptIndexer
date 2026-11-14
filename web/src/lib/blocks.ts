@@ -179,6 +179,7 @@ const builders: Record<BeatKind, Builder> = {
       speaker: said.speaker,
       text: said.text,
       expression: said.expression,
+      offstage: said.offstage,
     });
   },
   battle: (buffer, row) => {
