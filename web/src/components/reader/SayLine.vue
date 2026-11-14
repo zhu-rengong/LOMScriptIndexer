@@ -53,13 +53,7 @@ const open = (event: Event) => {
       role="img"
       :aria-label="t('offstageHint')"
       :title="t('offstageHint')"
-    >
-      <svg viewBox="0 0 40 46" aria-hidden="true">
-        <path class="wave-1" d="M13.2 17.1A6 6 0 0 1 13.2 28.9" />
-        <path class="wave-2" d="M13.9 12.2A11 11 0 0 1 13.9 33.8" />
-        <path class="wave-3" d="M14.2 7.2A16 16 0 0 1 14.2 38.8" />
-      </svg>
-    </span>
+    />
     <div class="say-body">
       <span v-if="showWho" class="who is-link" :title="t('lookupSpeaker')" @click="open">
         {{ speakerName(speaker) }}
