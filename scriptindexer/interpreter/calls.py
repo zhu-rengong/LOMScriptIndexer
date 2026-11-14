@@ -141,6 +141,12 @@ class CallHandler:
                     state.menu_options = self.option_list(
                         self.analyzer.expressions.eval(inner_args[0], state)
                     )
+                if (
+                    method == self.semantics.call_runner
+                    and inner_obj == self.semantics.character_object
+                    and inner_method in self.semantics.character_offset_methods
+                ):
+                    self.apply_offset(state, inner_args)
 
         if method == self.semantics.say_method and not obj:
             self._say(state, args, beats)
@@ -163,6 +169,13 @@ class CallHandler:
             expression = unwrap_text(self.analyzer.expressions.eval(args[1], state))
             if character and expression:
                 state.portraits[character] = expression
+            return None
+
+        if (
+            obj == self.semantics.character_object
+            and method in self.semantics.character_offset_methods
+        ):
+            self.apply_offset(state, args)
             return None
 
         if obj == self.semantics.stage_object:
@@ -274,6 +287,7 @@ class CallHandler:
             or self.semantics.stage_default_position
         )
         state.stage_positions[character] = position
+        state.stage_offsets[character] = 0.0
         state.hidden_characters.discard(character)
         if self.visible(state, character):
             self.resolve_pending(state, character, beats)
@@ -308,11 +322,26 @@ class CallHandler:
                 return position
         return ""
 
+    def apply_offset(self, state: EvalState, args: Sequence[lua.Node]) -> None:
+        if len(args) < 3:
+            return
+        character = unwrap_text(self.analyzer.expressions.eval(args[0], state))
+        value = self.analyzer.expressions.eval(args[2], state)
+        if not character or isinstance(value, bool) or not isinstance(value, int | float):
+            return
+        state.stage_offsets[character] = state.stage_offsets.get(character, 0.0) + float(value)
+
     def visible(self, state: EvalState, character: str) -> bool:
         if state.view_hidden or character in state.hidden_characters:
             return False
         position = state.stage_positions.get(character)
-        return position is None or position not in self.semantics.offstage_positions
+        if position is None:
+            return True
+        sunk = self.semantics.sunk_positions.get(position)
+        if sunk is not None:
+            offset = state.stage_offsets.get(character, 0.0)
+            return sunk + offset > self.semantics.stage_floor
+        return position not in self.semantics.offstage_positions
 
     def resolve_pending(self, state: EvalState, character: str, beats: list[Any]) -> None:
         pending = state.pending_says.get(character)

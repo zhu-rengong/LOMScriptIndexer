@@ -53,6 +53,10 @@ class Semantics:
     stage_to_key: str = "toPosition"
     stage_default_position: str = "M"
     offstage_positions: frozenset[str] = frozenset()
+    sunk_positions: Mapping[str, float] = field(default_factory=dict)
+    stage_floor: float = 0.0
+    character_offset_methods: tuple[str, ...] = ()
+    call_runner: str = ""
     view_object: str = "flowcharts.view"
     view_block_method: str = "runblock"
     view_hidden_blocks: frozenset[str] = frozenset()

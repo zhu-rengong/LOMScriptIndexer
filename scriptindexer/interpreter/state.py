@@ -38,6 +38,7 @@ class EvalState:
     pending_story_script: str | None = None
     portraits: dict[str, str] = field(default_factory=dict)
     stage_positions: dict[str, str] = field(default_factory=dict)
+    stage_offsets: dict[str, float] = field(default_factory=dict)
     hidden_characters: set[str] = field(default_factory=set)
     view_hidden: bool = False
     pending_says: dict[str, PendingSay] = field(default_factory=dict)
@@ -52,6 +53,7 @@ class EvalState:
             pending_story_script=self.pending_story_script,
             portraits=dict(self.portraits),
             stage_positions=dict(self.stage_positions),
+            stage_offsets=dict(self.stage_offsets),
             hidden_characters=set(self.hidden_characters),
             view_hidden=self.view_hidden,
             pending_says=dict(self.pending_says),

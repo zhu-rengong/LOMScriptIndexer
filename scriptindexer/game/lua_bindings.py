@@ -26,6 +26,19 @@ OFFSTAGE_POSITIONS = frozenset(
     }
 )
 
+SUNK_POSITIONS = {
+    "LB1": -2169.73,
+    "LB2": -2169.73,
+    "LB3": -2169.73,
+    "MB": -2169.73,
+    "RB1": -2169.73,
+    "RB2": -2169.73,
+    "RB3": -2169.73,
+    "BCB2": -3500.0,
+}
+
+STAGE_FLOOR = -2160.0
+
 LUA_BINDINGS = Semantics(
     narration_dialogs=frozenset({"center", "center2", "narrative"}),
     think_dialogs=frozenset({"think"}),
@@ -56,6 +69,10 @@ LUA_BINDINGS = Semantics(
     time_method="SetGameTime",
     stage_hide_method="hide",
     offstage_positions=OFFSTAGE_POSITIONS,
+    sunk_positions=SUNK_POSITIONS,
+    stage_floor=STAGE_FLOOR,
+    character_offset_methods=("MoveOffset", "MoveOffsetCoroutine"),
+    call_runner="runwait",
     view_object="flowcharts.view",
     view_block_method="runblock",
     view_hidden_blocks=frozenset({"out", "out_white", "out_2"}),
