@@ -57,17 +57,36 @@ class EvalState:
             pending_says=dict(self.pending_says),
         )
 
-    def merge(self, ends: Sequence[EvalState]) -> None:
+    def merge(self, ends: Sequence[EvalState], offstage: frozenset[str]) -> None:
         if not ends:
             return
-        self.stage_positions.update(_shared(ends, lambda end: end.stage_positions))
         self.portraits.update(_shared(ends, lambda end: end.portraits))
-        hidden = ends[0].hidden_characters
-        if all(end.hidden_characters == hidden for end in ends):
-            self.hidden_characters = set(hidden)
+        for character in set().union(*(end.stage_positions for end in ends)):
+            views = [_on_screen(end.stage_positions.get(character), offstage) for end in ends]
+            if all(view is True for view in views):
+                if self.stage_positions.get(character) in offstage:
+                    self.stage_positions.pop(character, None)
+            elif all(view is False for view in views):
+                self.stage_positions[character] = next(
+                    end.stage_positions[character]
+                    for end in ends
+                    if character in end.stage_positions
+                )
+        for character in set().union(*(end.hidden_characters for end in ends)):
+            hidden = [character in end.hidden_characters for end in ends]
+            if all(hidden):
+                self.hidden_characters.add(character)
+            elif not any(hidden):
+                self.hidden_characters.discard(character)
         views = {end.view_hidden for end in ends}
         if len(views) == 1:
             self.view_hidden = views.pop()
+
+
+def _on_screen(position: str | None, offstage: frozenset[str]) -> bool | None:
+    if position is None:
+        return None
+    return position not in offstage
 
 
 def _shared(

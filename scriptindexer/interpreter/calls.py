@@ -537,7 +537,7 @@ class CallHandler:
             ends.append(branch_state)
             branches.append(self.option_branch(option, sub))
         beats[pending.index] = ChoiceBeat(tuple(branches))
-        state.merge(ends)
+        state.merge(ends, self.semantics.offstage_positions)
 
     def close_incomplete(self, pending: ChoiceDraft, beats: list[Any]) -> None:
         beats[pending.index] = ChoiceBeat(

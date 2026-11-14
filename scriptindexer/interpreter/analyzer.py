@@ -123,9 +123,9 @@ class Analyzer:
                     group,
                 )
             )
-        if not has_else:
+        if not has_else and len(ends) < 2:
             ends.append(state.clone())
-        state.merge(ends)
+        state.merge(ends, self.semantics.offstage_positions)
 
 
 def analyze(script_id: str, source: str, semantics: Semantics) -> ScriptAnalysis:
