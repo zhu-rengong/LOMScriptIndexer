@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .. import lua
-from ..script_model import CharRef, CheckMark, Requirement, TextRef
+from ..script_model import CharRef, CheckMark, Requirement, SayBeat, TextRef
 
 
 @dataclass(frozen=True)
@@ -20,6 +20,13 @@ class ChoiceDraft:
     options: list[OptionDraft] = field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class PendingSay:
+    beats: list[Any]
+    beat: SayBeat
+    expression: str
+
+
 @dataclass
 class EvalState:
     speaker: str | None = None
@@ -32,6 +39,7 @@ class EvalState:
     stage_positions: dict[str, str] = field(default_factory=dict)
     hidden_characters: set[str] = field(default_factory=set)
     view_hidden: bool = False
+    pending_says: dict[str, PendingSay] = field(default_factory=dict)
 
     def clone(self) -> EvalState:
         return EvalState(
@@ -45,6 +53,7 @@ class EvalState:
             stage_positions=dict(self.stage_positions),
             hidden_characters=set(self.hidden_characters),
             view_hidden=self.view_hidden,
+            pending_says=dict(self.pending_says),
         )
 
 

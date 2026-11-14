@@ -30,6 +30,7 @@ from .state import (
     ChoiceDraft,
     EvalState,
     OptionDraft,
+    PendingSay,
     lua_key_sort_key,
     source_snippet,
     unwrap_text,
@@ -172,12 +173,12 @@ class CallHandler:
                 settings = self.analyzer.expressions.eval(args[0], state)
                 if isinstance(settings, dict):
                     self.apply_portrait(state, settings.get("portrait"))
-                    self.enter_stage(state, settings)
+                    self.enter_stage(state, settings, beats)
                 return None
             if method == self.semantics.stage_hide_method and args:
                 settings = self.analyzer.expressions.eval(args[0], state)
                 if isinstance(settings, dict):
-                    self.leave_stage(state, settings)
+                    self.leave_stage(state, settings, beats)
                 return None
 
         if (
@@ -186,7 +187,7 @@ class CallHandler:
             and len(args) > 1
             and lua.render_source(args[0]) == self.semantics.view_object
         ):
-            self.apply_view_block(state, args[1])
+            self.apply_view_block(state, args[1], beats)
             return None
 
         if method == self.semantics.dialog_method and not obj:
@@ -207,6 +208,7 @@ class CallHandler:
             state.portraits.clear()
             state.stage_positions.clear()
             state.hidden_characters.clear()
+            state.pending_says.clear()
             state.view_hidden = False
             return None
 
@@ -217,6 +219,7 @@ class CallHandler:
         if obj == self.semantics.scene_object and method == self.semantics.scene_method:
             self.emit_scene(args, state, beats)
             state.portraits.clear()
+            state.pending_says.clear()
             return None
 
         if obj == self.semantics.stat_object:
@@ -261,7 +264,7 @@ class CallHandler:
         if character and expression:
             state.portraits[character] = expression
 
-    def enter_stage(self, state: EvalState, settings: dict[str, Any]) -> None:
+    def enter_stage(self, state: EvalState, settings: dict[str, Any], beats: list[Any]) -> None:
         character = self.stage_character(settings)
         if not character:
             return
@@ -272,15 +275,18 @@ class CallHandler:
         )
         state.stage_positions[character] = position
         state.hidden_characters.discard(character)
+        if self.visible(state, character):
+            self.resolve_pending(state, character, beats)
 
-    def leave_stage(self, state: EvalState, settings: dict[str, Any]) -> None:
+    def leave_stage(self, state: EvalState, settings: dict[str, Any], beats: list[Any]) -> None:
         character = self.stage_character(settings)
         if not character:
             return
         state.stage_positions.pop(character, None)
         state.hidden_characters.add(character)
+        self.discard_pending(state, character, beats)
 
-    def apply_view_block(self, state: EvalState, arg: lua.Node) -> None:
+    def apply_view_block(self, state: EvalState, arg: lua.Node, beats: list[Any]) -> None:
         block = unwrap_text(self.analyzer.expressions.eval(arg, state))
         if not block:
             return
@@ -288,6 +294,9 @@ class CallHandler:
             state.view_hidden = True
         elif block in self.semantics.view_shown_blocks:
             state.view_hidden = False
+            for character in list(state.pending_says):
+                if self.visible(state, character):
+                    self.resolve_pending(state, character, beats)
 
     def stage_character(self, settings: dict[str, Any]) -> str:
         return unwrap_text(settings.get(self.semantics.stage_character_key)) or ""
@@ -304,6 +313,22 @@ class CallHandler:
             return False
         position = state.stage_positions.get(character)
         return position is None or position not in self.semantics.offstage_positions
+
+    def resolve_pending(self, state: EvalState, character: str, beats: list[Any]) -> None:
+        pending = state.pending_says.get(character)
+        if pending is None or pending.beats is not beats:
+            return
+        state.pending_says.pop(character, None)
+        index = next((i for i, item in enumerate(beats) if item is pending.beat), None)
+        if index is None:
+            return
+        beat = pending.beat
+        beats[index] = SayBeat(beat.speaker, beat.ref, beat.mode, pending.expression)
+
+    def discard_pending(self, state: EvalState, character: str, beats: list[Any]) -> None:
+        pending = state.pending_says.get(character)
+        if pending is not None and pending.beats is beats:
+            state.pending_says.pop(character, None)
 
     def set_time(self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]) -> None:
         if len(args) < 3:
@@ -330,10 +355,14 @@ class CallHandler:
         speaker = state.speaker if mode in ("dialog", "think") else None
         if speaker in self.semantics.speaker_sentinels:
             speaker = None
-        expression = ""
-        if speaker and self.visible(state, speaker):
-            expression = state.portraits.get(speaker, "")
-        beats.append(SayBeat(speaker, ref, mode, expression))
+        portrait = state.portraits.get(speaker, "") if speaker else ""
+        deferred = False
+        if speaker and portrait and not self.visible(state, speaker):
+            deferred = True
+        beat = SayBeat(speaker, ref, mode, "" if deferred else portrait)
+        beats.append(beat)
+        if deferred and speaker:
+            state.pending_says[speaker] = PendingSay(beats, beat, portrait)
         self.analyzer.context.say_count += 1
 
     def apply_effect(
