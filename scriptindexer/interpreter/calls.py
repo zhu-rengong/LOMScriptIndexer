@@ -522,6 +522,7 @@ class CallHandler:
     ) -> None:
         option_map = {index: option for index, option in enumerate(pending.options, start=1)}
         branches: list[ChoiceOption] = []
+        ends: list[EvalState] = []
         for cond, body in lua.if_clauses(stmt):
             if cond is None:
                 option = OptionDraft(TextRef(""))
@@ -531,9 +532,12 @@ class CallHandler:
                 if option is None:
                     option = OptionDraft(TextRef(lua.render_source(cond)))
             sub: list[Any] = []
-            self.analyzer.block(body, state.clone(), sub)
+            branch_state = state.clone()
+            self.analyzer.block(body, branch_state, sub)
+            ends.append(branch_state)
             branches.append(self.option_branch(option, sub))
         beats[pending.index] = ChoiceBeat(tuple(branches))
+        state.merge(ends)
 
     def close_incomplete(self, pending: ChoiceDraft, beats: list[Any]) -> None:
         beats[pending.index] = ChoiceBeat(

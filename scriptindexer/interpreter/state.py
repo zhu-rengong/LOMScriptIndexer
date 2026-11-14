@@ -1,3 +1,4 @@
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -55,6 +56,31 @@ class EvalState:
             view_hidden=self.view_hidden,
             pending_says=dict(self.pending_says),
         )
+
+    def merge(self, ends: Sequence[EvalState]) -> None:
+        if not ends:
+            return
+        self.stage_positions.update(_shared(ends, lambda end: end.stage_positions))
+        self.portraits.update(_shared(ends, lambda end: end.portraits))
+        hidden = ends[0].hidden_characters
+        if all(end.hidden_characters == hidden for end in ends):
+            self.hidden_characters = set(hidden)
+        views = {end.view_hidden for end in ends}
+        if len(views) == 1:
+            self.view_hidden = views.pop()
+
+
+def _shared(
+    ends: Sequence[EvalState], pick: Callable[[EvalState], dict[str, str]]
+) -> dict[str, str]:
+    shared: dict[str, str] = {}
+    for key in set().union(*(pick(end).keys() for end in ends)):
+        values = {pick(end).get(key) for end in ends}
+        if len(values) == 1:
+            value = values.pop()
+            if value is not None:
+                shared[key] = value
+    return shared
 
 
 def unwrap_text(value: Any) -> str | None:

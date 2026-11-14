@@ -103,11 +103,17 @@ class Analyzer:
     def emit_branch_group(self, stmt: lua.Node, state: EvalState, beats: list[Any]) -> None:
         group = self.context.branch_seq
         self.context.branch_seq += 1
+        ends: list[EvalState] = []
+        has_else = False
         for cond, body in lua.if_clauses(stmt):
             node = self.expressions.cond_node(cond, state) if cond is not None else None
             check = check_ref_of(node)
             sub: list[Any] = []
-            self.block(body, state.clone(), sub)
+            branch_state = state.clone()
+            self.block(body, branch_state, sub)
+            ends.append(branch_state)
+            if cond is None:
+                has_else = True
             beats.append(
                 BranchBeat(
                     check,
@@ -117,6 +123,9 @@ class Analyzer:
                     group,
                 )
             )
+        if not has_else:
+            ends.append(state.clone())
+        state.merge(ends)
 
 
 def analyze(script_id: str, source: str, semantics: Semantics) -> ScriptAnalysis:
