@@ -364,6 +364,9 @@ class CallHandler:
         beats.append(beat)
         if deferred and speaker:
             state.pending_says[speaker] = PendingSay(beats, beat, portrait)
+        for character in list(state.pending_says):
+            if character != speaker:
+                state.pending_says.pop(character, None)
         self.analyzer.context.say_count += 1
 
     def apply_effect(
