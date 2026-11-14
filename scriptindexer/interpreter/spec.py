@@ -47,4 +47,14 @@ class Semantics:
     stage_object: str = "stage"
     stage_portrait_method: str = "showPortrait"
     stage_show_method: str = "show"
+    stage_hide_method: str = "hide"
+    stage_character_key: str = "character"
+    stage_from_key: str = "fromPosition"
+    stage_to_key: str = "toPosition"
+    stage_default_position: str = "M"
+    offstage_positions: frozenset[str] = frozenset()
+    view_object: str = "flowcharts.view"
+    view_block_method: str = "runblock"
+    view_hidden_blocks: frozenset[str] = frozenset()
+    view_shown_blocks: frozenset[str] = frozenset()
     stat_getter_prefix: str = "Get"

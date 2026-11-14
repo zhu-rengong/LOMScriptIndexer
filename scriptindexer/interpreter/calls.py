@@ -172,7 +172,22 @@ class CallHandler:
                 settings = self.analyzer.expressions.eval(args[0], state)
                 if isinstance(settings, dict):
                     self.apply_portrait(state, settings.get("portrait"))
+                    self.enter_stage(state, settings)
                 return None
+            if method == self.semantics.stage_hide_method and args:
+                settings = self.analyzer.expressions.eval(args[0], state)
+                if isinstance(settings, dict):
+                    self.leave_stage(state, settings)
+                return None
+
+        if (
+            not obj
+            and method == self.semantics.view_block_method
+            and len(args) > 1
+            and lua.render_source(args[0]) == self.semantics.view_object
+        ):
+            self.apply_view_block(state, args[1])
+            return None
 
         if method == self.semantics.dialog_method and not obj:
             dialog_style = dialog_style_of(args[0], "saydialogs") if args else ""
@@ -190,6 +205,9 @@ class CallHandler:
         if obj == self.semantics.scene_object and method == self.semantics.init_method:
             state.pending_story_script = None
             state.portraits.clear()
+            state.stage_positions.clear()
+            state.hidden_characters.clear()
+            state.view_hidden = False
             return None
 
         if obj == self.semantics.scene_object and method in self.semantics.jumps:
@@ -243,6 +261,50 @@ class CallHandler:
         if character and expression:
             state.portraits[character] = expression
 
+    def enter_stage(self, state: EvalState, settings: dict[str, Any]) -> None:
+        character = self.stage_character(settings)
+        if not character:
+            return
+        position = (
+            self.stage_position(settings)
+            or state.stage_positions.get(character)
+            or self.semantics.stage_default_position
+        )
+        state.stage_positions[character] = position
+        state.hidden_characters.discard(character)
+
+    def leave_stage(self, state: EvalState, settings: dict[str, Any]) -> None:
+        character = self.stage_character(settings)
+        if not character:
+            return
+        state.stage_positions.pop(character, None)
+        state.hidden_characters.add(character)
+
+    def apply_view_block(self, state: EvalState, arg: lua.Node) -> None:
+        block = unwrap_text(self.analyzer.expressions.eval(arg, state))
+        if not block:
+            return
+        if block in self.semantics.view_hidden_blocks:
+            state.view_hidden = True
+        elif block in self.semantics.view_shown_blocks:
+            state.view_hidden = False
+
+    def stage_character(self, settings: dict[str, Any]) -> str:
+        return unwrap_text(settings.get(self.semantics.stage_character_key)) or ""
+
+    def stage_position(self, settings: dict[str, Any]) -> str:
+        for key in (self.semantics.stage_to_key, self.semantics.stage_from_key):
+            position = unwrap_text(settings.get(key))
+            if position:
+                return position
+        return ""
+
+    def visible(self, state: EvalState, character: str) -> bool:
+        if state.view_hidden or character in state.hidden_characters:
+            return False
+        position = state.stage_positions.get(character)
+        return position is None or position not in self.semantics.offstage_positions
+
     def set_time(self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]) -> None:
         if len(args) < 3:
             return
@@ -268,7 +330,9 @@ class CallHandler:
         speaker = state.speaker if mode in ("dialog", "think") else None
         if speaker in self.semantics.speaker_sentinels:
             speaker = None
-        expression = state.portraits.get(speaker, "") if speaker else ""
+        expression = ""
+        if speaker and self.visible(state, speaker):
+            expression = state.portraits.get(speaker, "")
         beats.append(SayBeat(speaker, ref, mode, expression))
         self.analyzer.context.say_count += 1
 

@@ -29,6 +29,9 @@ class EvalState:
     menu_options: list[OptionDraft] = field(default_factory=list)
     pending_story_script: str | None = None
     portraits: dict[str, str] = field(default_factory=dict)
+    stage_positions: dict[str, str] = field(default_factory=dict)
+    hidden_characters: set[str] = field(default_factory=set)
+    view_hidden: bool = False
 
     def clone(self) -> EvalState:
         return EvalState(
@@ -39,6 +42,9 @@ class EvalState:
             menu_options=list(self.menu_options),
             pending_story_script=self.pending_story_script,
             portraits=dict(self.portraits),
+            stage_positions=dict(self.stage_positions),
+            hidden_characters=set(self.hidden_characters),
+            view_hidden=self.view_hidden,
         )
 
 

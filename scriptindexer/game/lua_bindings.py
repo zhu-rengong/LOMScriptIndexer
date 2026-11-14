@@ -9,6 +9,23 @@ from ..vocab import (
     EDGE_TRAVEL,
 )
 
+OFFSTAGE_POSITIONS = frozenset(
+    {
+        "SL",
+        "SR",
+        "SLB",
+        "SRB",
+        "LB1",
+        "LB2",
+        "LB3",
+        "MB",
+        "RB1",
+        "RB2",
+        "RB3",
+        "BCB2",
+    }
+)
+
 LUA_BINDINGS = Semantics(
     narration_dialogs=frozenset({"center", "center2", "narrative"}),
     think_dialogs=frozenset({"think"}),
@@ -37,6 +54,12 @@ LUA_BINDINGS = Semantics(
     },
     time_object="luamanager",
     time_method="SetGameTime",
+    stage_hide_method="hide",
+    offstage_positions=OFFSTAGE_POSITIONS,
+    view_object="flowcharts.view",
+    view_block_method="runblock",
+    view_hidden_blocks=frozenset({"out", "out_white", "out_2"}),
+    view_shown_blocks=frozenset({"view", "view_white"}),
     effects={
         "Player": CallSpec("stat", value_index=1, display_index=3),
         "Character": CallSpec("rel", value_index=1, display_index=2),
