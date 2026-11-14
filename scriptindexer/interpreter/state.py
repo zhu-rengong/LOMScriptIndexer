@@ -72,6 +72,8 @@ class EvalState:
                     for end in ends
                     if character in end.stage_positions
                 )
+            else:
+                self.stage_positions.pop(character, None)
         for character in set().union(*(end.hidden_characters for end in ends)):
             hidden = [character in end.hidden_characters for end in ends]
             if all(hidden):
