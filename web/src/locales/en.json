@@ -188,6 +188,7 @@
   "searchNoHit": "No match inside the filter",
   "searchCount": "{n} matches",
   "searchTooShort": "Type at least 2 characters",
+  "searchIndexingText": "Building search index…",
   "fieldSpeaker": "Speaker",
   "fieldFlag": "Flag",
   "fieldCheck": "Checkpoint",

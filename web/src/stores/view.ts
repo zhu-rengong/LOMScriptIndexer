@@ -120,6 +120,7 @@ export const useViewStore = defineStore("view", () => {
     lang.applyDocument(id);
     panels.hideLookup();
     searchIndex.invalidate();
+    searchIndex.warm();
     resetFilterContext();
     if (script.filterSource.trim()) applyFilter(script.filterSource);
   };

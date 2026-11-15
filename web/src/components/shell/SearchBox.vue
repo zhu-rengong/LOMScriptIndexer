@@ -3,7 +3,7 @@ import { textStore } from "../../data/text";
 import { t } from "../../i18n";
 import { debounce, scheduleFrame } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
-import { needleOf, searchIndex, type SearchHit } from "../../lib/search";
+import { needleOf, searchIndex, type SearchHit, type SearchResult } from "../../lib/search";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 import FilterPopover from "./FilterPopover.vue";
@@ -24,11 +24,13 @@ const hits = ref<SearchHit[]>([]);
 const total = ref(0);
 const excludedCount = ref(0);
 const renderedCount = ref(0);
+const building = ref(false);
 
 let lastQuery = "";
 let renderedQuery = "";
 let renderedFilterSet: Set<number> | null = null;
 let isStale = true;
+let requestSeq = 0;
 let warmPromise: Promise<unknown> | null = null;
 let warmLang = "";
 
@@ -63,6 +65,7 @@ const noteText = () => {
 
 const messageText = (value: string) => {
   if (value.length < 2) return t("searchTooShort");
+  if (building.value) return t("searchIndexingText");
   if (hits.value.length) return "";
   if (!textStore.progress().done) return "";
   return t(hasActiveFilter() ? "searchNoHit" : "searchEmpty");
@@ -79,8 +82,7 @@ const updateStatus = (value: string) => {
   };
 };
 
-const syncHits = (value: string, keepScroll = false) => {
-  const result = searchIndex.search(value);
+const applyResult = (value: string, result: SearchResult, keepScroll: boolean) => {
   hits.value = result.hits;
   total.value = result.total;
   excludedCount.value = result.excludedByFilter;
@@ -92,6 +94,17 @@ const syncHits = (value: string, keepScroll = false) => {
   isStale = false;
 };
 
+const syncHits = async (value: string, keepScroll = false): Promise<number> => {
+  const seq = ++requestSeq;
+  building.value = true;
+  updateStatus(value);
+  const result = await searchIndex.search(value);
+  if (seq !== requestSeq) return 0;
+  building.value = false;
+  applyResult(value, result, keepScroll);
+  return result.hits.length;
+};
+
 const appendMore = () => {
   if (renderedCount.value >= hits.value.length) return;
   renderedCount.value = Math.min(hits.value.length, renderedCount.value + PAGE);
@@ -99,10 +112,10 @@ const appendMore = () => {
 
 const clearFilter = () => {
   store.setFilterState({ source: "", set: null, error: "", loading: false });
-  searchNow();
+  void searchNow();
 };
 
-const searchNow = (): number => {
+const searchNow = async (): Promise<number> => {
   const value = query.value.trim();
   lastQuery = value;
   if (!value) {
@@ -115,12 +128,11 @@ const searchNow = (): number => {
     show();
     return hits.value.length;
   }
-  syncHits(value);
   show();
-  return hits.value.length;
+  return syncHits(value);
 };
 
-const refresh = scheduleFrame(() => {
+const runRefresh = async (): Promise<void> => {
   const value = query.value.trim();
   if (value.length < 2) return;
   lastQuery = value;
@@ -128,12 +140,19 @@ const refresh = scheduleFrame(() => {
     isStale = true;
     return;
   }
-  const result = searchIndex.search(value);
+  const seq = ++requestSeq;
+  const result = await searchIndex.search(value);
+  if (seq !== requestSeq) return;
   if (result.total !== total.value || !hits.value.length) {
-    syncHits(value, true);
+    building.value = false;
+    applyResult(value, result, true);
     return;
   }
   updateStatus(value);
+};
+
+const refresh = scheduleFrame(() => {
+  void runRefresh();
 });
 
 const warmFullText = (lang: string) => {
@@ -150,7 +169,8 @@ const warmFullText = (lang: string) => {
         warmLang = "";
       }
       ui.setIoStatus("");
-      if (query.value.trim()) searchNow();
+      searchIndex.warm();
+      if (query.value.trim()) void searchNow();
     })
     .catch(() => {
       if (warmPromise === chain) {
@@ -164,7 +184,7 @@ const warmFullText = (lang: string) => {
 };
 
 const submit = () => {
-  searchNow();
+  void searchNow();
   const value = query.value.trim();
   const state = textStore.progress();
   if (value.length < 2 || state.done) return;
@@ -197,7 +217,7 @@ const onKeydown = (event: KeyboardEvent) => {
   }
   if (event.key === "Enter") {
     event.preventDefault();
-    pickFirst();
+    void searchNow().then(() => pickFirst());
   }
 };
 
@@ -206,6 +226,8 @@ const onFocus = () => {
 };
 
 const reset = () => {
+  requestSeq++;
+  building.value = false;
   hits.value = [];
   total.value = 0;
   excludedCount.value = 0;

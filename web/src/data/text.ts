@@ -63,6 +63,13 @@ const sourcePack = (): TextPack | null => pack;
 
 const sourceBeatRows = (): Record<string, BeatRow[]> | null => pack?.scripts || null;
 
+const scriptIds = (): string[] => {
+  const rows = sourceBeatRows();
+  return rows ? Object.keys(rows) : [];
+};
+
+const scriptCount = (): number => scriptIds().length;
+
 const hasConverted = (lang: string): boolean => lang !== sourceLang && convert.hasConverter(lang);
 
 const ensureConvert = (lang: string): Promise<boolean> => {
@@ -316,6 +323,8 @@ export const textStore = {
   pack: textPackOf,
   progress,
   retry,
+  scriptCount,
+  scriptIds,
   shardState,
   beatRows,
   titles,

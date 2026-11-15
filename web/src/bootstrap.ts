@@ -39,6 +39,7 @@ export const start = (): void => {
 
   textStore.ensureHead(script.textLang()).then(() => {
     searchIndex.invalidate();
+    searchIndex.warm();
     if (script.filterSource.trim()) applyFilter(script.filterSource);
   });
 };

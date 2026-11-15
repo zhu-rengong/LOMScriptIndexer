@@ -30,10 +30,7 @@ const sync = (): string => {
   return script().textLang();
 };
 
-const rowsOf = (textLang: string, id: string): unknown => {
-  const pack = textStore.pack(textLang);
-  return pack && pack.scripts ? pack.scripts[id] : undefined;
-};
+const rowsOf = (textLang: string, id: string): unknown => textStore.beatRows(textLang, id);
 
 const metaOf = (rows: unknown): string => {
   const parts: string[] = [];
@@ -51,7 +48,7 @@ const plainOf = (textLang: string, id: string): string => {
   const cached = plainTexts.get(id);
   if (cached !== undefined) return cached;
   const rows = rowsOf(textLang, id);
-  if (rows === undefined) return "";
+  if (!rows) return "";
   const text = beatRows.plainTextOf(rows).toLowerCase();
   plainTexts.set(id, text);
   return text;
@@ -64,7 +61,7 @@ export const searchTextOfId = (id: string): string => {
   const cached = searchTexts.get(id);
   if (cached !== undefined) return cached;
   const rows = rowsOf(textLang, id);
-  if (rows === undefined) return "";
+  if (!rows) return "";
   const text = `${plainOf(textLang, id)}\n${metaOf(rows)}`.toLowerCase();
   searchTexts.set(id, text);
   return text;

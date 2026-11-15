@@ -51,8 +51,7 @@ const nodeText = (index: number): string => {
 
 const buildIndex = (): QueryIndex => {
   const lang = script().textLang();
-  const pack = textStore.pack(lang);
-  const count = pack && pack.scripts ? Object.keys(pack.scripts).length : 0;
+  const count = textStore.scriptCount();
   if (compileCache && textLang === lang && textCount === count) return compileCache;
   textLang = lang;
   textCount = count;
