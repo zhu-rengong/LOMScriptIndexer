@@ -8,6 +8,7 @@ export type ShortcutHandlers = {
   infer: () => void;
   condInfer: () => void;
   reveal: () => void;
+  fold: () => void;
 };
 
 const typingInField = (): boolean => {
@@ -61,6 +62,12 @@ export const useShortcuts = (handlers: ShortcutHandlers): void => {
       event.preventDefault();
       if (event.repeat) return;
       handlers.reveal();
+      return;
+    }
+    if (String(event.key || "").toLowerCase() === "v") {
+      event.preventDefault();
+      if (event.repeat) return;
+      handlers.fold();
       return;
     }
     if (String(event.key || "").toLowerCase() === "j") {

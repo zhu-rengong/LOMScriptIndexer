@@ -12,9 +12,10 @@ const HELP_GROUPS: { title: string; rows: [string, string][] }[] = [
       ["B", "hkBookmark"],
       ["C", "hkCondInfer"],
       ["F", "hkInfer"],
-      ["H", "revealBtnTitle"],
+      ["H", "hkReveal"],
+      ["V", "hkFold"],
       ["?", "hkHelp"],
-      ["J", "navBtnTitle"],
+      ["J", "hkJump"],
     ],
   },
 ];

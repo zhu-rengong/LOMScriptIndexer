@@ -8,6 +8,7 @@ import { byId } from "../lib/browser";
 import { overlay } from "../lib/overlay";
 import { lang } from "../lib/lang";
 import { UI_IDS } from "../ui/ids";
+import { useFoldStore } from "../stores/fold";
 import { useScriptStore } from "../stores/script";
 import { useViewStore } from "../stores/view";
 import { useUiStore } from "../stores/ui";
@@ -15,6 +16,7 @@ import { useUiStore } from "../stores/ui";
 const store = useScriptStore();
 const view = useViewStore();
 const ui = useUiStore();
+const fold = useFoldStore();
 
 useLayout();
 useShortcuts({
@@ -41,6 +43,7 @@ useShortcuts({
   infer: view.toggleInfer,
   condInfer: view.toggleCondInfer,
   reveal: view.toggleReveal,
+  fold: () => fold.toggle(),
 });
 
 useHashRoute((id) => {
