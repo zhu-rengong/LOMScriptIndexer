@@ -25,6 +25,7 @@ const total = ref(0);
 const excludedCount = ref(0);
 const renderedCount = ref(0);
 const building = ref(false);
+const buildProgress = ref({ done: 0, total: 0 });
 
 let lastQuery = "";
 let renderedQuery = "";
@@ -65,7 +66,10 @@ const noteText = () => {
 
 const messageText = (value: string) => {
   if (value.length < 2) return t("searchTooShort");
-  if (building.value) return t("searchIndexingText");
+  const progress = buildProgress.value;
+  if (building.value) {
+    return progress.total > 0 ? t("searchIndexingText", progress) : "";
+  }
   if (hits.value.length) return "";
   if (!textStore.progress().done) return "";
   return t(hasActiveFilter() ? "searchNoHit" : "searchEmpty");
@@ -98,7 +102,11 @@ const syncHits = async (value: string, keepScroll = false): Promise<number> => {
   const seq = ++requestSeq;
   building.value = true;
   updateStatus(value);
-  const result = await searchIndex.search(value);
+  const result = await searchIndex.search(value, (done, count) => {
+    if (seq !== requestSeq) return;
+    buildProgress.value = { done, total: count };
+    updateStatus(value);
+  });
   if (seq !== requestSeq) return 0;
   building.value = false;
   applyResult(value, result, keepScroll);
@@ -141,10 +149,14 @@ const runRefresh = async (): Promise<void> => {
     return;
   }
   const seq = ++requestSeq;
-  const result = await searchIndex.search(value);
+  const result = await searchIndex.search(value, (done, count) => {
+    if (seq !== requestSeq) return;
+    buildProgress.value = { done, total: count };
+    updateStatus(value);
+  });
   if (seq !== requestSeq) return;
+  building.value = false;
   if (result.total !== total.value || !hits.value.length) {
-    building.value = false;
     applyResult(value, result, true);
     return;
   }
@@ -228,6 +240,7 @@ const onFocus = () => {
 const reset = () => {
   requestSeq++;
   building.value = false;
+  buildProgress.value = { done: 0, total: 0 };
   hits.value = [];
   total.value = 0;
   excludedCount.value = 0;

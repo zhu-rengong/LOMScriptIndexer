@@ -188,7 +188,7 @@
   "searchNoHit": "筛选范围内没有匹配",
   "searchCount": "共 {n} 条",
   "searchTooShort": "至少输入 2 个字符",
-  "searchIndexingText": "正在建立检索索引…",
+  "searchIndexingText": "正在建立检索索引… {done}/{total}",
   "fieldSpeaker": "说话人",
   "fieldFlag": "旗标",
   "fieldCheck": "检查点",

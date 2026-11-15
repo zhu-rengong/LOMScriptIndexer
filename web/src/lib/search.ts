@@ -19,6 +19,8 @@ export type SearchResult = {
   excludedByFilter: number;
 };
 
+export type SearchProgress = (done: number, total: number) => void;
+
 type IndexEntry = {
   id: string;
   nodeIndex: number;
@@ -48,6 +50,14 @@ const reset = (): void => {
   seen = new Set();
   sorted = true;
   warming = null;
+};
+
+const listeners = new Set<SearchProgress>();
+
+const notify = (): void => {
+  const done = engine.documentCount;
+  const total = entries.length;
+  for (const listener of listeners) listener(done, total);
 };
 
 export const needleOf = (input: unknown): string =>
@@ -83,6 +93,7 @@ const syncIndex = (): void => {
     entries.sort((a, b) => a.nodeIndex - b.nodeIndex);
     sorted = true;
   }
+  if (added) notify();
 };
 
 const pause = (): Promise<void> =>
@@ -109,7 +120,10 @@ const drain = async (token: number): Promise<void> => {
         docs.push({ key: id, text });
       }
       if (token !== generation) return;
-      if (docs.length) engine.addAll(docs);
+      if (docs.length) {
+        engine.addAll(docs);
+        notify();
+      }
       await pause();
     }
   } catch (error) {
@@ -148,10 +162,18 @@ const invalidate = (): void => {
   resetSearchText();
 };
 
-const search = async (input: string): Promise<SearchResult> => {
+const search = async (input: string, onProgress?: SearchProgress): Promise<SearchResult> => {
   const result: SearchResult = { hits: [], total: 0, excludedByFilter: 0 };
   if (toNeedle(String(input ?? "")).length < 2) return result;
-  await ensureReady();
+  if (onProgress) {
+    listeners.add(onProgress);
+    notify();
+  }
+  try {
+    await ensureReady();
+  } finally {
+    if (onProgress) listeners.delete(onProgress);
+  }
   const needle = needleOf(input);
   if (needle.length < 2) return result;
   const candidates = searchCandidates(engine, needle);
