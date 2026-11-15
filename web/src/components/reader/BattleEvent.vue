@@ -26,14 +26,14 @@ const openChip = (part: BattlePart, event: Event) => {
         </span>
         <button
           v-if="linkable(part)"
-          class="btn meta-action"
+          class="chip chip-btn"
           type="button"
           aria-haspopup="dialog"
           @click="openChip(part, $event)"
         >
           {{ part.text }}
         </button>
-        <span v-else class="chip-stat chip chip-sm">{{ part.text }}</span>
+        <span v-else class="chip chip-plain">{{ part.text }}</span>
       </template>
     </div>
     <div v-if="event.lines.length" class="battle-lines">

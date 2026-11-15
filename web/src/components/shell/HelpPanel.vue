@@ -37,7 +37,7 @@ onMounted(() => {
 <template>
   <div
     id="helpPanel"
-    class="help-panel surface"
+    class="pop help-panel"
     role="dialog"
     aria-modal="true"
     aria-labelledby="helpHeading"
@@ -50,6 +50,7 @@ onMounted(() => {
         class="btn btn-icon"
         type="button"
         :title="t('closeTitle')"
+        :aria-label="t('closeTitle')"
         @click="close"
       >
         <AppIcon name="close" />

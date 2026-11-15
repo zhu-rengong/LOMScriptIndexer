@@ -17,7 +17,7 @@ const emit = defineEmits<{
     <button
       v-for="row in props.rows"
       :key="row.id"
-      class="cat-row cat-special"
+      class="row cat-special"
       :class="{ 'is-on': props.selectedId === row.id }"
       type="button"
       :disabled="!row.known"
@@ -28,5 +28,5 @@ const emit = defineEmits<{
       <span class="cat-code">{{ row.id }}</span>
     </button>
   </template>
-  <p v-else class="cat-empty">{{ t("searchEmpty") }}</p>
+  <p v-else class="empty">{{ t("searchEmpty") }}</p>
 </template>

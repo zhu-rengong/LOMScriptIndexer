@@ -106,7 +106,8 @@ watch(checkSignature, resolveCondition, { immediate: true });
     @reveal="reveal"
   >
     <div
-      :class="isEmpty ? 'branch-head' : 'branch-head row row-sm'"
+      class="row row-sm row-card branch-head"
+      :class="{ 'is-static': isEmpty }"
       :role="isEmpty ? undefined : 'button'"
       :tabindex="isEmpty ? undefined : 0"
       :aria-expanded="isEmpty ? undefined : open"
@@ -137,7 +138,7 @@ watch(checkSignature, resolveCondition, { immediate: true });
       </button>
       <span
         v-if="isEmpty"
-        class="branch-empty"
+        class="chip"
         :title="t('branchEmptyNote')"
         :aria-label="t('branchEmptyNote')"
       >

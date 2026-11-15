@@ -62,6 +62,13 @@
     --ctl-sm: 30px;
     --ctl-lg: 42px;
 
+    --pad-page: var(--sp-8);
+    --pad-panel: var(--sp-5);
+    --pad-rail: var(--sp-4);
+
+    --row-h: var(--ctl-sm);
+    --chip-h: 24px;
+
     --rd-gap-1: 4px;
     --rd-gap-2: 8px;
     --rd-gap-3: 18px;
@@ -69,7 +76,6 @@
     --rd-inset: 18px;
 
     --masthead-h: 76px;
-    --masthead-tools: 292px;
     --rail-w: 340px;
     --reader-measure: 860px;
     --scrollbar-w: 10px;

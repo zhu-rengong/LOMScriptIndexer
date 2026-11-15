@@ -194,25 +194,26 @@ onMounted(() => {
 <template>
   <div
     id="lookupPanel"
-    class="lookup surface popover"
+    class="pop lookup"
     role="dialog"
     :aria-label="t('lookupSpeaker')"
     :hidden="!open"
   >
-    <header class="lookup-head">
-      <span id="lookupTitle" class="overlay-title">{{ title }}</span>
+    <header class="panel-head">
+      <span id="lookupTitle" class="panel-title">{{ title }}</span>
       <button
         id="lookupClose"
         class="btn btn-icon"
         type="button"
         :title="t('closeTitle')"
+        :aria-label="t('closeTitle')"
         @click="close"
       >
         <AppIcon name="close" />
       </button>
     </header>
-    <p v-if="subText" id="lookupSub" class="lookup-sub">{{ subText }}</p>
-    <div id="lookupList" class="lookup-list popover-list">
+    <p v-if="subText" id="lookupSub" class="panel-sub lookup-sub">{{ subText }}</p>
+    <div id="lookupList" class="list">
       <MissionStateDetail
         v-if="kind === 'mission' && missionHit"
         :mission-id="missionHit.mission"
@@ -226,47 +227,47 @@ onMounted(() => {
           :checkpoint="checkpoint"
           :method="method"
         />
-        <div v-else-if="kind === 'check' && loading" class="lookup-cond">
+        <div v-else-if="kind === 'check' && loading" class="surface lookup-cond">
           <p class="lookup-cond-title">{{ t("lookupCondTitle") }}</p>
           <div class="lookup-cond-body">
-            <p class="lookup-cond-muted">{{ t("lookupCondLoading") }}</p>
+            <p class="empty">{{ t("lookupCondLoading") }}</p>
           </div>
         </div>
 
-        <p v-if="!totalCount" class="lookup-empty popover-empty">
+        <p v-if="!totalCount" class="empty">
           {{ t("lookupEmpty") }}
         </p>
 
         <template v-else-if="flagNodeGroups">
           <template v-if="flagNodeGroups.writers.length">
-            <p class="lookup-group">
+            <p class="list-head">
               {{ t("lookupGroupWrites", { n: flagNodeGroups.writers.length }) }}
             </p>
             <NodeResultList :items="flagWriters" @pick="pickById" />
           </template>
           <template v-if="flagNodeGroups.checkers.length">
-            <p class="lookup-group">
+            <p class="list-head">
               {{ t("lookupGroupReads", { n: flagNodeGroups.checkers.length }) }}
             </p>
             <NodeResultList :items="flagCheckers" @pick="pickById" />
           </template>
-          <p v-else class="lookup-group-note">{{ t("lookupGroupReadsEmpty") }}</p>
+          <p v-else class="empty">{{ t("lookupGroupReadsEmpty") }}</p>
         </template>
 
         <template v-else>
           <NodeResultList :items="mainRows" @pick="pickById" />
           <template v-if="checkpointReaders.length">
-            <p class="lookup-group">
+            <p class="list-head">
               {{ t("lookupGroupReads", { n: checkpointReaders.length }) }}
             </p>
             <NodeResultList :items="readerRows" @pick="pickById" />
           </template>
-          <p v-else-if="kind === 'stat' || kind === 'rel'" class="lookup-group-note">
+          <p v-else-if="kind === 'stat' || kind === 'rel'" class="empty">
             {{ t(readsEmptyText) }}
           </p>
         </template>
       </template>
     </div>
-    <p class="lookup-hint">{{ t("lookupHint") }}</p>
+    <p class="panel-hint">{{ t("lookupHint") }}</p>
   </div>
 </template>

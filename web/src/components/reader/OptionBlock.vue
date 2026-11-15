@@ -86,7 +86,7 @@ watch(() => props.option.condition, resolveCondition, { immediate: true });
 <template>
   <div class="option" :class="{ 'is-open': open }" data-reveal @reveal="open = true">
     <div
-      class="option-head row"
+      class="row row-card option-head"
       role="button"
       tabindex="0"
       :aria-expanded="open"

@@ -36,7 +36,7 @@ const rowGroups = computed(() => {
 <template>
   <component
     :is="expandable ? 'div' : 'dl'"
-    :class="expandable ? 'branch-head battle-head row row-sm' : 'mission-rows battle-rows'"
+    :class="expandable ? 'row row-sm row-card battle-head' : 'surface mission-rows battle-rows'"
   >
     <template v-if="expandable">
       <div class="battle-head-main">
@@ -97,7 +97,7 @@ const rowGroups = computed(() => {
         <dd class="mission-value">
           <button
             v-if="battle.speaker"
-            class="battle-link"
+            class="btn-link"
             type="button"
             aria-haspopup="dialog"
             :title="t('lookupSpeaker')"

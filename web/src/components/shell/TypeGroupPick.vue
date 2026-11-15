@@ -70,14 +70,14 @@ onMounted(() => {
 <template>
   <div
     :id="PANEL"
-    class="picker popover surface"
+    class="pop picker"
     role="listbox"
     tabindex="-1"
     :aria-label="t('pref.groupTitle')"
     :hidden="!open"
     @keydown="onKeydown"
   >
-    <div class="picker-list popover-list">
+    <div class="list">
       <button
         v-for="item in items"
         :key="item.id"

@@ -65,17 +65,17 @@ const badgeCount = computed(() => {
 
 const status = computed(() => {
   const { filterError, filterSource, filterSet, filterLoading } = store;
-  if (filterError) return { text: filterError, className: "filter-status is-error" };
-  if (!filterSource.trim()) return { text: t("filterIdle"), className: "filter-status" };
+  if (filterError) return { text: filterError, className: "status is-error" };
+  if (!filterSource.trim()) return { text: t("filterIdle"), className: "status" };
   if (filterSet && filterSet.size === 0) {
     return {
       text: filterLoading ? t("filterLoadingText") : t("filterNoMatch"),
-      className: filterLoading ? "filter-status" : "filter-status is-error",
+      className: filterLoading ? "status" : "status is-error",
     };
   }
   return {
     text: filterLoading ? t("filterLoadingText") : "",
-    className: "filter-status is-ok",
+    className: "status is-ok",
   };
 });
 
@@ -194,27 +194,25 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
       :class="{ 'is-on': hasAppliedFilter }"
       @click.stop="toggle"
     >
-      <AppIcon name="filter" class="ico" />
+      <AppIcon name="filter" />
       <span class="btn-label">{{ t("filterBtn") }}</span>
-      <span id="filterBadge" class="badge badge-solid badge-num" :hidden="!hasAppliedFilter">{{
-        badgeCount
-      }}</span>
+      <span class="badge badge-solid badge-num" :hidden="!hasAppliedFilter">{{ badgeCount }}</span>
     </button>
 
     <div
       :id="POPOVER_KEY"
-      class="filter-panel surface popover"
+      class="pop filter-panel"
       role="dialog"
       aria-labelledby="filterHeading"
       :hidden="!isPopoverOpen"
     >
-      <header class="filter-head">
-        <div class="filter-head-text">
-          <h2 id="filterHeading" class="filter-title">{{ t("filterBtn") }}</h2>
-          <p class="filter-summary">{{ t("filterBtnTitle") }}</p>
+      <header class="panel-head">
+        <div class="panel-head-text">
+          <h2 id="filterHeading" class="panel-title">{{ t("filterBtn") }}</h2>
+          <p v-if="store.filterSource" class="panel-sub">{{ store.filterSource }}</p>
         </div>
         <button
-          class="btn btn-icon filter-close"
+          class="btn btn-icon"
           type="button"
           :title="t('closeTitle')"
           :aria-label="t('closeTitle')"
@@ -224,137 +222,136 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
         </button>
       </header>
 
-      <div class="filter-row">
-        <div class="filter-input-wrap" :class="{ 'is-error': !!store.filterError }">
-          <input
-            id="filterExpr"
-            ref="exprInput"
-            v-model="exprValue"
-            class="input input-mono filter-expr"
-            type="text"
-            spellcheck="false"
-            autocomplete="off"
-            role="combobox"
-            aria-autocomplete="list"
-            :aria-expanded="isSuggestOpen"
-            :aria-controls="SUGGEST_KEY"
-            :placeholder="t('filterPlaceholder')"
-            :aria-label="t('filterPlaceholder')"
-            @input="onExpressionInput"
-            @click="updateSuggestions"
-            @keyup="onKeyup"
-            @keydown="onKeydown"
-            @blur="onBlur"
-          />
-          <div
-            :id="SUGGEST_KEY"
-            ref="suggestPanel"
-            class="filter-suggest surface popover"
-            role="listbox"
-            :hidden="!isSuggestOpen"
-            @scroll.passive="onSuggestScroll"
-          >
-            <template v-if="suggestRows.length">
-              <button
-                v-for="(item, index) in suggestRows"
-                :key="`${item.value}-${index}`"
-                class="suggest-item row row-sm"
-                :class="{ 'is-active': index === suggestState.activeIndex }"
-                type="button"
-                role="option"
-                @mousedown.prevent="acceptSuggestion(index)"
-              >
-                <span class="sg-value">{{ suggestShown(item) }}</span>
-                <span v-if="suggestLabel(item)" class="sg-label">{{ suggestLabel(item) }}</span>
-                <span v-if="item.count" class="sg-count">
-                  {{ t("suggestCount", { n: item.count }) }}
-                </span>
-              </button>
-            </template>
-            <div v-else class="popover-empty">{{ t("suggestEmpty") }}</div>
+      <div class="panel-body filter-body">
+        <div class="filter-row">
+          <div class="field field-line" :class="{ 'is-error': !!store.filterError }">
+            <input
+              id="filterExpr"
+              ref="exprInput"
+              v-model="exprValue"
+              class="input input-line input-mono"
+              type="text"
+              spellcheck="false"
+              autocomplete="off"
+              role="combobox"
+              aria-autocomplete="list"
+              :aria-expanded="isSuggestOpen"
+              :aria-invalid="!!store.filterError"
+              :aria-controls="SUGGEST_KEY"
+              :placeholder="t('filterPlaceholder')"
+              :aria-label="t('filterPlaceholder')"
+              @input="onExpressionInput"
+              @click="updateSuggestions"
+              @keyup="onKeyup"
+              @keydown="onKeydown"
+              @blur="onBlur"
+            />
+            <div
+              :id="SUGGEST_KEY"
+              ref="suggestPanel"
+              class="pop filter-suggest"
+              role="listbox"
+              :hidden="!isSuggestOpen"
+              @scroll.passive="onSuggestScroll"
+            >
+              <template v-if="suggestRows.length">
+                <button
+                  v-for="(item, index) in suggestRows"
+                  :key="`${item.value}-${index}`"
+                  class="row row-sm"
+                  :class="{ 'is-active': index === suggestState.activeIndex }"
+                  type="button"
+                  role="option"
+                  @mousedown.prevent="acceptSuggestion(index)"
+                >
+                  <span class="sg-value">{{ suggestShown(item) }}</span>
+                  <span v-if="suggestLabel(item)" class="sg-label">{{ suggestLabel(item) }}</span>
+                  <span v-if="item.count" class="sg-count">
+                    {{ t("suggestCount", { n: item.count }) }}
+                  </span>
+                </button>
+              </template>
+              <div v-else class="empty">{{ t("suggestEmpty") }}</div>
+            </div>
           </div>
         </div>
-      </div>
-      <div id="filterStatus" :class="status.className">{{ status.text }}</div>
+        <div :class="status.className">{{ status.text }}</div>
 
-      <div class="filter-section">
-        <p class="filter-label">{{ t("filterFields") }}</p>
-        <div id="filterFieldChips" class="filter-chips">
-          <button
-            v-for="field in fields"
-            :key="field.id"
-            class="filter-chip btn btn-mono"
-            type="button"
-            :data-insert="`${field.id}:`"
-            @click="onChipInsert(`${field.id}:`)"
-          >
-            {{ t(FIELD_LABEL_KEYS[field.id] || field.id) }}
-          </button>
+        <div class="filter-section">
+          <p class="filter-label">{{ t("filterFields") }}</p>
+          <div class="filter-chips">
+            <button
+              v-for="field in fields"
+              :key="field.id"
+              class="btn btn-mono"
+              type="button"
+              :data-insert="`${field.id}:`"
+              @click="onChipInsert(`${field.id}:`)"
+            >
+              {{ t(FIELD_LABEL_KEYS[field.id] || field.id) }}
+            </button>
+          </div>
         </div>
-      </div>
-      <div class="filter-section">
-        <p class="filter-label">{{ t("filterOperators") }}</p>
-        <div id="filterOpChips" class="filter-chips">
-          <button
-            v-for="op in OPS"
-            :key="op"
-            class="filter-chip btn btn-mono"
-            type="button"
-            :data-insert="op === '(' || op === ')' ? op : ` ${op} `"
-            @click="onChipInsert(op === '(' || op === ')' ? op : ` ${op} `)"
-          >
-            {{ op }}
-          </button>
+        <div class="filter-section">
+          <p class="filter-label">{{ t("filterOperators") }}</p>
+          <div class="filter-chips">
+            <button
+              v-for="op in OPS"
+              :key="op"
+              class="btn btn-mono"
+              type="button"
+              :data-insert="op === '(' || op === ')' ? op : ` ${op} `"
+              @click="onChipInsert(op === '(' || op === ')' ? op : ` ${op} `)"
+            >
+              {{ op }}
+            </button>
+          </div>
         </div>
-      </div>
-      <div class="filter-section">
-        <p class="filter-label">{{ t("filterExamples") }}</p>
-        <div id="filterExampleChips" class="filter-chips">
-          <button
-            v-for="example in EXAMPLES"
-            :key="example.key"
-            class="filter-chip btn btn-mono"
-            type="button"
-            :data-expr="example.expr"
-            @click="applyExample(example.expr)"
-          >
-            {{ t(example.key) }}
-          </button>
+        <div class="filter-section">
+          <p class="filter-label">{{ t("filterExamples") }}</p>
+          <div class="filter-chips">
+            <button
+              v-for="example in EXAMPLES"
+              :key="example.key"
+              class="btn btn-mono"
+              type="button"
+              :data-expr="example.expr"
+              @click="applyExample(example.expr)"
+            >
+              {{ t(example.key) }}
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div
-        id="filterResults"
-        class="filter-results"
-        :hidden="!hasAppliedFilter || !store.filterSource.trim()"
-      >
-        <div class="filter-results-title">
-          {{ t("filterResults", { n: hitNodeIndexes.length }) }}
-          <span class="filter-count">
-            {{ t("filterCount", { n: hitNodeIndexes.length, total: graph.nodes.length }) }}
-          </span>
-        </div>
-        <div v-if="!hitNodeIndexes.length" class="filter-results-empty">
-          {{ t("filterResultsEmpty") }}
-        </div>
-        <div
-          v-else
-          ref="resultsPanel"
-          class="filter-results-list"
-          @scroll.passive="onResultsScroll"
-        >
-          <button
-            v-for="row in resultRows"
-            :key="row.id"
-            class="result-item row row-sm"
-            :class="{ 'is-active': store.selectedId === row.id }"
-            type="button"
-            :data-id="row.id"
-            @click="pickNode(row.id)"
+        <div class="filter-results" :hidden="!hasAppliedFilter || !store.filterSource.trim()">
+          <div class="list-head">
+            {{ t("filterResults", { n: hitNodeIndexes.length }) }}
+            <span class="filter-count">
+              {{ t("filterCount", { n: hitNodeIndexes.length, total: graph.nodes.length }) }}
+            </span>
+          </div>
+          <div v-if="!hitNodeIndexes.length" class="empty">
+            {{ t("filterResultsEmpty") }}
+          </div>
+          <div
+            v-else
+            ref="resultsPanel"
+            class="list filter-results-list"
+            @scroll.passive="onResultsScroll"
           >
-            <span class="ri-id">{{ row.id }}</span>
-            <span class="ri-ch">{{ row.chapter }}</span>
-          </button>
+            <button
+              v-for="row in resultRows"
+              :key="row.id"
+              class="row row-sm result"
+              :class="{ 'is-on': store.selectedId === row.id }"
+              type="button"
+              :data-id="row.id"
+              @click="pickNode(row.id)"
+            >
+              <span class="result-id">{{ row.id }}</span>
+              <span class="result-meta">{{ row.chapter }}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

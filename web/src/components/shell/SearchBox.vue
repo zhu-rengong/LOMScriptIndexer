@@ -239,12 +239,12 @@ onMounted(() => {
 
 <template>
   <div class="searchwrap">
-    <div class="search-field">
-      <AppIcon name="search" class="search-icon" />
+    <div class="field search-field">
+      <AppIcon name="search" />
       <input
         id="search"
         v-model="query"
-        class="search-input"
+        class="input input-icon"
         type="search"
         autocomplete="off"
         spellcheck="false"

@@ -37,37 +37,30 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="menu-wrap display-filter">
-    <span class="tip-host" :title="t('displayFilterTitle')">
-      <button
-        :id="UI_IDS.displayFilterBtn"
-        class="btn btn-icon"
-        :class="{ 'is-on': view.filtering }"
-        type="button"
-        aria-haspopup="dialog"
-        :aria-expanded="open"
-        :aria-controls="UI_IDS.displayFilterMenu"
-        :title="t('displayFilterTitle')"
-        :aria-label="t('displayFilterTitle')"
-        @click="toggle"
-      >
-        <AppIcon name="filter" />
-      </button>
-    </span>
+  <div class="menu-wrap">
+    <button
+      :id="UI_IDS.displayFilterBtn"
+      class="btn btn-icon"
+      :class="{ 'is-on': view.filtering }"
+      type="button"
+      aria-haspopup="dialog"
+      :aria-expanded="open"
+      :aria-controls="UI_IDS.displayFilterMenu"
+      :title="t('displayFilterTitle')"
+      :aria-label="t('displayFilterTitle')"
+      @click="toggle"
+    >
+      <AppIcon name="filter" />
+    </button>
     <div
       :id="UI_IDS.displayFilterMenu"
-      class="menu display-filter-menu surface popover"
+      class="pop menu"
       role="dialog"
       :aria-label="t('displayFilterTitle')"
       :hidden="!open"
     >
-      <div class="menu-head">{{ t("displayFilterHead") }}</div>
-      <label
-        v-for="item in items"
-        :key="item.kind"
-        class="menu-item display-filter-item"
-        :for="`displayFilter-${item.kind}`"
-      >
+      <div class="list-head">{{ t("displayFilterHead") }}</div>
+      <label v-for="item in items" :key="item.kind" class="row" :for="`displayFilter-${item.kind}`">
         <input
           :id="`displayFilter-${item.kind}`"
           class="display-filter-check"

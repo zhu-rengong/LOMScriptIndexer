@@ -142,7 +142,7 @@ watch(() => props.jump.position, loadCheckpoint, { immediate: true });
     @reveal="open = true"
   >
     <div
-      class="option-head jump-head row"
+      class="row row-card option-head jump-head"
       :class="{ 'is-static': !collapsible }"
       :role="collapsible ? 'button' : undefined"
       :tabindex="collapsible ? 0 : undefined"
@@ -168,7 +168,7 @@ watch(() => props.jump.position, loadCheckpoint, { immediate: true });
       <div
         v-for="row in rows"
         :key="row.id"
-        class="jump jump-target"
+        class="row row-card jump-target"
         role="button"
         tabindex="0"
         :aria-label="row.id"
@@ -225,7 +225,7 @@ watch(() => props.jump.position, loadCheckpoint, { immediate: true });
     <AppIcon name="arrow-right" class="arrow" />{{ display.text
     }}<span v-if="jump.dynamicSource" class="option-cond">{{ `  ${jump.dynamicSource}` }}</span>
   </button>
-  <span v-else class="jump dynamic">
+  <span v-else class="jump is-static">
     <AppIcon name="arrow-right" class="arrow" />{{ display.text }}
   </span>
 </template>

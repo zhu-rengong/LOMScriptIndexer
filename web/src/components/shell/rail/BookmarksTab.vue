@@ -21,7 +21,7 @@ const emit = defineEmits<{
     <div
       v-for="row in props.rows"
       :key="row.id"
-      class="cat-book"
+      class="row cat-book"
       :class="{ 'is-on': props.selectedId === row.id }"
     >
       <button
@@ -36,7 +36,7 @@ const emit = defineEmits<{
         <span v-if="row.chapter" class="cat-meta">{{ row.chapter }}</span>
       </button>
       <button
-        class="cat-del"
+        class="btn btn-icon cat-del"
         type="button"
         :title="t('bookmarkRemove')"
         :aria-label="t('bookmarkRemove')"
@@ -45,9 +45,9 @@ const emit = defineEmits<{
         <AppIcon name="close" />
       </button>
     </div>
-    <button class="cat-clear" type="button" @click="emit('clear')">
+    <button class="btn-link is-block" type="button" @click="emit('clear')">
       {{ t("bookmarkClear") }}
     </button>
   </template>
-  <p v-else class="cat-empty">{{ t(props.searching ? "searchEmpty" : "bookmarkEmpty") }}</p>
+  <p v-else class="empty">{{ t(props.searching ? "searchEmpty" : "bookmarkEmpty") }}</p>
 </template>
