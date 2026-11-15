@@ -290,7 +290,16 @@ const open = (
       key,
       onClickOutside(
         panel,
-        () => {
+        (event) => {
+          const current = defs.get(key);
+          if (!current) return;
+          const target = event.target as Node | null;
+          if (!target) return;
+          const layer = panelOf(current);
+          if (!layer || layer.hidden) return;
+          if (layer.contains(target)) return;
+          const anchor = triggerOf(current);
+          if (anchor && anchor.contains(target)) return;
           close(key, { restoreFocus: false });
         },
         {
