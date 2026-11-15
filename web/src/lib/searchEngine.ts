@@ -1,4 +1,4 @@
-import MiniSearch, { type AsPlainObject, type Options } from "minisearch";
+import MiniSearch, { type Options } from "minisearch";
 
 export type SearchDoc = {
   key: string;
@@ -8,8 +8,6 @@ export type SearchDoc = {
 const SEGMENT = /[^\p{L}\p{N}]+/u;
 
 const HAN = /^[\u3400-\u9fff\uf900-\ufaff]+$/;
-
-export const SEARCH_INDEX_VERSION = 1;
 
 const tokenize = (value: string): string[] => {
   const tokens = new Set<string>();
@@ -48,9 +46,6 @@ const SEARCH_OPTIONS: Options<SearchDoc> = {
 
 export const createSearchEngine = (): MiniSearch<SearchDoc> =>
   new MiniSearch<SearchDoc>(SEARCH_OPTIONS);
-
-export const loadSearchEngine = (data: AsPlainObject): MiniSearch<SearchDoc> =>
-  MiniSearch.loadJS<SearchDoc>(data, SEARCH_OPTIONS);
 
 export const searchCandidates = (
   engine: MiniSearch<SearchDoc>,

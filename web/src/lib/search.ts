@@ -1,17 +1,9 @@
 import { convert } from "../data/convert";
-import { dataset } from "../data/dataset";
 import { graph } from "../data/graph";
 import { textStore } from "../data/text";
 import type { Chapter } from "../types/graph";
 import { normalizeSearchText, toNeedle } from "./browser";
-import { clearSearchIndex, readSearchIndex, writeSearchIndex } from "./searchCache";
-import {
-  createSearchEngine,
-  loadSearchEngine,
-  searchCandidates,
-  SEARCH_INDEX_VERSION,
-  type SearchDoc,
-} from "./searchEngine";
+import { createSearchEngine, searchCandidates, type SearchDoc } from "./searchEngine";
 import { resetSearchText, searchTextOfId } from "./searchText";
 import { scriptStore as script } from "./scriptStore";
 
@@ -44,14 +36,11 @@ let engine = createSearchEngine();
 let entries: IndexEntry[] = [];
 let byId = new Map<string, IndexEntry>();
 let pending: string[] = [];
-let indexed = new Set<string>();
 let seen = new Set<string>();
 let prepared = 0;
 let sorted = true;
 let generation = 0;
 let warming: Promise<void> | null = null;
-let restored = false;
-let persisted = false;
 
 const reset = (): void => {
   generation += 1;
@@ -59,13 +48,10 @@ const reset = (): void => {
   entries = [];
   byId = new Map();
   pending = [];
-  indexed = new Set();
   seen = new Set();
   prepared = 0;
   sorted = true;
   warming = null;
-  restored = false;
-  persisted = false;
 };
 
 const listeners = new Set<SearchProgress>();
@@ -77,19 +63,6 @@ const notify = (): void => {
 
 export const needleOf = (input: unknown): string =>
   normalizeSearchText(convert.text(script().textLang(), String(input ?? "")));
-
-const cacheKey = (): string => {
-  const counts = dataset.meta.counts;
-  return [
-    script().lang,
-    script().textLang(),
-    dataset.meta.generated,
-    dataset.schema,
-    counts.scripts ?? 0,
-    counts.edges ?? 0,
-    SEARCH_INDEX_VERSION,
-  ].join("|");
-};
 
 const syncIndex = (): void => {
   const current = script().lang;
@@ -124,53 +97,8 @@ const syncIndex = (): void => {
   if (added) notify();
 };
 
-const restore = async (token: number): Promise<void> => {
-  if (restored) return;
-  restored = true;
-  const cached = await readSearchIndex(cacheKey());
-  if (token !== generation) return;
-  if (!cached) {
-    console.info("[ScriptIndexer] search index cache miss, indexing from scratch");
-    return;
-  }
-  try {
-    engine = loadSearchEngine(cached.data);
-  } catch (error) {
-    console.warn("[ScriptIndexer] discarded an unreadable search index cache", error);
-    void clearSearchIndex();
-    return;
-  }
-  indexed = new Set(cached.ids);
-  persisted = true;
-  console.info(
-    `[ScriptIndexer] search index restored: ${cached.ids.length} scripts,` +
-      ` cached at ${new Date(cached.saved).toISOString()}`,
-  );
-};
-
-const persist = (token: number): void => {
-  if (persisted) return;
-  if (indexed.size !== entries.length) return;
-  const state = textStore.progress();
-  if (!state.done || state.headError || state.shardError) return;
-  persisted = true;
-  const key = cacheKey();
-  const ids = Array.from(indexed);
-  const write = async (): Promise<void> => {
-    if (token !== generation) return;
-    const stored = await writeSearchIndex({ key, ids, saved: Date.now(), data: engine.toJSON() });
-    if (stored) console.info(`[ScriptIndexer] search index cached: ${ids.length} scripts`);
-  };
-  if (typeof requestIdleCallback === "function") {
-    requestIdleCallback(() => void write(), { timeout: 2000 });
-    return;
-  }
-  setTimeout(() => void write(), 0);
-};
-
 const drain = async (token: number): Promise<void> => {
   try {
-    await restore(token);
     while (pending.length) {
       if (token !== generation) return;
       const batch = pending.splice(0, SLICE);
@@ -181,16 +109,14 @@ const drain = async (token: number): Promise<void> => {
         const text = searchTextOfId(id);
         entry.text = text;
         prepared += 1;
-        if (!indexed.has(id)) docs.push({ key: id, text });
+        docs.push({ key: id, text });
       }
       if (docs.length) {
         await engine.addAllAsync(docs, { chunkSize: SLICE });
         if (token !== generation) return;
-        for (const doc of docs) indexed.add(doc.key);
       }
       notify();
     }
-    if (token === generation) persist(token);
   } catch (error) {
     if (token === generation) pending = [];
     console.error("[ScriptIndexer] search index build failed", error);
