@@ -1,4 +1,6 @@
-import type { QuerySuggestion } from "../../types/query";
+import type MiniSearch from "minisearch";
+import type { QueryField, QuerySuggestion } from "../../types/query";
+import { createSearchEngine, searchCandidates, type SearchDoc } from "../searchEngine";
 import { FIELDS, FIELD_BY_ALIAS, LOGIC_ALIAS, ROOTS } from "./fields";
 import type { QueryIndex } from "./evaluate";
 
@@ -93,6 +95,29 @@ const rank = (items: QuerySuggestion[], prefix: string): QuerySuggestion[] => {
   return scored.map((entry) => entry.item);
 };
 
+type FacetState = {
+  source: QueryIndex;
+  engine: MiniSearch<SearchDoc>;
+};
+
+const facetStates = new Map<string, FacetState>();
+
+const facetFilter = (source: QueryIndex, field: QueryField, needle: string): Set<string> | null => {
+  let state = facetStates.get(field.id);
+  if (!state || state.source !== source) {
+    const docs = source.facetValues(field).map((item, index) => ({
+      key: String(index),
+      text: `${item.value}\n${item.label}`.toLowerCase(),
+    }));
+    const engine = createSearchEngine();
+    engine.addAll(docs);
+    state = { source, engine };
+    facetStates.set(field.id, state);
+  }
+  const keys = searchCandidates(state.engine, needle);
+  return keys === null ? null : new Set(keys);
+};
+
 export type SuggestResult = {
   mode: "field" | "value";
   field: string | null;
@@ -170,6 +195,14 @@ export const suggest = (source: string, cursor: number, index: QueryIndex): Sugg
     }
   }
 
+  const needle = valuePrefix.toLowerCase();
+  const allowed =
+    needle !== "" && field.kind !== "number" ? facetFilter(index, field, needle) : null;
+  const filtered =
+    allowed === null
+      ? candidates
+      : candidates.filter((_, position) => allowed.has(String(position)));
+
   return {
     mode: "value",
     field: field.id,
@@ -177,6 +210,6 @@ export const suggest = (source: string, cursor: number, index: QueryIndex): Sugg
     to: at,
     prefix: valuePrefix,
     quoted,
-    items: rank(candidates, valuePrefix),
+    items: rank(filtered, valuePrefix),
   };
 };

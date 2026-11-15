@@ -3,8 +3,8 @@ import { textStore } from "../data/text";
 import { t } from "../i18n";
 
 import type { QueryContext, QueryError } from "../types/query";
-import * as beatRows from "./beatRows";
 import { createIndex, query, type QueryIndex } from "./query";
+import { plainTextOfId } from "./searchText";
 import { scriptStore as script } from "./scriptStore";
 
 export const RESULT_LIMIT = 50;
@@ -40,29 +40,22 @@ export const EXAMPLES: { key: string; expr: string }[] = [
   { key: "exCombo", expr: "speaker:master AND (dice:yes OR lock:yes)" },
 ];
 
-let nodeTextCache = { lang: "", count: -1, map: new Map<number, string>() };
+let textLang = "";
+let textCount = -1;
 let compileCache: QueryIndex | null = null;
 
 const nodeText = (index: number): string => {
-  const lang = script().textLang();
-  const pack = textStore.pack(lang);
-  const count = pack && pack.scripts ? Object.keys(pack.scripts).length : 0;
-  if (nodeTextCache.lang !== lang || nodeTextCache.count !== count) {
-    nodeTextCache = { lang, count, map: new Map() };
-    compileCache = null;
-  }
-  const cached = nodeTextCache.map.get(index);
-  if (cached !== undefined) return cached;
   const node = graph.nodes[index];
-  const rows = pack && pack.scripts ? pack.scripts[node.id] : null;
-  const value = rows ? beatRows.plainTextOf(rows).toLowerCase() : "";
-  nodeTextCache.map.set(index, value);
-  return value;
+  return node ? plainTextOfId(node.id) : "";
 };
 
 const buildIndex = (): QueryIndex => {
-  if (compileCache) return compileCache;
   const lang = script().textLang();
+  const pack = textStore.pack(lang);
+  const count = pack && pack.scripts ? Object.keys(pack.scripts).length : 0;
+  if (compileCache && textLang === lang && textCount === count) return compileCache;
+  textLang = lang;
+  textCount = count;
   const names = textStore.names(lang);
   const context: QueryContext = {
     nodeCount: graph.nodes.length,
@@ -93,7 +86,8 @@ const buildIndex = (): QueryIndex => {
 export const queryIndex = (): QueryIndex => buildIndex();
 
 export const resetFilterContext = (): void => {
-  nodeTextCache = { lang: "", count: -1, map: new Map() };
+  textLang = "";
+  textCount = -1;
   compileCache = null;
 };
 

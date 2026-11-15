@@ -172,6 +172,9 @@ importers:
       '@floating-ui/vue':
         specifier: ^2.0.1
         version: 2.0.1(vue@3.6.0-rc.14(typescript@6.0.3))
+      minisearch:
+        specifier: ^7.2.0
+        version: 7.2.0
       opencc-js:
         specifier: ^1.4.2
         version: 1.4.2
@@ -932,6 +935,9 @@ packages:
 
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
+
+  minisearch@7.2.0:
+    resolution: {integrity: sha512-dqT2XBYUOZOiC5t2HRnwADjhNS2cecp9u+TJRiJ1Qp/f5qjkeT5APcGPjHw+bz89Ms8Jp+cG4AlE+QZ/QnDglg==}
 
   mlly@1.8.2:
     resolution: {integrity: sha512-d+ObxMQFmbt10sretNDytwt85VrbkhhUA/JBGm1MPaWJ65Cl4wOgLaB1NYvJSZ0Ef03MMEU/0xpPMXUIQ29UfA==}
@@ -1786,6 +1792,8 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.6.0
 
   minimist@1.2.8: {}
+
+  minisearch@7.2.0: {}
 
   mlly@1.8.2:
     dependencies:

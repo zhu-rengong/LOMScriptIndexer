@@ -1,11 +1,10 @@
 import { convert } from "../data/convert";
 import { graph } from "../data/graph";
-import { dataset } from "../data/dataset";
 import { textStore } from "../data/text";
 import type { Chapter } from "../types/graph";
-import * as beatRows from "./beatRows";
-import { metaText } from "./conditions";
 import { toNeedle } from "./browser";
+import { createSearchEngine, searchCandidates, type SearchDoc } from "./searchEngine";
+import { resetSearchText, searchTextOfId } from "./searchText";
 import { scriptStore as script } from "./scriptStore";
 
 export type SearchHit = {
@@ -27,88 +26,74 @@ type IndexEntry = {
   text: string;
 };
 
-type SearchIndex = {
-  lang: string;
-  converted: boolean;
-  seen: Set<string>;
-  entries: IndexEntry[];
-  sorted: boolean;
-};
+let lang = "";
+let converted = false;
+let engine = createSearchEngine();
+let entries: IndexEntry[] = [];
+let seen = new Set<string>();
+let sorted = true;
 
-const emptyIndex = (): SearchIndex => ({
-  lang: "",
-  converted: false,
-  seen: new Set(),
-  entries: [],
-  sorted: true,
-});
+const reset = (): void => {
+  engine = createSearchEngine();
+  entries = [];
+  seen = new Set();
+  sorted = true;
+};
 
 export const needleOf = (input: unknown): string =>
   toNeedle(convert.text(script().textLang(), String(input ?? "")));
 
-let cache: SearchIndex = emptyIndex();
-
-const indexedMetaKinds = new Set([
-  ...(dataset.vocab.itemKinds || []),
-  "settitle",
-  "mission",
-  "missionTrigger",
-]);
-
-const indexedMetaText = (rows: unknown): string => {
-  const parts: string[] = [];
-  beatRows.walkRows(rows, (row) => {
-    if (!beatRows.isBeat(row, "meta")) return;
-    const meta = beatRows.parseMeta(row);
-    if (!indexedMetaKinds.has(meta.kind)) return;
-    const label = metaText(meta.kind, meta.key, meta.value, meta.extra);
-    if (label) parts.push(label);
-  });
-  return parts.join("\n");
-};
-
-const buildSearchIndex = (): SearchIndex => {
-  const lang = script().textLang();
-  const converted = convert.hasConverter(lang);
-  if (cache.lang !== lang || cache.converted !== converted) cache = emptyIndex();
-  cache.lang = lang;
-  cache.converted = converted;
-  const pack = textStore.pack(lang);
+const buildSearchIndex = (): void => {
+  const current = script().lang;
+  const ready = convert.hasConverter(script().textLang());
+  if (current !== lang || ready !== converted) {
+    lang = current;
+    converted = ready;
+    reset();
+  }
+  const pack = textStore.pack(script().textLang());
   const scripts = (pack && pack.scripts) || {};
-  const ids = Object.keys(scripts);
-  let added = false;
-  for (const id of ids) {
-    if (cache.seen.has(id)) continue;
-    cache.seen.add(id);
-    added = true;
+  const fresh: SearchDoc[] = [];
+  for (const id of Object.keys(scripts)) {
+    if (seen.has(id)) continue;
+    seen.add(id);
     const nodeIndex = graph.indexById.get(id);
     const node = nodeIndex === undefined ? null : graph.nodes[nodeIndex];
-    cache.entries.push({
+    const text = searchTextOfId(id);
+    entries.push({
       id,
       nodeIndex: nodeIndex === undefined ? -1 : nodeIndex,
       chapter: node ? graph.chapterOf(node) : null,
-      text: `${beatRows.plainTextOf(scripts[id])}\n${indexedMetaText(scripts[id])}`.toLowerCase(),
+      text,
     });
+    fresh.push({ key: id, text });
   }
-  if (added) cache.sorted = false;
-  if (!cache.sorted) {
-    cache.entries.sort((a, b) => a.nodeIndex - b.nodeIndex);
-    cache.sorted = true;
+  if (fresh.length) {
+    engine.addAll(fresh);
+    sorted = false;
   }
-  return cache;
+  if (!sorted) {
+    entries.sort((a, b) => a.nodeIndex - b.nodeIndex);
+    sorted = true;
+  }
 };
 
 const invalidate = (): void => {
-  cache = emptyIndex();
+  lang = "";
+  reset();
+  resetSearchText();
 };
 
 const search = (input: string): SearchResult => {
   const needle = needleOf(input);
   const result: SearchResult = { hits: [], total: 0, excludedByFilter: 0 };
   if (needle.length < 2) return result;
-  const current = buildSearchIndex();
+  buildSearchIndex();
+  const candidates = searchCandidates(engine, needle);
+  const allowed = candidates === null ? null : new Set(candidates);
   let excludedByFilter = 0;
-  for (const entry of current.entries) {
+  for (const entry of entries) {
+    if (allowed && !allowed.has(entry.id)) continue;
     const position = entry.text.indexOf(needle);
     if (position < 0) continue;
     if (entry.nodeIndex < 0) continue;
