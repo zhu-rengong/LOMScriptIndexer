@@ -1243,33 +1243,43 @@
   }
 
   .meta-chips .meta-chip.is-hidden {
+    height: auto;
     padding: 0 var(--sp-1);
+    border: 1px solid var(--line-1);
     border-radius: var(--r-sm);
     background: var(--ink);
     color: transparent;
     user-select: none;
     transition:
       color var(--t-fast) var(--ease),
-      background-color var(--t-fast) var(--ease);
+      background-color var(--t-fast) var(--ease),
+      border-color var(--t-fast) var(--ease);
   }
 
-  .reader-body.is-revealing .meta-chips .meta-chip.is-hidden,
-  .meta-chips .meta-chip.is-hidden:hover,
-  .meta-chips .meta-chip.is-hidden:focus-visible {
+  .reader-body.is-revealing .meta-chips .meta-chip.is-hidden {
     background: none;
     color: var(--ink-2);
   }
 
-  .reader-body.is-revealing .meta-chips button.meta-chip.is-hidden,
-  .meta-chips button.meta-chip.is-hidden:hover,
-  .meta-chips button.meta-chip.is-hidden:focus-visible {
-    background: var(--surface-hover);
+  .meta-chips .meta-chip.is-hidden:hover,
+  .meta-chips .meta-chip.is-hidden:focus-visible {
+    border-color: var(--line-2);
+    background: var(--surface-inset);
     color: var(--ink-hover);
+  }
+
+  .meta-chips button.meta-chip.is-hidden {
+    cursor: pointer;
+  }
+
+  .meta-chips button.meta-chip.is-hidden:active {
+    border-color: var(--line-3);
+    background: var(--surface-active);
+    color: var(--ink);
   }
 
   @media (hover: none) {
     .meta-chips .meta-chip.is-hidden {
-      padding: 0;
       background: none;
       color: var(--ink-2);
     }
