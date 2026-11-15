@@ -11,22 +11,25 @@
     margin: 0;
   }
 
+  @supports (height: 100dvh) {
+    html,
+    body {
+      height: 100dvh;
+    }
+  }
+
   body {
     display: flex;
     flex-direction: column;
     min-height: 0;
     background: var(--surface);
     color: var(--ink);
+    font-family: var(--font-base);
+    font-size: 16px;
+    line-height: 1.6;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-  }
-
-  @supports (height: 100dvh) {
-    html,
-    body {
-      height: 100dvh;
-    }
   }
 
   h1,
@@ -63,7 +66,9 @@
     cursor: pointer;
   }
 
-  button:disabled {
+  :where(button, input, select, textarea, a)[aria-disabled="true"],
+  :where(button, input, select, textarea):disabled {
+    opacity: var(--opacity-disabled);
     cursor: default;
   }
 
@@ -116,7 +121,7 @@
 
   mark {
     padding: 0 2px;
-    border-radius: 2px;
+    border-radius: var(--r-sm);
     background: var(--accent-soft);
     color: var(--accent-strong);
   }
@@ -133,7 +138,9 @@
     border-radius: var(--r-sm);
     background: var(--surface-inset);
     color: var(--ink-2);
-    --tlh-control: 0.625;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1;
   }
 
   ::placeholder {

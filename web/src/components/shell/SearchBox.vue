@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { textStore } from "../../data/text";
-import { t } from "../../i18n";
+import { chapterTitle, t } from "../../i18n";
 import { debounce, scheduleFrame } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
 import { needleOf, searchIndex, type SearchHit } from "../../lib/search";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
+import PanelShell from "../ui/PanelShell.vue";
 import FilterPopover from "./FilterPopover.vue";
-import SearchResults from "./SearchResults.vue";
+import HitList, { type HitRow } from "./HitList.vue";
 import { useScriptStore } from "../../stores/script";
 import { usePanelsStore } from "../../stores/panels";
 import { useUiStore } from "../../stores/ui";
@@ -17,6 +18,7 @@ const panels = usePanelsStore();
 const ui = useUiStore();
 
 const PAGE = 50;
+const KEY = "searchResults";
 
 const input = ref<HTMLInputElement | null>(null);
 const query = ref("");
@@ -32,21 +34,19 @@ let isStale = true;
 let warmPromise: Promise<unknown> | null = null;
 let warmLang = "";
 
-const openState = ref(false);
+const open = computed(() => overlay.isOpen(KEY));
 
 const hasActiveFilter = () => !!store.filterSet;
 
 const show = () => {
-  overlay.open("searchResults", {
+  overlay.open(KEY, {
     trigger: input.value,
     placement: { align: "start", gap: 8, matchWidth: true, fit: true },
   });
-  openState.value = true;
 };
 
 const hide = () => {
-  overlay.close("searchResults");
-  openState.value = false;
+  overlay.close(KEY);
 };
 
 const loadingText = () => {
@@ -92,6 +92,16 @@ const syncHits = (value: string, keepScroll = false) => {
   isStale = false;
 };
 
+const visibleRows = computed<HitRow[]>(() =>
+  hits.value.slice(0, renderedCount.value).map((hit) => ({
+    id: hit.id,
+    chapter: hit.chapter ? chapterTitle(hit.chapter) : "",
+    snippet: hit.snippet,
+  })),
+);
+
+const activeHit = computed(() => hits.value[0]?.id || "");
+
 const appendMore = () => {
   if (renderedCount.value >= hits.value.length) return;
   renderedCount.value = Math.min(hits.value.length, renderedCount.value + PAGE);
@@ -124,7 +134,7 @@ const refresh = scheduleFrame(() => {
   const value = query.value.trim();
   if (value.length < 2) return;
   lastQuery = value;
-  if (!openState.value) {
+  if (!open.value) {
     isStale = true;
     return;
   }
@@ -141,7 +151,7 @@ const warmFullText = (lang: string) => {
   warmLang = lang;
   const chain = textStore
     .ensureAll(lang, (loaded, totalShards) => {
-      ui.setIoStatus(t("searchLoadingText", { loaded, total: totalShards }));
+      ui.setIoStatus("searchLoadingText", { loaded, total: totalShards });
       refresh();
     })
     .then(() => {
@@ -168,7 +178,7 @@ const submit = () => {
   const value = query.value.trim();
   const state = textStore.progress();
   if (value.length < 2 || state.done) return;
-  ui.setIoStatus(t("searchLoadingText", { loaded: state.loaded, total: state.total }));
+  ui.setIoStatus("searchLoadingText", { loaded: state.loaded, total: state.total });
   warmFullText(store.textLang());
 };
 
@@ -183,10 +193,10 @@ const pickFirst = (): boolean => {
   return true;
 };
 
-const pick = (hit: SearchHit) => {
+const pickById = (id: string) => {
   hide();
-  panels.focusText(hit.id, needleOf(lastQuery));
-  store.select(hit.id, { history: true });
+  panels.focusText(id, needleOf(lastQuery));
+  store.select(id, { history: true });
 };
 
 const onKeydown = (event: KeyboardEvent) => {
@@ -203,6 +213,12 @@ const onKeydown = (event: KeyboardEvent) => {
 
 const onFocus = () => {
   if (query.value.trim()) submit();
+};
+
+const onScroll = (event: Event) => {
+  const node = event.currentTarget as HTMLElement;
+  if (node.scrollTop + node.clientHeight < node.scrollHeight - 96) return;
+  appendMore();
 };
 
 const reset = () => {
@@ -223,33 +239,21 @@ watch(
     reset();
   },
 );
-
-onMounted(() => {
-  overlay.register("searchResults", {
-    id: "searchResults",
-    triggerId: UI_IDS.search,
-    group: "menu",
-    placement: { align: "start", gap: 8, matchWidth: true, fit: true },
-    onHide: () => {
-      openState.value = false;
-    },
-  });
-});
 </script>
 
 <template>
   <div class="searchwrap">
-    <div class="search-field">
-      <AppIcon name="search" class="search-icon" />
+    <div class="search-field field-wrap">
+      <AppIcon name="search" class="field-icon" />
       <input
         id="search"
         v-model="query"
-        class="search-input"
+        class="field"
         type="search"
         autocomplete="off"
         spellcheck="false"
         role="combobox"
-        :aria-expanded="openState"
+        :aria-expanded="open"
         aria-controls="searchResults"
         :placeholder="t('searchPlaceholder')"
         :title="t('searchTitle')"
@@ -259,20 +263,36 @@ onMounted(() => {
         @keydown="onKeydown"
       />
       <kbd class="search-key" aria-hidden="true">/</kbd>
-      <SearchResults
-        :hits="hits"
-        :rendered-count="renderedCount"
-        :excluded-count="excludedCount"
-        :query="lastQuery"
-        :status="status"
-        :is-hidden="!openState"
-        :has-filter="hasActiveFilter()"
-        @pick="pick"
-        @more="appendMore"
-        @clear-filter="clearFilter"
-      />
     </div>
 
     <FilterPopover />
+
+    <PanelShell
+      :id="KEY"
+      :overlay-key="KEY"
+      kind="menu"
+      align="stretch"
+      pad="none"
+      :trigger-id="UI_IDS.search"
+      :placement="{ align: 'start', gap: 8, matchWidth: true, fit: true }"
+      :label="t('searchPlaceholder')"
+      @scroll="onScroll"
+    >
+      <template v-if="query.trim().length >= 2">
+        <div class="drop-scope">
+          <span>{{ status.count }}</span>
+          <button v-if="hasActiveFilter()" class="link" type="button" @click="clearFilter">
+            {{ t("searchClearFilters") }}
+          </button>
+        </div>
+        <p v-if="status.note" class="menu-note">{{ status.note }}</p>
+        <p v-if="status.message" class="empty">{{ status.message }}</p>
+        <button v-if="status.excluded" class="row drop-more" type="button" @click="clearFilter">
+          {{ status.excluded }}
+        </button>
+        <HitList :rows="visibleRows" :query="lastQuery" :active-id="activeHit" @pick="pickById" />
+      </template>
+      <p v-else class="empty">{{ status.message || t("searchTooShort") }}</p>
+    </PanelShell>
   </div>
 </template>

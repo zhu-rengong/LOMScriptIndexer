@@ -11,6 +11,7 @@ import {
   specialRows,
 } from "../../lib/rail";
 import AppIcon from "../ui/AppIcon.vue";
+import PanelHead from "../ui/PanelHead.vue";
 import BookmarksTab from "./rail/BookmarksTab.vue";
 import OutlineTab from "./rail/OutlineTab.vue";
 import SpecialTab from "./rail/SpecialTab.vue";
@@ -129,12 +130,12 @@ const pick = (id: string) => {
 
 const removeBookmark = (id: string) => {
   const on = store.toggleBookmark(id);
-  ui.toast(t(on ? "bookmarkAdded" : "bookmarkRemoved"));
+  ui.toast(on ? "bookmarkAdded" : "bookmarkRemoved");
 };
 
 const clearAll = () => {
   store.clearBookmarks();
-  ui.toast(t("bookmarkCleared"));
+  ui.toast("bookmarkCleared");
 };
 
 watch(
@@ -148,26 +149,18 @@ watch(
 
 <template>
   <aside id="chapterRail" :aria-label="t('railTitle')">
-    <header class="rail-head">
-      <div class="rail-head-text">
-        <h2 class="rail-title">{{ t("railTitle") }}</h2>
-        <p class="rail-summary">{{ summary }}</p>
-      </div>
-      <button
-        id="railClose"
-        class="btn btn-icon rail-close"
-        type="button"
-        :title="t('closeTitle')"
-        :aria-label="t('closeTitle')"
-        @click="view.closeRail"
-      >
-        <AppIcon name="close" />
-      </button>
-    </header>
+    <PanelHead
+      class="rail-head"
+      :title="t('railTitle')"
+      :summary="summary"
+      close-id="railClose"
+      :close-title="t('closeTitle')"
+      @close="view.closeRail"
+    />
 
     <div
       ref="tablistRef"
-      class="rail-tabs"
+      class="tabs tabs-lined tabs-fill rail-tabs"
       role="tablist"
       :aria-label="t('railTabsLabel')"
       @keydown="onTabKeydown"
@@ -176,7 +169,7 @@ watch(
         v-for="tab in tabs"
         :id="`railTab-${tab.id}`"
         :key="tab.id"
-        class="rail-tab"
+        class="tab"
         :class="{ 'is-on': view.railTab === tab.id }"
         :data-rail="tab.id"
         role="tab"
@@ -186,18 +179,19 @@ watch(
         :tabindex="view.railTab === tab.id ? 0 : -1"
         @click="setTab(tab.id)"
       >
-        <span class="rail-tab-text">{{ t(tab.labelKey) }}</span>
-        <span class="rail-tab-count">{{ tab.count }}</span>
+        <span class="tab-text">{{ t(tab.labelKey) }}</span>
+        <span class="tab-count">{{ tab.count }}</span>
       </button>
     </div>
 
-    <div class="rail-search">
-      <AppIcon name="search" />
+    <div class="field-wrap rail-search">
+      <AppIcon name="search" class="field-icon" />
       <input
         id="railSearch"
         ref="searchRef"
         v-model="query"
-        class="search-input"
+        class="field"
+        data-variant="line"
         type="search"
         autocomplete="off"
         spellcheck="false"
@@ -206,7 +200,7 @@ watch(
       />
       <button
         v-if="query"
-        class="rail-search-clear"
+        class="field-clear"
         type="button"
         :title="t('railSearchClear')"
         :aria-label="t('railSearchClear')"

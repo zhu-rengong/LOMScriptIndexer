@@ -86,7 +86,7 @@ watch(() => props.option.condition, resolveCondition, { immediate: true });
 <template>
   <div class="option" :class="{ 'is-open': open }" data-reveal @reveal="open = true">
     <div
-      class="option-head row"
+      class="option-head row card-row"
       role="button"
       tabindex="0"
       :aria-expanded="open"
@@ -118,6 +118,7 @@ watch(() => props.option.condition, resolveCondition, { immediate: true });
               <button
                 v-if="check"
                 class="cond-lookup btn btn-icon"
+                data-size="sm"
                 type="button"
                 :title="t('condLookup')"
                 :aria-label="t('condLookup')"

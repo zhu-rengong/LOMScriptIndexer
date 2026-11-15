@@ -7,6 +7,7 @@ import { t } from "../i18n";
 import { byId } from "../lib/browser";
 import { overlay } from "../lib/overlay";
 import { lang } from "../lib/lang";
+import { openInfo } from "../lib/info";
 import { UI_IDS } from "../ui/ids";
 import { useScriptStore } from "../stores/script";
 import { useViewStore } from "../stores/view";
@@ -24,16 +25,13 @@ useShortcuts({
     const node = store.selected();
     if (!node) return;
     const on = store.toggleBookmark(node.id);
-    ui.toast(t(on ? "bookmarkAdded" : "bookmarkRemoved"));
+    ui.toast(on ? "bookmarkAdded" : "bookmarkRemoved");
   },
   jump: () => {
     const button = byId(UI_IDS.navBtn) as HTMLButtonElement | null;
     if (button && !button.disabled) button.click();
   },
-  help: () => {
-    if (overlay.isOpen("help")) overlay.close("help");
-    else overlay.open("help", { trigger: byId(UI_IDS.helpBtn) });
-  },
+  help: () => openInfo("help", UI_IDS.helpBtn),
   search: () => {
     const input = byId(UI_IDS.search) as HTMLInputElement | null;
     input?.focus();
@@ -45,7 +43,7 @@ useShortcuts({
 
 useHashRoute((id) => {
   if (!graph.nodeById.has(id)) {
-    ui.toast(t("statusNotFound", { id }));
+    ui.toast("statusNotFound", { id });
     return;
   }
   if (store.selectedId !== id) store.select(id, { history: false });
@@ -78,10 +76,9 @@ onMounted(() => {
     <ReaderPane />
   </main>
 
+  <AppMenus />
   <SettingsDrawer />
   <LookupPanel />
+  <InfoPanel />
   <StatusLayers />
-  <HelpPanel />
-  <StatsPanel />
-  <ChangelogPanel />
 </template>

@@ -2,23 +2,25 @@
   :root {
     color-scheme: light;
 
+    --font-base:
+      "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", "STSong", Georgia, "SimSun",
+      serif;
+    --font-mono:
+      ui-monospace, "Sarasa Mono TC", "Cascadia Mono", Consolas, "Courier New", monospace;
+
     --surface: #f3ead7;
     --surface-inset: #ebe0c9;
     --surface-hover: #efe5d1;
     --surface-active: #e2d5bb;
-    --surface-hold: #e7dcc5;
     --surface-focus: #faf4e4;
 
     --ink: #1b1813;
     --ink-2: #4a4133;
-    --ink-hover: #2a241b;
-    --ink-hold: #221d16;
     --ink-think: #7c6f59;
 
     --line-1: #d8cbac;
     --line-2: #c1b190;
     --line-3: #a49176;
-    --line-hold: #b6a687;
 
     --accent: #8b5a33;
     --accent-strong: #6c4224;
@@ -45,7 +47,6 @@
     --think-ghost-soft: rgba(124, 111, 89, 0.15);
 
     --shadow-float: 0 6px 20px -10px rgba(27, 24, 19, 0.24);
-
     --scrim: rgba(27, 24, 19, 0.4);
 
     --sp-1: 4px;
@@ -58,9 +59,13 @@
     --sp-8: 64px;
 
     --r-sm: 2px;
+    --r-md: 4px;
 
+    --ctl-xs: 22px;
     --ctl-sm: 30px;
     --ctl-lg: 42px;
+
+    --opacity-disabled: 0.38;
 
     --rd-gap-1: 4px;
     --rd-gap-2: 8px;
@@ -69,12 +74,12 @@
     --rd-inset: 18px;
 
     --masthead-h: 76px;
-    --masthead-tools: 292px;
     --rail-w: 340px;
     --reader-measure: 860px;
     --scrollbar-w: 10px;
 
     --z-float: 10;
+    --z-grip: 12;
     --z-scrim: 30;
     --z-drawer: 40;
     --z-pop: 45;

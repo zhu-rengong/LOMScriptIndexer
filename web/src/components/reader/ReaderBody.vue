@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { textStore } from "../../data/text";
+import { t } from "../../i18n";
 import { buildReaderBlocks } from "../../lib/blocks";
 import { clamp } from "../../lib/browser";
 import type { FocusTarget } from "../../stores/panels";
 import BlockList from "./BlockList.vue";
-import EmptyState from "./EmptyState.vue";
+import EmptyState from "../ui/EmptyState.vue";
 import ReaderSkeleton from "./ReaderSkeleton.vue";
 import { useScriptStore } from "../../stores/script";
 import { useViewStore } from "../../stores/view";
@@ -23,8 +24,7 @@ const HIT_SELECTOR = [
   ".lore-p",
   ".ending-title",
   ".ending-line",
-  ".meta-chips .chip",
-  ".meta-chips .meta-action",
+  ".meta-chips .tag",
   ".time-mark",
 ].join(", ");
 
@@ -197,13 +197,22 @@ defineExpose({ body, scrollFraction });
     :aria-busy="isLoading ? 'true' : 'false'"
     @scroll.passive="onScroll"
   >
-    <EmptyState v-if="!node" no-selection />
+    <EmptyState
+      v-if="!node"
+      variant="hero"
+      :icon="t('emptyBrush')"
+      :title="t('emptyH3')"
+      :description="t('emptyP')"
+      :hint="t('emptyHint')"
+    />
     <ReaderSkeleton v-else-if="isLoading" />
     <ReaderSkeleton v-else-if="isFailed" failed @retry="retry" />
     <EmptyState
       v-else-if="!hasBeats"
-      :no-selection="false"
-      :is-script-file-empty="!!node.flags.isEmpty"
+      variant="hero"
+      :icon="t('brushGlyph')"
+      :title="t('noBeatsTitle')"
+      :description="t(node.flags.isEmpty ? 'noBeatsEmpty' : 'noBeatsOther')"
     />
     <BlockList v-else :key="node.id" :blocks="blocks || []" />
   </div>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { sayKindOf } from "../../lib/beatRows";
-import type { ReaderBlock } from "../../types/beats";
+import type { BranchView, ReaderBlock } from "../../types/beats";
 import type { Component } from "vue";
 import BattleCard from "./BattleCard.vue";
-import BranchGroup from "./BranchGroup.vue";
+import BranchBlock from "./BranchBlock.vue";
 import ChoiceBlock from "./ChoiceBlock.vue";
 import EndingBlock from "./EndingBlock.vue";
 import JumpLink from "./JumpLink.vue";
@@ -21,14 +21,13 @@ const props = defineProps<{ blocks: ReaderBlock[]; path?: string }>();
 const view = useViewStore();
 const prefs = usePrefsStore();
 
-const components: Record<ReaderBlock["kind"], Component> = {
+const components: Record<string, Component> = {
   say: SayLine,
   time: TimeLine,
   meta: MetaChips,
   missionEvent: MissionEventCard,
   dice: MetaChips,
   choice: ChoiceBlock,
-  branches: BranchGroup,
   lore: LoreLines,
   battle: BattleCard,
   ending: EndingBlock,
@@ -40,6 +39,11 @@ const foldKeyOf = (index: number): string => {
   const base = props.path || "";
   return base ? `${base}/${index}` : String(index);
 };
+
+const branchKey = (branch: BranchView, position: number): string =>
+  branch.check
+    ? `${branch.check.kind}:${branch.check.key}:${branch.check.expectedResult ?? ""}`
+    : `pos:${position}`;
 
 const blockProps = (block: ReaderBlock, index: number): Record<string, unknown> => {
   switch (block.kind) {
@@ -62,8 +66,6 @@ const blockProps = (block: ReaderBlock, index: number): Record<string, unknown> 
       return { chips: block.chips, dice: true };
     case "choice":
       return { options: block.options, diceChips: block.diceChips, foldKey: foldKeyOf(index) };
-    case "branches":
-      return { branches: block.branches, foldKey: foldKeyOf(index) };
     case "lore":
       return { lines: block.lines };
     case "battle":
@@ -74,6 +76,8 @@ const blockProps = (block: ReaderBlock, index: number): Record<string, unknown> 
       return { view: block.scene };
     case "jump":
       return { jump: block.jump, foldKey: foldKeyOf(index) };
+    default:
+      return {};
   }
 };
 
@@ -89,10 +93,15 @@ const visible = computed(() =>
 </script>
 
 <template>
-  <component
-    :is="components[block.kind]"
-    v-for="{ block, index } in visible"
-    :key="`${block.kind}:${index}`"
-    v-bind="blockProps(block, index)"
-  />
+  <template v-for="{ block, index } in visible" :key="`${block.kind}:${index}`">
+    <div v-if="block.kind === 'branches'" class="branch-group">
+      <BranchBlock
+        v-for="(branch, position) in block.branches"
+        :key="branchKey(branch, position)"
+        :branch="branch"
+        :fold-key="`${foldKeyOf(index)}/b${position}`"
+      />
+    </div>
+    <component :is="components[block.kind]" v-else v-bind="blockProps(block, index)" />
+  </template>
 </template>

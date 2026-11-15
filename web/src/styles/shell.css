@@ -5,7 +5,7 @@
     flex: none;
     display: flex;
     align-items: center;
-    gap: var(--sp-5);
+    gap: var(--sp-4);
     height: var(--masthead-h);
     padding: 0 var(--sp-6);
     background: var(--surface);
@@ -15,30 +15,27 @@
   body[data-layout="wide"] .masthead,
   body[data-layout="mid"] .masthead {
     display: grid;
-    grid-template-columns: var(--rail-w) minmax(0, 1fr);
+    grid-template-columns: var(--rail-w) minmax(0, 1fr) auto;
     gap: 0;
     padding: 0;
   }
 
   body[data-layout="wide"] .masthead > .brand,
   body[data-layout="mid"] .masthead > .brand {
-    grid-area: 1 / 1;
-    justify-self: start;
+    grid-column: 1;
     padding-left: var(--sp-6);
   }
 
   body[data-layout="wide"] .masthead > .searchwrap,
   body[data-layout="mid"] .masthead > .searchwrap {
-    grid-area: 1 / 2;
+    grid-column: 2;
     justify-self: center;
-    width: min(720px, calc(100% - 2 * (var(--sp-6) + var(--masthead-tools))));
-    margin: 0;
+    width: min(720px, calc(100% - var(--sp-7)));
   }
 
   body[data-layout="wide"] .masthead > .tools,
   body[data-layout="mid"] .masthead > .tools {
-    grid-area: 1 / 2;
-    justify-self: end;
+    grid-column: 3;
     margin-right: var(--sp-6);
   }
 
@@ -56,7 +53,7 @@
     width: 38px;
     height: 38px;
     flex: none;
-    border-radius: 2px;
+    border-radius: var(--r-sm);
     background: var(--seal);
     box-shadow: inset 0 0 0 1px var(--seal-rim);
     color: var(--on-seal);
@@ -93,99 +90,33 @@
   .searchwrap {
     position: relative;
     flex: 1 1 380px;
-    max-width: 720px;
-    margin: 0 auto;
     display: flex;
     align-items: center;
     gap: var(--sp-2);
     min-width: 0;
+    max-width: 720px;
+    margin: 0 auto;
   }
 
   .search-field {
-    position: relative;
     flex: 1 1 auto;
     min-width: 0;
-    display: flex;
-    align-items: center;
-  }
-
-  .search-field .search-icon {
-    position: absolute;
-    left: 14px;
-    width: 16px;
-    height: 16px;
-    color: var(--ink-2);
-    pointer-events: none;
-    transition: color var(--t-base) var(--ease);
-  }
-
-  .search-field:focus-within .search-icon {
-    color: var(--accent);
-  }
-
-  .search-input {
-    width: 100%;
-    height: var(--ctl-sm);
-    padding: 0 34px 0 38px;
-    border: 1px solid var(--line-1);
-    border-radius: var(--r-sm);
-    background: var(--surface-inset);
-    color: var(--ink-2);
-    transition:
-      border-color var(--t-fast) var(--ease),
-      background-color var(--t-fast) var(--ease);
-  }
-
-  .search-input:hover {
-    border-color: var(--line-2);
-  }
-
-  .search-input:focus-visible {
-    outline: none;
-  }
-
-  .search-input:focus {
-    border-color: var(--accent);
-    background: var(--surface-focus);
-  }
-
-  .search-input::-webkit-search-cancel-button {
-    appearance: none;
   }
 
   .search-key {
     position: absolute;
     right: 10px;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 4px;
-    border: 1px solid var(--line-1);
-    border-radius: var(--r-sm);
-    background: var(--surface-inset);
-    color: var(--ink-2);
-    text-align: center;
     pointer-events: none;
-    --tlh-code: 0.625;
+  }
+
+  .search-field > .search-key ~ .field,
+  .search-field > .field {
+    padding-right: 34px;
   }
 
   .menu-wrap {
     position: relative;
     display: inline-flex;
-  }
-
-  .filter-btn,
-  .lang-btn {
-    gap: var(--sp-2);
-  }
-
-  .filter-btn .ico,
-  .lang-btn .ico {
-    width: 15px;
-    height: 15px;
-  }
-
-  .filter-btn .badge {
-    margin-left: -2px;
   }
 
   .tools {
@@ -194,8 +125,19 @@
     gap: 2px;
     flex: none;
     margin-left: auto;
-    padding-left: var(--sp-4);
-    border-left: 1px solid var(--line-1);
+  }
+
+  .tool-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .tool-sep {
+    width: 1px;
+    height: 20px;
+    margin: 0 var(--sp-1);
+    background: var(--line-1);
   }
 
   .workbuddy-ico {
@@ -226,170 +168,25 @@
   }
 
   .rail-head {
-    flex: none;
-    display: flex;
-    align-items: flex-start;
-    gap: var(--sp-2);
-    padding: var(--sp-5) var(--sp-5) var(--sp-3);
+    border-bottom: 0;
   }
 
-  .rail-head-text {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .rail-title {
-    color: var(--ink);
+  .rail-head .panel-title {
     --tls-display: 0.18em;
   }
 
-  .rail-summary {
-    margin-top: 6px;
-    color: var(--ink-think);
-  }
-
-  .rail-close {
-    flex: none;
-    place-items: center;
-    width: var(--ctl-sm);
-    height: var(--ctl-sm);
+  .rail-head .panel-close {
+    display: none;
   }
 
   .rail-tabs {
     flex: none;
-    display: flex;
-    gap: 0;
-    margin: 0;
     padding: 0 var(--sp-4);
-    border: 0;
-    border-bottom: 1px solid var(--line-1);
-    background: transparent;
-    overflow: visible;
-  }
-
-  .rail-tabs .rail-tab {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 1 1 0;
-    min-width: 0;
-    height: var(--ctl-sm);
-    gap: 6px;
-    padding: 0 4px;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    color: var(--ink-think);
-    cursor: pointer;
-    box-shadow: inset 0 -2px 0 0 transparent;
-    transition:
-      color var(--t-fast) var(--ease),
-      box-shadow var(--t-fast) var(--ease);
-  }
-
-  .rail-tabs .rail-tab:hover {
-    border: 0;
-    background: transparent;
-    color: var(--ink-hover);
-    box-shadow: inset 0 -2px 0 0 var(--line-2);
-  }
-
-  .rail-tabs .rail-tab.is-on,
-  .rail-tabs .rail-tab[aria-selected="true"] {
-    background: transparent;
-    color: var(--accent-strong);
-    box-shadow: inset 0 -2px 0 0 var(--accent);
-  }
-
-  .rail-tab-text {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .rail-tab-count {
-    flex: none;
-    color: var(--ink-think);
-  }
-
-  .rail-tabs .rail-tab.is-on .rail-tab-count {
-    color: var(--accent);
   }
 
   .rail-search {
-    position: relative;
     flex: none;
     margin: var(--sp-2) var(--sp-4) 0;
-    border-bottom: 1px solid var(--line-1);
-    transition: border-color var(--t-fast) var(--ease);
-  }
-
-  .rail-search:focus-within {
-    border-bottom-color: var(--accent);
-  }
-
-  .rail-search svg {
-    position: absolute;
-    left: 2px;
-    top: 50%;
-    width: 14px;
-    height: 14px;
-    transform: translateY(-50%);
-    color: var(--ink-think);
-    pointer-events: none;
-    transition: color var(--t-fast) var(--ease);
-  }
-
-  .rail-search:focus-within svg {
-    color: var(--accent);
-  }
-
-  .rail-search .search-input {
-    width: 100%;
-    height: var(--ctl-lg);
-    padding: 0 30px 0 24px;
-    border: 0;
-    border-radius: 0;
-    background: transparent;
-    color: var(--ink);
-  }
-
-  .rail-search .search-input:hover,
-  .rail-search .search-input:focus {
-    border: 0;
-    background: transparent;
-  }
-
-  .rail-search-clear {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    display: grid;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    padding: 0;
-    transform: translateY(-50%);
-    border: 0;
-    border-radius: var(--r-sm);
-    background: transparent;
-    color: var(--ink-think);
-    transition:
-      color var(--t-fast) var(--ease),
-      background-color var(--t-fast) var(--ease);
-  }
-
-  .rail-search-clear:hover {
-    background: var(--surface-inset);
-    color: var(--ink);
-  }
-
-  .rail-search-clear svg {
-    position: static;
-    width: 12px;
-    height: 12px;
-    transform: none;
   }
 
   .rail-list {
@@ -407,32 +204,8 @@
   }
 
   .cat-chap {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2);
-    width: 100%;
     min-height: 40px;
-    margin-top: var(--sp-1);
     padding: 8px var(--sp-2);
-    border: 1px solid transparent;
-    border-radius: var(--r-sm);
-    background: transparent;
-    color: var(--ink-2);
-    text-align: left;
-    transition:
-      color var(--t-fast) var(--ease),
-      background-color var(--t-fast) var(--ease),
-      border-color var(--t-fast) var(--ease);
-  }
-
-  .cat-chap:hover:not(:disabled) {
-    background: var(--surface-hover);
-    color: var(--ink);
-  }
-
-  .cat-chap:active:not(:disabled) {
-    background: var(--surface-active);
-    color: var(--ink-hold);
   }
 
   .cat-chap.is-open {
@@ -441,7 +214,6 @@
 
   .cat-chap:disabled {
     cursor: default;
-    opacity: 1;
   }
 
   .cat-chap:disabled .cat-chap-arrow {
@@ -456,14 +228,6 @@
 
   .cat-chap.is-open .cat-chap-ord {
     color: var(--accent);
-  }
-
-  .cat-chap-mark {
-    flex: none;
-    width: 3px;
-    height: 14px;
-    border-radius: 1px;
-    opacity: 0.72;
   }
 
   .cat-chap-title {
@@ -501,41 +265,6 @@
     border-left: 1px solid var(--line-1);
   }
 
-  .cat-row {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2);
-    width: 100%;
-    min-height: 32px;
-    padding: 5px var(--sp-2);
-    border: 0;
-    border-radius: var(--r-sm);
-    background: transparent;
-    color: var(--ink-2);
-    text-align: left;
-    transition:
-      color var(--t-fast) var(--ease),
-      background-color var(--t-fast) var(--ease);
-  }
-
-  .cat-row:hover:not(:disabled) {
-    background: var(--surface-hover);
-    color: var(--ink-hover);
-  }
-
-  .cat-row:active:not(:disabled) {
-    background: var(--surface-active);
-    color: var(--ink-hold);
-  }
-
-  .cat-row.is-on,
-  .cat-row.is-on:hover:not(:disabled),
-  .cat-row.is-on:active:not(:disabled) {
-    background: var(--accent-soft);
-    color: var(--accent-strong);
-  }
-
   .cat-row .cat-id {
     flex: 1;
     min-width: 0;
@@ -555,8 +284,7 @@
     text-align: right;
   }
 
-  .cat-row.is-on .cat-meta,
-  .cat-book.is-on .cat-meta {
+  .cat-row.is-on .cat-meta {
     color: var(--accent);
   }
 
@@ -565,112 +293,36 @@
     color: var(--ink-think);
   }
 
-  .cat-book {
-    position: relative;
-    border-radius: var(--r-sm);
-    transition: background-color var(--t-fast) var(--ease);
-  }
-
-  .cat-book:hover {
-    background: var(--surface-hover);
-  }
-
-  .cat-book.is-on,
-  .cat-book.is-on:hover {
-    background: var(--accent-soft);
-    color: var(--accent-strong);
-  }
-
-  .cat-book-main {
-    display: flex;
+  .cat-book-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
-    width: 100%;
-    padding: 6px 34px 6px var(--sp-3);
-    border: 0;
-    border-radius: var(--r-sm);
-    background: transparent;
-    color: inherit;
-    text-align: left;
+    padding-right: 34px;
   }
 
-  .cat-book-main:disabled {
-    cursor: default;
-    color: var(--ink-think);
+  .cat-clear {
+    margin: var(--sp-3) var(--sp-2) 0;
   }
 
-  .cat-book-main .cat-id {
-    flex: none;
-    width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: inherit;
+  .rail-search .field {
+    padding-right: 26px;
   }
 
-  .cat-book-main .cat-meta {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--ink-think);
-  }
-
-  .cat-del {
+  .row-action {
     position: absolute;
     right: var(--sp-2);
     top: 50%;
     display: grid;
     place-items: center;
-    width: 24px;
-    height: 24px;
-    padding: 0;
-    transform: translateY(-50%);
-    border: 0;
-    border-radius: var(--r-sm);
-    background: transparent;
-    color: var(--ink-think);
     opacity: 0;
-    transition:
-      opacity var(--t-fast) var(--ease),
-      color var(--t-fast) var(--ease),
-      background-color var(--t-fast) var(--ease);
+    transform: translateY(-50%);
+    transition: opacity var(--t-fast) var(--ease);
   }
 
-  .cat-del svg {
-    width: 13px;
-    height: 13px;
-  }
-
-  .cat-del:hover {
-    background: var(--surface-inset);
-    color: var(--danger);
-  }
-
-  .cat-book:hover .cat-del,
-  .cat-del:focus-visible {
+  .row:hover > .row-action,
+  .row:focus-within > .row-action,
+  .row-action:focus-visible {
     opacity: 1;
-  }
-
-  .cat-clear {
-    display: block;
-    margin: var(--sp-3) var(--sp-2) 0;
-    padding: 4px 0;
-    border: 0;
-    border-bottom: 1px solid transparent;
-    background: none;
-    color: var(--accent);
-    text-align: left;
-    cursor: pointer;
-    transition:
-      color var(--t-fast) var(--ease),
-      border-color var(--t-fast) var(--ease);
-  }
-
-  .cat-clear:hover {
-    border-bottom-color: currentColor;
-    color: var(--accent-strong);
   }
 
   .cat-special .cat-name {
@@ -693,31 +345,13 @@
     text-align: right;
   }
 
-  .cat-special.is-on .cat-name {
+  .cat-special.is-on .cat-name,
+  .cat-special.is-on .cat-code {
     color: var(--accent-strong);
   }
 
-  .cat-special.is-on .cat-code {
-    color: var(--accent);
-  }
-
-  .cat-special:disabled .cat-name,
-  .cat-special:disabled .cat-code {
-    color: var(--ink-think);
-    opacity: 0.6;
-  }
-
-  .cat-special:disabled:hover {
-    background: transparent;
-  }
-
-  .cat-empty {
-    margin: var(--sp-1) var(--sp-2);
-    padding: var(--sp-5) 0 var(--sp-4);
-    color: var(--ink-think);
-  }
-
   #reader {
+    --reader-pad-x: var(--sp-8);
     position: relative;
     z-index: 1;
     display: flex;
@@ -734,7 +368,7 @@
 
   .reader-head {
     flex: none;
-    padding: var(--sp-5) var(--sp-8) var(--sp-4);
+    padding: var(--sp-5) var(--reader-pad-x) var(--sp-4);
     border-bottom: 1px solid var(--line-1);
     background: transparent;
   }
@@ -751,7 +385,6 @@
     gap: var(--sp-2);
     max-width: 46%;
     min-width: 0;
-    margin-bottom: 0;
     color: var(--ink-2);
     white-space: nowrap;
     overflow: hidden;
@@ -801,19 +434,13 @@
     display: flex;
     align-items: center;
     gap: 2px;
-    margin-top: 0;
   }
 
-  .reader-actions .tip-host {
-    display: inline-flex;
+  .reader-actions .tool-sep {
+    margin: 0 var(--sp-1);
   }
 
-  .reader-actions #bookmarkBtn[aria-pressed="true"] svg {
-    fill: currentColor;
-    color: var(--accent);
-  }
-
-  .reader-actions .infer-toggle-mark {
+  .infer-toggle-mark {
     display: inline-grid;
     place-items: center;
     flex: none;
@@ -837,7 +464,7 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    z-index: 3;
+    z-index: var(--z-grip);
     display: grid;
     align-items: center;
     justify-items: center;

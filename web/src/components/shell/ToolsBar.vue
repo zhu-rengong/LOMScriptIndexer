@@ -1,149 +1,169 @@
 <script setup lang="ts">
 import workbuddyIcon from "../../assets/workbuddy.png";
 import { langShort, t } from "../../i18n";
+import { openInfo } from "../../lib/info";
 import { overlay } from "../../lib/overlay";
-import type { OverlayKey } from "../../lib/overlayKeys";
+import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
-import LangMenu from "./LangMenu.vue";
-import MoreMenu from "./MoreMenu.vue";
 import { useScriptStore } from "../../stores/script";
+import { useUiStore } from "../../stores/ui";
 
 const store = useScriptStore();
+const ui = useUiStore();
 
 const langOpen = computed(() => overlay.isOpen("langMenu"));
 const moreOpen = computed(() => overlay.isOpen("moreMenu"));
-const statsOpen = computed(() => overlay.isOpen("stats"));
-const helpOpen = computed(() => overlay.isOpen("help"));
-const changelogOpen = computed(() => overlay.isOpen("changelog"));
 const settingsOpen = computed(() => overlay.isOpen("settings"));
 
 const langLabel = computed(() => langShort(store.lang));
 
-const toggle = (key: OverlayKey) => {
-  if (overlay.isOpen(key)) overlay.close(key);
-  else overlay.open(key);
+const tabOn = (tab: "stats" | "help" | "changelog"): boolean =>
+  overlay.isOpen("info") && ui.infoTab === tab;
+
+const toggleLang = () => {
+  if (overlay.isOpen("langMenu")) overlay.close("langMenu");
+  else overlay.open("langMenu");
+};
+
+const toggleMore = () => {
+  if (overlay.isOpen("moreMenu")) overlay.close("moreMenu");
+  else overlay.open("moreMenu");
+};
+
+const toggleSettings = () => {
+  if (overlay.isOpen("settings")) overlay.close("settings");
+  else overlay.open("settings");
 };
 </script>
 
 <template>
   <div class="tools">
-    <div class="menu-wrap">
+    <div class="tool-group">
       <button
         id="langBtn"
-        class="btn lang-btn"
+        class="btn"
         :class="{ 'is-on': langOpen }"
         type="button"
-        aria-haspopup="true"
+        aria-haspopup="menu"
         :aria-expanded="langOpen"
         aria-controls="langMenu"
         :title="t('langBtnTitle')"
         :aria-label="t('langBtnTitle')"
-        @click.stop="toggle('langMenu')"
+        @click.stop="toggleLang"
       >
-        <AppIcon name="lang" class="ico" />
+        <AppIcon name="lang" />
         <span class="btn-label">{{ langLabel }}</span>
       </button>
-      <LangMenu />
     </div>
 
-    <button
-      id="statsBtn"
-      class="btn btn-icon"
-      :class="{ 'is-on': statsOpen }"
-      type="button"
-      aria-haspopup="dialog"
-      :aria-expanded="statsOpen"
-      aria-controls="statsPanel"
-      :title="t('statsBtnTitle')"
-      :aria-label="t('statsBtnTitle')"
-      @click="toggle('stats')"
-    >
-      <AppIcon name="stats" />
-    </button>
+    <span class="tool-sep"></span>
 
-    <button
-      id="helpBtn"
-      class="btn btn-icon"
-      type="button"
-      aria-haspopup="dialog"
-      :aria-expanded="helpOpen"
-      aria-controls="helpPanel"
-      :title="t('helpTitle')"
-      :aria-label="t('helpTitle')"
-      @click="toggle('help')"
-    >
-      <AppIcon name="help" />
-    </button>
-
-    <button
-      id="changelogBtn"
-      class="btn btn-icon"
-      :class="{ 'is-on': changelogOpen }"
-      type="button"
-      aria-haspopup="dialog"
-      :aria-expanded="changelogOpen"
-      aria-controls="changelogPanel"
-      :title="t('changelogBtnTitle')"
-      :aria-label="t('changelogBtnTitle')"
-      @click="toggle('changelog')"
-    >
-      <AppIcon name="log" />
-    </button>
-
-    <a
-      id="githubBtn"
-      class="btn btn-icon"
-      href="https://github.com/zhu-rengong/LOMScriptIndexer"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="GitHub"
-      :title="t('githubBtnTitle')"
-    >
-      <AppIcon name="github" />
-    </a>
-
-    <a
-      id="workbuddyBtn"
-      class="btn btn-icon"
-      href="https://wbapp-xx74txuyeotgchq6dlrweb.app.workbuddy.host/?sharecode=BZQLRCGPP5"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="WorkBuddy"
-      :title="t('workbuddyBtnTitle')"
-    >
-      <img class="workbuddy-ico" :src="workbuddyIcon" alt="" width="16" height="16" />
-    </a>
-
-    <button
-      id="settingsBtn"
-      class="btn btn-icon"
-      type="button"
-      aria-haspopup="dialog"
-      :aria-expanded="settingsOpen"
-      aria-controls="settingsDrawer"
-      :title="t('settingsBtnTitle')"
-      :aria-label="t('settingsBtnTitle')"
-      @click="toggle('settings')"
-    >
-      <AppIcon name="gear" />
-    </button>
-
-    <div class="menu-wrap more-wrap">
+    <div class="tool-group">
       <button
-        id="moreBtn"
+        id="statsBtn"
         class="btn btn-icon"
-        :class="{ 'is-on': moreOpen }"
+        :class="{ 'is-on': tabOn('stats') }"
         type="button"
-        aria-haspopup="true"
-        :aria-expanded="moreOpen"
-        aria-controls="moreMenu"
-        :title="t('moreTitle')"
-        :aria-label="t('moreTitle')"
-        @click.stop="toggle('moreMenu')"
+        aria-haspopup="dialog"
+        :aria-expanded="tabOn('stats')"
+        aria-controls="infoPanel"
+        :title="t('statsBtnTitle')"
+        :aria-label="t('statsBtnTitle')"
+        @click="openInfo('stats', UI_IDS.statsBtn)"
       >
-        <AppIcon name="more" />
+        <AppIcon name="stats" />
       </button>
-      <MoreMenu />
+      <button
+        id="helpBtn"
+        class="btn btn-icon"
+        :class="{ 'is-on': tabOn('help') }"
+        type="button"
+        aria-haspopup="dialog"
+        :aria-expanded="tabOn('help')"
+        aria-controls="infoPanel"
+        :title="t('helpTitle')"
+        :aria-label="t('helpTitle')"
+        @click="openInfo('help', UI_IDS.helpBtn)"
+      >
+        <AppIcon name="help" />
+      </button>
+      <button
+        id="changelogBtn"
+        class="btn btn-icon"
+        :class="{ 'is-on': tabOn('changelog') }"
+        type="button"
+        aria-haspopup="dialog"
+        :aria-expanded="tabOn('changelog')"
+        aria-controls="infoPanel"
+        :title="t('changelogBtnTitle')"
+        :aria-label="t('changelogBtnTitle')"
+        @click="openInfo('changelog', UI_IDS.changelogBtn)"
+      >
+        <AppIcon name="log" />
+      </button>
+    </div>
+
+    <span class="tool-sep"></span>
+
+    <div class="tool-group">
+      <a
+        id="githubBtn"
+        class="btn btn-icon"
+        href="https://github.com/zhu-rengong/LOMScriptIndexer"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="GitHub"
+        :title="t('githubBtnTitle')"
+      >
+        <AppIcon name="github" />
+      </a>
+      <a
+        id="workbuddyBtn"
+        class="btn btn-icon"
+        href="https://wbapp-xx74txuyeotgchq6dlrweb.app.workbuddy.host/?sharecode=BZQLRCGPP5"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="WorkBuddy"
+        :title="t('workbuddyBtnTitle')"
+      >
+        <img class="workbuddy-ico" :src="workbuddyIcon" alt="" width="16" height="16" />
+      </a>
+    </div>
+
+    <span class="tool-sep"></span>
+
+    <div class="tool-group">
+      <button
+        id="settingsBtn"
+        class="btn btn-icon"
+        :class="{ 'is-on': settingsOpen }"
+        type="button"
+        aria-haspopup="dialog"
+        :aria-expanded="settingsOpen"
+        aria-controls="settingsDrawer"
+        :title="t('settingsBtnTitle')"
+        :aria-label="t('settingsBtnTitle')"
+        @click="toggleSettings"
+      >
+        <AppIcon name="gear" />
+      </button>
+
+      <div class="more-wrap">
+        <button
+          id="moreBtn"
+          class="btn btn-icon"
+          :class="{ 'is-on': moreOpen }"
+          type="button"
+          aria-haspopup="menu"
+          :aria-expanded="moreOpen"
+          aria-controls="moreMenu"
+          :title="t('moreTitle')"
+          :aria-label="t('moreTitle')"
+          @click.stop="toggleMore"
+        >
+          <AppIcon name="more" />
+        </button>
+      </div>
     </div>
   </div>
 </template>

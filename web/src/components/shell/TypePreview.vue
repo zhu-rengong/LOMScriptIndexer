@@ -1,8 +1,27 @@
 <script setup lang="ts">
+import { defineComponent, h, type Component, type PropType, type VNode } from "vue";
 import { t } from "../../i18n";
+import type { Wrapper } from "../../lib/fontTypes";
 import { slotById, slotsOfGroup } from "../../lib/fontTypes";
 import type { FontTarget } from "../../types/font";
-import TypeSpecimen from "./TypeSpecimen.vue";
+
+const nest = (wrappers: Wrapper[], text: string): VNode => {
+  let node: VNode | string = text;
+  for (let index = wrappers.length - 1; index >= 0; index -= 1) {
+    const wrapper = wrappers[index];
+    node = h(wrapper.tag, { class: wrapper.cls }, [node]);
+  }
+  return node as VNode;
+};
+
+const Specimen: Component = defineComponent({
+  name: "TypeSpecimen",
+  props: {
+    wrappers: { type: Array as PropType<Wrapper[]>, required: true },
+    text: { type: String, required: true },
+  },
+  setup: (props) => () => nest(props.wrappers, props.text),
+});
 
 const props = defineProps<{ target: FontTarget }>();
 
@@ -24,9 +43,9 @@ const specimenOf = (slotId: string) => slotById(slotId) || null;
           <span class="preview-tag">{{ t(specimenOf(slotId)!.label) }}</span>
         </div>
         <div class="preview-specimen">
-          <TypeSpecimen
+          <Specimen
             :wrappers="specimenOf(slotId)!.wrappers"
-            :preview-text="t(specimenOf(slotId)!.previewKey)"
+            :text="t(specimenOf(slotId)!.previewKey)"
           />
         </div>
       </template>

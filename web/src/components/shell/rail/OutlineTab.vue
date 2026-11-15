@@ -2,6 +2,8 @@
 import { t } from "../../../i18n";
 import { nodeIndexOf, type ChapterRow } from "../../../lib/rail";
 import AppIcon from "../../ui/AppIcon.vue";
+import EmptyState from "../../ui/EmptyState.vue";
+import ListRow from "../../ui/ListRow.vue";
 
 const props = defineProps<{
   rows: ChapterRow[];
@@ -18,37 +20,36 @@ const emit = defineEmits<{
 <template>
   <template v-if="props.rows.length">
     <template v-for="row in props.rows" :key="row.chapter.id">
-      <button
+      <ListRow
         class="cat-chap"
-        :class="{ 'is-open': row.open }"
-        type="button"
+        density="comfortable"
+        :active="row.open"
         :disabled="props.searching"
         :aria-expanded="row.open"
         @click="emit('toggle', row.index)"
       >
         <span class="cat-chap-ord">{{ row.ordinal }}</span>
-        <span class="cat-chap-mark" :style="{ backgroundColor: row.chapter.color }"></span>
+        <span class="icon-mark" :style="{ color: row.chapter.color }"></span>
         <span class="cat-chap-title">{{ row.title }}</span>
         <span class="cat-chap-count">{{ t("railScripts", { n: row.total }) }}</span>
         <AppIcon class="cat-chap-arrow" name="chevron" />
-      </button>
+      </ListRow>
       <div v-if="row.open" class="cat-entries">
-        <button
+        <ListRow
           v-for="node in row.members"
           :key="node.id"
           class="cat-row"
-          :class="{ 'is-on': props.selectedId === node.id }"
-          type="button"
+          density="compact"
+          :active="props.selectedId === node.id"
           :data-index="nodeIndexOf(node.id)"
-          :aria-current="props.selectedId === node.id ? 'true' : undefined"
           @click="emit('pick', node.id)"
         >
           <span class="cat-id">{{ node.id }}</span>
           <span class="cat-meta">{{ t("sayCount", { n: node.sayCount }) }}</span>
-        </button>
+        </ListRow>
         <p v-if="row.hidden" class="cat-more">{{ t("previewMore", { n: row.hidden }) }}</p>
       </div>
     </template>
   </template>
-  <p v-else class="cat-empty">{{ t("searchEmpty") }}</p>
+  <EmptyState v-else :title="t('searchEmpty')" />
 </template>

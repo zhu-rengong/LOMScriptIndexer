@@ -17,17 +17,17 @@ const retry = () => {
 </script>
 
 <template>
-  <div v-if="!failed" class="reader-skeleton" role="status" aria-live="polite">
+  <div v-if="!failed" class="skeleton reader-skeleton" role="status" aria-live="polite">
     <span class="sk-caption">{{ t("loadTextLoading") }}</span>
     <span
       v-for="index in 5"
       :key="index"
-      class="sk-line"
+      class="skeleton-line"
       :style="{ width: `${100 - (index - 1) * 9}%` }"
     ></span>
   </div>
-  <div v-else class="reader-skeleton is-failed">
+  <div v-else class="skeleton reader-skeleton is-failed">
     <span class="sk-caption">{{ t("loadTextFailed") }}</span>
-    <button class="tool-btn btn" type="button" @click="retry">{{ t("loadTextRetry") }}</button>
+    <button class="btn" type="button" @click="retry">{{ t("loadTextRetry") }}</button>
   </div>
 </template>

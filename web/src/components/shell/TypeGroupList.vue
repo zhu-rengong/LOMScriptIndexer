@@ -2,6 +2,7 @@
 import { t, typeLabel } from "../../i18n";
 import { GROUPS, groupById, slotById, slotsOfGroup } from "../../lib/fontTypes";
 import type { FontScope, FontTarget } from "../../types/font";
+import { useListNav } from "../../composables/useListNav";
 import { usePrefsStore } from "../../stores/prefs";
 import { useViewStore } from "../../stores/view";
 
@@ -25,6 +26,8 @@ const prefs = usePrefsStore();
 const view = useViewStore();
 
 const treeEl = ref<HTMLElement | null>(null);
+
+const nav = useListNav(() => treeEl.value, ".type-tree-row");
 
 const faceOf = (target: FontTarget): string => {
   const key = prefs.fontLabelKeyOf(target);
@@ -81,30 +84,14 @@ const isOn = (row: TreeRow): boolean =>
 const pick = (row: TreeRow) => {
   view.setFontTarget({ scope: row.scope, id: row.id });
 };
-
-const onKeydown = (event: KeyboardEvent) => {
-  if (["ArrowDown", "ArrowUp", "Home", "End"].indexOf(event.key) < 0) return;
-  const host = treeEl.value;
-  if (!host) return;
-  const items = Array.from(host.querySelectorAll<HTMLButtonElement>(".type-tree-row"));
-  const index = items.indexOf(document.activeElement as HTMLButtonElement);
-  if (index < 0) return;
-  event.preventDefault();
-  let next = index;
-  if (event.key === "ArrowDown") next = Math.min(items.length - 1, index + 1);
-  if (event.key === "ArrowUp") next = Math.max(0, index - 1);
-  if (event.key === "Home") next = 0;
-  if (event.key === "End") next = items.length - 1;
-  items[next]?.focus();
-};
 </script>
 
 <template>
-  <div ref="treeEl" class="type-tree" role="tree" @keydown="onKeydown">
+  <div ref="treeEl" class="type-tree" role="tree" @keydown="nav.onKeydown">
     <button
       v-for="row in rows"
       :key="row.key"
-      class="type-tree-row"
+      class="row type-tree-row"
       :class="{ 'is-on': isOn(row), 'is-group': row.scope === 'group' }"
       type="button"
       role="treeitem"
