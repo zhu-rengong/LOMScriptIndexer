@@ -1243,10 +1243,6 @@
   }
 
   .meta-chips .meta-chip.is-hidden {
-    height: auto;
-    padding: 0 var(--sp-1);
-    border: 1px solid var(--line-1);
-    border-radius: var(--r-sm);
     background: var(--ink);
     color: transparent;
     user-select: none;
@@ -1256,15 +1252,20 @@
       border-color var(--t-fast) var(--ease);
   }
 
+  .meta-chips .chip-stat.meta-chip.is-hidden {
+    padding: 0 var(--sp-1);
+    border: 1px solid var(--line-1);
+  }
+
   .reader-body.is-revealing .meta-chips .meta-chip.is-hidden {
-    background: none;
+    background: var(--surface);
     color: var(--ink-2);
   }
 
   .meta-chips .meta-chip.is-hidden:hover,
   .meta-chips .meta-chip.is-hidden:focus-visible {
     border-color: var(--line-2);
-    background: var(--surface-inset);
+    background: var(--surface-hover);
     color: var(--ink-hover);
   }
 
@@ -1278,9 +1279,15 @@
     color: var(--ink);
   }
 
+  .meta-chips button.meta-chip.is-hidden:active:not(:hover) {
+    border-color: var(--line-hold);
+    background: var(--surface-hold);
+    color: var(--ink-hold);
+  }
+
   @media (hover: none) {
     .meta-chips .meta-chip.is-hidden {
-      background: none;
+      background: var(--surface);
       color: var(--ink-2);
     }
   }
