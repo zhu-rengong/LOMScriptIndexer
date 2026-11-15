@@ -22,7 +22,7 @@ const HIT_SELECTOR = [
   ".branch-head .cond",
   ".lore-p",
   ".ending-title",
-  ".ending-text",
+  ".ending-line",
   ".meta-chips .chip",
   ".meta-chips .meta-action",
   ".time-mark",
@@ -124,7 +124,7 @@ const firstByText = (root: HTMLElement, query: string): HTMLElement | null => {
   if (!needle) return null;
   return (
     Array.from(root.querySelectorAll<HTMLElement>(HIT_SELECTOR)).find((candidate) =>
-      normalizeSearchText(candidate.innerText || candidate.textContent || "").includes(needle),
+      normalizeSearchText(candidate.textContent || "").includes(needle),
     ) || null
   );
 };

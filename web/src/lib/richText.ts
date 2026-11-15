@@ -10,16 +10,21 @@ const MARKUP_TAG_ALL = /\{[^{}]*\}/g;
 export const stripMarkup = (value: unknown): string =>
   value ? String(value).replace(MARKUP_TAG_ALL, "") : "";
 
+export const paragraphLines = (value: unknown): string[] =>
+  stripMarkup(value)
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+
 const clampScale = (value: number): number => {
   if (!Number.isFinite(value)) return 1;
   return clamp(value, SIZE_MIN_SCALE, SIZE_MAX_SCALE);
 };
 
-export const parseRichText = (value: string, hardBreaks = false): RichTextSegment[] => {
-  const normalized = String(value ?? "").replace(/\r\n?/g, "\n");
-  const source = hardBreaks
-    ? normalized.replace(/^\n+|\n+$/g, "")
-    : normalized.replace(/\n+/g, " ");
+export const parseRichText = (value: string): RichTextSegment[] => {
+  const source = String(value ?? "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/\n+/g, " ");
   if (!source) return [];
   const out: RichTextSegment[] = [];
   const stack: number[] = [];
@@ -29,14 +34,7 @@ export const parseRichText = (value: string, hardBreaks = false): RichTextSegmen
   const push = (chunk: string) => {
     if (!chunk) return;
     const scale = stack.length ? stack[stack.length - 1] : 1;
-    if (!hardBreaks) {
-      out.push({ text: chunk, scale });
-      return;
-    }
-    chunk.split("\n").forEach((line, index) => {
-      if (index) out.push({ text: "", scale, lineBreak: true });
-      if (line) out.push({ text: line, scale });
-    });
+    out.push({ text: chunk, scale });
   };
   while ((match = MARKUP_TAG.exec(source)) !== null) {
     if (match.index > last) push(source.slice(last, match.index));

@@ -209,7 +209,7 @@ const renderRows = (input: unknown, indent: string): string[] => {
     if (beatRows.isBeat(row, "ending")) {
       const ending = beatRows.parseEnding(row);
       out.push(`${indent}[${t("deathEnding")}]${ending.title ? ` ${ending.title}` : ""}`);
-      out.push(...textLines(cleanText(ending.desc), `${indent}  `));
+      for (const line of ending.desc) out.push(`${indent}  ${line}`);
       continue;
     }
 

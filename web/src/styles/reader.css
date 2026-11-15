@@ -846,7 +846,7 @@
     --ts-ending: 1.3;
   }
 
-  .ending-desc .ending-text {
+  .ending-desc .ending-line {
     color: var(--ending-ink-soft);
     overflow-wrap: anywhere;
     --tls-ending: -0.06em;

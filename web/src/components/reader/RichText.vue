@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import { parseRichText } from "../../lib/richText";
 
-const props = defineProps<{ text: string; hardBreaks?: boolean }>();
+const props = defineProps<{ text: string }>();
 
-const segments = computed(() => parseRichText(props.text, props.hardBreaks === true));
+const segments = computed(() => parseRichText(props.text));
 </script>
 
 <template>
   <template v-for="(segment, index) in segments" :key="index">
-    <br v-if="segment.lineBreak" />
-    <span v-else-if="segment.scale !== 1" :style="{ fontSize: `${segment.scale.toFixed(2)}em` }">{{
+    <span v-if="segment.scale !== 1" :style="{ fontSize: `${segment.scale.toFixed(2)}em` }">{{
       segment.text
     }}</span>
     <template v-else>{{ segment.text }}</template>

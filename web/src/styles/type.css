@@ -86,7 +86,7 @@
 
   .ending-label,
   .ending-title,
-  .ending-text {
+  .ending-line {
     font-family: var(--rd-ff-ending, var(--font-base));
     font-size: calc(var(--rd-fs-ending, 16px) * var(--ts-ending, 1));
     font-weight: var(--rd-fw-ending, 400);

@@ -61,7 +61,7 @@ export type SceneView = {
 export type EndingView = {
   key: string;
   title: string;
-  desc: string;
+  desc: string[];
 };
 
 export type MetaView = {
@@ -163,7 +163,6 @@ export type ReaderBlock =
 export type RichTextSegment = {
   text: string;
   scale: number;
-  lineBreak?: boolean;
 };
 
 export type SayKind = "dialog" | "think" | "narration";

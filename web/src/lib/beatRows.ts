@@ -16,7 +16,7 @@ import type {
   SceneView,
 } from "../types/beats";
 import type { ConditionNode } from "../types/condition";
-import { stripMarkup } from "./richText";
+import { paragraphLines, stripMarkup } from "./richText";
 
 export const BEAT_TAG = {
   say: "say",
@@ -130,7 +130,7 @@ export const parseEnding = (row: BeatNode): EndingView => {
   return {
     key: asString(record.key),
     title: asString(record.title),
-    desc: asString(record.desc),
+    desc: paragraphLines(record.desc),
   };
 };
 
@@ -230,7 +230,7 @@ export const plainTextOf = (rows: unknown): string => {
     else if (isBeat(row, "ending")) {
       const ending = parseEnding(row);
       if (ending.title) parts.push(stripMarkup(ending.title));
-      if (ending.desc) parts.push(stripMarkup(ending.desc));
+      if (ending.desc.length) parts.push(ending.desc.join("\n"));
     } else if (isBeat(row, "battle")) {
       for (const event of parseBattle(row).events) {
         for (const line of event.lines) {
