@@ -68,8 +68,8 @@ const toggle = (key: OverlayKey) => {
       aria-haspopup="dialog"
       :aria-expanded="helpOpen"
       aria-controls="helpPanel"
-      :title="t('helpTitle')"
-      :aria-label="t('helpTitle')"
+      :title="t('helpBtnTitle')"
+      :aria-label="t('helpBtnTitle')"
       @click="toggle('help')"
     >
       <AppIcon name="help" />
