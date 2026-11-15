@@ -1242,6 +1242,11 @@
     white-space: nowrap;
   }
 
+  .meta-chips .meta-chip {
+    height: auto;
+    --tlh-mark: 0.625;
+  }
+
   .meta-chips .meta-chip.is-hidden {
     background: var(--surface-hover);
     user-select: none;
