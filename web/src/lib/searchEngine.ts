@@ -1,4 +1,4 @@
-import MiniSearch from "minisearch";
+import MiniSearch, { type AsPlainObject, type Options } from "minisearch";
 
 export type SearchDoc = {
   key: string;
@@ -9,7 +9,9 @@ const SEGMENT = /[^\p{L}\p{N}]+/u;
 
 const HAN = /^[\u3400-\u9fff\uf900-\ufaff]+$/;
 
-export const searchTokens = (value: string): string[] => {
+export const SEARCH_INDEX_VERSION = 1;
+
+const tokenize = (value: string): string[] => {
   const tokens = new Set<string>();
   for (const segment of String(value ?? "")
     .toLowerCase()
@@ -27,18 +29,33 @@ export const searchTokens = (value: string): string[] => {
   return Array.from(tokens);
 };
 
+const foldTerm = (term: string): string => {
+  let hash = 2166136261;
+  for (let index = 0; index < term.length; index++) {
+    hash ^= term.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(36);
+};
+
+const SEARCH_OPTIONS: Options<SearchDoc> = {
+  idField: "key",
+  fields: ["text"],
+  tokenize,
+  processTerm: foldTerm,
+  searchOptions: { combineWith: "AND" },
+};
+
 export const createSearchEngine = (): MiniSearch<SearchDoc> =>
-  new MiniSearch<SearchDoc>({
-    idField: "key",
-    fields: ["text"],
-    tokenize: searchTokens,
-    searchOptions: { combineWith: "AND" },
-  });
+  new MiniSearch<SearchDoc>(SEARCH_OPTIONS);
+
+export const loadSearchEngine = (data: AsPlainObject): MiniSearch<SearchDoc> =>
+  MiniSearch.loadJS<SearchDoc>(data, SEARCH_OPTIONS);
 
 export const searchCandidates = (
   engine: MiniSearch<SearchDoc>,
   needle: string,
 ): string[] | null => {
-  if (!searchTokens(needle).length) return null;
+  if (!tokenize(needle).length) return null;
   return engine.search(needle, { combineWith: "AND" }).map((hit) => String(hit.id));
 };
