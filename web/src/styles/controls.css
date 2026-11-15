@@ -106,7 +106,7 @@
     border-radius: var(--r-sm);
     background: var(--surface-inset);
     color: var(--ink-2);
-    --tlh-mark: 0.625;
+    --tlh-mark: 0.75;
     white-space: nowrap;
   }
 
@@ -135,7 +135,7 @@
     border-radius: var(--r-sm);
     background: var(--surface-inset);
     color: var(--ink-2);
-    --tlh-mark: 0.625;
+    --tlh-mark: 0.75;
     white-space: nowrap;
   }
 

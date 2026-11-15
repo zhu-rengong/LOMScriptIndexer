@@ -1244,7 +1244,7 @@
 
   .meta-chips .meta-chip {
     height: auto;
-    --tlh-mark: 0.625;
+    --tlh-mark: 0.75;
   }
 
   .meta-chips .meta-chip.is-hidden {
