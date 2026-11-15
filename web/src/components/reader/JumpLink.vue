@@ -142,7 +142,7 @@ watch(() => props.jump.position, loadCheckpoint, { immediate: true });
     @reveal="open = true"
   >
     <div
-      class="row card-row jump-head"
+      class="option-head jump-head row"
       :class="{ 'is-static': !collapsible }"
       :role="collapsible ? 'button' : undefined"
       :tabindex="collapsible ? 0 : undefined"
@@ -156,7 +156,6 @@ watch(() => props.jump.position, loadCheckpoint, { immediate: true });
       </span>
       <button
         class="cond-lookup btn btn-icon"
-        data-size="sm"
         type="button"
         :title="t('jumpPositionLookup')"
         :aria-label="t('jumpPositionLookup')"
@@ -169,7 +168,7 @@ watch(() => props.jump.position, loadCheckpoint, { immediate: true });
       <div
         v-for="row in rows"
         :key="row.id"
-        class="row card-row jump-target"
+        class="jump jump-target"
         role="button"
         tabindex="0"
         :aria-label="row.id"
@@ -222,7 +221,12 @@ watch(() => props.jump.position, loadCheckpoint, { immediate: true });
       </div>
     </div>
   </div>
-  <button v-else-if="display.mode === 'link'" class="link jump" type="button" @click="go(target)">
+  <button
+    v-else-if="display.mode === 'link'"
+    class="jump btn btn-sm"
+    type="button"
+    @click="go(target)"
+  >
     <AppIcon name="arrow-right" class="arrow" />{{ display.text
     }}<span v-if="jump.dynamicSource" class="option-cond">{{ `  ${jump.dynamicSource}` }}</span>
   </button>

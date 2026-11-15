@@ -6,12 +6,12 @@ import { GROUPS, firstSlot, groupById, slotById } from "../../lib/fontTypes";
 import type { FontTarget } from "../../types/font";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
-import ConfirmPrompt from "../ui/ConfirmPrompt.vue";
-import PanelShell from "../ui/PanelShell.vue";
+import FontPicker from "./FontPicker.vue";
 import ScaleSlider from "./ScaleSlider.vue";
+import SettingsPreview from "./SettingsPreview.vue";
 import TypeGroupList from "./TypeGroupList.vue";
-import TypePicker from "./TypePicker.vue";
-import TypePreview from "./TypePreview.vue";
+import TypeGroupPick from "./TypeGroupPick.vue";
+import TypeParamPanel from "./TypeParamPanel.vue";
 import { useUiStore } from "../../stores/ui";
 import { usePrefsStore } from "../../stores/prefs";
 import { useViewStore } from "../../stores/view";
@@ -19,8 +19,6 @@ import { useViewStore } from "../../stores/view";
 const ui = useUiStore();
 const prefs = usePrefsStore();
 const view = useViewStore();
-
-const open = computed(() => overlay.isOpen("settings"));
 
 const target = computed<FontTarget>(() => {
   const current = view.fontTarget;
@@ -42,7 +40,7 @@ const scopeLabel = computed(() => {
   return `${t(group.value.label)} → ${leaf}`;
 });
 
-const groupPickOpen = computed(() => overlay.isOpen("typeGroupPick"));
+const open = computed(() => overlay.isOpen("settings"));
 
 const togglePortraits = (value: boolean) => {
   prefs.set({ showPortraits: value });
@@ -54,8 +52,10 @@ const onPortraitSize = (value: number) => {
 
 const reset = () => {
   prefs.reset();
-  ui.toast("toastReset");
+  ui.toast(t("toastReset"));
 };
+
+const groupPickOpen = computed(() => overlay.isOpen("typeGroupPick"));
 
 const toggleGroupPick = () => {
   if (overlay.isOpen("typeGroupPick")) {
@@ -69,9 +69,10 @@ const toggleGroupPick = () => {
   });
 };
 
-const onClose = () => {
+const close = () => {
   overlay.close("typeGroupPick");
   overlay.close("fontPicker");
+  overlay.close("settings");
 };
 
 watch(open, async (value) => {
@@ -83,87 +84,101 @@ watch(open, async (value) => {
 watch(target, () => {
   prefs.customFontOpen = false;
 });
+
+onMounted(() => {
+  overlay.register("settings", {
+    id: UI_IDS.settingsDrawer,
+    triggerId: UI_IDS.settingsBtn,
+    group: "sheet",
+  });
+});
 </script>
 
 <template>
-  <div id="settingsScrim" class="scrim" :hidden="!open" @click="overlay.close('settings')"></div>
-
-  <PanelShell
+  <div id="settingsScrim" class="scrim" :hidden="!open" @click="close"></div>
+  <aside
     :id="UI_IDS.settingsDrawer"
-    overlay-key="settings"
-    kind="drawer"
+    class="drawer surface"
+    aria-modal="true"
     role="dialog"
-    modal
-    :title="t('settingsTitle')"
-    :summary="scopeLabel"
-    heading-id="settingsHeading"
-    :close-title="t('closeTitle')"
-    :trigger-id="UI_IDS.settingsBtn"
-    group="sheet"
-    @close="onClose"
+    :aria-label="t('settingsTitle')"
+    :hidden="!open"
   >
-    <section class="panel-section">
-      <p class="panel-caption">{{ t("readerDisplay") }}</p>
-      <label class="settings-switch" :for="UI_IDS.showPortraits">
-        <input
-          :id="UI_IDS.showPortraits"
-          type="checkbox"
-          :checked="prefs.showPortraits"
-          @change="togglePortraits(($event.target as HTMLInputElement).checked)"
-        />
-        <span>{{ t("showPortraits") }}</span>
-      </label>
-      <p class="settings-hint">{{ t("showPortraitsHint") }}</p>
-      <ScaleSlider
-        :id="UI_IDS.portraitSize"
-        :label="t('portraitSize')"
-        :value="prefs.portraitSize"
-        :text="`${prefs.portraitSize}px`"
-        :min="prefs.limits.portraitSize.min"
-        :max="prefs.limits.portraitSize.max"
-        :step="prefs.limits.portraitSize.step"
-        :disabled="!prefs.showPortraits"
-        @update="onPortraitSize"
-      />
-    </section>
-
-    <section class="panel-section">
-      <p class="panel-caption">{{ t("fontTypes") }}</p>
-      <p class="sub-label type-group-title">{{ t("pref.groupTitle") }}</p>
+    <header class="drawer-head settings-head">
+      <div class="settings-head-text">
+        <h2 class="drawer-title settings-title">{{ t("settingsTitle") }}</h2>
+        <p class="settings-summary">{{ scopeLabel }}</p>
+      </div>
       <button
-        :id="UI_IDS.typeGroupTrigger"
-        class="btn select type-group-pick"
+        id="settingsClose"
+        class="btn btn-icon settings-close"
         type="button"
-        aria-haspopup="listbox"
-        aria-controls="typeGroupPick"
-        :aria-expanded="groupPickOpen"
-        @click="toggleGroupPick"
+        :title="t('closeTitle')"
+        @click="close"
       >
-        <span class="ft-name">{{ t(group.label) }}</span>
-        <AppIcon name="chevron" class="caret" />
+        <AppIcon name="close" />
       </button>
-      <TypeGroupList :target="target" />
-      <TypeParamPanel :target="target" />
-    </section>
+    </header>
 
-    <section class="panel-section">
-      <p class="panel-caption">{{ t("previewTitle") }}</p>
-      <TypePreview :target="target" />
-    </section>
+    <div class="drawer-body">
+      <section class="settings-section">
+        <p class="settings-caption">{{ t("readerDisplay") }}</p>
+        <label class="settings-switch" :for="UI_IDS.showPortraits">
+          <input
+            :id="UI_IDS.showPortraits"
+            type="checkbox"
+            :checked="prefs.showPortraits"
+            @change="togglePortraits(($event.target as HTMLInputElement).checked)"
+          />
+          <span>{{ t("showPortraits") }}</span>
+        </label>
+        <p class="settings-hint">{{ t("showPortraitsHint") }}</p>
+        <ScaleSlider
+          :id="UI_IDS.portraitSize"
+          :label="t('portraitSize')"
+          :value="prefs.portraitSize"
+          :text="`${prefs.portraitSize}px`"
+          :min="prefs.limits.portraitSize.min"
+          :max="prefs.limits.portraitSize.max"
+          :step="prefs.limits.portraitSize.step"
+          :disabled="!prefs.showPortraits"
+          @update="onPortraitSize"
+        />
+      </section>
 
-    <template #foot>
-      <ConfirmPrompt
-        :label="t('resetSettings')"
-        :prompt="t('confirmResetSettings')"
-        tone="danger"
-        @confirm="reset"
-      />
-      <button id="settingsDone" class="btn" type="button" @click="overlay.close('settings')">
-        {{ t("done") }}
+      <section class="settings-section">
+        <p class="settings-caption">{{ t("fontTypes") }}</p>
+        <p class="sub-label type-group-title">{{ t("pref.groupTitle") }}</p>
+        <button
+          :id="UI_IDS.typeGroupTrigger"
+          class="btn select settings-select type-group-pick"
+          type="button"
+          aria-haspopup="listbox"
+          aria-controls="typeGroupPick"
+          :aria-expanded="groupPickOpen"
+          @click="toggleGroupPick"
+        >
+          <span class="ft-name">{{ t(group.label) }}</span>
+          <AppIcon name="chevron" class="caret" />
+        </button>
+        <TypeGroupList :target="target" />
+        <TypeParamPanel :target="target" />
+      </section>
+
+      <section class="settings-section">
+        <p class="settings-caption">{{ t("previewTitle") }}</p>
+        <SettingsPreview :target="target" />
+      </section>
+    </div>
+
+    <footer class="drawer-foot">
+      <button id="settingsReset" class="btn" type="button" @click="reset">
+        {{ t("resetSettings") }}
       </button>
-    </template>
-  </PanelShell>
+      <button id="settingsDone" class="btn" type="button" @click="close">{{ t("done") }}</button>
+    </footer>
+  </aside>
 
-  <TypePicker kind="group" />
-  <TypePicker kind="font" />
+  <TypeGroupPick :group-id="group.id" />
+  <FontPicker />
 </template>

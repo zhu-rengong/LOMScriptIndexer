@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { t } from "../../../i18n";
 import type { SpecialRow } from "../../../lib/rail";
-import EmptyState from "../../ui/EmptyState.vue";
-import ListRow from "../../ui/ListRow.vue";
 
 const props = defineProps<{
   rows: SpecialRow[];
@@ -12,27 +10,23 @@ const props = defineProps<{
 const emit = defineEmits<{
   (event: "pick", id: string): void;
 }>();
-
-const pick = (row: SpecialRow) => {
-  if (!row.known) return;
-  emit("pick", row.id);
-};
 </script>
 
 <template>
   <template v-if="props.rows.length">
-    <ListRow
+    <button
       v-for="row in props.rows"
       :key="row.id"
       class="cat-row cat-special"
-      density="compact"
-      :active="props.selectedId === row.id"
+      :class="{ 'is-on': props.selectedId === row.id }"
+      type="button"
       :disabled="!row.known"
-      @click="pick(row)"
+      :aria-current="props.selectedId === row.id ? 'true' : undefined"
+      @click="emit('pick', row.id)"
     >
       <span class="cat-name">{{ row.name }}</span>
       <span class="cat-code">{{ row.id }}</span>
-    </ListRow>
+    </button>
   </template>
-  <EmptyState v-else :title="t('searchEmpty')" />
+  <p v-else class="cat-empty">{{ t("searchEmpty") }}</p>
 </template>

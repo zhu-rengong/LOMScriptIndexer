@@ -29,15 +29,17 @@ const isDisabled = computed(() => fold.state === "none");
 </script>
 
 <template>
-  <button
-    :id="UI_IDS.foldToggleBtn"
-    class="btn btn-icon"
-    type="button"
-    :disabled="isDisabled"
-    :title="label"
-    :aria-label="label"
-    @click="fold.toggle"
-  >
-    <AppIcon :name="icon" />
-  </button>
+  <span class="tip-host" :title="label">
+    <button
+      :id="UI_IDS.foldToggleBtn"
+      class="btn btn-icon btn-sm"
+      type="button"
+      :disabled="isDisabled"
+      :title="label"
+      :aria-label="label"
+      @click="fold.toggle"
+    >
+      <AppIcon :name="icon" />
+    </button>
+  </span>
 </template>

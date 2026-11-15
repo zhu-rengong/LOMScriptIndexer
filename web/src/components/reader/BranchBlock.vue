@@ -106,7 +106,7 @@ watch(checkSignature, resolveCondition, { immediate: true });
     @reveal="reveal"
   >
     <div
-      :class="isEmpty ? 'branch-head' : 'branch-head row card-row'"
+      :class="isEmpty ? 'branch-head' : 'branch-head row row-sm'"
       :role="isEmpty ? undefined : 'button'"
       :tabindex="isEmpty ? undefined : 0"
       :aria-expanded="isEmpty ? undefined : open"
@@ -116,7 +116,11 @@ watch(checkSignature, resolveCondition, { immediate: true });
       @keydown.enter.prevent="isEmpty ? undefined : toggle()"
       @keydown.space.prevent="isEmpty ? undefined : toggle()"
     >
-      <span class="cond" :class="{ 'is-expr': hasCondition }" :title="tooltipText || undefined">
+      <span
+        class="cond"
+        :class="{ 'is-expr': hasCondition, 'is-fallback': isFallback }"
+        :title="tooltipText || undefined"
+      >
         <CondExpr v-if="hasCondition" :expr="condition" :method="branch.check?.kind" />
         <span v-else-if="isFallback" class="cx-fallback">{{ t("lookupCondFallback") }}</span>
         <template v-else>{{ label }}</template>
@@ -124,7 +128,6 @@ watch(checkSignature, resolveCondition, { immediate: true });
       <button
         v-if="!isEmpty && branch.check"
         class="cond-lookup btn btn-icon"
-        data-size="sm"
         type="button"
         :title="t('condLookup')"
         :aria-label="t('condLookup')"

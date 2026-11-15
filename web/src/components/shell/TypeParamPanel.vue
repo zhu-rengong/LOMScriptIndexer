@@ -125,7 +125,7 @@ const onCaps = (value: CapsMode | null) => {
     <p class="sub-label">{{ t("typeFont") }}</p>
     <button
       :id="UI_IDS.typeFontTrigger"
-      class="btn select"
+      class="btn select font-trigger settings-select"
       type="button"
       aria-haspopup="listbox"
       aria-controls="fontPicker"
@@ -137,8 +137,7 @@ const onCaps = (value: CapsMode | null) => {
     </button>
     <input
       :id="UI_IDS.typeFontCustom"
-      class="field"
-      data-variant="line"
+      class="input input-sm text-input"
       type="text"
       :hidden="!showCustom"
       :value="showCustom ? entry?.font || '' : ''"
@@ -180,10 +179,10 @@ const onCaps = (value: CapsMode | null) => {
 
     <p class="sub-label type-panel-head">{{ t("pref.glyphs") }}</p>
     <p class="sub-label">{{ t("typeWeight") }}</p>
-    <div id="weightSeg" class="tabs tabs-fill settings-weight" role="group">
+    <div id="weightSeg" class="seg seg-wide settings-weight" role="group">
       <button
         v-if="isSlot"
-        class="tab"
+        class="seg-btn tab"
         type="button"
         :class="{ 'is-on': isWeightOn(null) }"
         :aria-pressed="isWeightOn(null)"
@@ -194,7 +193,7 @@ const onCaps = (value: CapsMode | null) => {
       <button
         v-for="value in weightOptions"
         :key="value"
-        class="tab"
+        class="seg-btn tab"
         type="button"
         :class="{ 'is-on': isWeightOn(value) }"
         :aria-pressed="isWeightOn(value)"
@@ -205,10 +204,10 @@ const onCaps = (value: CapsMode | null) => {
     </div>
 
     <p class="sub-label">{{ t("pref.italic") }}</p>
-    <div class="tabs tabs-fill settings-weight" role="group">
+    <div class="seg seg-wide settings-weight" role="group">
       <button
         v-if="isSlot"
-        class="tab"
+        class="seg-btn tab"
         type="button"
         :class="{ 'is-on': italicValue === null }"
         :aria-pressed="italicValue === null"
@@ -217,7 +216,7 @@ const onCaps = (value: CapsMode | null) => {
         {{ inheritLabel }}
       </button>
       <button
-        class="tab"
+        class="seg-btn tab"
         type="button"
         :class="{ 'is-on': italicValue === false }"
         :aria-pressed="italicValue === false"
@@ -226,7 +225,7 @@ const onCaps = (value: CapsMode | null) => {
         {{ t("pref.upright") }}
       </button>
       <button
-        class="tab"
+        class="seg-btn tab"
         type="button"
         :class="{ 'is-on': italicValue === true }"
         :aria-pressed="italicValue === true"
@@ -237,12 +236,12 @@ const onCaps = (value: CapsMode | null) => {
     </div>
 
     <p class="sub-label">{{ t("pref.caps") }}</p>
-    <div class="tabs tabs-fill settings-weight" role="group">
+    <div class="seg seg-wide settings-weight" role="group">
       <button
         v-for="option in capsOptions"
         :key="String(option.value)"
         v-show="isSlot || option.value !== null"
-        class="tab"
+        class="seg-btn tab"
         type="button"
         :class="{ 'is-on': capsValue === option.value }"
         :aria-pressed="capsValue === option.value"
@@ -253,10 +252,10 @@ const onCaps = (value: CapsMode | null) => {
     </div>
 
     <p class="sub-label">{{ t("pref.numeric") }}</p>
-    <div class="tabs tabs-fill settings-weight" role="group">
+    <div class="seg seg-wide settings-weight" role="group">
       <button
         v-if="isSlot"
-        class="tab"
+        class="seg-btn tab"
         type="button"
         :class="{ 'is-on': numericValue === null }"
         :aria-pressed="numericValue === null"
@@ -265,7 +264,7 @@ const onCaps = (value: CapsMode | null) => {
         {{ inheritLabel }}
       </button>
       <button
-        class="tab"
+        class="seg-btn tab"
         type="button"
         :class="{ 'is-on': numericValue === false }"
         :aria-pressed="numericValue === false"
@@ -274,7 +273,7 @@ const onCaps = (value: CapsMode | null) => {
         {{ t("pref.numericOff") }}
       </button>
       <button
-        class="tab"
+        class="seg-btn tab"
         type="button"
         :class="{ 'is-on': numericValue === true }"
         :aria-pressed="numericValue === true"

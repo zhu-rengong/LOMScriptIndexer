@@ -2,9 +2,6 @@
 import { t } from "../../../i18n";
 import type { BookmarkRow } from "../../../lib/rail";
 import AppIcon from "../../ui/AppIcon.vue";
-import ConfirmPrompt from "../../ui/ConfirmPrompt.vue";
-import EmptyState from "../../ui/EmptyState.vue";
-import ListRow from "../../ui/ListRow.vue";
 
 const props = defineProps<{
   rows: BookmarkRow[];
@@ -17,30 +14,29 @@ const emit = defineEmits<{
   (event: "remove", id: string): void;
   (event: "clear"): void;
 }>();
-
-const pick = (row: BookmarkRow) => {
-  if (!row.known) return;
-  emit("pick", row.id);
-};
 </script>
 
 <template>
   <template v-if="props.rows.length">
-    <ListRow
+    <div
       v-for="row in props.rows"
       :key="row.id"
-      class="cat-row cat-book-row"
-      density="compact"
-      :active="props.selectedId === row.id"
-      :disabled="!row.known"
-      :data-index="row.index"
-      @click="pick(row)"
+      class="cat-book"
+      :class="{ 'is-on': props.selectedId === row.id }"
     >
-      <span class="cat-id">{{ row.id }}</span>
-      <span v-if="row.chapter" class="cat-meta">{{ row.chapter }}</span>
       <button
-        class="btn btn-icon row-action"
-        data-size="sm"
+        class="cat-book-main"
+        type="button"
+        :disabled="!row.known"
+        :data-index="row.index"
+        :aria-current="props.selectedId === row.id ? 'true' : undefined"
+        @click="emit('pick', row.id)"
+      >
+        <span class="cat-id">{{ row.id }}</span>
+        <span v-if="row.chapter" class="cat-meta">{{ row.chapter }}</span>
+      </button>
+      <button
+        class="cat-del"
         type="button"
         :title="t('bookmarkRemove')"
         :aria-label="t('bookmarkRemove')"
@@ -48,15 +44,10 @@ const pick = (row: BookmarkRow) => {
       >
         <AppIcon name="close" />
       </button>
-    </ListRow>
-    <div class="cat-clear">
-      <ConfirmPrompt
-        :label="t('bookmarkClear')"
-        :prompt="t('confirmClearBookmarks')"
-        tone="danger"
-        @confirm="emit('clear')"
-      />
     </div>
+    <button class="cat-clear" type="button" @click="emit('clear')">
+      {{ t("bookmarkClear") }}
+    </button>
   </template>
-  <EmptyState v-else :title="t(props.searching ? 'searchEmpty' : 'bookmarkEmpty')" />
+  <p v-else class="cat-empty">{{ t(props.searching ? "searchEmpty" : "bookmarkEmpty") }}</p>
 </template>

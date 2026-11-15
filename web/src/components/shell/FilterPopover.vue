@@ -8,8 +8,6 @@ import { query } from "../../lib/query";
 import type { QuerySuggestion } from "../../types/query";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
-import PanelShell from "../ui/PanelShell.vue";
-import Tag from "../ui/Tag.vue";
 import { useExprAutocomplete } from "../../composables/useExprAutocomplete";
 import { useScriptStore } from "../../stores/script";
 
@@ -67,15 +65,18 @@ const badgeCount = computed(() => {
 
 const status = computed(() => {
   const { filterError, filterSource, filterSet, filterLoading } = store;
-  if (filterError) return { text: filterError, tone: "is-error" };
-  if (!filterSource.trim()) return { text: t("filterIdle"), tone: "" };
+  if (filterError) return { text: filterError, className: "filter-status is-error" };
+  if (!filterSource.trim()) return { text: t("filterIdle"), className: "filter-status" };
   if (filterSet && filterSet.size === 0) {
     return {
       text: filterLoading ? t("filterLoadingText") : t("filterNoMatch"),
-      tone: filterLoading ? "" : "is-error",
+      className: filterLoading ? "filter-status" : "filter-status is-error",
     };
   }
-  return { text: filterLoading ? t("filterLoadingText") : "", tone: "is-ok" };
+  return {
+    text: filterLoading ? t("filterLoadingText") : "",
+    className: "filter-status is-ok",
+  };
 });
 
 const hitNodeIndexes = computed(() => {
@@ -157,8 +158,6 @@ const pickNode = (id: string) => {
   store.select(id, { history: true });
 };
 
-const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
-
 watch(
   () => store.filterSource,
   (value) => {
@@ -167,47 +166,71 @@ watch(
     if (exprValue.value !== value) exprValue.value = value;
   },
 );
+
+onMounted(() => {
+  overlay.register(POPOVER_KEY, {
+    id: POPOVER_KEY,
+    triggerId: UI_IDS.filterBtn,
+    group: "pop",
+    onHide: () => {
+      hideSuggestions();
+    },
+  });
+});
+
+const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
 </script>
 
 <template>
   <div class="menu-wrap">
     <button
       id="filterBtn"
-      class="btn"
+      class="btn filter-btn"
       type="button"
       aria-haspopup="dialog"
-      :class="{ 'is-on': hasAppliedFilter }"
       :aria-expanded="isPopoverOpen"
       :aria-controls="POPOVER_KEY"
       :title="t('filterBtnTitle')"
+      :class="{ 'is-on': hasAppliedFilter }"
       @click.stop="toggle"
     >
-      <AppIcon name="filter" />
+      <AppIcon name="filter" class="ico" />
       <span class="btn-label">{{ t("filterBtn") }}</span>
-      <Tag v-if="hasAppliedFilter" size="sm" tone="accent">{{ badgeCount }}</Tag>
+      <span id="filterBadge" class="badge badge-solid badge-num" :hidden="!hasAppliedFilter">{{
+        badgeCount
+      }}</span>
     </button>
 
-    <PanelShell
+    <div
       :id="POPOVER_KEY"
-      :overlay-key="POPOVER_KEY"
-      kind="popover"
-      size="lg"
-      :title="t('filterBtn')"
-      :summary="t('filterBtnTitle')"
-      heading-id="filterHeading"
-      :trigger-id="UI_IDS.filterBtn"
-      :placement="{ align: 'end', width: 560, fit: true }"
-      :close-title="t('closeTitle')"
-      @hide="hideSuggestions"
+      class="filter-panel surface popover"
+      role="dialog"
+      aria-labelledby="filterHeading"
+      :hidden="!isPopoverOpen"
     >
+      <header class="filter-head">
+        <div class="filter-head-text">
+          <h2 id="filterHeading" class="filter-title">{{ t("filterBtn") }}</h2>
+          <p class="filter-summary">{{ t("filterBtnTitle") }}</p>
+        </div>
+        <button
+          class="btn btn-icon filter-close"
+          type="button"
+          :title="t('closeTitle')"
+          :aria-label="t('closeTitle')"
+          @click="closePanel"
+        >
+          <AppIcon name="close" />
+        </button>
+      </header>
+
       <div class="filter-row">
-        <div class="field-wrap filter-expr">
+        <div class="filter-input-wrap" :class="{ 'is-error': !!store.filterError }">
           <input
             id="filterExpr"
             ref="exprInput"
             v-model="exprValue"
-            class="field"
-            data-variant="line"
+            class="input input-mono filter-expr"
             type="text"
             spellcheck="false"
             autocomplete="off"
@@ -217,7 +240,6 @@ watch(
             :aria-controls="SUGGEST_KEY"
             :placeholder="t('filterPlaceholder')"
             :aria-label="t('filterPlaceholder')"
-            :class="{ 'is-error': !!store.filterError }"
             @input="onExpressionInput"
             @click="updateSuggestions"
             @keyup="onKeyup"
@@ -236,8 +258,7 @@ watch(
               <button
                 v-for="(item, index) in suggestRows"
                 :key="`${item.value}-${index}`"
-                class="row suggest-item"
-                data-density="compact"
+                class="suggest-item row row-sm"
                 :class="{ 'is-active': index === suggestState.activeIndex }"
                 type="button"
                 role="option"
@@ -250,12 +271,11 @@ watch(
                 </span>
               </button>
             </template>
-            <p v-else class="empty">{{ t("suggestEmpty") }}</p>
+            <div v-else class="suggest-empty popover-empty">{{ t("suggestEmpty") }}</div>
           </div>
         </div>
       </div>
-
-      <p id="filterStatus" class="status filter-status" :class="status.tone">{{ status.text }}</p>
+      <div id="filterStatus" :class="status.className">{{ status.text }}</div>
 
       <div class="filter-section">
         <p class="filter-label">{{ t("filterFields") }}</p>
@@ -263,8 +283,7 @@ watch(
           <button
             v-for="field in fields"
             :key="field.id"
-            class="btn"
-            data-size="sm"
+            class="filter-chip btn btn-sm btn-mono"
             type="button"
             :data-insert="`${field.id}:`"
             @click="onChipInsert(`${field.id}:`)"
@@ -279,8 +298,7 @@ watch(
           <button
             v-for="op in OPS"
             :key="op"
-            class="btn"
-            data-size="sm"
+            class="filter-chip btn btn-sm btn-mono"
             type="button"
             :data-insert="op === '(' || op === ')' ? op : ` ${op} `"
             @click="onChipInsert(op === '(' || op === ')' ? op : ` ${op} `)"
@@ -295,8 +313,7 @@ watch(
           <button
             v-for="example in EXAMPLES"
             :key="example.key"
-            class="btn"
-            data-size="sm"
+            class="filter-chip btn btn-sm btn-mono"
             type="button"
             :data-expr="example.expr"
             @click="applyExample(example.expr)"
@@ -317,9 +334,9 @@ watch(
             {{ t("filterCount", { n: hitNodeIndexes.length, total: graph.nodes.length }) }}
           </span>
         </div>
-        <p v-if="!hitNodeIndexes.length" class="empty" data-align="start">
+        <div v-if="!hitNodeIndexes.length" class="filter-results-empty">
           {{ t("filterResultsEmpty") }}
-        </p>
+        </div>
         <div
           v-else
           ref="resultsPanel"
@@ -329,8 +346,7 @@ watch(
           <button
             v-for="row in resultRows"
             :key="row.id"
-            class="row result-item"
-            data-density="compact"
+            class="result-item row row-sm"
             :class="{ 'is-active': store.selectedId === row.id }"
             type="button"
             :data-id="row.id"
@@ -341,6 +357,6 @@ watch(
           </button>
         </div>
       </div>
-    </PanelShell>
+    </div>
   </div>
 </template>

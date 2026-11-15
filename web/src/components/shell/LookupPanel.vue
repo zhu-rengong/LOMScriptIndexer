@@ -5,14 +5,15 @@ import { missions } from "../../data/missions";
 import { names } from "../../data/names";
 import { chapterTitle, t } from "../../i18n";
 import { firstSayTextOf, speakerName } from "../../lib/blocks";
+import { byId } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
 import type { CheckpointModel } from "../../types/condition";
 import type { GraphNode } from "../../types/graph";
 import { UI_IDS } from "../../ui/ids";
+import AppIcon from "../ui/AppIcon.vue";
 import CheckpointBranches from "./CheckpointBranches.vue";
-import HitList, { type HitRow } from "./HitList.vue";
 import MissionStateDetail from "./MissionStateDetail.vue";
-import PanelShell from "../ui/PanelShell.vue";
+import NodeResultList from "./NodeResultList.vue";
 import { useScriptStore } from "../../stores/script";
 import { useViewStore } from "../../stores/view";
 import { usePanelsStore } from "../../stores/panels";
@@ -31,10 +32,6 @@ const kind = computed(() => panels.lookupState.kind);
 const key = computed(() => panels.lookupState.key);
 
 const method = computed(() => panels.lookupState.method);
-
-const placement = computed(() =>
-  view.layout === "mobile" ? undefined : { align: "start" as const, width: 380, fit: true },
-);
 
 const flagNodeGroups = computed(() => (kind.value === "flag" ? graph.flagUsage(key.value) : null));
 
@@ -104,10 +101,10 @@ const lookupTitleKey = computed(() =>
 
 const subText = computed(() => (kind.value === "mission" ? "" : t(lookupTitleKey.value)));
 
-const rowOf = (node: GraphNode): HitRow => ({
+const rowOf = (node: GraphNode) => ({
   id: node.id,
   chapter: chapterTitle(graph.chapterOf(node)),
-  snippet: firstSayTextOf(node),
+  first: firstSayTextOf(node),
 });
 
 const flagWriters = computed(() => (flagNodeGroups.value?.writers ?? []).map(rowOf));
@@ -123,14 +120,29 @@ const close = () => {
   overlay.close("lookup");
 };
 
-const pickById = (id: string) => {
-  const node = graph.nodeById.get(id);
-  if (!node) return;
+const pick = (node: GraphNode) => {
   const target = { kind: kind.value, key: key.value };
   const name = displayName.value;
   close();
   panels.focusText(node.id, name, target);
   store.select(node.id, { history: true });
+};
+
+const pickById = (id: string) => {
+  const node = graph.nodeById.get(id);
+  if (node) pick(node);
+};
+
+const positionLookup = () => {
+  const panel = byId(UI_IDS.lookupPanel);
+  if (!panel || !panels.lookupState.trigger) return;
+  if (view.layout === "mobile") {
+    panel.style.left = "";
+    panel.style.top = "";
+    panel.style.position = "";
+    return;
+  }
+  overlay.place(panel, panels.lookupState.trigger, { align: "start", width: 380, fit: true });
 };
 
 const loadCheckpoint = async () => {
@@ -153,6 +165,7 @@ watch(
       return;
     }
     overlay.open("lookup", { trigger: panels.lookupState.trigger });
+    positionLookup();
     void loadCheckpoint();
   },
 );
@@ -165,77 +178,95 @@ watch(
     checkpoint.value = null;
   },
 );
+
+onMounted(() => {
+  overlay.register("lookup", {
+    id: "lookupPanel",
+    group: "pop",
+    placement: { align: "start", width: 380, fit: true },
+    onHide: () => {
+      panels.hideLookup();
+    },
+  });
+});
 </script>
 
 <template>
-  <PanelShell
-    :id="UI_IDS.lookupPanel"
-    overlay-key="lookup"
-    kind="popover"
-    pad="tight"
-    :title="title"
-    heading-id="lookupTitle"
-    :close-title="t('closeTitle')"
-    :placement="placement"
-    group="pop"
-    @hide="panels.hideLookup()"
+  <div
+    id="lookupPanel"
+    class="lookup surface popover"
+    role="dialog"
+    :aria-label="t('lookupSpeaker')"
+    :hidden="!open"
   >
-    <template v-if="subText" #sub>
-      <p id="lookupSub" class="lookup-sub">{{ subText }}</p>
-    </template>
-
-    <MissionStateDetail
-      v-if="kind === 'mission' && missionHit"
-      :mission-id="missionHit.mission"
-      :state-key="key"
-      :state="missionHit.state"
-      :record="missionRecord"
-    />
-    <template v-else>
-      <CheckpointBranches
-        v-if="kind === 'check' && checkpoint"
-        :checkpoint="checkpoint"
-        :method="method"
+    <header class="lookup-head">
+      <span id="lookupTitle" class="overlay-title">{{ title }}</span>
+      <button
+        id="lookupClose"
+        class="btn btn-icon btn-sm"
+        type="button"
+        :title="t('closeTitle')"
+        @click="close"
+      >
+        <AppIcon name="close" />
+      </button>
+    </header>
+    <p v-if="subText" id="lookupSub" class="lookup-sub">{{ subText }}</p>
+    <div id="lookupList" class="lookup-list popover-list">
+      <MissionStateDetail
+        v-if="kind === 'mission' && missionHit"
+        :mission-id="missionHit.mission"
+        :state-key="key"
+        :state="missionHit.state"
+        :record="missionRecord"
       />
-      <div v-else-if="kind === 'check' && loading" class="lookup-cond">
-        <p class="lookup-cond-title">{{ t("lookupCondTitle") }}</p>
-        <div class="lookup-cond-body">
-          <p class="lookup-cond-muted">{{ t("lookupCondLoading") }}</p>
-        </div>
-      </div>
-
-      <p v-if="!totalCount" class="empty">{{ t("lookupEmpty") }}</p>
-
-      <template v-else-if="flagNodeGroups">
-        <template v-if="flagNodeGroups.writers.length">
-          <p class="lookup-group">
-            {{ t("lookupGroupWrites", { n: flagNodeGroups.writers.length }) }}
-          </p>
-          <HitList :rows="flagWriters" @pick="pickById" />
-        </template>
-        <template v-if="flagNodeGroups.checkers.length">
-          <p class="lookup-group">
-            {{ t("lookupGroupReads", { n: flagNodeGroups.checkers.length }) }}
-          </p>
-          <HitList :rows="flagCheckers" @pick="pickById" />
-        </template>
-        <p v-else class="lookup-group-note">{{ t("lookupGroupReadsEmpty") }}</p>
-      </template>
-
       <template v-else>
-        <HitList :rows="mainRows" @pick="pickById" />
-        <template v-if="checkpointReaders.length">
-          <p class="lookup-group">
-            {{ t("lookupGroupReads", { n: checkpointReaders.length }) }}
-          </p>
-          <HitList :rows="readerRows" @pick="pickById" />
-        </template>
-        <p v-else-if="kind === 'stat' || kind === 'rel'" class="lookup-group-note">
-          {{ t(readsEmptyText) }}
-        </p>
-      </template>
-    </template>
+        <CheckpointBranches
+          v-if="kind === 'check' && checkpoint"
+          :checkpoint="checkpoint"
+          :method="method"
+        />
+        <div v-else-if="kind === 'check' && loading" class="lookup-cond">
+          <p class="lookup-cond-title">{{ t("lookupCondTitle") }}</p>
+          <div class="lookup-cond-body">
+            <p class="lookup-cond-muted">{{ t("lookupCondLoading") }}</p>
+          </div>
+        </div>
 
-    <template #hint>{{ t("lookupHint") }}</template>
-  </PanelShell>
+        <p v-if="!totalCount" class="lookup-empty popover-empty">
+          {{ t("lookupEmpty") }}
+        </p>
+
+        <template v-else-if="flagNodeGroups">
+          <template v-if="flagNodeGroups.writers.length">
+            <p class="lookup-group">
+              {{ t("lookupGroupWrites", { n: flagNodeGroups.writers.length }) }}
+            </p>
+            <NodeResultList :items="flagWriters" @pick="pickById" />
+          </template>
+          <template v-if="flagNodeGroups.checkers.length">
+            <p class="lookup-group">
+              {{ t("lookupGroupReads", { n: flagNodeGroups.checkers.length }) }}
+            </p>
+            <NodeResultList :items="flagCheckers" @pick="pickById" />
+          </template>
+          <p v-else class="lookup-group-note">{{ t("lookupGroupReadsEmpty") }}</p>
+        </template>
+
+        <template v-else>
+          <NodeResultList :items="mainRows" @pick="pickById" />
+          <template v-if="checkpointReaders.length">
+            <p class="lookup-group">
+              {{ t("lookupGroupReads", { n: checkpointReaders.length }) }}
+            </p>
+            <NodeResultList :items="readerRows" @pick="pickById" />
+          </template>
+          <p v-else-if="kind === 'stat' || kind === 'rel'" class="lookup-group-note">
+            {{ t(readsEmptyText) }}
+          </p>
+        </template>
+      </template>
+    </div>
+    <p class="lookup-hint">{{ t("lookupHint") }}</p>
+  </div>
 </template>

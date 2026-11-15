@@ -49,7 +49,7 @@
       scroll-behavior: auto;
     }
 
-    .skeleton-line {
+    .sk-line {
       animation: none;
     }
   }

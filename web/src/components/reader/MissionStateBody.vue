@@ -2,6 +2,8 @@
 import { graph } from "../../data/graph";
 import { names } from "../../data/names";
 import { t } from "../../i18n";
+import { usePanelsStore } from "../../stores/panels";
+import { useScriptStore } from "../../stores/script";
 import type {
   MissionDialog,
   MissionFlagChange,
@@ -9,9 +11,6 @@ import type {
   MissionTime,
 } from "../../types/missions";
 import CondExpr from "./CondExpr.vue";
-import Tag from "../ui/Tag.vue";
-import { usePanelsStore } from "../../stores/panels";
-import { useScriptStore } from "../../stores/script";
 
 const props = defineProps<{
   state: MissionState;
@@ -79,10 +78,10 @@ const go = (id: string) => {
 </script>
 
 <template>
-  <div>
+  <div class="mission-body">
     <div v-if="showTags !== false && (!state.active || state.beforeMain)" class="mission-tags">
-      <Tag v-if="!state.active" size="xs" tone="warn">{{ t("missionPanelInactive") }}</Tag>
-      <Tag v-if="state.beforeMain" size="xs">{{ t("missionPanelBeforeMain") }}</Tag>
+      <span v-if="!state.active" class="mission-tag is-warn">{{ t("missionPanelInactive") }}</span>
+      <span v-if="state.beforeMain" class="mission-tag">{{ t("missionPanelBeforeMain") }}</span>
     </div>
 
     <dl class="mission-rows">
@@ -94,7 +93,12 @@ const go = (id: string) => {
       <div class="mission-row">
         <dt class="mission-label">{{ t("missionPanelStart") }}</dt>
         <dd class="mission-value">
-          <button v-if="canJump(state.start)" class="link" type="button" @click="go(state.start)">
+          <button
+            v-if="canJump(state.start)"
+            class="mission-link btn btn-sm"
+            type="button"
+            @click="go(state.start)"
+          >
             {{ state.start }}
           </button>
           <span v-else>{{ state.start || t("missionPanelNone") }}</span>
@@ -129,25 +133,23 @@ const go = (id: string) => {
         <dd class="mission-value">
           <div v-if="state.modifyFlagsTrue.length" class="mission-flags">
             <span class="mission-sub-label">{{ t("missionPanelFlagsTrue") }}</span>
-            <Tag
+            <span
               v-for="(change, index) in state.modifyFlagsTrue"
               :key="`true-${index}`"
-              size="xs"
-              variant="plain"
+              class="mission-flag"
             >
               {{ t("metaAssign", { name: flagLabel(change), value: change.value }) }}
-            </Tag>
+            </span>
           </div>
           <div v-if="state.modifyFlagsFalse.length" class="mission-flags">
             <span class="mission-sub-label">{{ t("missionPanelFlagsFalse") }}</span>
-            <Tag
+            <span
               v-for="(change, index) in state.modifyFlagsFalse"
               :key="`false-${index}`"
-              size="xs"
-              variant="plain"
+              class="mission-flag"
             >
               {{ t("metaAssign", { name: flagLabel(change), value: change.value }) }}
-            </Tag>
+            </span>
           </div>
         </dd>
       </div>
@@ -155,9 +157,9 @@ const go = (id: string) => {
         <dt class="mission-label">{{ t("missionPanelDialogs") }}</dt>
         <dd class="mission-value">
           <p v-for="(dialog, index) in state.startDialogs" :key="index" class="mission-dialog">
-            <Tag v-if="portraitText(dialog)" size="xs" variant="plain">
-              {{ portraitText(dialog) }}
-            </Tag>
+            <span v-if="portraitText(dialog)" class="mission-portrait">{{
+              portraitText(dialog)
+            }}</span>
             <span>{{ dialogText(dialog) }}</span>
           </p>
         </dd>
@@ -166,9 +168,9 @@ const go = (id: string) => {
         <dt class="mission-label">{{ t("missionPanelAlertDialogs") }}</dt>
         <dd class="mission-value">
           <p v-for="(dialog, index) in state.alertDialogs" :key="index" class="mission-dialog">
-            <Tag v-if="portraitText(dialog)" size="xs" variant="plain">
-              {{ portraitText(dialog) }}
-            </Tag>
+            <span v-if="portraitText(dialog)" class="mission-portrait">{{
+              portraitText(dialog)
+            }}</span>
             <span>{{ dialogText(dialog) }}</span>
           </p>
         </dd>
