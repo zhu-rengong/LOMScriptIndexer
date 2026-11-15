@@ -26,7 +26,7 @@ const openChip = (part: BattlePart, event: Event) => {
         </span>
         <button
           v-if="linkable(part)"
-          class="btn btn-sm meta-action"
+          class="btn meta-action"
           type="button"
           aria-haspopup="dialog"
           @click="openChip(part, $event)"

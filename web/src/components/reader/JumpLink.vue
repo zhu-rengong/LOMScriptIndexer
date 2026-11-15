@@ -221,12 +221,7 @@ watch(() => props.jump.position, loadCheckpoint, { immediate: true });
       </div>
     </div>
   </div>
-  <button
-    v-else-if="display.mode === 'link'"
-    class="jump btn btn-sm"
-    type="button"
-    @click="go(target)"
-  >
+  <button v-else-if="display.mode === 'link'" class="jump btn" type="button" @click="go(target)">
     <AppIcon name="arrow-right" class="arrow" />{{ display.text
     }}<span v-if="jump.dynamicSource" class="option-cond">{{ `  ${jump.dynamicSource}` }}</span>
   </button>

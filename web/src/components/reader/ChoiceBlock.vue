@@ -24,7 +24,7 @@ const openDice = (chip: MetaChip, event: Event) => {
     <template v-for="(chip, index) in diceChips" :key="`dice-${index}`">
       <button
         v-if="chip.target"
-        class="btn btn-sm meta-action"
+        class="btn meta-action"
         type="button"
         aria-haspopup="dialog"
         :title="chip.title"

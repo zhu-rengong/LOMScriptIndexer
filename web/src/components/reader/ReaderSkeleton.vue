@@ -28,6 +28,6 @@ const retry = () => {
   </div>
   <div v-else class="reader-skeleton is-failed">
     <span class="sk-caption">{{ t("loadTextFailed") }}</span>
-    <button class="tool-btn btn" type="button" @click="retry">{{ t("loadTextRetry") }}</button>
+    <button class="btn" type="button" @click="retry">{{ t("loadTextRetry") }}</button>
   </div>
 </template>

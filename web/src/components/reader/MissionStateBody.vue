@@ -95,7 +95,7 @@ const go = (id: string) => {
         <dd class="mission-value">
           <button
             v-if="canJump(state.start)"
-            class="mission-link btn btn-sm"
+            class="mission-link btn"
             type="button"
             @click="go(state.start)"
           >

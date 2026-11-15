@@ -29,7 +29,7 @@ const open = (chip: MetaChip, event: Event) => {
       <template v-for="(chip, index) in chips" :key="index">
         <button
           v-if="chip.target"
-          class="btn btn-sm meta-action meta-chip"
+          class="btn meta-action meta-chip"
           type="button"
           :class="{ 'is-hidden': chip.hidden }"
           aria-haspopup="dialog"

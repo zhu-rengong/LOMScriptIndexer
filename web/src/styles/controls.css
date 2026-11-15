@@ -110,12 +110,6 @@
     white-space: nowrap;
   }
 
-  .badge-danger {
-    border-color: var(--danger);
-    background: var(--surface-inset);
-    color: var(--danger);
-  }
-
   .badge-num {
     justify-content: center;
     min-width: 18px;
@@ -183,10 +177,6 @@
 
   .input.is-error:focus-visible {
     border-color: var(--danger);
-  }
-
-  .input-sm {
-    height: var(--ctl-sm);
   }
 
   .tabs {

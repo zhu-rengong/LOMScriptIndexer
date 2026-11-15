@@ -947,9 +947,6 @@
     min-width: 0;
   }
 
-  .overlay-title {
-  }
-
   .lookup-sub {
     padding: var(--sp-2) var(--sp-4) 0;
     color: var(--ink-2);
@@ -1232,10 +1229,6 @@
     padding: 0 5px;
   }
 
-  .lookup-cond .cx-var.is-link,
-  .mission-cond .cx-var.is-link {
-  }
-
   .lookup-cond .cx-fallback,
   .mission-cond .cx-fallback {
     padding: 0 4px;
@@ -1455,9 +1448,6 @@
     min-width: 0;
   }
 
-  .stats-title {
-  }
-
   .stats-title + .stats-note {
     margin-top: 6px;
   }
@@ -1649,14 +1639,6 @@
     color: var(--accent);
   }
 
-  .stats-mark {
-    flex: none;
-    width: 3px;
-    height: 14px;
-    border-radius: 1px;
-    opacity: 0.72;
-  }
-
   .stats-name {
     flex: 1;
     min-width: 0;
@@ -1679,9 +1661,6 @@
   .stats-chapter.is-open .stats-arrow {
     transform: rotate(0deg);
     color: var(--accent);
-  }
-
-  .stats-script {
   }
 
   .stats-script > td {

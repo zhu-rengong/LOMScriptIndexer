@@ -46,7 +46,7 @@ onMounted(() => {
       <h2 id="helpHeading" class="panel-title">{{ t("helpTitle") }}</h2>
       <button
         id="helpClose"
-        class="btn btn-icon btn-sm"
+        class="btn btn-icon"
         type="button"
         :title="t('closeTitle')"
         @click="close"

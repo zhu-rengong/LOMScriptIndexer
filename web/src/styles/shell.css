@@ -458,7 +458,8 @@
     color: var(--accent);
   }
 
-  .cat-chap-mark {
+  .cat-chap-mark,
+  .stats-mark {
     flex: none;
     width: 3px;
     height: 14px;

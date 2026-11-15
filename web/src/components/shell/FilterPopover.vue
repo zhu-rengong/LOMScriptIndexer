@@ -271,7 +271,7 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
                 </span>
               </button>
             </template>
-            <div v-else class="suggest-empty popover-empty">{{ t("suggestEmpty") }}</div>
+            <div v-else class="popover-empty">{{ t("suggestEmpty") }}</div>
           </div>
         </div>
       </div>
@@ -283,7 +283,7 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
           <button
             v-for="field in fields"
             :key="field.id"
-            class="filter-chip btn btn-sm btn-mono"
+            class="filter-chip btn btn-mono"
             type="button"
             :data-insert="`${field.id}:`"
             @click="onChipInsert(`${field.id}:`)"
@@ -298,7 +298,7 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
           <button
             v-for="op in OPS"
             :key="op"
-            class="filter-chip btn btn-sm btn-mono"
+            class="filter-chip btn btn-mono"
             type="button"
             :data-insert="op === '(' || op === ')' ? op : ` ${op} `"
             @click="onChipInsert(op === '(' || op === ')' ? op : ` ${op} `)"
@@ -313,7 +313,7 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
           <button
             v-for="example in EXAMPLES"
             :key="example.key"
-            class="filter-chip btn btn-sm btn-mono"
+            class="filter-chip btn btn-mono"
             type="button"
             :data-expr="example.expr"
             @click="applyExample(example.expr)"

@@ -74,7 +74,7 @@ const toggleBookmark = () => {
           <span class="tip-host" :title="t('backTitle')">
             <button
               id="backBtn"
-              class="btn btn-icon btn-sm"
+              class="btn btn-icon"
               type="button"
               :title="t('backTitle')"
               :aria-label="t('backTitle')"
@@ -87,7 +87,7 @@ const toggleBookmark = () => {
           <span class="tip-host" :title="t('forwardTitle')">
             <button
               id="forwardBtn"
-              class="btn btn-icon btn-sm"
+              class="btn btn-icon"
               type="button"
               :title="t('forwardTitle')"
               :aria-label="t('forwardTitle')"
@@ -102,7 +102,7 @@ const toggleBookmark = () => {
           <span class="tip-host" :title="t('condInferBtnTitle')">
             <button
               id="condInferBtn"
-              class="btn btn-icon btn-sm"
+              class="btn btn-icon"
               :class="{ 'is-on': condInferOn }"
               type="button"
               :aria-pressed="condInferOn"
@@ -116,7 +116,7 @@ const toggleBookmark = () => {
           <span class="tip-host" :title="t('inferBtnTitle')">
             <button
               id="inferBtn"
-              class="btn btn-icon btn-sm"
+              class="btn btn-icon"
               :class="{ 'is-on': inferOn }"
               type="button"
               :aria-pressed="inferOn"
@@ -130,7 +130,7 @@ const toggleBookmark = () => {
           <span class="tip-host" :title="t('revealBtnTitle')">
             <button
               id="revealBtn"
-              class="btn btn-icon btn-sm"
+              class="btn btn-icon"
               :class="{ 'is-on': revealOn }"
               type="button"
               :aria-pressed="revealOn"
@@ -145,7 +145,7 @@ const toggleBookmark = () => {
             <span class="tip-host" :title="t('navBtnTitle')">
               <button
                 id="navBtn"
-                class="btn btn-icon btn-sm"
+                class="btn btn-icon"
                 :class="{ 'is-on': navOpen }"
                 type="button"
                 aria-haspopup="true"
@@ -167,7 +167,7 @@ const toggleBookmark = () => {
           >
             <button
               id="bookmarkBtn"
-              class="btn btn-icon btn-sm"
+              class="btn btn-icon"
               type="button"
               :aria-pressed="isBookmarked"
               :aria-label="t(isBookmarked ? 'bookmarkRemoveTitle' : 'bookmarkAddTitle')"

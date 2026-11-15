@@ -37,7 +37,7 @@ onMounted(() => {
       <h2 id="changelogHeading" class="panel-title">{{ t("changelogTitle") }}</h2>
       <button
         id="changelogClose"
-        class="btn btn-icon btn-sm"
+        class="btn btn-icon"
         type="button"
         :title="t('closeTitle')"
         @click="close"

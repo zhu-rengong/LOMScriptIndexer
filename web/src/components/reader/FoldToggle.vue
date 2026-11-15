@@ -32,7 +32,7 @@ const isDisabled = computed(() => fold.state === "none");
   <span class="tip-host" :title="label">
     <button
       :id="UI_IDS.foldToggleBtn"
-      class="btn btn-icon btn-sm"
+      class="btn btn-icon"
       type="button"
       :disabled="isDisabled"
       :title="label"

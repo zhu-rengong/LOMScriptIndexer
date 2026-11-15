@@ -203,7 +203,7 @@ onMounted(() => {
       <span id="lookupTitle" class="overlay-title">{{ title }}</span>
       <button
         id="lookupClose"
-        class="btn btn-icon btn-sm"
+        class="btn btn-icon"
         type="button"
         :title="t('closeTitle')"
         @click="close"

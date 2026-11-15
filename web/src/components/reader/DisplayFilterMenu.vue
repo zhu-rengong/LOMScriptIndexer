@@ -41,7 +41,7 @@ onMounted(() => {
     <span class="tip-host" :title="t('displayFilterTitle')">
       <button
         :id="UI_IDS.displayFilterBtn"
-        class="btn btn-icon btn-sm"
+        class="btn btn-icon"
         :class="{ 'is-on': view.filtering }"
         type="button"
         aria-haspopup="dialog"
