@@ -20,5 +20,6 @@ provider:
 10. **本体只读**：游戏本体 `G:\SteamLibrary\steamapps\common\LegendOfMortal` 只读取，禁止写入或修改。
 11. **自动提交**：每次任务执行完成后使用git提交，但不推送远端。
 12. **静态可部署**：`docs/` 只由 `web/` 构建产生，资源相对路径、无服务端、无 CDN；`docs/data/` 与构建产物不入库；发布走 `tools/publish-pages.ps1` 推 `gh-pages`。
+13. **先读依赖**：引用的包、库、工具的参考源码位于 `D:\Code Repository\Node`，查 API、类型定义与行为前先去读，不凭记忆猜。
 
 除以上条例外，实现方式自由发挥。
