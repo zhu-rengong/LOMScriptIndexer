@@ -1,3 +1,4 @@
+import { useTimeoutFn } from "@vueuse/core";
 import { queryIndex } from "../lib/filter";
 import { overlay } from "../lib/overlay";
 import type { OverlayKey } from "../lib/overlayKeys";
@@ -36,13 +37,14 @@ export const useExprAutocomplete = (
   options: AutocompleteOptions,
 ) => {
   const state = ref<SuggestState>(emptyState());
-  let blurTimer: ReturnType<typeof setTimeout> | null = null;
 
   const isOpen = computed(() => overlay.isOpen(options.suggestKey));
 
   const hide = (): void => {
     overlay.close(options.suggestKey);
   };
+
+  const { start: scheduleHide } = useTimeoutFn(hide, 120, { immediate: false });
 
   const replaceRange = (start: number, end: number, text: string): void => {
     const current = value.value || "";
@@ -137,11 +139,7 @@ export const useExprAutocomplete = (
   };
 
   const onBlur = (): void => {
-    if (blurTimer !== null) clearTimeout(blurTimer);
-    blurTimer = setTimeout(() => {
-      blurTimer = null;
-      hide();
-    }, 120);
+    scheduleHide();
   };
 
   onMounted(() => {
@@ -157,7 +155,6 @@ export const useExprAutocomplete = (
   });
 
   onUnmounted(() => {
-    if (blurTimer !== null) clearTimeout(blurTimer);
     overlay.unregister(options.suggestKey);
   });
 

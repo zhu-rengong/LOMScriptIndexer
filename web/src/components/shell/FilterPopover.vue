@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { useDebounceFn } from "@vueuse/core";
 import { graph } from "../../data/graph";
 import { chapterTitle, t } from "../../i18n";
-import { byId, debounce, nearBottom } from "../../lib/browser";
+import { byId, nearBottom } from "../../lib/browser";
 import { applyFilter, EXAMPLES, FIELD_LABEL_KEYS, RESULT_LIMIT } from "../../lib/filter";
 import { overlay } from "../../lib/overlay";
 import { query } from "../../lib/query";
@@ -26,7 +27,7 @@ const exprValue = ref(store.filterSource);
 const visibleLimit = ref(RESULT_LIMIT);
 const suggestLimit = ref(SUGGEST_LIMIT);
 
-const applyDebounced = debounce(() => {
+const applyDebounced = useDebounceFn(() => {
   applyFilter(exprValue.value);
 }, 250);
 

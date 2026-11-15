@@ -6,7 +6,7 @@ import { applyFilter, resetFilterContext } from "../lib/filter";
 import { lang } from "../lib/lang";
 import { overlay } from "../lib/overlay";
 import { searchIndex } from "../lib/search";
-import { keys, readJson, writeJson } from "../lib/storage";
+import { keys, storedRef } from "../lib/storage";
 import type { ReaderVisibleKind, ReaderVisibility } from "../types/beats";
 import type { FontTarget } from "../types/font";
 import { UI_IDS } from "../ui/ids";
@@ -16,9 +16,10 @@ import { useScriptStore } from "./script";
 
 const CHAPTER_RAIL = "chapterRail";
 
-const storedInfer = readJson<boolean>(keys.infer);
-
-const storedCondInfer = readJson<boolean>(keys.condInfer);
+const flagStored = (key: string) =>
+  storedRef<boolean>(key, true, {
+    decode: (raw, base) => (typeof raw === "boolean" ? raw : base),
+  });
 
 export const useViewStore = defineStore("view", () => {
   const layout = ref("wide");
@@ -26,8 +27,8 @@ export const useViewStore = defineStore("view", () => {
   const outlineChapter = ref<number | undefined>(undefined);
   const fontTarget = ref<FontTarget>({ scope: "slot", id: "dialog" });
   const railOpen = ref(false);
-  const inferEnabled = ref(storedInfer === null ? true : storedInfer === true);
-  const condInferEnabled = ref(storedCondInfer === null ? true : storedCondInfer === true);
+  const inferEnabled = flagStored(keys.infer);
+  const condInferEnabled = flagStored(keys.condInfer);
   const revealOn = ref(false);
   const visibleKinds = ref<ReaderVisibility>({
     dialog: true,
@@ -90,12 +91,10 @@ export const useViewStore = defineStore("view", () => {
 
   const toggleInfer = (): void => {
     inferEnabled.value = !inferEnabled.value;
-    writeJson(keys.infer, inferEnabled.value);
   };
 
   const toggleCondInfer = (): void => {
     condInferEnabled.value = !condInferEnabled.value;
-    writeJson(keys.condInfer, condInferEnabled.value);
   };
 
   const toggleKind = (kind: ReaderVisibleKind): void => {

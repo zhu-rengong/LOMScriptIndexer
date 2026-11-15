@@ -1,3 +1,4 @@
+import { useEventListener } from "@vueuse/core";
 import type { Ref } from "vue";
 import { clamp } from "../lib/browser";
 import { pinia } from "../stores";
@@ -25,7 +26,7 @@ export const createGripController = (
   applyMeasure: (value: number) => void;
   currentWidth: () => number;
 } => {
-  let drag: DragState | null = null;
+  const drag = shallowRef<DragState | null>(null);
 
   const currentWidth = (): number =>
     readerRef.value ? Math.round(readerRef.value.getBoundingClientRect().width) : 0;
@@ -55,33 +56,34 @@ export const createGripController = (
     prefs.set({ measure: value });
   };
 
+  const active = () => (drag.value ? window : null);
+
   const onPointerMove = (event: PointerEvent) => {
-    if (!drag) return;
-    const delta = event.clientX - drag.startX;
-    const next = drag.edge === "left" ? drag.startWidth - delta * 2 : drag.startWidth + delta * 2;
-    drag.current = clampMeasure(next);
-    applyMeasure(drag.current);
+    const state = drag.value;
+    if (!state) return;
+    const delta = event.clientX - state.startX;
+    const next =
+      state.edge === "left" ? state.startWidth - delta * 2 : state.startWidth + delta * 2;
+    state.current = clampMeasure(next);
+    applyMeasure(state.current);
   };
 
   const onPointerUp = () => {
-    if (!drag) return;
-    const value = drag.current;
-    drag = null;
+    const state = drag.value;
+    if (!state) return;
+    drag.value = null;
     document.body.classList.remove("is-gripping");
-    window.removeEventListener("pointermove", onPointerMove);
-    window.removeEventListener("pointerup", onPointerUp);
-    window.removeEventListener("pointercancel", onPointerUp);
-    commitMeasure(value);
+    commitMeasure(state.current);
   };
+
+  useEventListener(active, "pointermove", onPointerMove);
+  useEventListener(active, ["pointerup", "pointercancel"], onPointerUp);
 
   const start = (edge: "left" | "right", event: PointerEvent) => {
     if (event.button !== 0) return;
     const width = currentWidth();
-    drag = { edge, startX: event.clientX, startWidth: width, current: width };
+    drag.value = { edge, startX: event.clientX, startWidth: width, current: width };
     document.body.classList.add("is-gripping");
-    window.addEventListener("pointermove", onPointerMove);
-    window.addEventListener("pointerup", onPointerUp);
-    window.addEventListener("pointercancel", onPointerUp);
   };
 
   return {

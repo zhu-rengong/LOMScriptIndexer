@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { useDebounceFn } from "@vueuse/core";
 import { textStore } from "../../data/text";
 import { t } from "../../i18n";
-import { debounce, scheduleFrame } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
 import { needleOf, searchIndex, type SearchHit, type SearchResult } from "../../lib/search";
 import { UI_IDS } from "../../ui/ids";
@@ -163,9 +163,9 @@ const runRefresh = async (): Promise<void> => {
   updateStatus(value);
 };
 
-const refresh = scheduleFrame(() => {
+const refresh = useDebounceFn(() => {
   void runRefresh();
-});
+}, 16);
 
 const warmFullText = (lang: string) => {
   if (warmPromise && warmLang === lang) return warmPromise;
@@ -204,7 +204,7 @@ const submit = () => {
   warmFullText(store.textLang());
 };
 
-const onInput = debounce(submit, 160);
+const onInput = useDebounceFn(submit, 160);
 
 const pickFirst = (): boolean => {
   const hit = hits.value[0];

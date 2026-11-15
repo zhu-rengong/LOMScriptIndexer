@@ -9,7 +9,7 @@ import {
   fontStackOf,
 } from "../lib/fontFamilies";
 import { GROUPS, TYPE_SLOTS, slotById } from "../lib/fontTypes";
-import { keys, readJson, writeJson } from "../lib/storage";
+import { keys, storedRef } from "../lib/storage";
 import type {
   CapsMode,
   FontScope,
@@ -197,13 +197,70 @@ const normalizeSlot = (raw: unknown, base: PrefEntry): PrefEntry => {
   };
 };
 
+const defaultState = (): StoredPrefs => ({
+  version: PREFS_VERSION,
+  groups: defaultGroups(),
+  slots: defaultSlots(),
+  measure: MEASURE_DEFAULT,
+  showPortraits: true,
+  portraitSize: PORTRAIT_SIZE_DEFAULT,
+});
+
+const decodePrefs = (raw: unknown): StoredPrefs => {
+  if (!raw || typeof raw !== "object") return defaultState();
+  const source = raw as Record<string, unknown>;
+  if (source.version !== PREFS_VERSION) return defaultState();
+  const next = defaultState();
+  next.measure = Math.round(clampNumber(source.measure, MEASURE_MIN, MEASURE_MAX, MEASURE_DEFAULT));
+  next.showPortraits = source.showPortraits !== false;
+  next.portraitSize = clampPortraitSize(source.portraitSize, PORTRAIT_SIZE_DEFAULT);
+  const storedGroups =
+    source.groups && typeof source.groups === "object"
+      ? (source.groups as Record<string, unknown>)
+      : null;
+  if (storedGroups) {
+    for (const group of GROUPS) {
+      next.groups[group.id] = normalizeGroup(storedGroups[group.id], next.groups[group.id]);
+    }
+  }
+  const storedSlots =
+    source.slots && typeof source.slots === "object"
+      ? (source.slots as Record<string, unknown>)
+      : null;
+  if (storedSlots) {
+    for (const slot of TYPE_SLOTS) {
+      next.slots[slot.id] = normalizeSlot(storedSlots[slot.id], next.slots[slot.id]);
+    }
+  }
+  return next;
+};
+
 export const usePrefsStore = defineStore("prefs", () => {
-  const groups = ref<Record<string, PrefEntry>>(defaultGroups());
-  const slots = ref<Record<string, PrefEntry>>(defaultSlots());
-  const measure = ref(MEASURE_DEFAULT);
-  const showPortraits = ref(true);
-  const portraitSize = ref(PORTRAIT_SIZE_DEFAULT);
+  const state = storedRef<StoredPrefs>(KEY, defaultState(), { decode: decodePrefs });
   const customFontOpen = ref(false);
+
+  const groups = computed(() => state.value.groups);
+  const slots = computed(() => state.value.slots);
+  const measure = computed({
+    get: () => state.value.measure,
+    set: (value: number) => {
+      state.value.measure = Math.round(
+        clampNumber(value, MEASURE_MIN, MEASURE_MAX, state.value.measure),
+      );
+    },
+  });
+  const showPortraits = computed({
+    get: () => state.value.showPortraits,
+    set: (value: boolean) => {
+      state.value.showPortraits = !!value;
+    },
+  });
+  const portraitSize = computed({
+    get: () => state.value.portraitSize,
+    set: (value: number) => {
+      state.value.portraitSize = clampPortraitSize(value, state.value.portraitSize);
+    },
+  });
 
   const groupStack = (groupId: string): string =>
     fontStackOf((groups.value[groupId] || GROUP_DEFAULT).font);
@@ -287,73 +344,15 @@ export const usePrefsStore = defineStore("prefs", () => {
     }
   };
 
-  const persist = (): void => {
-    writeJson(KEY, {
-      version: PREFS_VERSION,
-      groups: groups.value,
-      slots: slots.value,
-      measure: measure.value,
-      showPortraits: showPortraits.value,
-      portraitSize: portraitSize.value,
-    });
-  };
-
-  let frame = 0;
-
-  const flush = (): void => {
-    frame = 0;
-    applyToDocument();
-    persist();
-  };
-
-  const schedule = (): void => {
-    if (frame) return;
-    frame = requestAnimationFrame(flush);
-  };
+  watch(state, applyToDocument, { deep: true, flush: "post", immediate: true });
 
   const get = (): PrefState => ({
-    groups: groups.value,
-    slots: slots.value,
-    measure: measure.value,
-    showPortraits: showPortraits.value,
-    portraitSize: portraitSize.value,
+    groups: state.value.groups,
+    slots: state.value.slots,
+    measure: state.value.measure,
+    showPortraits: state.value.showPortraits,
+    portraitSize: state.value.portraitSize,
   });
-
-  const resetDefaults = (): void => {
-    groups.value = defaultGroups();
-    slots.value = defaultSlots();
-    measure.value = MEASURE_DEFAULT;
-    showPortraits.value = true;
-    portraitSize.value = PORTRAIT_SIZE_DEFAULT;
-  };
-
-  const restoreFromStorage = (): void => {
-    resetDefaults();
-    const saved = readJson<StoredPrefs>(KEY);
-    if (!saved || typeof saved !== "object") return;
-    if (saved.version !== PREFS_VERSION) {
-      persist();
-      return;
-    }
-    const source = saved;
-    measure.value = Math.round(
-      clampNumber(source.measure, MEASURE_MIN, MEASURE_MAX, MEASURE_DEFAULT),
-    );
-    showPortraits.value = source.showPortraits !== false;
-    portraitSize.value = clampPortraitSize(source.portraitSize, PORTRAIT_SIZE_DEFAULT);
-    const storedGroups = source.groups && typeof source.groups === "object" ? source.groups : null;
-    if (storedGroups) {
-      for (const group of GROUPS) {
-        groups.value[group.id] = normalizeGroup(storedGroups[group.id], groups.value[group.id]);
-      }
-    }
-    const storedSlots = source.slots && typeof source.slots === "object" ? source.slots : null;
-    if (storedSlots) {
-      for (const slot of TYPE_SLOTS) {
-        slots.value[slot.id] = normalizeSlot(storedSlots[slot.id], slots.value[slot.id]);
-      }
-    }
-  };
 
   const patchEntry = (current: PrefEntry, next: Partial<PrefEntry>, slotScope: boolean): void => {
     if (typeof next.font === "string") current.font = next.font;
@@ -382,36 +381,28 @@ export const usePrefsStore = defineStore("prefs", () => {
   const set = (patch: PrefPatch): PrefState => {
     if (patch && typeof patch === "object") {
       if (typeof patch.showPortraits === "boolean") showPortraits.value = patch.showPortraits;
-      if (patch.portraitSize !== undefined) {
-        portraitSize.value = clampPortraitSize(patch.portraitSize, portraitSize.value);
-      }
-      if (patch.measure !== undefined) {
-        measure.value = Math.round(
-          clampNumber(patch.measure, MEASURE_MIN, MEASURE_MAX, measure.value),
-        );
-      }
+      if (patch.portraitSize !== undefined) portraitSize.value = patch.portraitSize;
+      if (patch.measure !== undefined) measure.value = patch.measure;
       if (patch.groups && typeof patch.groups === "object") {
         for (const groupId of Object.keys(patch.groups)) {
-          const current = groups.value[groupId];
+          const current = state.value.groups[groupId];
           if (!current) continue;
           patchEntry(current, patch.groups[groupId] || {}, false);
         }
       }
       if (patch.slots && typeof patch.slots === "object") {
         for (const slotId of Object.keys(patch.slots)) {
-          const current = slots.value[slotId];
+          const current = state.value.slots[slotId];
           if (!current) continue;
           patchEntry(current, patch.slots[slotId] || {}, true);
         }
       }
     }
-    schedule();
     return get();
   };
 
   const reset = (): PrefState => {
-    resetDefaults();
-    schedule();
+    state.value = defaultState();
     return get();
   };
 
@@ -426,9 +417,6 @@ export const usePrefsStore = defineStore("prefs", () => {
 
   const isCustomFont = (value: string): boolean =>
     !!value && value !== FOLLOW_BASE && value !== FOLLOW_GROUP && !fontPreset(value);
-
-  restoreFromStorage();
-  applyToDocument();
 
   return {
     labels: LABELS,

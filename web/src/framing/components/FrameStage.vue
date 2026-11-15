@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
+import { useResizeObserver } from "@vueuse/core";
 import type { Frame } from "../frames";
 import { MIN_WIDTH, clamp, frameBox } from "../frames";
 import { artUrl } from "../api";
@@ -15,17 +16,11 @@ const dragging = ref(false);
 const loaded = ref(false);
 
 let drag: Drag | null = null;
-let observer: ResizeObserver | null = null;
 
-onMounted(() => {
-  observer = new ResizeObserver((entries) => {
-    const rect = entries[0]?.contentRect;
-    if (rect) size.value = { width: rect.width, height: rect.height };
-  });
-  if (viewport.value) observer.observe(viewport.value);
+useResizeObserver(viewport, (entries) => {
+  const rect = entries[0]?.contentRect;
+  if (rect) size.value = { width: rect.width, height: rect.height };
 });
-
-onBeforeUnmount(() => observer?.disconnect());
 
 const active = computed(() => store.current);
 const src = computed(() => (active.value ? artUrl(active.value.artifact.file) : ""));

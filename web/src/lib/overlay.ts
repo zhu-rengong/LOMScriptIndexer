@@ -1,6 +1,8 @@
 import { autoUpdate, computePosition, flip, offset, shift, size } from "@floating-ui/dom";
 import type { Middleware, Placement as FloatingPlacement, VirtualElement } from "@floating-ui/dom";
-import { byId, focusableElements } from "./browser";
+import { onClickOutside, useEventListener } from "@vueuse/core";
+import { useFocusTrap } from "@vueuse/integrations/useFocusTrap";
+import { byId } from "./browser";
 import type { OverlayKey } from "./overlayKeys";
 
 const MARGIN = 12;
@@ -34,6 +36,10 @@ const defs = new Map<OverlayKey, OverlayDef>();
 const openState = reactive<Record<string, boolean>>({});
 const stack: { key: OverlayKey; trigger: HTMLElement | null; focusInside: boolean }[] = [];
 const cleanups = new Map<OverlayKey, () => void>();
+const outsideStops = new Map<OverlayKey, () => void>();
+const stackRevision = ref(0);
+let pendingActivation = false;
+let pendingAutofocus = "";
 
 const panelOf = (def: OverlayDef | undefined): HTMLElement | null => (def ? byId(def.id) : null);
 
@@ -112,6 +118,12 @@ const stopPlacement = (key: OverlayKey): void => {
   if (stop) stop();
 };
 
+const stopOutside = (key: OverlayKey): void => {
+  const stop = outsideStops.get(key);
+  outsideStops.delete(key);
+  if (stop) stop();
+};
+
 const startPlacement = (key: OverlayKey): void => {
   const def = defs.get(key);
   const panel = panelOf(def);
@@ -173,6 +185,42 @@ const hideLayer = (key: OverlayKey): void => {
   if (typeof def.onHide === "function") def.onHide();
 };
 
+const topKey = (): OverlayKey | null => (stack.length ? stack[stack.length - 1].key : null);
+
+const trapPanel = computed<HTMLElement | null>(() => {
+  void stackRevision.value;
+  const key = topKey();
+  const def = key ? defs.get(key) : undefined;
+  if (!def || !TRAP_GROUPS[def.group || ""]) return null;
+  return panelOf(def);
+});
+
+const initialFocusTarget = (): HTMLElement | false => {
+  if (!pendingActivation) return false;
+  pendingActivation = false;
+  const autofocus = pendingAutofocus;
+  pendingAutofocus = "";
+  return (autofocus ? byId(autofocus) : null) || trapPanel.value || false;
+};
+
+const trap = useFocusTrap(() => [trapPanel.value], {
+  escapeDeactivates: false,
+  returnFocusOnDeactivate: false,
+  allowOutsideClick: true,
+  initialFocus: initialFocusTarget,
+  fallbackFocus: () => trapPanel.value || document.body,
+});
+
+watch(
+  trapPanel,
+  () => {
+    if (trap.hasFocus.value) trap.deactivate();
+    if (!trapPanel.value) return;
+    trap.activate();
+  },
+  { flush: "post" },
+);
+
 const open = (
   key: OverlayKey,
   options?: {
@@ -216,10 +264,12 @@ const open = (
   if (placement) def.placement = placement;
   startPlacement(key);
 
+  stackRevision.value++;
+
   if (!existing) {
     const autofocus = opts.autofocus || def.autofocus;
     if (autofocus) {
-      const target = typeof autofocus === "string" ? byId(autofocus) : autofocus;
+      const target = byId(autofocus);
       if (target) {
         try {
           target.focus({ preventScroll: true });
@@ -228,7 +278,34 @@ const open = (
         }
       }
     }
+    if (TRAP_GROUPS[def.group || ""]) {
+      pendingActivation = true;
+      pendingAutofocus = autofocus || "";
+    }
   }
+
+  stopOutside(key);
+  if (AUTO_CLOSE_GROUPS[def.group || ""]) {
+    outsideStops.set(
+      key,
+      onClickOutside(
+        panel,
+        () => {
+          close(key, { restoreFocus: false });
+        },
+        {
+          ignore: () => {
+            const current = defs.get(key);
+            const items: (HTMLElement | null)[] = [panelOf(current)];
+            const anchor = triggerOf(current);
+            if (anchor) items.push(anchor);
+            return items;
+          },
+        },
+      ),
+    );
+  }
+
   if (typeof def.onOpen === "function") def.onOpen();
   return true;
 };
@@ -236,6 +313,7 @@ const open = (
 const close = (key: OverlayKey, options?: { restoreFocus?: boolean }): boolean => {
   const opts = options || {};
   stopPlacement(key);
+  stopOutside(key);
   const index = stack.findIndex((layer) => layer.key === key);
   if (index < 0) {
     hideLayer(key);
@@ -243,11 +321,11 @@ const close = (key: OverlayKey, options?: { restoreFocus?: boolean }): boolean =
   }
   const layer = stack.splice(index, 1)[0];
   hideLayer(key);
+  stackRevision.value++;
+  if (trap.hasFocus.value) trap.deactivate();
   if (opts.restoreFocus && !layer.focusInside) restoreFocus(layer);
   return true;
 };
-
-const topKey = (): OverlayKey | null => (stack.length ? stack[stack.length - 1].key : null);
 
 const closeTop = (): boolean => {
   const key = topKey();
@@ -255,73 +333,18 @@ const closeTop = (): boolean => {
   return close(key, { restoreFocus: true });
 };
 
-const trapTab = (event: KeyboardEvent): void => {
-  const key = topKey();
-  const def = key ? defs.get(key) : undefined;
-  if (!def || !TRAP_GROUPS[def.group || "menu"]) return;
-  const root = panelOf(def);
-  if (!root) return;
-  const list = focusableElements(root);
-  if (!list.length) return;
-  const first = list[0];
-  const last = list[list.length - 1];
-  const active = document.activeElement;
-  if (!root.contains(active)) {
-    event.preventDefault();
-    first.focus();
-    return;
-  }
-  if (event.shiftKey && active === first) {
-    event.preventDefault();
-    last.focus();
-    return;
-  }
-  if (!event.shiftKey && active === last) {
-    event.preventDefault();
-    first.focus();
-  }
-};
-
-document.addEventListener(
+useEventListener(
+  document,
   "keydown",
   (event) => {
     if (event.defaultPrevented) return;
-    if (event.key === "Escape") {
-      if (closeTop()) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      return;
-    }
-    if (event.key === "Tab") trapTab(event);
+    if (event.key !== "Escape") return;
+    if (!closeTop()) return;
+    event.preventDefault();
+    event.stopPropagation();
   },
-  true,
+  { capture: true },
 );
-
-document.addEventListener("click", (event) => {
-  for (let guard = 0; guard < 8; guard++) {
-    const key = topKey();
-    const def = key ? defs.get(key) : undefined;
-    if (!key || !def || !AUTO_CLOSE_GROUPS[def.group || ""]) return;
-    const panel = panelOf(def);
-    const trigger = triggerOf(def);
-    if (!panel || panel.hidden) return;
-    const target = event.target as Node;
-    if (panel.contains(target)) return;
-    if (trigger && trigger.contains && trigger.contains(target)) return;
-    let kept = false;
-    for (const keep of def.keep || []) {
-      const keptDef = defs.get(keep);
-      const keptPanel = keptDef && panelOf(keptDef);
-      if (keptPanel && keptPanel.contains(target)) {
-        kept = true;
-        break;
-      }
-    }
-    close(key, { restoreFocus: false });
-    if (kept) return;
-  }
-});
 
 export const overlay = {
   register: (key: OverlayKey, def: OverlayDef): void => {

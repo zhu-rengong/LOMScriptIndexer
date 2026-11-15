@@ -1,3 +1,5 @@
+import { useBrowserLocation } from "@vueuse/core";
+
 export const readHash = (): string | null => {
   const match = /^#\/(.+)$/.exec(location.hash || "");
   if (!match) return null;
@@ -15,10 +17,12 @@ export const writeHash = (id: string): void => {
 };
 
 export const useHashRoute = (onChange: (id: string) => void): void => {
-  const handler = () => {
-    const id = readHash();
-    if (id) onChange(id);
-  };
-  onMounted(() => window.addEventListener("hashchange", handler));
-  onBeforeUnmount(() => window.removeEventListener("hashchange", handler));
+  const location = useBrowserLocation();
+  watch(
+    () => location.value.hash,
+    () => {
+      const id = readHash();
+      if (id) onChange(id);
+    },
+  );
 };

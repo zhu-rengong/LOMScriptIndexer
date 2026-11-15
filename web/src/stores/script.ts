@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { dataset } from "../data/dataset";
 import { graph } from "../data/graph";
 import { lang as langState } from "../lib/lang";
-import { keys, readJson, writeJson } from "../lib/storage";
+import { keys, storedRef } from "../lib/storage";
 import type { GraphNode } from "../types/graph";
 
 const graphMeta = dataset.meta;
@@ -18,13 +18,18 @@ export type FilterState = {
   loading: boolean;
 };
 
-const loadBookmarks = (): Set<string> => {
-  const saved = readJson<string[]>(keys.bookmarks);
+const readBookmarks = (raw: unknown): Set<string> => {
   const out = new Set<string>();
-  if (!Array.isArray(saved)) return out;
-  for (const id of saved) if (typeof id === "string") out.add(id);
+  if (!Array.isArray(raw)) return out;
+  for (const id of raw) if (typeof id === "string") out.add(id);
   return out;
 };
+
+const bookmarksRef = () =>
+  storedRef<Set<string>>(keys.bookmarks, new Set<string>(), {
+    decode: (raw) => readBookmarks(raw),
+    encode: (value) => JSON.stringify(Array.from(value)),
+  });
 
 export const useScriptStore = defineStore("script", () => {
   const positions = new Map<string, number>();
@@ -39,7 +44,7 @@ export const useScriptStore = defineStore("script", () => {
   const visibilityRevision = ref(0);
   const filterRevision = ref(0);
 
-  const bookmarks = loadBookmarks();
+  const bookmarks = bookmarksRef();
   const bookmarkVersion = ref(0);
 
   const computeVisible = (): void => {
@@ -119,26 +124,20 @@ export const useScriptStore = defineStore("script", () => {
     filterRevision.value++;
   };
 
-  const isBookmarked = (id: string): boolean => bookmarks.has(id);
+  const isBookmarked = (id: string): boolean => bookmarks.value.has(id);
 
-  const bookmarkList = (): string[] => Array.from(bookmarks);
-
-  const saveBookmarks = (): void => {
-    writeJson(keys.bookmarks, bookmarkList());
-  };
+  const bookmarkList = (): string[] => Array.from(bookmarks.value);
 
   const toggleBookmark = (id: string): boolean => {
     if (!id) return false;
-    if (bookmarks.has(id)) bookmarks.delete(id);
-    else bookmarks.add(id);
-    saveBookmarks();
+    if (bookmarks.value.has(id)) bookmarks.value.delete(id);
+    else bookmarks.value.add(id);
     bookmarkVersion.value++;
-    return bookmarks.has(id);
+    return bookmarks.value.has(id);
   };
 
   const clearBookmarks = (): void => {
-    bookmarks.clear();
-    saveBookmarks();
+    bookmarks.value.clear();
     bookmarkVersion.value++;
   };
 

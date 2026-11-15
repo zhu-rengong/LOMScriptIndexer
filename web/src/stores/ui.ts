@@ -1,19 +1,22 @@
+import { useTimeoutFn } from "@vueuse/core";
 import { defineStore } from "pinia";
 
 export const useUiStore = defineStore("ui", () => {
   const toastText = ref("");
   const ioText = ref("");
 
-  let timer: ReturnType<typeof setTimeout> | null = null;
+  const { start: scheduleClear } = useTimeoutFn(
+    () => {
+      toastText.value = "";
+    },
+    2400,
+    { immediate: false },
+  );
 
   const toast = (message: string): void => {
     if (!message) return;
     toastText.value = message;
-    if (timer !== null) clearTimeout(timer);
-    timer = setTimeout(() => {
-      toastText.value = "";
-      timer = null;
-    }, 2400);
+    scheduleClear();
   };
 
   const setIoStatus = (message: string): void => {

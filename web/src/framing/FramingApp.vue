@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
+import { useEventListener, useTimeoutFn } from "@vueuse/core";
 import CharacterPanel from "./components/CharacterPanel.vue";
 import FrameStage from "./components/FrameStage.vue";
 import InspectorPanel from "./components/InspectorPanel.vue";
@@ -10,17 +11,20 @@ const file = ref<HTMLInputElement | null>(null);
 const navOpen = ref(false);
 const toast = ref("");
 
-let timer: ReturnType<typeof setTimeout> | null = null;
+const { start: scheduleToastHide } = useTimeoutFn(
+  () => {
+    toast.value = "";
+  },
+  4200,
+  { immediate: false },
+);
 
 watch(
   () => store.notice,
   (value) => {
     if (!value) return;
     toast.value = value;
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => {
-      toast.value = "";
-    }, 4200);
+    scheduleToastHide();
   },
 );
 
@@ -86,16 +90,8 @@ const beforeUnload = (event: BeforeUnloadEvent): void => {
   if (store.dirty) event.preventDefault();
 };
 
-onMounted(() => {
-  window.addEventListener("keydown", onKey);
-  window.addEventListener("beforeunload", beforeUnload);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("keydown", onKey);
-  window.removeEventListener("beforeunload", beforeUnload);
-  if (timer) clearTimeout(timer);
-});
+useEventListener(window, "keydown", onKey);
+useEventListener(window, "beforeunload", beforeUnload);
 </script>
 
 <template>

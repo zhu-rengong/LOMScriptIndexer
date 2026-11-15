@@ -1,27 +1,17 @@
-import { debounce } from "../lib/browser";
+import { useBreakpoints } from "@vueuse/core";
 import { overlay } from "../lib/overlay";
 import { pinia } from "../stores";
 import { useViewStore } from "../stores/view";
 
 export type LayoutName = "wide" | "mid" | "narrow" | "compact" | "mobile";
 
-const BREAKPOINTS: [number, LayoutName][] = [
-  [1440, "wide"],
-  [1200, "mid"],
-  [1024, "narrow"],
-  [768, "compact"],
-];
-
-export const layoutNameFor = (width: number): LayoutName => {
-  for (const [minWidth, name] of BREAKPOINTS) if (width >= minWidth) return name;
-  return "mobile";
-};
+const BREAKPOINTS = { wide: 1440, mid: 1200, narrow: 1024, compact: 768 };
 
 export const useLayout = (onChange?: () => void): void => {
   const view = useViewStore(pinia);
+  const active = useBreakpoints(BREAKPOINTS).active();
 
-  const applyLayout = () => {
-    const next = layoutNameFor(window.innerWidth);
+  const applyLayout = (next: LayoutName): void => {
     if (next === view.layout && document.body.dataset.layout === next) return;
     view.setLayout(next);
     document.body.dataset.layout = next;
@@ -32,19 +22,5 @@ export const useLayout = (onChange?: () => void): void => {
     if (onChange) onChange();
   };
 
-  const onResize = debounce(() => {
-    applyLayout();
-    overlay.close("navMenu");
-  }, 80);
-
-  onMounted(() => {
-    applyLayout();
-    document.body.dataset.layout = view.layout;
-    window.addEventListener("resize", onResize);
-  });
-
-  onBeforeUnmount(() => {
-    onResize.cancel();
-    window.removeEventListener("resize", onResize);
-  });
+  watch(active, () => applyLayout((active.value || "mobile") as LayoutName), { immediate: true });
 };

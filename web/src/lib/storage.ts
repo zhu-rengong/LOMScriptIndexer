@@ -1,3 +1,6 @@
+import { useStorage } from "@vueuse/core";
+import type { RemovableRef, Serializer } from "@vueuse/core";
+
 const NAMESPACE = "legend-of-mortal.scriptindexer";
 
 export const keys = {
@@ -8,39 +11,39 @@ export const keys = {
   condInfer: `${NAMESPACE}.condInfer.v1`,
 };
 
-export const readRaw = (key: string): string | null => {
+export type StoredOptions<T> = {
+  decode: (raw: unknown, base: T) => T;
+  encode?: (value: T) => string;
+};
+
+const parse = (raw: string): unknown => {
   try {
-    return localStorage.getItem(key);
+    return JSON.parse(raw);
   } catch {
-    return null;
+    return raw;
   }
 };
 
-export const writeRaw = (key: string, value: string): boolean => {
-  try {
-    localStorage.setItem(key, value);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-export const readJson = <T>(key: string): T | null => {
-  const raw = readRaw(key);
-  if (raw === null) return null;
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return null;
-  }
-};
-
-export const writeJson = (key: string, value: unknown): boolean => {
-  let payload = "";
-  try {
-    payload = JSON.stringify(value);
-  } catch {
-    return false;
-  }
-  return writeRaw(key, payload);
+export const storedRef = <T extends string | number | boolean | object | null>(
+  key: string,
+  defaults: T,
+  options: StoredOptions<T>,
+): RemovableRef<T> => {
+  const serializer: Serializer<T> = {
+    read: (raw) => {
+      try {
+        return options.decode(parse(raw), defaults);
+      } catch {
+        return defaults;
+      }
+    },
+    write: (value) => (options.encode ? options.encode(value) : JSON.stringify(value)),
+  };
+  return useStorage<T>(key, defaults, undefined, {
+    writeDefaults: false,
+    mergeDefaults: false,
+    listenToStorageChanges: true,
+    serializer,
+    onError: () => {},
+  });
 };

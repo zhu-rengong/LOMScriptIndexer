@@ -1,8 +1,8 @@
+import { useNavigatorLanguage, usePreferredLanguages } from "@vueuse/core";
 import { LANGS, messageOf } from "../i18n";
 import { languageMeta } from "../i18n/meta";
-import { keys, readRaw, writeRaw } from "./storage";
+import { keys, storedRef } from "./storage";
 
-const KEY = keys.lang;
 const DEFAULT = "zh-tw";
 
 const has = (id: unknown): id is string => typeof id === "string" && LANGS.indexOf(id) >= 0;
@@ -15,18 +15,16 @@ const match = (raw: unknown): string => {
   return /hans|-cn|-sg|-my/.test(tag) ? "zh-cn" : "zh-tw";
 };
 
-const read = (): string => readRaw(KEY) || "";
+const pinned = storedRef<string>(keys.lang, "", {
+  decode: (raw, base) => (has(raw) ? raw : base),
+  encode: (value) => value,
+});
 
-const pinnedLang = (): string => {
-  const id = read();
-  return has(id) ? id : "";
-};
+const preferredLanguages = usePreferredLanguages();
+const { language } = useNavigatorLanguage();
 
 const detect = (): string => {
-  const tags =
-    navigator.languages && navigator.languages.length
-      ? navigator.languages
-      : [navigator.language || ""];
+  const tags = preferredLanguages.value.length ? preferredLanguages.value : [language.value || ""];
   for (const raw of tags) {
     const id = match(raw);
     if (has(id)) return id;
@@ -34,11 +32,12 @@ const detect = (): string => {
   return has(DEFAULT) ? DEFAULT : LANGS[0] || DEFAULT;
 };
 
-const initial = (): string => pinnedLang() || detect();
+const initial = (): string => (has(pinned.value) ? pinned.value : detect());
 
 const pin = (id: string): boolean => {
   if (!has(id)) return false;
-  return writeRaw(KEY, id);
+  pinned.value = id;
+  return true;
 };
 
 const htmlOf = (id: string): string => languageMeta[id]?.html || String(id || DEFAULT);
