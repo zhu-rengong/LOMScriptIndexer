@@ -67,11 +67,13 @@ const noteText = () => {
 const messageText = (value: string) => {
   if (value.length < 2) return t("searchTooShort");
   const progress = buildProgress.value;
-  if (building.value) {
-    return progress.total > 0 ? t("searchIndexingText", progress) : "";
+  const loading = !textStore.progress().done;
+  if (progress.total > 0 && (progress.done < progress.total || loading)) {
+    return t("searchIndexingText", progress);
   }
+  if (building.value) return "";
   if (hits.value.length) return "";
-  if (!textStore.progress().done) return "";
+  if (loading) return "";
   return t(hasActiveFilter() ? "searchNoHit" : "searchEmpty");
 };
 
