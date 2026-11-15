@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { textStore } from "../../data/text";
 import { buildReaderBlocks } from "../../lib/blocks";
-import { clamp } from "../../lib/browser";
+import { clamp, normalizeSearchText } from "../../lib/browser";
 import type { FocusTarget } from "../../stores/panels";
 import BlockList from "./BlockList.vue";
 import EmptyState from "./EmptyState.vue";
@@ -119,10 +119,15 @@ const firstByTarget = (root: HTMLElement, target: FocusTarget): HTMLElement | nu
     (candidate) => candidate.dataset.kind === target.kind && candidate.dataset.key === target.key,
   ) || null;
 
-const firstByText = (root: HTMLElement, query: string): HTMLElement | null =>
-  Array.from(root.querySelectorAll<HTMLElement>(HIT_SELECTOR)).find((candidate) =>
-    (candidate.textContent || "").toLowerCase().includes(query),
-  ) || null;
+const firstByText = (root: HTMLElement, query: string): HTMLElement | null => {
+  const needle = normalizeSearchText(query);
+  if (!needle) return null;
+  return (
+    Array.from(root.querySelectorAll<HTMLElement>(HIT_SELECTOR)).find((candidate) =>
+      normalizeSearchText(candidate.textContent || "").includes(needle),
+    ) || null
+  );
+};
 
 const applyHit = async () => {
   const current = node.value;

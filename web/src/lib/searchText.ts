@@ -1,6 +1,7 @@
 import { convert } from "../data/convert";
 import { dataset } from "../data/dataset";
 import { textStore } from "../data/text";
+import { normalizeSearchText } from "./browser";
 import * as beatRows from "./beatRows";
 import { metaText } from "./conditions";
 import { scriptStore as script } from "./scriptStore";
@@ -62,7 +63,7 @@ export const searchTextOfId = (id: string): string => {
   if (cached !== undefined) return cached;
   const rows = rowsOf(textLang, id);
   if (!rows) return "";
-  const text = `${plainOf(textLang, id)}\n${metaOf(rows)}`.toLowerCase();
+  const text = normalizeSearchText(`${plainOf(textLang, id)}\n${metaOf(rows)}`);
   searchTexts.set(id, text);
   return text;
 };

@@ -2,7 +2,7 @@ import { convert } from "../data/convert";
 import { graph } from "../data/graph";
 import { textStore } from "../data/text";
 import type { Chapter } from "../types/graph";
-import { toNeedle } from "./browser";
+import { normalizeSearchText, toNeedle } from "./browser";
 import { createSearchEngine, searchCandidates, type SearchDoc } from "./searchEngine";
 import { resetSearchText, searchTextOfId } from "./searchText";
 import { scriptStore as script } from "./scriptStore";
@@ -51,7 +51,7 @@ const reset = (): void => {
 };
 
 export const needleOf = (input: unknown): string =>
-  toNeedle(convert.text(script().textLang(), String(input ?? "")));
+  normalizeSearchText(convert.text(script().textLang(), String(input ?? "")));
 
 const syncIndex = (): void => {
   const current = script().lang;
