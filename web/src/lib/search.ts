@@ -4,7 +4,7 @@ import { graph } from "../data/graph";
 import { textStore } from "../data/text";
 import type { Chapter } from "../types/graph";
 import { normalizeSearchText, toNeedle } from "./browser";
-import { readSearchIndex, writeSearchIndex } from "./searchCache";
+import { clearSearchIndex, readSearchIndex, writeSearchIndex } from "./searchCache";
 import {
   createSearchEngine,
   loadSearchEngine,
@@ -78,8 +78,18 @@ const notify = (): void => {
 export const needleOf = (input: unknown): string =>
   normalizeSearchText(convert.text(script().textLang(), String(input ?? "")));
 
-const cacheKey = (): string =>
-  [script().lang, script().textLang(), dataset.meta.generated, SEARCH_INDEX_VERSION].join("|");
+const cacheKey = (): string => {
+  const counts = dataset.meta.counts;
+  return [
+    script().lang,
+    script().textLang(),
+    dataset.meta.generated,
+    dataset.schema,
+    counts.scripts ?? 0,
+    counts.edges ?? 0,
+    SEARCH_INDEX_VERSION,
+  ].join("|");
+};
 
 const syncIndex = (): void => {
   const current = script().lang;
@@ -118,10 +128,24 @@ const restore = async (token: number): Promise<void> => {
   if (restored) return;
   restored = true;
   const cached = await readSearchIndex(cacheKey());
-  if (!cached || token !== generation) return;
-  engine = loadSearchEngine(cached.data);
+  if (token !== generation) return;
+  if (!cached) {
+    console.info("[ScriptIndexer] search index cache miss, indexing from scratch");
+    return;
+  }
+  try {
+    engine = loadSearchEngine(cached.data);
+  } catch (error) {
+    console.warn("[ScriptIndexer] discarded an unreadable search index cache", error);
+    void clearSearchIndex();
+    return;
+  }
   indexed = new Set(cached.ids);
   persisted = true;
+  console.info(
+    `[ScriptIndexer] search index restored: ${cached.ids.length} scripts,` +
+      ` cached at ${new Date(cached.saved).toISOString()}`,
+  );
 };
 
 const persist = (token: number): void => {
@@ -132,15 +156,16 @@ const persist = (token: number): void => {
   persisted = true;
   const key = cacheKey();
   const ids = Array.from(indexed);
-  const write = (): void => {
+  const write = async (): Promise<void> => {
     if (token !== generation) return;
-    void writeSearchIndex({ key, ids, data: engine.toJSON() });
+    const stored = await writeSearchIndex({ key, ids, saved: Date.now(), data: engine.toJSON() });
+    if (stored) console.info(`[ScriptIndexer] search index cached: ${ids.length} scripts`);
   };
   if (typeof requestIdleCallback === "function") {
-    requestIdleCallback(write, { timeout: 2000 });
+    requestIdleCallback(() => void write(), { timeout: 2000 });
     return;
   }
-  setTimeout(write, 0);
+  setTimeout(() => void write(), 0);
 };
 
 const drain = async (token: number): Promise<void> => {
