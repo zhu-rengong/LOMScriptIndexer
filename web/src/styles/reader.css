@@ -1243,8 +1243,7 @@
   }
 
   .meta-chips .meta-chip.is-hidden {
-    background: var(--ink);
-    color: transparent;
+    background: var(--surface-hover);
     user-select: none;
     transition:
       color var(--t-fast) var(--ease),
@@ -1257,16 +1256,14 @@
     border: 1px solid var(--line-1);
   }
 
-  .reader-body.is-revealing .meta-chips .meta-chip.is-hidden {
-    background: var(--surface);
-    color: var(--ink-2);
+  .meta-chips .chip-stat.meta-chip.is-hidden:hover,
+  .meta-chips .chip-stat.meta-chip.is-hidden:focus-visible {
+    border-color: var(--line-2);
   }
 
   .meta-chips .meta-chip.is-hidden:hover,
   .meta-chips .meta-chip.is-hidden:focus-visible {
-    border-color: var(--line-2);
-    background: var(--surface-hover);
-    color: var(--ink-hover);
+    background: var(--surface-inset);
   }
 
   .meta-chips button.meta-chip.is-hidden {
@@ -1274,20 +1271,25 @@
   }
 
   .meta-chips button.meta-chip.is-hidden:active {
-    border-color: var(--line-3);
     background: var(--surface-active);
-    color: var(--ink);
   }
 
   .meta-chips button.meta-chip.is-hidden:active:not(:hover) {
-    border-color: var(--line-hold);
     background: var(--surface-hold);
-    color: var(--ink-hold);
+  }
+
+  .reader-body:not(.is-revealing)
+    .meta-chips
+    .meta-chip.is-hidden:not(:hover):not(:focus-visible):not(:active) {
+    background: var(--ink);
+    color: var(--ink);
   }
 
   @media (hover: none) {
-    .meta-chips .meta-chip.is-hidden {
-      background: var(--surface);
+    .reader-body:not(.is-revealing)
+      .meta-chips
+      .meta-chip.is-hidden:not(:hover):not(:focus-visible):not(:active) {
+      background: var(--surface-hover);
       color: var(--ink-2);
     }
   }
