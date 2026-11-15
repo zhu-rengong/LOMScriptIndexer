@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 import type { EndingView } from "../../types/beats";
+import RichText from "./RichText.vue";
 
 defineProps<{ ending: EndingView }>();
 </script>
@@ -11,8 +12,8 @@ defineProps<{ ending: EndingView }>();
       <span class="ending-label">{{ t("deathEnding") }}</span>
       <span v-if="ending.title" class="ending-title">{{ ending.title }}</span>
     </div>
-    <div v-if="ending.desc.length" class="ending-desc">
-      <p v-for="(line, index) in ending.desc" :key="index" class="ending-line">{{ line }}</p>
+    <div v-if="ending.desc" class="ending-desc">
+      <div class="ending-text"><RichText :text="ending.desc" hard-breaks /></div>
     </div>
   </div>
 </template>

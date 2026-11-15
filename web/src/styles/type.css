@@ -48,7 +48,7 @@
     font-variant-numeric: var(--rd-fn-think, normal);
   }
 
-  .lore-text .lore-p {
+  .lore-text {
     font-family: var(--rd-ff-lore, var(--font-base));
     font-size: calc(var(--rd-fs-lore, 16px) * var(--ts-lore, 1));
     font-weight: var(--rd-fw-lore, 400);
@@ -86,7 +86,7 @@
 
   .ending-label,
   .ending-title,
-  .ending-line {
+  .ending-text {
     font-family: var(--rd-ff-ending, var(--font-base));
     font-size: calc(var(--rd-fs-ending, 16px) * var(--ts-ending, 1));
     font-weight: var(--rd-fw-ending, 400);

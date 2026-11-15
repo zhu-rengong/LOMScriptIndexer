@@ -11,12 +11,16 @@ export const stripMarkup = (value: unknown): string =>
   value ? String(value).replace(MARKUP_TAG_ALL, "") : "";
 
 const clampScale = (value: number): number => {
-  if (!Number.isFinite(value) || value <= 0) return 1;
+  if (!Number.isFinite(value)) return 1;
   return clamp(value, SIZE_MIN_SCALE, SIZE_MAX_SCALE);
 };
 
-export const parseRichText = (value: string): RichTextSegment[] => {
-  if (!value) return [];
+export const parseRichText = (value: string, hardBreaks = false): RichTextSegment[] => {
+  const normalized = String(value ?? "").replace(/\r\n?/g, "\n");
+  const source = hardBreaks
+    ? normalized.replace(/^\n+|\n+$/g, "")
+    : normalized.replace(/\n+/g, " ");
+  if (!source) return [];
   const out: RichTextSegment[] = [];
   const stack: number[] = [];
   let last = 0;
@@ -25,10 +29,17 @@ export const parseRichText = (value: string): RichTextSegment[] => {
   const push = (chunk: string) => {
     if (!chunk) return;
     const scale = stack.length ? stack[stack.length - 1] : 1;
-    out.push({ text: chunk, scale });
+    if (!hardBreaks) {
+      out.push({ text: chunk, scale });
+      return;
+    }
+    chunk.split("\n").forEach((line, index) => {
+      if (index) out.push({ text: "", scale, lineBreak: true });
+      if (line) out.push({ text: line, scale });
+    });
   };
-  while ((match = MARKUP_TAG.exec(value)) !== null) {
-    if (match.index > last) push(value.slice(last, match.index));
+  while ((match = MARKUP_TAG.exec(source)) !== null) {
+    if (match.index > last) push(source.slice(last, match.index));
     const tag = (match[1] || "").trim();
     const tagLower = tag.toLowerCase();
     if (tagLower.indexOf("/size") === 0 || tagLower === "size") {
@@ -43,6 +54,6 @@ export const parseRichText = (value: string): RichTextSegment[] => {
     }
     last = MARKUP_TAG.lastIndex;
   }
-  if (last < value.length) push(value.slice(last));
+  if (last < source.length) push(source.slice(last));
   return out;
 };

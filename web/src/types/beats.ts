@@ -61,7 +61,7 @@ export type SceneView = {
 export type EndingView = {
   key: string;
   title: string;
-  desc: string[];
+  desc: string;
 };
 
 export type MetaView = {
@@ -154,7 +154,7 @@ export type ReaderBlock =
   | { kind: "dice"; chips: MetaChip[] }
   | { kind: "choice"; options: ChoiceOption[]; diceChips: MetaChip[] }
   | { kind: "branches"; branches: BranchView[] }
-  | { kind: "lore"; lines: string[] }
+  | { kind: "lore"; text: string }
   | { kind: "battle"; battle: BattleView }
   | { kind: "scene"; scene: SceneView }
   | { kind: "ending"; ending: EndingView }
@@ -163,6 +163,7 @@ export type ReaderBlock =
 export type RichTextSegment = {
   text: string;
   scale: number;
+  lineBreak?: boolean;
 };
 
 export type SayKind = "dialog" | "think" | "narration";

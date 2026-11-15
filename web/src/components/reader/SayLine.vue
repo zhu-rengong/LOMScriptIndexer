@@ -18,11 +18,14 @@ const props = defineProps<{
   inBattle?: boolean;
 }>();
 
+const kind = computed(() => sayKindOf(props.mode));
+
 const className = computed(() => {
-  const kind = sayKindOf(props.mode);
-  if (kind === "dialog") return "say";
-  return kind === "think" ? "say think" : "say narration";
+  if (kind.value === "dialog") return "say";
+  return kind.value === "think" ? "say think" : "say narration";
 });
+
+const hardBreaks = computed(() => kind.value === "narration");
 
 const showWho = computed(() => {
   if (!props.speaker) return false;
@@ -58,7 +61,7 @@ const open = (event: Event) => {
       <span v-if="showWho" class="who is-link" :title="t('lookupSpeaker')" @click="open">
         {{ speakerName(speaker) }}
       </span>
-      <div class="what"><RichText :text="text" /></div>
+      <div class="what"><RichText :text="text" :hard-breaks="hardBreaks" /></div>
     </div>
   </div>
 </template>

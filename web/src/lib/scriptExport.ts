@@ -202,18 +202,14 @@ const renderRows = (input: unknown, indent: string): string[] => {
 
     if (beatRows.isBeat(row, "lore")) {
       out.push(`${indent}[${t("typeLore")}]`);
-      const lines = cleanText(beatRows.parseLore(row))
-        .split(/\n+/)
-        .map((line) => line.trim())
-        .filter(Boolean);
-      lines.forEach((line) => out.push(`${indent}  ${line}`));
+      out.push(...textLines(cleanText(beatRows.parseLore(row)), `${indent}  `));
       continue;
     }
 
     if (beatRows.isBeat(row, "ending")) {
       const ending = beatRows.parseEnding(row);
       out.push(`${indent}[${t("deathEnding")}]${ending.title ? ` ${ending.title}` : ""}`);
-      for (const line of ending.desc) out.push(`${indent}  ${line}`);
+      out.push(...textLines(cleanText(ending.desc), `${indent}  `));
       continue;
     }
 
