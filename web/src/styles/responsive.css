@@ -249,7 +249,7 @@
   body[data-layout="mobile"] .empty-state .brush {
     width: 64px;
     height: 64px;
-    --ts-seal: 0.75;
+    --brush-scale: 1.9;
   }
 
   body[data-layout="mobile"] .filter-panel {

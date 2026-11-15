@@ -206,6 +206,11 @@
     font-variant-numeric: var(--rd-fn-seal, normal);
   }
 
+  .empty-state .brush {
+    font-size: calc(var(--rd-fs-display, 16px) * var(--brush-scale, 2.5));
+    line-height: 1;
+  }
+
   :where(.btn, .btn-link, .tab, .seg-btn, .input, .search-input, .row),
   .menu-item,
   .nav-item,
