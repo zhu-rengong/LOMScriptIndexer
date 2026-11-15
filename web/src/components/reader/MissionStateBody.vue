@@ -80,8 +80,8 @@ const go = (id: string) => {
 <template>
   <div class="mission-body">
     <div v-if="showTags !== false && (!state.active || state.beforeMain)" class="mission-tags">
-      <span v-if="!state.active" class="chip is-warn">{{ t("missionPanelInactive") }}</span>
-      <span v-if="state.beforeMain" class="chip">{{ t("missionPanelBeforeMain") }}</span>
+      <span v-if="!state.active" class="mission-tag is-warn">{{ t("missionPanelInactive") }}</span>
+      <span v-if="state.beforeMain" class="mission-tag">{{ t("missionPanelBeforeMain") }}</span>
     </div>
 
     <dl class="mission-rows">
@@ -95,7 +95,7 @@ const go = (id: string) => {
         <dd class="mission-value">
           <button
             v-if="canJump(state.start)"
-            class="btn-link mission-link"
+            class="mission-link btn"
             type="button"
             @click="go(state.start)"
           >
@@ -136,7 +136,7 @@ const go = (id: string) => {
             <span
               v-for="(change, index) in state.modifyFlagsTrue"
               :key="`true-${index}`"
-              class="chip"
+              class="mission-flag"
             >
               {{ t("metaAssign", { name: flagLabel(change), value: change.value }) }}
             </span>
@@ -146,7 +146,7 @@ const go = (id: string) => {
             <span
               v-for="(change, index) in state.modifyFlagsFalse"
               :key="`false-${index}`"
-              class="chip"
+              class="mission-flag"
             >
               {{ t("metaAssign", { name: flagLabel(change), value: change.value }) }}
             </span>
@@ -157,7 +157,7 @@ const go = (id: string) => {
         <dt class="mission-label">{{ t("missionPanelDialogs") }}</dt>
         <dd class="mission-value">
           <p v-for="(dialog, index) in state.startDialogs" :key="index" class="mission-dialog">
-            <span v-if="portraitText(dialog)" class="chip chip-plain">{{
+            <span v-if="portraitText(dialog)" class="mission-portrait">{{
               portraitText(dialog)
             }}</span>
             <span>{{ dialogText(dialog) }}</span>
@@ -168,7 +168,7 @@ const go = (id: string) => {
         <dt class="mission-label">{{ t("missionPanelAlertDialogs") }}</dt>
         <dd class="mission-value">
           <p v-for="(dialog, index) in state.alertDialogs" :key="index" class="mission-dialog">
-            <span v-if="portraitText(dialog)" class="chip chip-plain">{{
+            <span v-if="portraitText(dialog)" class="mission-portrait">{{
               portraitText(dialog)
             }}</span>
             <span>{{ dialogText(dialog) }}</span>

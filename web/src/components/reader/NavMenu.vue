@@ -59,14 +59,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <div id="navMenu" class="pop menu menu-wide" role="menu" :hidden="!open">
-    <div class="list">
-      <div class="list-head">{{ t("navOut", { n: outgoing.length }) }}</div>
+  <div id="navMenu" class="menu menu-wide surface popover" role="menu" :hidden="!open">
+    <div class="menu-list popover-list">
+      <div class="menu-head">{{ t("navOut", { n: outgoing.length }) }}</div>
       <template v-if="outgoing.length">
         <button
           v-for="item in outgoing"
           :key="`${item.edge.index}-out`"
-          class="row"
+          class="nav-item row"
           type="button"
           role="menuitem"
           @click="pick(item.target?.id || '')"
@@ -75,21 +75,21 @@ onMounted(() => {
           <span v-if="edgeLabelText(item.edge)" class="nav-label">
             {{ edgeLabelText(item.edge) }}
           </span>
-          <span v-if="edgeGroupLabel(item.edge)" class="chip is-warn">
+          <span v-if="edgeGroupLabel(item.edge)" class="nav-badge badge">
             {{ edgeGroupLabel(item.edge) }}
           </span>
         </button>
       </template>
-      <div v-else class="empty">{{ t("navEmpty") }}</div>
+      <div v-else class="menu-empty popover-empty">{{ t("navEmpty") }}</div>
 
       <div class="menu-sep"></div>
 
-      <div class="list-head">{{ t("navIn", { n: incoming.length }) }}</div>
+      <div class="menu-head">{{ t("navIn", { n: incoming.length }) }}</div>
       <template v-if="incoming.length">
         <button
           v-for="item in incoming"
           :key="`${item.edge.index}-in`"
-          class="row"
+          class="nav-item row"
           type="button"
           role="menuitem"
           @click="pick(item.target?.id || '')"
@@ -98,12 +98,12 @@ onMounted(() => {
           <span v-if="edgeLabelText(item.edge)" class="nav-label">
             {{ edgeLabelText(item.edge) }}
           </span>
-          <span v-if="edgeGroupLabel(item.edge)" class="chip is-warn">
+          <span v-if="edgeGroupLabel(item.edge)" class="nav-badge badge">
             {{ edgeGroupLabel(item.edge) }}
           </span>
         </button>
       </template>
-      <div v-else class="empty">{{ t("navEmpty") }}</div>
+      <div v-else class="menu-empty popover-empty">{{ t("navEmpty") }}</div>
     </div>
   </div>
 </template>

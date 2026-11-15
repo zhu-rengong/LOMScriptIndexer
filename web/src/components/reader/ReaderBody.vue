@@ -24,6 +24,7 @@ const HIT_SELECTOR = [
   ".ending-title",
   ".ending-line",
   ".meta-chips .chip",
+  ".meta-chips .meta-action",
   ".time-mark",
 ].join(", ");
 

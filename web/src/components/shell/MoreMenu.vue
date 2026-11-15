@@ -58,19 +58,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div id="moreMenu" class="pop menu" role="menu" :hidden="!open">
-    <button class="row" type="button" @click="openStats">{{ t("statsBtn") }}</button>
-    <button class="row" type="button" @click="openHelp">{{ t("helpTitle") }}</button>
-    <button class="row" type="button" @click="openChangelog">
+  <div id="moreMenu" class="menu surface popover" role="menu" :hidden="!open">
+    <button class="menu-item row" type="button" @click="openStats">{{ t("statsBtn") }}</button>
+    <button class="menu-item row" type="button" @click="openHelp">{{ t("helpTitle") }}</button>
+    <button class="menu-item row" type="button" @click="openChangelog">
       {{ t("changelogTitle") }}
     </button>
     <template v-if="nextJumpTargets.length">
       <div class="menu-sep"></div>
-      <div class="list-head">{{ t("recentChoices") }}</div>
+      <div class="menu-head">{{ t("recentChoices") }}</div>
       <button
         v-for="item in nextJumpTargets"
         :key="item.id"
-        class="row"
+        class="nav-item row"
         type="button"
         role="menuitem"
         @click="pick(item.id)"

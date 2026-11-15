@@ -29,7 +29,7 @@ const open = (chip: MetaChip, event: Event) => {
       <template v-for="(chip, index) in chips" :key="index">
         <button
           v-if="chip.target"
-          class="chip chip-btn"
+          class="btn meta-action meta-chip"
           type="button"
           :class="{ 'is-hidden': chip.hidden }"
           aria-haspopup="dialog"
@@ -51,7 +51,7 @@ const open = (chip: MetaChip, event: Event) => {
         </button>
         <span
           v-else
-          class="chip chip-plain"
+          class="chip-stat chip chip-sm meta-chip"
           :class="{ 'is-hidden': chip.hidden }"
           :title="chip.title"
           :data-kind="chip.match?.kind"

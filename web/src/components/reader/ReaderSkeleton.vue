@@ -18,7 +18,7 @@ const retry = () => {
 
 <template>
   <div v-if="!failed" class="reader-skeleton" role="status" aria-live="polite">
-    <span class="status">{{ t("loadTextLoading") }}</span>
+    <span class="sk-caption">{{ t("loadTextLoading") }}</span>
     <span
       v-for="index in 5"
       :key="index"
@@ -27,7 +27,7 @@ const retry = () => {
     ></span>
   </div>
   <div v-else class="reader-skeleton is-failed">
-    <span class="status">{{ t("loadTextFailed") }}</span>
-    <button class="btn btn-primary" type="button" @click="retry">{{ t("loadTextRetry") }}</button>
+    <span class="sk-caption">{{ t("loadTextFailed") }}</span>
+    <button class="btn" type="button" @click="retry">{{ t("loadTextRetry") }}</button>
   </div>
 </template>

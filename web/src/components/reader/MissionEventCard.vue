@@ -43,7 +43,7 @@ const leadOf = (row: EventRow) => ({
 
 <template>
   <div class="mission-event" :class="{ 'is-cancel': allCancel }">
-    <div class="surface mission-event-panel">
+    <div class="mission-event-panel">
       <div v-for="(row, index) in rows" :key="index" class="mission-event-item">
         <MissionStateBody
           v-if="row.state"

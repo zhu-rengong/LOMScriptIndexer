@@ -146,8 +146,8 @@ export const TYPE_SLOTS: TypeSlot[] = [
     numeric: false,
     previewKey: "previewSnippet",
     wrappers: [
-      { tag: "div", cls: "row row-tall result" },
-      { tag: "span", cls: "result-text is-search" },
+      { tag: "div", cls: "drop-item" },
+      { tag: "span", cls: "dtext" },
     ],
   },
   {
@@ -164,8 +164,8 @@ export const TYPE_SLOTS: TypeSlot[] = [
     numeric: false,
     previewKey: "previewSnippet",
     wrappers: [
-      { tag: "div", cls: "row row-tall result" },
-      { tag: "span", cls: "result-text is-lookup" },
+      { tag: "div", cls: "lookup-item" },
+      { tag: "span", cls: "li-text" },
     ],
   },
   {
@@ -197,7 +197,7 @@ export const TYPE_SLOTS: TypeSlot[] = [
     numeric: false,
     previewKey: "previewOption",
     wrappers: [
-      { tag: "div", cls: "row row-card option-head" },
+      { tag: "div", cls: "option-head row" },
       { tag: "span", cls: "option-main" },
       { tag: "span", cls: "option-text" },
     ],
@@ -217,7 +217,7 @@ export const TYPE_SLOTS: TypeSlot[] = [
     previewKey: "previewBranchCond",
     wrappers: [
       { tag: "div", cls: "branch" },
-      { tag: "div", cls: "row row-sm row-card branch-head" },
+      { tag: "div", cls: "branch-head row" },
       { tag: "span", cls: "cond" },
     ],
   },
@@ -310,8 +310,8 @@ export const TYPE_SLOTS: TypeSlot[] = [
     numeric: true,
     previewKey: "previewId",
     wrappers: [
-      { tag: "div", cls: "row row-tall result" },
-      { tag: "span", cls: "result-id" },
+      { tag: "div", cls: "drop-item" },
+      { tag: "span", cls: "did" },
     ],
   },
   {
@@ -361,7 +361,7 @@ export const TYPE_SLOTS: TypeSlot[] = [
     numeric: false,
     previewKey: "previewNode",
     wrappers: [
-      { tag: "div", cls: "row" },
+      { tag: "div", cls: "nav-item" },
       { tag: "span", cls: "nav-label" },
     ],
   },
@@ -438,7 +438,7 @@ export const TYPE_SLOTS: TypeSlot[] = [
     caps: "none",
     numeric: false,
     previewKey: "previewStatus",
-    wrappers: [{ tag: "p", cls: "status" }],
+    wrappers: [{ tag: "p", cls: "filter-status" }],
   },
 ];
 

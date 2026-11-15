@@ -89,14 +89,14 @@ const openChip = (line: BattleLine, event: Event) => {
       <template v-for="(chip, position) in item.lines" :key="position">
         <button
           v-if="linkable(chip)"
-          class="chip chip-btn"
+          class="btn meta-action"
           type="button"
           aria-haspopup="dialog"
           @click="openChip(chip, $event)"
         >
           {{ chip.text }}
         </button>
-        <span v-else class="chip chip-plain">{{ chip.text }}</span>
+        <span v-else class="chip-stat chip chip-sm">{{ chip.text }}</span>
       </template>
     </div>
   </template>

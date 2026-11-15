@@ -104,7 +104,7 @@ const onKeydown = (event: KeyboardEvent) => {
     <button
       v-for="row in rows"
       :key="row.key"
-      class="row type-tree-row"
+      class="type-tree-row"
       :class="{ 'is-on': isOn(row), 'is-group': row.scope === 'group' }"
       type="button"
       role="treeitem"

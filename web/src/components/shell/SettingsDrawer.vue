@@ -104,24 +104,23 @@ onMounted(() => {
     :aria-label="t('settingsTitle')"
     :hidden="!open"
   >
-    <header class="panel-head">
-      <div class="panel-head-text">
-        <h2 class="panel-title">{{ t("settingsTitle") }}</h2>
-        <p class="panel-sub">{{ scopeLabel }}</p>
+    <header class="drawer-head settings-head">
+      <div class="settings-head-text">
+        <h2 class="drawer-title settings-title">{{ t("settingsTitle") }}</h2>
+        <p class="settings-summary">{{ scopeLabel }}</p>
       </div>
       <button
         id="settingsClose"
-        class="btn btn-icon"
+        class="btn btn-icon settings-close"
         type="button"
         :title="t('closeTitle')"
-        :aria-label="t('closeTitle')"
         @click="close"
       >
         <AppIcon name="close" />
       </button>
     </header>
 
-    <div class="panel-body">
+    <div class="drawer-body">
       <section class="settings-section">
         <p class="settings-caption">{{ t("readerDisplay") }}</p>
         <label class="settings-switch" :for="UI_IDS.showPortraits">
@@ -152,7 +151,7 @@ onMounted(() => {
         <p class="sub-label type-group-title">{{ t("pref.groupTitle") }}</p>
         <button
           :id="UI_IDS.typeGroupTrigger"
-          class="btn btn-select type-group-pick"
+          class="btn select settings-select type-group-pick"
           type="button"
           aria-haspopup="listbox"
           aria-controls="typeGroupPick"
@@ -172,13 +171,11 @@ onMounted(() => {
       </section>
     </div>
 
-    <footer class="panel-foot">
+    <footer class="drawer-foot">
       <button id="settingsReset" class="btn" type="button" @click="reset">
         {{ t("resetSettings") }}
       </button>
-      <button id="settingsDone" class="btn btn-primary" type="button" @click="close">
-        {{ t("done") }}
-      </button>
+      <button id="settingsDone" class="btn" type="button" @click="close">{{ t("done") }}</button>
     </footer>
   </aside>
 

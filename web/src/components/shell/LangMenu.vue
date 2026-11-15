@@ -28,12 +28,18 @@ onMounted(() => {
 </script>
 
 <template>
-  <div id="langMenu" class="pop menu" role="menu" :aria-label="t('moreLang')" :hidden="!open">
-    <div class="list-head">{{ t("moreLang") }}</div>
+  <div
+    id="langMenu"
+    class="menu surface popover"
+    role="menu"
+    :aria-label="t('moreLang')"
+    :hidden="!open"
+  >
+    <div class="menu-head">{{ t("moreLang") }}</div>
     <button
       v-for="item in items"
       :key="item.id"
-      class="row"
+      class="menu-item row"
       :class="{ 'is-on': item.id === store.lang }"
       type="button"
       role="menuitemradio"
@@ -45,6 +51,6 @@ onMounted(() => {
       {{ item.native }}
     </button>
     <div class="menu-sep"></div>
-    <p class="empty">{{ t("langPickerNote") }}</p>
+    <p class="menu-note">{{ t("langPickerNote") }}</p>
   </div>
 </template>

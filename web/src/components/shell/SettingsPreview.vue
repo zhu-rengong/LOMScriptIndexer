@@ -17,7 +17,7 @@ const specimenOf = (slotId: string) => slotById(slotId) || null;
 </script>
 
 <template>
-  <div id="settingsPreview" class="surface preview">
+  <div id="settingsPreview" class="preview">
     <template v-for="slotId in typeIds" :key="slotId">
       <template v-if="specimenOf(slotId)">
         <div class="preview-head">

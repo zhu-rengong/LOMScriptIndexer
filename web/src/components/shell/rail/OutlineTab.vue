@@ -19,7 +19,7 @@ const emit = defineEmits<{
   <template v-if="props.rows.length">
     <template v-for="row in props.rows" :key="row.chapter.id">
       <button
-        class="row cat-chap"
+        class="cat-chap"
         :class="{ 'is-open': row.open }"
         type="button"
         :disabled="props.searching"
@@ -36,7 +36,7 @@ const emit = defineEmits<{
         <button
           v-for="node in row.members"
           :key="node.id"
-          class="row"
+          class="cat-row"
           :class="{ 'is-on': props.selectedId === node.id }"
           type="button"
           :data-index="nodeIndexOf(node.id)"
@@ -46,9 +46,9 @@ const emit = defineEmits<{
           <span class="cat-id">{{ node.id }}</span>
           <span class="cat-meta">{{ t("sayCount", { n: node.sayCount }) }}</span>
         </button>
-        <p v-if="row.hidden" class="empty">{{ t("previewMore", { n: row.hidden }) }}</p>
+        <p v-if="row.hidden" class="cat-more">{{ t("previewMore", { n: row.hidden }) }}</p>
       </div>
     </template>
   </template>
-  <p v-else class="empty">{{ t("searchEmpty") }}</p>
+  <p v-else class="cat-empty">{{ t("searchEmpty") }}</p>
 </template>

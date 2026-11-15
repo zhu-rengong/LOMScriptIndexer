@@ -60,7 +60,7 @@
     font-variant-numeric: var(--rd-fn-lore, normal);
   }
 
-  .result-text.is-search {
+  .drop-item .dtext {
     font-family: var(--rd-ff-search-snippet, var(--font-base));
     font-size: calc(var(--rd-fs-search-snippet, 16px) * var(--ts-search-snippet, 1));
     font-weight: var(--rd-fw-search-snippet, 400);
@@ -72,7 +72,7 @@
     font-variant-numeric: var(--rd-fn-search-snippet, normal);
   }
 
-  .result-text.is-lookup {
+  .lookup-item .li-text {
     font-family: var(--rd-ff-lookup-snippet, var(--font-base));
     font-size: calc(var(--rd-fs-lookup-snippet, 16px) * var(--ts-lookup-snippet, 1));
     font-weight: var(--rd-fw-lookup-snippet, 400);
@@ -121,7 +121,7 @@
   .jump-cond-label,
   .jump-cond-text,
   .lc-cond,
-  .battle-when :is(.chip, .option-cond) {
+  .battle-when :is(.chip, .chip-stat, .meta-action, .option-cond) {
     font-family: var(--rd-ff-condition, var(--font-base));
     font-size: calc(var(--rd-fs-condition, 16px) * var(--ts-condition, 1));
     font-weight: var(--rd-fw-condition, 600);
@@ -149,6 +149,10 @@
   }
 
   .panel-title,
+  .drawer-title,
+  .filter-title,
+  .stats-title,
+  .overlay-title,
   .empty-state h3 {
     font-family: var(--rd-ff-title, var(--font-base));
     font-size: calc(var(--rd-fs-title, 16px) * var(--ts-title, 1));
@@ -202,19 +206,34 @@
     font-variant-numeric: var(--rd-fn-seal, normal);
   }
 
-  :where(.btn, .btn-link, .tab, .input, .row, .chip-btn),
+  :where(.btn, .btn-link, .tab, .seg-btn, .input, .search-input, .row),
+  .menu-item,
+  .nav-item,
   .picker-item,
   .type-tree-row,
   .type-tree-label,
+  .result-item,
+  .suggest-item,
+  .filter-chip,
+  .rail-tab,
+  .cat-clear,
+  .cat-more,
   .cat-chap-title,
   .option-head,
   .cat-special .cat-name,
+  .display-filter-item,
   .display-filter-label,
   .jump,
+  .battle-link,
   .battle-rows .jump,
   .stats-name,
+  .stats-kind,
+  .drop-more,
   .lc-row,
+  .lc-add-type,
   .lc-add-tag,
+  .li-ch,
+  .ri-ch,
   .sg-label,
   kbd {
     font-family: var(--rd-ff-control, var(--font-base));
@@ -230,6 +249,11 @@
 
   .badge,
   .chip,
+  .chip-stat,
+  .meta-action,
+  .meta-chip,
+  .mission-tag,
+  .mission-flag,
   .option-lock,
   .jump-weight,
   .jump-never,
@@ -246,19 +270,25 @@
     font-variant-numeric: var(--rd-fn-mark, normal);
   }
 
-  .result-id,
-  .result-meta,
-  .cat-id,
-  .cat-meta,
+  .drop-item .did,
+  .drop-item .dmeta,
+  .nav-item .nav-id,
+  .cat-row .cat-id,
+  .cat-row .cat-meta,
+  .cat-book-main .cat-id,
+  .cat-book-main .cat-meta,
   .cat-special .cat-code,
   .cat-chap-count,
-  .tab-count,
+  .rail-tab-count,
   .type-tree-size,
-  .btn-select .ft-name,
+  .settings-select .ft-name,
   .badge-num,
   .filter-count,
-  .sg-value,
-  .sg-count,
+  .filter-expr,
+  .suggest-item .sg-value,
+  .suggest-item .sg-count,
+  .result-item .ri-id,
+  .lookup-item .li-id,
   .mission-link,
   .help-key,
   .brand-build,
@@ -271,8 +301,7 @@
   .field-value,
   .jump-target-id,
   .lc-add-rate,
-  .lc-sub-rate,
-  .lc-result {
+  .lc-sub-rate {
     font-family: var(--rd-ff-code, var(--font-base));
     font-size: calc(var(--rd-fs-code, 16px) * var(--ts-code, 1));
     font-weight: var(--rd-fw-code, 400);
@@ -310,7 +339,7 @@
     font-variant-numeric: var(--rd-fn-figure, normal);
   }
 
-  .nav-label {
+  .nav-item .nav-label {
     font-family: var(--rd-ff-menu-title, var(--font-base));
     font-size: calc(var(--rd-fs-menu-title, 16px) * var(--ts-menu-title, 1));
     font-weight: var(--rd-fw-menu-title, 400);
@@ -322,12 +351,15 @@
     font-variant-numeric: var(--rd-fn-menu-title, normal);
   }
 
-  .list-head,
+  .menu-head,
   .sub-label,
+  .drop-scope,
   .cat-result,
+  .lookup-group,
   .lookup-cond-title,
   .help-group-title,
   .filter-label,
+  .filter-results-title,
   .settings-caption,
   .preview-tag,
   .mission-label,
@@ -348,13 +380,21 @@
     font-variant-numeric: var(--rd-fn-label, normal);
   }
 
-  .panel-sub,
   .panel-hint,
   .settings-hint,
+  .settings-summary,
+  .filter-summary,
+  .lookup-sub,
+  .lookup-hint,
+  .rail-summary,
+  .stats-note,
   .mission-cond-note,
   .mission-sub-label,
+  .changelog-badge,
+  .lc-result,
   .pi-meta,
   .type-tree-face,
+  .menu-note,
   .hint-line,
   .crumb .crumb-time {
     font-family: var(--rd-ff-caption, var(--font-base));
@@ -374,7 +414,9 @@
   .changelog-text,
   .mission-value,
   .mission-dialog,
+  .lookup-group-note,
   .lookup-cond-sub,
+  .lookup-cond-muted,
   .lc-add-name,
   .settings-switch,
   .stats-table {
@@ -389,10 +431,20 @@
     font-variant-numeric: var(--rd-fn-text, normal);
   }
 
-  .status,
-  .empty,
+  .filter-status,
   .toast,
-  .io-status {
+  .io-status,
+  .sk-caption,
+  .stats-loading,
+  .drop-empty,
+  .popover-empty,
+  .cat-empty,
+  .stats-empty,
+  .filter-results-empty,
+  .branch-empty,
+  .picker-empty,
+  .lookup-empty,
+  .menu-empty {
     font-family: var(--rd-ff-status, var(--font-base));
     font-size: calc(var(--rd-fs-status, 16px) * var(--ts-status, 1));
     font-weight: var(--rd-fw-status, 400);

@@ -89,16 +89,16 @@ onMounted(() => {
 <template>
   <div
     id="statsPanel"
-    class="pop stats-panel"
+    class="stats-panel surface"
     role="dialog"
     aria-modal="true"
     aria-labelledby="statsHeading"
     :hidden="!open"
   >
-    <header class="panel-head">
-      <div class="panel-head-text">
-        <h2 id="statsHeading" class="panel-title">{{ t("statsTitle") }}</h2>
-        <p class="panel-sub">
+    <header class="panel-head stats-panel-head">
+      <div class="stats-head-text">
+        <h2 id="statsHeading" class="panel-title stats-title">{{ t("statsTitle") }}</h2>
+        <p class="stats-note">
           {{ t("statsNote", { n: graph.nodes.length, chapters: graph.chapters.length }) }}
         </p>
       </div>
@@ -107,7 +107,6 @@ onMounted(() => {
         class="btn btn-icon"
         type="button"
         :title="t('closeTitle')"
-        :aria-label="t('closeTitle')"
         @click="close"
       >
         <AppIcon name="close" />
@@ -133,7 +132,7 @@ onMounted(() => {
       <button
         v-for="item in kindItems"
         :key="item.id"
-        class="tab tab-line"
+        class="stats-kind"
         :class="{ 'is-on': item.id === activeKind }"
         type="button"
         role="tab"
@@ -145,9 +144,9 @@ onMounted(() => {
       </button>
     </div>
 
-    <div id="statsBody" class="panel-body stats-body">
+    <div id="statsBody" class="stats-body">
       <template v-if="!wordPack">
-        <p :class="loading ? 'status' : 'empty'">
+        <p :class="loading ? 'stats-loading' : 'stats-empty'">
           {{ t(loading ? "statsLoading" : "statsEmpty") }}
         </p>
       </template>
@@ -204,7 +203,7 @@ onMounted(() => {
                 <td class="name">
                   <span class="stats-script-name">
                     <button
-                      class="btn-link stats-open"
+                      class="stats-open btn-link"
                       type="button"
                       :title="t('statsOpen')"
                       @click="openScript(row.id)"

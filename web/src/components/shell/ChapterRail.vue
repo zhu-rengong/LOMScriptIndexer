@@ -149,9 +149,9 @@ watch(
 <template>
   <aside id="chapterRail" :aria-label="t('railTitle')">
     <header class="rail-head">
-      <div class="panel-head-text">
-        <h2 class="panel-title rail-title">{{ t("railTitle") }}</h2>
-        <p class="panel-sub">{{ summary }}</p>
+      <div class="rail-head-text">
+        <h2 class="rail-title">{{ t("railTitle") }}</h2>
+        <p class="rail-summary">{{ summary }}</p>
       </div>
       <button
         id="railClose"
@@ -176,7 +176,7 @@ watch(
         v-for="tab in tabs"
         :id="`railTab-${tab.id}`"
         :key="tab.id"
-        class="tab tab-line"
+        class="rail-tab"
         :class="{ 'is-on': view.railTab === tab.id }"
         :data-rail="tab.id"
         role="tab"
@@ -186,18 +186,18 @@ watch(
         :tabindex="view.railTab === tab.id ? 0 : -1"
         @click="setTab(tab.id)"
       >
-        <span class="tab-text">{{ t(tab.labelKey) }}</span>
-        <span class="tab-count">{{ tab.count }}</span>
+        <span class="rail-tab-text">{{ t(tab.labelKey) }}</span>
+        <span class="rail-tab-count">{{ tab.count }}</span>
       </button>
     </div>
 
-    <div class="field field-line rail-search">
+    <div class="rail-search">
       <AppIcon name="search" />
       <input
         id="railSearch"
         ref="searchRef"
         v-model="query"
-        class="input input-line"
+        class="search-input"
         type="search"
         autocomplete="off"
         spellcheck="false"
@@ -206,7 +206,7 @@ watch(
       />
       <button
         v-if="query"
-        class="btn btn-icon rail-search-clear"
+        class="rail-search-clear"
         type="button"
         :title="t('railSearchClear')"
         :aria-label="t('railSearchClear')"
@@ -219,7 +219,7 @@ watch(
     <div
       id="chapterList"
       ref="listRef"
-      class="list rail-list"
+      class="rail-list"
       role="tabpanel"
       :aria-labelledby="`railTab-${view.railTab}`"
     >

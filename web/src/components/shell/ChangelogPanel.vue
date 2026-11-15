@@ -27,7 +27,7 @@ onMounted(() => {
 <template>
   <div
     id="changelogPanel"
-    class="pop changelog-panel"
+    class="changelog-panel surface"
     role="dialog"
     aria-modal="true"
     aria-labelledby="changelogHeading"
@@ -40,7 +40,6 @@ onMounted(() => {
         class="btn btn-icon"
         type="button"
         :title="t('closeTitle')"
-        :aria-label="t('closeTitle')"
         @click="close"
       >
         <AppIcon name="close" />
@@ -51,7 +50,7 @@ onMounted(() => {
         <div class="changelog-meta">
           <span class="changelog-date">{{ entry.date }}</span>
           <span class="changelog-range">{{ `${entry.from} → ${entry.to}` }}</span>
-          <span v-if="index === 0" class="chip">{{ t("changelogLatest") }}</span>
+          <span v-if="index === 0" class="changelog-badge">{{ t("changelogLatest") }}</span>
         </div>
         <p class="changelog-text">{{ t(entry.key) }}</p>
       </article>

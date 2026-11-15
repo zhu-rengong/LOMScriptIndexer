@@ -71,7 +71,7 @@ const toggleBookmark = () => {
           </h2>
         </div>
         <div class="reader-actions">
-          <div class="ctl-group">
+          <span class="tip-host" :title="t('backTitle')">
             <button
               id="backBtn"
               class="btn btn-icon"
@@ -83,6 +83,8 @@ const toggleBookmark = () => {
             >
               <AppIcon name="back" />
             </button>
+          </span>
+          <span class="tip-host" :title="t('forwardTitle')">
             <button
               id="forwardBtn"
               class="btn btn-icon"
@@ -94,11 +96,10 @@ const toggleBookmark = () => {
             >
               <AppIcon name="forward" />
             </button>
-          </div>
-
-          <div class="ctl-group">
-            <DisplayFilterMenu />
-            <FoldToggle />
+          </span>
+          <DisplayFilterMenu />
+          <FoldToggle />
+          <span class="tip-host" :title="t('condInferBtnTitle')">
             <button
               id="condInferBtn"
               class="btn btn-icon"
@@ -111,6 +112,8 @@ const toggleBookmark = () => {
             >
               <span class="infer-toggle-mark" aria-hidden="true">析</span>
             </button>
+          </span>
+          <span class="tip-host" :title="t('inferBtnTitle')">
             <button
               id="inferBtn"
               class="btn btn-icon"
@@ -123,6 +126,8 @@ const toggleBookmark = () => {
             >
               <span class="infer-toggle-mark" aria-hidden="true">{{ t("inferMark") }}</span>
             </button>
+          </span>
+          <span class="tip-host" :title="t('revealBtnTitle')">
             <button
               id="revealBtn"
               class="btn btn-icon"
@@ -135,10 +140,9 @@ const toggleBookmark = () => {
             >
               <AppIcon :name="revealOn ? 'eye-off' : 'eye'" />
             </button>
-          </div>
-
-          <div class="ctl-group">
-            <div class="menu-wrap">
+          </span>
+          <div class="menu-wrap reader-nav" id="navWrap">
+            <span class="tip-host" :title="t('navBtnTitle')">
               <button
                 id="navBtn"
                 class="btn btn-icon"
@@ -154,8 +158,13 @@ const toggleBookmark = () => {
               >
                 <AppIcon name="jump" />
               </button>
-              <NavMenu />
-            </div>
+            </span>
+            <NavMenu />
+          </div>
+          <span
+            class="tip-host"
+            :title="t(isBookmarked ? 'bookmarkRemoveTitle' : 'bookmarkAddTitle')"
+          >
             <button
               id="bookmarkBtn"
               class="btn btn-icon"
@@ -167,7 +176,7 @@ const toggleBookmark = () => {
             >
               <AppIcon name="star" />
             </button>
-          </div>
+          </span>
         </div>
       </div>
     </div>

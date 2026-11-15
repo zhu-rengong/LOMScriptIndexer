@@ -176,18 +176,18 @@ onMounted(() => {
 <template>
   <div
     id="fontPicker"
-    class="pop picker"
+    class="picker popover surface"
     role="listbox"
     :aria-label="t('typeFont')"
     :hidden="!open"
   >
-    <div class="field field-line picker-search">
+    <div class="picker-search">
       <AppIcon name="search" />
       <input
         id="fontPickerSearch"
         ref="searchInput"
         v-model="query"
-        class="input input-line"
+        class="input"
         type="search"
         autocomplete="off"
         spellcheck="false"
@@ -196,7 +196,7 @@ onMounted(() => {
         @keydown="onKeydown"
       />
     </div>
-    <div id="fontPickerList" class="list">
+    <div id="fontPickerList" class="picker-list popover-list">
       <template v-if="visibleItems.length">
         <button
           v-for="(item, index) in visibleItems"
@@ -217,7 +217,7 @@ onMounted(() => {
           </span>
         </button>
       </template>
-      <div v-else class="empty">{{ t("fontNoMatch") }}</div>
+      <div v-else class="picker-empty popover-empty">{{ t("fontNoMatch") }}</div>
     </div>
   </div>
 </template>

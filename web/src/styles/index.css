@@ -1,9 +1,9 @@
-@layer tokens, base, controls, shell, reader, panels, responsive, motion, type;
+@layer tokens, base, shell, controls, reader, panels, responsive, motion, type;
 
 @import "./tokens.css";
 @import "./base.css";
-@import "./controls.css";
 @import "./shell.css";
+@import "./controls.css";
 @import "./reader.css";
 @import "./panels.css";
 @import "./responsive.css";

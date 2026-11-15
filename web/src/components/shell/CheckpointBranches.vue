@@ -123,7 +123,7 @@ const openAddition = (item: DiceAddition, event: Event) => {
           >
             <button
               v-if="additionLinkable(item)"
-              class="cx-var chip-btn is-link"
+              class="cx-var is-link"
               type="button"
               :title="t('lookupStat')"
               @click="openAddition(item, $event)"
@@ -132,9 +132,7 @@ const openAddition = (item: DiceAddition, event: Event) => {
               <span class="cx-name">{{ additionName(item) }}</span>
             </button>
             <span v-else class="lc-add-main">
-              <span v-if="additionType(item)" class="chip chip-plain">{{
-                additionType(item)
-              }}</span>
+              <span v-if="additionType(item)" class="lc-add-type">{{ additionType(item) }}</span>
               <span class="lc-add-name">{{ additionName(item) }}</span>
             </span>
             <span class="lc-add-rate">{{ additionRate(item) }}</span>
@@ -188,7 +186,7 @@ const openAddition = (item: DiceAddition, event: Event) => {
         {{ t("lookupCondFlag", { n: checkpoint.default }) }}
       </p>
 
-      <p v-else class="empty">{{ t("lookupCondEmpty") }}</p>
+      <p v-else class="lookup-cond-muted">{{ t("lookupCondEmpty") }}</p>
     </div>
   </div>
 </template>

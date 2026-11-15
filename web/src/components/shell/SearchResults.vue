@@ -50,36 +50,36 @@ const onScroll = () => {
   <div
     id="searchResults"
     ref="panel"
-    class="pop dropdown"
+    class="dropdown surface popover"
     role="listbox"
     :hidden="isHidden"
     @scroll="onScroll"
   >
     <template v-if="!tooShort">
-      <div class="list-head">
+      <div class="drop-scope">
         <span>{{ status.count }}</span>
         <span :hidden="!status.note">{{ status.note }}</span>
         <button v-if="hasFilter" class="btn-link" type="button" @click="emit('clear-filter')">
           {{ t("searchClearFilters") }}
         </button>
       </div>
-      <div class="empty" :hidden="excludedCount <= 0">
-        <button class="btn-link" type="button" @click="emit('clear-filter')">
+      <div class="drop-empty popover-empty" :hidden="excludedCount <= 0">
+        <button class="drop-more btn-link" type="button" @click="emit('clear-filter')">
           {{ status.excluded }}
         </button>
       </div>
-      <div class="empty" :hidden="!status.message">{{ status.message }}</div>
+      <div class="drop-empty popover-empty" :hidden="!status.message">{{ status.message }}</div>
       <div
         v-for="(hit, position) in visibleHits"
         :key="hit.id"
-        class="row row-tall result"
+        class="drop-item row row-tall"
         :class="{ 'is-active': position === 0 }"
         :data-id="hit.id"
         @click="emit('pick', hit)"
       >
-        <span class="result-id">{{ hit.id }}</span>
-        <span class="result-meta">{{ hit.chapter ? chapterTitle(hit.chapter) : "" }}</span>
-        <span v-if="hit.snippet" class="result-text is-search">
+        <span class="did">{{ hit.id }}</span>
+        <span class="dmeta">{{ hit.chapter ? chapterTitle(hit.chapter) : "" }}</span>
+        <span v-if="hit.snippet" class="dtext">
           <template v-if="splitSnippet(hit)">
             {{ splitSnippet(hit)?.head }}<mark>{{ splitSnippet(hit)?.mark }}</mark
             >{{ splitSnippet(hit)?.tail }}
@@ -88,6 +88,6 @@ const onScroll = () => {
         </span>
       </div>
     </template>
-    <div v-else class="empty">{{ status.message }}</div>
+    <div v-else class="drop-empty popover-empty">{{ status.message }}</div>
   </div>
 </template>
