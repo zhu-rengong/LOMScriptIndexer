@@ -1253,12 +1253,16 @@
       background-color var(--t-fast) var(--ease);
   }
 
-  .reader-body.is-revealing .meta-chips .meta-chip.is-hidden,
+  .reader-body.is-revealing .meta-chips .meta-chip.is-hidden {
+    background: none;
+    color: var(--ink-2);
+    user-select: text;
+  }
+
   .meta-chips .meta-chip.is-hidden:hover,
   .meta-chips .meta-chip.is-hidden:focus-visible {
     background: none;
     color: var(--ink-2);
-    user-select: text;
   }
 
   .reader-body.is-revealing .meta-chips button.meta-chip.is-hidden,
