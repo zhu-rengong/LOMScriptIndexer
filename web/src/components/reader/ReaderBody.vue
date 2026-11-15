@@ -20,7 +20,7 @@ const HIT_SELECTOR = [
   ".option-text",
   ".option-cond",
   ".branch-head .cond",
-  ".lore-text",
+  ".lore-p",
   ".ending-title",
   ".ending-text",
   ".meta-chips .chip",

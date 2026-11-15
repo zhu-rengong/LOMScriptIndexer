@@ -65,7 +65,7 @@ const blockProps = (block: ReaderBlock, index: number): Record<string, unknown> 
     case "branches":
       return { branches: block.branches, foldKey: foldKeyOf(index) };
     case "lore":
-      return { text: block.text };
+      return { lines: block.lines };
     case "battle":
       return { battle: block.battle, foldKey: foldKeyOf(index) };
     case "ending":

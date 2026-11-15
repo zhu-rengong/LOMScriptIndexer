@@ -25,8 +25,6 @@ const className = computed(() => {
   return kind.value === "think" ? "say think" : "say narration";
 });
 
-const hardBreaks = computed(() => kind.value === "narration");
-
 const showWho = computed(() => {
   if (!props.speaker) return false;
   if (props.inBattle) return props.mode !== "narration";
@@ -61,7 +59,7 @@ const open = (event: Event) => {
       <span v-if="showWho" class="who is-link" :title="t('lookupSpeaker')" @click="open">
         {{ speakerName(speaker) }}
       </span>
-      <div class="what"><RichText :text="text" :hard-breaks="hardBreaks" /></div>
+      <div class="what"><RichText :text="text" /></div>
     </div>
   </div>
 </template>

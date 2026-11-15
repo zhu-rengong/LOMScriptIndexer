@@ -48,7 +48,7 @@
     font-variant-numeric: var(--rd-fn-think, normal);
   }
 
-  .lore-text {
+  .lore-text .lore-p {
     font-family: var(--rd-ff-lore, var(--font-base));
     font-size: calc(var(--rd-fs-lore, 16px) * var(--ts-lore, 1));
     font-weight: var(--rd-fw-lore, 400);

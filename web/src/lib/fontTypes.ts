@@ -129,6 +129,7 @@ export const TYPE_SLOTS: TypeSlot[] = [
     wrappers: [
       { tag: "div", cls: "lore" },
       { tag: "div", cls: "lore-text" },
+      { tag: "p", cls: "lore-p" },
     ],
   },
   {

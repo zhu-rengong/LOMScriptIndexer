@@ -15,6 +15,7 @@ import type { GraphEdge, GraphNode } from "../types/graph";
 import type { BeatKind } from "./beatRows";
 import * as beatRows from "./beatRows";
 import { condText, metaDisplay, metaTarget, missionEventView } from "./conditions";
+import { stripMarkup } from "./richText";
 import { scriptStore as script } from "./scriptStore";
 
 export const speakerName = (id: string): string => {
@@ -163,7 +164,11 @@ const builders: Record<BeatKind, Builder> = {
   },
   lore: (buffer, row) => {
     buffer.flushAll();
-    buffer.push({ kind: "lore", text: beatRows.parseLore(row) });
+    const lines = stripMarkup(beatRows.parseLore(row))
+      .split(/\n+/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    buffer.push({ kind: "lore", lines });
   },
   say: (buffer, row) => {
     buffer.flushAll();

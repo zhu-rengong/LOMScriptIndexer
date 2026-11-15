@@ -755,9 +755,13 @@
     background: var(--surface-inset);
   }
 
-  .lore-text {
+  .lore-text .lore-p {
     color: var(--ink-2);
     overflow-wrap: anywhere;
+  }
+
+  .lore-text .lore-p + .lore-p {
+    margin-top: 0.45em;
   }
 
   .scene-switch {

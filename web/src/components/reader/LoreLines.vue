@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import RichText from "./RichText.vue";
-
-defineProps<{ text: string }>();
+defineProps<{ lines: string[] }>();
 </script>
 
 <template>
   <div class="lore">
-    <div class="lore-text"><RichText :text="text" hard-breaks /></div>
+    <div class="lore-text">
+      <p v-for="(line, index) in lines" :key="index" class="lore-p">{{ line }}</p>
+    </div>
   </div>
 </template>

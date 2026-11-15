@@ -154,7 +154,7 @@ export type ReaderBlock =
   | { kind: "dice"; chips: MetaChip[] }
   | { kind: "choice"; options: ChoiceOption[]; diceChips: MetaChip[] }
   | { kind: "branches"; branches: BranchView[] }
-  | { kind: "lore"; text: string }
+  | { kind: "lore"; lines: string[] }
   | { kind: "battle"; battle: BattleView }
   | { kind: "scene"; scene: SceneView }
   | { kind: "ending"; ending: EndingView }
