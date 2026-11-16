@@ -171,7 +171,7 @@
   "fontEmptyHint": "未取得系統字體，請在瀏覽器中允許字體存取，或載入字體檔案。",
   "fontFileProtocolHint": "本機檔案無法請求系統字體權限，請用本機伺服器（如 http://localhost:8000）開啟站點。",
   "fontInsecureHint": "列舉本機字體需要 HTTPS 或 localhost，請透過安全位址開啟後再試。",
-  "fontDeniedHint": "此站點已被禁止存取本機字體。請在瀏覽器的站點設定中允許字體存取，然後重新開啟此選單。",
+  "fontDeniedHint": "此站點已禁止存取本機字體。請點位址欄左側的站點圖示，進入站點權限，將「本機字體」設為允許，然後重新整理頁面。",
   "fontBlockedHint": "此頁面被嵌入策略阻止存取本機字體。請在 Chrome/Edge 中直接開啟站點，不要在嵌入視窗內使用。",
   "fontFileError": "無法載入該字體檔案",
   "fontLoadingHint": "正在請求本機字體存取權限…",

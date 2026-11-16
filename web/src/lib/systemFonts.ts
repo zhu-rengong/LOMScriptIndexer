@@ -50,6 +50,17 @@ const failureStatus = (error: unknown): FontSourceStatus => {
   return "empty";
 };
 
+const permissionState = async (): Promise<PermissionState | null> => {
+  try {
+    const status = await navigator.permissions.query({
+      name: "local-fonts" as PermissionName,
+    });
+    return status.state;
+  } catch {
+    return null;
+  }
+};
+
 const ensureFamilies = (): Promise<string[]> => {
   if (detected) return Promise.resolve(detected);
   if (pending) return pending;
@@ -73,10 +84,15 @@ const ensureFamilies = (): Promise<string[]> => {
     console.warn("[ScriptIndexer] local font enumeration timed out");
   }, ENUMERATION_TIMEOUT);
   pending = enumerateFamilies()
-    .then((list) => {
+    .then(async (list) => {
       familiesRef.value = list;
-      statusRef.value = list.length ? "ready" : "empty";
-      if (list.length) detected = list;
+      if (list.length) {
+        statusRef.value = "ready";
+        detected = list;
+        return list;
+      }
+      const state = await permissionState();
+      statusRef.value = state === "denied" ? "denied" : "empty";
       return list;
     })
     .catch((error: unknown) => {

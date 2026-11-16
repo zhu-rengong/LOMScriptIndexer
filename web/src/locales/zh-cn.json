@@ -171,7 +171,7 @@
   "fontEmptyHint": "未获取到系统字体，请在浏览器中允许字体访问，或加载字体文件。",
   "fontFileProtocolHint": "本地文件无法请求系统字体权限，请用本地服务器（如 http://localhost:8000）打开站点。",
   "fontInsecureHint": "枚举本机字体需要 HTTPS 或 localhost，请通过安全地址打开后再试。",
-  "fontDeniedHint": "此站点已被禁止访问本机字体。请在浏览器的站点设置中允许字体访问，然后重新打开此菜单。",
+  "fontDeniedHint": "此站点已禁止访问本机字体。请点地址栏左侧的站点图标，进入站点权限，将「本地字体」设为允许，然后刷新页面。",
   "fontBlockedHint": "此页面被嵌入策略阻止访问本机字体。请在 Chrome/Edge 中直接打开站点，不要在嵌入窗口内使用。",
   "fontFileError": "无法加载该字体文件",
   "fontLoadingHint": "正在请求本机字体访问权限…",

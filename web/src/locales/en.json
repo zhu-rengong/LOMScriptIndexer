@@ -171,7 +171,7 @@
   "fontEmptyHint": "No system fonts are available. Allow font access in the browser or load a font file.",
   "fontFileProtocolHint": "Local files cannot request font permissions. Serve the site over http://localhost and open that address.",
   "fontInsecureHint": "Font access requires HTTPS or localhost. Open the site over a secure address and try again.",
-  "fontDeniedHint": "Font access is blocked for this site. Allow local fonts in the browser's site settings, then reopen this menu.",
+  "fontDeniedHint": "Font access is blocked for this site. Open the site permissions from the address bar, allow local fonts, then reload.",
   "fontBlockedHint": "Font access is blocked for this page. Open the site directly in Chrome or Edge, not inside an embedded frame.",
   "fontFileError": "This font file could not be loaded",
   "fontLoadingHint": "Requesting access to local fonts…",
