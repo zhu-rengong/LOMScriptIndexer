@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import type { UseVirtualListItem } from "@vueuse/core";
-import type { StyleValue } from "vue";
-import { t } from "../../../i18n";
 import type { RailRow } from "../../../lib/rail";
+import { t } from "../../../i18n";
 import AppIcon from "../../ui/AppIcon.vue";
 
 const props = defineProps<{
-  items: UseVirtualListItem<RailRow>[];
-  wrapperStyle: StyleValue;
+  items: { row: RailRow; top: number }[];
+  height: number;
   selectedId: string;
   searching: boolean;
 }>();
@@ -19,33 +17,35 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div v-if="props.items.length" class="rail-vlist" :style="props.wrapperStyle">
-    <template v-for="{ data } in props.items" :key="data.key">
+  <div v-if="props.items.length" class="rail-vlist" :style="{ height: `${props.height}px` }">
+    <template v-for="{ row, top } in props.items" :key="row.key">
       <button
-        v-if="data.kind === 'chapter'"
-        class="cat-chap"
-        :class="{ 'is-open': data.open }"
+        v-if="row.kind === 'chapter'"
+        class="cat-chap rail-vpos"
+        :class="{ 'is-open': row.open }"
+        :style="{ top: `${top}px` }"
         type="button"
         :disabled="props.searching"
-        :aria-expanded="data.open"
-        @click="emit('toggle', data.index)"
+        :aria-expanded="row.open"
+        @click="emit('toggle', row.index)"
       >
-        <span class="cat-chap-ord">{{ data.ordinal }}</span>
-        <span class="cat-chap-mark" :style="{ backgroundColor: data.chapter.color }"></span>
-        <span class="cat-chap-title">{{ data.title }}</span>
-        <span class="cat-chap-count">{{ t("railScripts", { n: data.total }) }}</span>
+        <span class="cat-chap-ord">{{ row.ordinal }}</span>
+        <span class="cat-chap-mark" :style="{ backgroundColor: row.chapter.color }"></span>
+        <span class="cat-chap-title">{{ row.title }}</span>
+        <span class="cat-chap-count">{{ t("railScripts", { n: row.total }) }}</span>
         <AppIcon class="cat-chap-arrow" name="chevron" />
       </button>
       <button
         v-else
-        class="cat-row rail-vrow"
-        :class="{ 'is-on': props.selectedId === data.id }"
+        class="cat-row rail-vrow rail-vpos"
+        :class="{ 'is-on': props.selectedId === row.id }"
+        :style="{ top: `${top}px` }"
         type="button"
-        :aria-current="props.selectedId === data.id ? 'true' : undefined"
-        @click="emit('pick', data.id)"
+        :aria-current="props.selectedId === row.id ? 'true' : undefined"
+        @click="emit('pick', row.id)"
       >
-        <span class="cat-id">{{ data.id }}</span>
-        <span class="cat-meta">{{ t("sayCount", { n: data.sayCount }) }}</span>
+        <span class="cat-id">{{ row.id }}</span>
+        <span class="cat-meta">{{ t("sayCount", { n: row.sayCount }) }}</span>
       </button>
     </template>
   </div>

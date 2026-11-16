@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { useVirtualList } from "@vueuse/core";
 import { graph } from "../../data/graph";
 import { specialScripts } from "../../data/special";
 import { t } from "../../i18n";
 import { toNeedle } from "../../lib/browser";
-import { bookmarkRows, outlineRows, specialRows } from "../../lib/rail";
+import { bookmarkRows, outlineRows, specialRows, type RailRow } from "../../lib/rail";
 import AppIcon from "../ui/AppIcon.vue";
 import BookmarksTab from "./rail/BookmarksTab.vue";
 import OutlineTab from "./rail/OutlineTab.vue";
@@ -43,21 +42,68 @@ const openChapter = computed(() => {
 const outline = computed(() => outlineRows(query.value, openChapter.value));
 const rows = computed(() => outline.value.rows);
 
+const OVERSCAN = 12;
+
 const rowHeight = reactive({ chapter: 44, node: 32 });
 
-const heightOf = (index: number): number => {
-  const row = rows.value[index];
-  return row && row.kind === "chapter" ? rowHeight.chapter : rowHeight.node;
+const offsets = computed(() => {
+  const list = rows.value;
+  const spans = new Float64Array(list.length + 1);
+  for (let index = 0; index < list.length; index++) {
+    spans[index + 1] =
+      spans[index] + (list[index].kind === "chapter" ? rowHeight.chapter : rowHeight.node);
+  }
+  return spans;
+});
+
+const totalHeight = computed(() => offsets.value[rows.value.length] ?? 0);
+
+const scrollTop = ref(0);
+const viewHeight = ref(0);
+
+const indexAt = (position: number): number => {
+  const spans = offsets.value;
+  const count = rows.value.length;
+  if (count === 0) return 0;
+  if (position <= 0) return 0;
+  if (position >= spans[count]) return count - 1;
+  let low = 0;
+  let high = count - 1;
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    if (spans[mid + 1] <= position) low = mid + 1;
+    else high = mid;
+  }
+  return low;
 };
 
-const { list: outlineItems, wrapperProps, containerProps } = useVirtualList(rows, {
-  itemHeight: heightOf,
-  overscan: 12,
+const visible = computed(() => {
+  const list = rows.value;
+  const spans = offsets.value;
+  if (!list.length) return [] as { row: RailRow; top: number }[];
+  const first = indexAt(scrollTop.value);
+  const last = indexAt(scrollTop.value + Math.max(viewHeight.value, 1));
+  const from = Math.max(0, first - OVERSCAN);
+  const to = Math.min(list.length, last + 1 + OVERSCAN);
+  const items: { row: RailRow; top: number }[] = [];
+  for (let index = from; index < to; index += 1) {
+    items.push({ row: list[index], top: spans[index] });
+  }
+  return items;
 });
 
-watchEffect(() => {
-  containerProps.ref.value = listRef.value;
-});
+const readScroll = () => {
+  const element = listRef.value;
+  if (!element) return;
+  scrollTop.value = element.scrollTop;
+  viewHeight.value = element.clientHeight;
+};
+
+const onScroll = () => {
+  const element = listRef.value;
+  if (!element) return;
+  scrollTop.value = element.scrollTop;
+};
 
 let staleHeights = true;
 
@@ -65,8 +111,10 @@ const measureRows = () => {
   if (!staleHeights) return;
   const element = listRef.value;
   if (!element) return;
-  const chapter = element.querySelector<HTMLElement>(".cat-chap")?.offsetHeight ?? 0;
-  const node = element.querySelector<HTMLElement>(".rail-vrow")?.offsetHeight ?? 0;
+  const chapter =
+    element.querySelector<HTMLElement>(".cat-chap")?.getBoundingClientRect().height ?? 0;
+  const node =
+    element.querySelector<HTMLElement>(".rail-vrow")?.getBoundingClientRect().height ?? 0;
   if (chapter > 0) rowHeight.chapter = chapter;
   if (node > 0) rowHeight.node = node;
   staleHeights = chapter <= 0 || node <= 0;
@@ -77,22 +125,36 @@ const invalidateHeights = () => {
   measureRows();
 };
 
-watch(outlineItems, () => measureRows(), { flush: "post" });
+watch(visible, () => measureRows(), { flush: "post" });
+
+watch(rows, () => {
+  void nextTick(readScroll);
+});
+
+watch(totalHeight, () => {
+  void nextTick(readScroll);
+});
+
+let observer: ResizeObserver | null = null;
 
 const coarse = window.matchMedia("(pointer: coarse)");
 const typography = new MutationObserver(invalidateHeights);
 
 onMounted(() => {
+  readScroll();
   measureRows();
   coarse.addEventListener("change", invalidateHeights);
   typography.observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
-  void nextTick(() => {
-    containerProps.ref.value = listRef.value;
-    containerProps.onScroll();
-  });
+  const element = listRef.value;
+  if (element) {
+    observer = new ResizeObserver(readScroll);
+    observer.observe(element);
+  }
 });
 
 onBeforeUnmount(() => {
+  observer?.disconnect();
+  observer = null;
   coarse.removeEventListener("change", invalidateHeights);
   typography.disconnect();
 });
@@ -155,14 +217,16 @@ const toggleChapter = (index: number) => {
 };
 
 const scrollToRow = (index: number) => {
-  const element = containerProps.ref.value;
+  const element = listRef.value;
   if (!element) return;
-  let top = 0;
-  for (let step = 0; step < index; step++) top += heightOf(step);
-  const height = heightOf(index);
+  const spans = offsets.value;
+  const top = spans[index];
+  if (top === undefined) return;
+  const bottom = spans[index + 1] ?? top;
   if (top < element.scrollTop) element.scrollTop = top;
-  else if (top + height > element.scrollTop + element.clientHeight)
-    element.scrollTop = top + height - element.clientHeight;
+  else if (bottom > element.scrollTop + element.clientHeight)
+    element.scrollTop = bottom - element.clientHeight;
+  scrollTop.value = element.scrollTop;
 };
 
 const revealSelected = async (id: string) => {
@@ -284,7 +348,7 @@ watch(
       class="rail-list"
       role="tabpanel"
       :aria-labelledby="`railTab-${view.railTab}`"
-      @scroll="containerProps.onScroll"
+      @scroll.passive="onScroll"
     >
       <BookmarksTab
         v-if="view.railTab === 'bookmarks'"
@@ -303,8 +367,8 @@ watch(
       />
       <OutlineTab
         v-else
-        :items="outlineItems"
-        :wrapper-style="wrapperProps.style"
+        :items="visible"
+        :height="totalHeight"
         :selected-id="store.selectedId"
         :searching="searching"
         @toggle="toggleChapter"

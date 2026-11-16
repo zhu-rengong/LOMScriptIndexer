@@ -396,6 +396,7 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overflow-anchor: none;
     padding: 0 var(--sp-3) var(--sp-6);
   }
 
@@ -556,9 +557,19 @@
     color: var(--accent);
   }
 
-  .rail-vrow {
+  .rail-vlist {
+    position: relative;
+  }
+
+  .rail-vpos {
+    position: absolute;
+    left: 0;
+    right: 0;
     width: auto;
-    margin-left: 11px;
+  }
+
+  .rail-vrow {
+    left: 11px;
     padding-left: calc(var(--sp-2) + var(--sp-3));
     box-shadow: inset 1px 0 0 var(--line-1);
   }
