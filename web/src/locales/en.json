@@ -187,7 +187,6 @@
   "searchOutside": "{n} more outside the filter",
   "searchNoHit": "No match inside the filter",
   "searchCount": "{n} matches",
-  "searchTooShort": "Type at least 2 characters",
   "searchIndexingText": "Building search index… {done}/{total}",
   "fieldSpeaker": "Speaker",
   "fieldFlag": "Flag",

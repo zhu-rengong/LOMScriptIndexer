@@ -2,7 +2,7 @@ import { convert } from "../data/convert";
 import { graph } from "../data/graph";
 import { textStore } from "../data/text";
 import type { Chapter } from "../types/graph";
-import { normalizeSearchText, toNeedle } from "./browser";
+import { normalizeSearchText } from "./browser";
 import { createSearchEngine, searchCandidates, type SearchDoc } from "./searchEngine";
 import { resetSearchText, searchTextOfId } from "./searchText";
 import { scriptStore as script } from "./scriptStore";
@@ -155,7 +155,8 @@ const invalidate = (): void => {
 
 const search = async (input: string, onProgress?: SearchProgress): Promise<SearchResult> => {
   const result: SearchResult = { hits: [], total: 0, excludedByFilter: 0 };
-  if (toNeedle(String(input ?? "")).length < 2) return result;
+  const needle = needleOf(input);
+  if (!needle) return result;
   if (onProgress) {
     listeners.add(onProgress);
     notify();
@@ -165,8 +166,6 @@ const search = async (input: string, onProgress?: SearchProgress): Promise<Searc
   } finally {
     if (onProgress) listeners.delete(onProgress);
   }
-  const needle = needleOf(input);
-  if (needle.length < 2) return result;
   const candidates = searchCandidates(engine, needle);
   const allowed = candidates === null ? null : new Set(candidates);
   let excludedByFilter = 0;

@@ -64,8 +64,7 @@ const noteText = () => {
   return hasActiveFilter() ? t("searchScoped") : "";
 };
 
-const messageText = (value: string) => {
-  if (value.length < 2) return t("searchTooShort");
+const messageText = () => {
   const progress = buildProgress.value;
   const loading = !textStore.progress().done;
   if (progress.total > 0 && (progress.done < progress.total || loading)) {
@@ -79,12 +78,12 @@ const messageText = (value: string) => {
 
 const status = ref({ count: "", note: "", excluded: "", message: "" });
 
-const updateStatus = (value: string) => {
+const updateStatus = () => {
   status.value = {
     count: t("searchCount", { n: hits.value.length }),
     note: noteText(),
     excluded: excludedCount.value > 0 ? t("searchOutside", { n: excludedCount.value }) : "",
-    message: messageText(value),
+    message: messageText(),
   };
 };
 
@@ -94,7 +93,7 @@ const applyResult = (value: string, result: SearchResult, keepScroll: boolean) =
   excludedCount.value = result.excludedByFilter;
   const limit = keepScroll ? Math.max(renderedCount.value, PAGE) : PAGE;
   renderedCount.value = Math.min(hits.value.length, limit);
-  updateStatus(value);
+  updateStatus();
   renderedQuery = value;
   renderedFilterSet = store.filterSet;
   isStale = false;
@@ -103,11 +102,11 @@ const applyResult = (value: string, result: SearchResult, keepScroll: boolean) =
 const syncHits = async (value: string, keepScroll = false): Promise<number> => {
   const seq = ++requestSeq;
   building.value = true;
-  updateStatus(value);
+  updateStatus();
   const result = await searchIndex.search(value, (done, count) => {
     if (seq !== requestSeq) return;
     buildProgress.value = { done, total: count };
-    updateStatus(value);
+    updateStatus();
   });
   if (seq !== requestSeq) return 0;
   building.value = false;
@@ -134,7 +133,7 @@ const searchNow = async (): Promise<number> => {
   }
   const filterSet = store.filterSet;
   if (!isStale && value === renderedQuery && filterSet === renderedFilterSet && hits.value.length) {
-    updateStatus(value);
+    updateStatus();
     show();
     return hits.value.length;
   }
@@ -144,7 +143,7 @@ const searchNow = async (): Promise<number> => {
 
 const runRefresh = async (): Promise<void> => {
   const value = query.value.trim();
-  if (value.length < 2) return;
+  if (!value) return;
   lastQuery = value;
   if (!openState.value) {
     isStale = true;
@@ -154,7 +153,7 @@ const runRefresh = async (): Promise<void> => {
   const result = await searchIndex.search(value, (done, count) => {
     if (seq !== requestSeq) return;
     buildProgress.value = { done, total: count };
-    updateStatus(value);
+    updateStatus();
   });
   if (seq !== requestSeq) return;
   building.value = false;
@@ -162,7 +161,7 @@ const runRefresh = async (): Promise<void> => {
     applyResult(value, result, true);
     return;
   }
-  updateStatus(value);
+  updateStatus();
 };
 
 const refresh = useDebounceFn(() => {
@@ -201,7 +200,7 @@ const submit = () => {
   void searchNow();
   const value = query.value.trim();
   const state = textStore.progress();
-  if (value.length < 2 || state.done) return;
+  if (!value || state.done) return;
   ui.setIoStatus(t("searchLoadingText", { loaded: state.loaded, total: state.total }));
   warmFullText(store.textLang());
 };
