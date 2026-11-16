@@ -20,7 +20,7 @@ export const BASE_FONT = SERIF;
 
 export type FontPreset = { id: string; label: string; stack: string };
 
-export const FONTS: FontPreset[] = [
+const FONTS: FontPreset[] = [
   { id: "serif", label: "pref.font.serif", stack: SERIF },
   { id: "sans", label: "pref.font.sans", stack: SANS },
   { id: "kai", label: "pref.font.kai", stack: KAI },

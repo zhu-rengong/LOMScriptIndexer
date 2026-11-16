@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import {
   BASE_FONT,
-  FONTS,
   FOLLOW_BASE,
   FOLLOW_GROUP,
   fontLabelKey,
@@ -70,7 +69,6 @@ const LABELS = {
 };
 
 const PRESETS = {
-  fonts: FONTS,
   groups: GROUPS,
   slots: TYPE_SLOTS,
   weights: WEIGHTS.slice(),
