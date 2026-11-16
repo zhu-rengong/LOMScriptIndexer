@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import { byId, toNeedle } from "../../lib/browser";
+import { byId } from "../../lib/browser";
 import { FOLLOW_BASE, FOLLOW_GROUP } from "../../lib/fontFamilies";
+import {
+  fontAliases,
+  fontMatches,
+  fontSearchText,
+  fontStackSearch,
+  fontTokens,
+} from "../../lib/fontSearch";
 import { GROUPS, TYPE_SLOTS, groupById, slotById } from "../../lib/fontTypes";
 import { overlay } from "../../lib/overlay";
 import { fonts } from "../../lib/systemFonts";
@@ -23,6 +30,7 @@ type PickerItem = {
   label: string;
   hint: string;
   family?: string;
+  search: string;
 };
 
 const searchInput = ref<HTMLInputElement | null>(null);
@@ -42,25 +50,39 @@ const target = computed<FontTarget>(() => {
 const pickerItems = computed<PickerItem[]>(() => {
   const list: PickerItem[] = [];
   if (target.value.scope === "group") {
-    list.push({ value: "@base", label: t(prefs.labels.followBase), hint: "" });
+    const label = t(prefs.labels.followBase);
+    list.push({ value: "@base", label, hint: "", search: fontSearchText(label) });
   } else {
-    list.push({ value: "@group", label: t(prefs.labels.followGroup), hint: "" });
+    const label = t(prefs.labels.followGroup);
+    list.push({ value: "@group", label, hint: "", search: fontSearchText(label) });
   }
   prefs.presets.fonts.forEach((font) => {
-    list.push({ value: font.id, label: t(font.label), hint: t("fontPresetMeta") });
+    const label = t(font.label);
+    list.push({
+      value: font.id,
+      label,
+      hint: t("fontPresetMeta"),
+      search: fontSearchText(font.id, label, fontStackSearch(font.stack)),
+    });
   });
-  list.push({ value: "__custom__", label: t(prefs.labels.customFont), hint: "" });
+  const custom = t(prefs.labels.customFont);
+  list.push({ value: "__custom__", label: custom, hint: "", search: fontSearchText(custom) });
   fonts.families().forEach((family) => {
-    list.push({ value: family, label: family, hint: t("fontSystemMeta"), family });
+    list.push({
+      value: family,
+      label: family,
+      hint: t("fontSystemMeta"),
+      family,
+      search: fontSearchText(family, ...fontAliases(family)),
+    });
   });
   return list;
 });
 
 const visibleItems = computed(() => {
-  const needle = toNeedle(query.value);
-  return pickerItems.value.filter(
-    (item) => !needle || item.label.toLowerCase().indexOf(needle) >= 0,
-  );
+  const tokens = fontTokens(query.value);
+  if (!tokens.length) return pickerItems.value;
+  return pickerItems.value.filter((item) => fontMatches(item.search, tokens));
 });
 
 const currentFont = computed(() => {
