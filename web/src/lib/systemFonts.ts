@@ -6,7 +6,8 @@ export type FontSourceStatus =
   | "unsupported"
   | "insecure"
   | "denied"
-  | "blocked";
+  | "blocked"
+  | "file";
 
 let detected: string[] | null = null;
 let pending: Promise<string[]> | null = null;
@@ -49,6 +50,10 @@ const failureStatus = (error: unknown): FontSourceStatus => {
 const ensureFamilies = (): Promise<string[]> => {
   if (detected) return Promise.resolve(detected);
   if (pending) return pending;
+  if (window.location.protocol === "file:") {
+    statusRef.value = "file";
+    return Promise.resolve([]);
+  }
   if (!supported()) {
     statusRef.value = "unsupported";
     return Promise.resolve([]);

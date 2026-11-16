@@ -125,6 +125,8 @@ const onFile = async (event: Event) => {
 
 const fontHint = computed(() => {
   switch (fonts.status()) {
+    case "file":
+      return t("fontFileProtocolHint");
     case "unsupported":
       return t("fontUnsupportedHint");
     case "insecure":
