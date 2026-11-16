@@ -124,10 +124,20 @@ const onFile = async (event: Event) => {
 };
 
 const fontHint = computed(() => {
-  const status = fonts.status();
-  if (status === "unsupported") return t("fontUnsupportedHint");
-  if (status === "empty") return t("fontEmptyHint");
-  return "";
+  switch (fonts.status()) {
+    case "unsupported":
+      return t("fontUnsupportedHint");
+    case "insecure":
+      return t("fontInsecureHint");
+    case "denied":
+      return t("fontDeniedHint");
+    case "blocked":
+      return t("fontBlockedHint");
+    case "empty":
+      return t("fontEmptyHint");
+    default:
+      return "";
+  }
 });
 
 const close = () => overlay.close("fontPicker");

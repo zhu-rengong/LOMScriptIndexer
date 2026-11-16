@@ -3,6 +3,7 @@ import { t } from "../../i18n";
 import { byId } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
 import { slotById } from "../../lib/fontTypes";
+import { fonts } from "../../lib/systemFonts";
 import type { CapsMode, FontTarget } from "../../types/font";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
@@ -86,6 +87,7 @@ const openPicker = () => {
     overlay.close("fontPicker");
     return;
   }
+  void fonts.ensureFamilies();
   overlay.open("fontPicker", {
     trigger: byId(UI_IDS.typeFontTrigger),
     keep: ["settings"],

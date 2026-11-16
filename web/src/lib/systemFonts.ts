@@ -1,4 +1,12 @@
-export type FontSourceStatus = "idle" | "loading" | "ready" | "empty" | "unsupported";
+export type FontSourceStatus =
+  | "idle"
+  | "loading"
+  | "ready"
+  | "empty"
+  | "unsupported"
+  | "insecure"
+  | "denied"
+  | "blocked";
 
 let detected: string[] | null = null;
 let pending: Promise<string[]> | null = null;
@@ -26,12 +34,16 @@ const orderFamilies = (names: string[]): string[] => {
 const enumerateFamilies = async (): Promise<string[]> => {
   const queryLocalFonts = window.queryLocalFonts;
   if (!queryLocalFonts) return [];
-  try {
-    const fonts = await queryLocalFonts();
-    return orderFamilies(fonts.map((font) => font.family));
-  } catch {
-    return [];
-  }
+  const fonts = await queryLocalFonts();
+  return orderFamilies(fonts.map((font) => font.family));
+};
+
+const failureStatus = (error: unknown): FontSourceStatus => {
+  const name = error instanceof DOMException ? error.name : "";
+  if (name === "NotAllowedError") return "denied";
+  if (name === "SecurityError") return "blocked";
+  if (name === "NotSupportedError") return "unsupported";
+  return "empty";
 };
 
 const ensureFamilies = (): Promise<string[]> => {
@@ -41,14 +53,27 @@ const ensureFamilies = (): Promise<string[]> => {
     statusRef.value = "unsupported";
     return Promise.resolve([]);
   }
+  if (!window.isSecureContext) {
+    statusRef.value = "insecure";
+    return Promise.resolve([]);
+  }
   statusRef.value = "loading";
-  pending = enumerateFamilies().then((list) => {
-    familiesRef.value = list;
-    statusRef.value = list.length ? "ready" : "empty";
-    if (list.length) detected = list;
-    pending = null;
-    return list;
-  });
+  pending = enumerateFamilies()
+    .then((list) => {
+      familiesRef.value = list;
+      statusRef.value = list.length ? "ready" : "empty";
+      if (list.length) detected = list;
+      return list;
+    })
+    .catch((error: unknown) => {
+      console.warn("[ScriptIndexer] local font enumeration failed", error);
+      familiesRef.value = [];
+      statusRef.value = failureStatus(error);
+      return [];
+    })
+    .finally(() => {
+      pending = null;
+    });
   return pending;
 };
 
