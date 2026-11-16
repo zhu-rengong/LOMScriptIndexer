@@ -581,22 +581,6 @@
     transform: translateY(-50%) scaleY(1);
   }
 
-  .type-tree-row.is-group {
-    background: var(--surface);
-    color: var(--ink);
-    --ts-control: 1.02;
-    --tls-control: 0.04em;
-  }
-
-  .type-tree-row.is-group:hover {
-    background: var(--surface-hover);
-  }
-
-  .type-tree-row.is-group.is-on,
-  .type-tree-row.is-group.is-on:hover {
-    background: var(--accent-soft);
-  }
-
   .type-tree-ord {
     min-width: 0;
     color: var(--ink-think);

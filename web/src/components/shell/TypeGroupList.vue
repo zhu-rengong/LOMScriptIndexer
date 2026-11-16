@@ -108,7 +108,7 @@ const onKeydown = (event: KeyboardEvent) => {
       v-for="row in rows"
       :key="row.key"
       class="type-tree-row"
-      :class="{ 'is-on': isOn(row), 'is-group': row.scope === 'group' }"
+      :class="{ 'is-on': isOn(row) }"
       type="button"
       role="treeitem"
       :aria-selected="isOn(row)"
