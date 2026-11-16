@@ -1,5 +1,7 @@
 import { FOLLOW_GROUP } from "./fontFamilies";
-import type { CapsMode } from "../types/font";
+import type { CapsMode, FontTarget } from "../types/font";
+
+export const BASE_TARGET: FontTarget = { scope: "base", id: "base" };
 
 type FontGroup = {
   id: string;

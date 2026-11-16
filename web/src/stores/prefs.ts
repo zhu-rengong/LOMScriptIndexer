@@ -1,8 +1,9 @@
 import { defineStore } from "pinia";
 import {
-  BASE_FONT,
+  DEFAULT_BASE_FONT,
   FOLLOW_BASE,
   FOLLOW_GROUP,
+  baseFontStack,
   fontLabelKey,
   fontStackOf,
 } from "../lib/fontFamilies";
@@ -20,7 +21,7 @@ import type {
 
 const KEY = keys.prefs;
 
-const PREFS_VERSION = 10;
+const PREFS_VERSION = 11;
 
 type StoredPrefs = PrefState & { version: number };
 
@@ -124,6 +125,11 @@ const clampBool = (value: unknown, fallback: boolean | null): boolean | null => 
 const clampPortraitSize = (value: unknown, fallback: number): number =>
   roundTo(clampNumber(value, PORTRAIT_SIZE_MIN, PORTRAIT_SIZE_MAX, fallback), PORTRAIT_SIZE_STEP);
 
+const normalizeBaseFont = (value: unknown): string => {
+  const font = typeof value === "string" ? value.trim() : "";
+  return font && font !== FOLLOW_BASE && font !== FOLLOW_GROUP ? font : DEFAULT_BASE_FONT;
+};
+
 const defaultGroups = (): Record<string, PrefEntry> => {
   const out: Record<string, PrefEntry> = {};
   for (const group of GROUPS) {
@@ -183,6 +189,7 @@ const normalizeSlot = (raw: unknown, base: PrefEntry): PrefEntry => {
 
 const defaultState = (): StoredPrefs => ({
   version: PREFS_VERSION,
+  baseFont: DEFAULT_BASE_FONT,
   groups: defaultGroups(),
   slots: defaultSlots(),
   measure: MEASURE_DEFAULT,
@@ -195,6 +202,7 @@ const decodePrefs = (raw: unknown): StoredPrefs => {
   const source = raw as Record<string, unknown>;
   if (source.version !== PREFS_VERSION) return defaultState();
   const next = defaultState();
+  next.baseFont = normalizeBaseFont(source.baseFont);
   next.measure = Math.round(clampNumber(source.measure, MEASURE_MIN, MEASURE_MAX, MEASURE_DEFAULT));
   next.showPortraits = source.showPortraits !== false;
   next.portraitSize = clampPortraitSize(source.portraitSize, PORTRAIT_SIZE_DEFAULT);
@@ -222,6 +230,13 @@ const decodePrefs = (raw: unknown): StoredPrefs => {
 export const usePrefsStore = defineStore("prefs", () => {
   const state = storedRef<StoredPrefs>(KEY, defaultState(), { decode: decodePrefs });
 
+  const baseFont = computed({
+    get: () => state.value.baseFont,
+    set: (value: string) => {
+      state.value.baseFont = normalizeBaseFont(value);
+    },
+  });
+  const baseStack = computed(() => baseFontStack(baseFont.value));
   const groups = computed(() => state.value.groups);
   const slots = computed(() => state.value.slots);
   const measure = computed({
@@ -246,14 +261,14 @@ export const usePrefsStore = defineStore("prefs", () => {
   });
 
   const groupStack = (groupId: string): string =>
-    fontStackOf(groups.value[groupId]?.font || FOLLOW_BASE);
+    fontStackOf(groups.value[groupId]?.font || FOLLOW_BASE, baseStack.value);
 
   const slotStack = (slotId: string): string => {
     const slot = slotById(slotId);
-    if (!slot) return BASE_FONT;
+    if (!slot) return baseStack.value;
     const entry = slots.value[slotId];
     if (!entry || !entry.font || entry.font === FOLLOW_GROUP) return groupStack(slot.group);
-    return fontStackOf(entry.font);
+    return fontStackOf(entry.font, baseStack.value);
   };
 
   const groupStyle = (id: string): ResolvedTypeStyle | null => {
@@ -297,8 +312,10 @@ export const usePrefsStore = defineStore("prefs", () => {
     };
   };
 
-  const resolveEntry = (scope: FontScope, id: string): ResolvedTypeStyle | null =>
-    scope === "group" ? groupStyle(id) : slotStyle(id);
+  const resolveEntry = (scope: FontScope, id: string): ResolvedTypeStyle | null => {
+    if (scope === "base") return null;
+    return scope === "group" ? groupStyle(id) : slotStyle(id);
+  };
 
   const capsTokens = (caps: CapsMode): [string, string] => {
     if (caps === "upper") return ["uppercase", "normal"];
@@ -308,7 +325,7 @@ export const usePrefsStore = defineStore("prefs", () => {
 
   const applyToDocument = (): void => {
     const root = document.documentElement;
-    root.style.setProperty("--font-base", BASE_FONT);
+    root.style.setProperty("--font-base", baseStack.value);
     root.style.setProperty("--reader-measure", `${measure.value}px`);
     root.style.setProperty("--rd-portrait-w", `${portraitSize.value}px`);
     for (const slot of TYPE_SLOTS) {
@@ -330,6 +347,7 @@ export const usePrefsStore = defineStore("prefs", () => {
   watch(state, applyToDocument, { deep: true, flush: "post", immediate: true });
 
   const get = (): PrefState => ({
+    baseFont: state.value.baseFont,
     groups: state.value.groups,
     slots: state.value.slots,
     measure: state.value.measure,
@@ -363,6 +381,7 @@ export const usePrefsStore = defineStore("prefs", () => {
 
   const set = (patch: PrefPatch): PrefState => {
     if (patch && typeof patch === "object") {
+      if (typeof patch.baseFont === "string") baseFont.value = patch.baseFont;
       if (typeof patch.showPortraits === "boolean") showPortraits.value = patch.showPortraits;
       if (patch.portraitSize !== undefined) portraitSize.value = patch.portraitSize;
       if (patch.measure !== undefined) measure.value = patch.measure;
@@ -390,6 +409,7 @@ export const usePrefsStore = defineStore("prefs", () => {
   };
 
   const fontLabelKeyOf = (target: FontTarget): string => {
+    if (target.scope === "base") return fontLabelKey(state.value.baseFont);
     if (target.scope === "group") {
       return fontLabelKey(groups.value[target.id]?.font || FOLLOW_BASE);
     }
@@ -400,6 +420,7 @@ export const usePrefsStore = defineStore("prefs", () => {
     labels: LABELS,
     presets: PRESETS,
     limits: LIMITS,
+    baseFont,
     groups,
     slots,
     measure,

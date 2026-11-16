@@ -17,6 +17,8 @@ const MONO = 'ui-monospace,"Sarasa Mono TC","Cascadia Mono",Consolas,"Courier Ne
 
 export const BASE_FONT = SERIF;
 
+export const DEFAULT_BASE_FONT = "serif";
+
 type FontPreset = { id: string; label: string; stack: string };
 
 const FONTS: FontPreset[] = [
@@ -46,12 +48,17 @@ const normalizeFamily = (name: string): string => {
     .join(",");
 };
 
-export const fontStackOf = (value: string): string => {
-  if (!value || value === FOLLOW_BASE) return BASE_FONT;
+export const fontStackOf = (value: string, base: string = BASE_FONT): string => {
+  if (!value || value === FOLLOW_BASE) return base;
   const preset = fontPreset(value);
   if (preset) return preset.stack;
   const direct = normalizeFamily(value);
-  return direct ? `${direct},${BASE_FONT}` : BASE_FONT;
+  return direct ? `${direct},${base}` : base;
+};
+
+export const baseFontStack = (value: string): string => {
+  if (!value || value === FOLLOW_BASE || value === FOLLOW_GROUP) return BASE_FONT;
+  return fontStackOf(value);
 };
 
 export const fontLabelKey = (value: string): string => {

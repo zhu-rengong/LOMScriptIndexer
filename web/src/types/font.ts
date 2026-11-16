@@ -1,4 +1,4 @@
-export type FontScope = "group" | "slot";
+export type FontScope = "base" | "group" | "slot";
 
 export type CapsMode = "none" | "upper" | "small";
 
@@ -16,6 +16,7 @@ export type PrefEntry = {
 };
 
 export type PrefState = {
+  baseFont: string;
   groups: Record<string, PrefEntry>;
   slots: Record<string, PrefEntry>;
   measure: number;
@@ -24,6 +25,7 @@ export type PrefState = {
 };
 
 export type PrefPatch = {
+  baseFont?: string;
   measure?: number;
   groups?: Record<string, Partial<PrefEntry>>;
   slots?: Record<string, Partial<PrefEntry>>;

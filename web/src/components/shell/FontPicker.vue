@@ -35,10 +35,16 @@ const moved = ref(false);
 const open = computed(() => overlay.isOpen("fontPicker"));
 
 const pickerItems = computed<PickerItem[]>(() => {
-  const list: PickerItem[] = [
-    { value: followValue.value, label: followLabel.value, hint: "", search: followLabel.value },
-    { value: MANUAL, label: t("pref.customFont"), hint: "", search: t("pref.customFont") },
-  ];
+  const list: PickerItem[] = [];
+  if (props.target.scope !== "base") {
+    list.push({
+      value: followValue.value,
+      label: followLabel.value,
+      hint: "",
+      search: followLabel.value,
+    });
+  }
+  list.push({ value: MANUAL, label: t("pref.customFont"), hint: "", search: t("pref.customFont") });
   systemFonts.value.forEach((font) => {
     const hint = font.label === font.family ? "" : font.family;
     const search = [font.label, font.family].concat(font.aliases).join(" ").toLowerCase();

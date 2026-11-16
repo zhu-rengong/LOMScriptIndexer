@@ -2,7 +2,7 @@
 import { t, typeLabel } from "../../i18n";
 import { byId } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
-import { GROUPS, firstSlot, groupById, slotById } from "../../lib/fontTypes";
+import { BASE_TARGET, GROUPS, firstSlot, groupById, slotById } from "../../lib/fontTypes";
 import { ensureSystemFonts } from "../../lib/systemFonts";
 import type { FontTarget } from "../../types/font";
 import { UI_IDS } from "../../ui/ids";
@@ -11,6 +11,7 @@ import FontPicker from "./FontPicker.vue";
 import ScaleSlider from "./ScaleSlider.vue";
 import SettingsPreview from "./SettingsPreview.vue";
 import TypeGroupList from "./TypeGroupList.vue";
+import TypeFontSetting from "./TypeFontSetting.vue";
 import TypeGroupPick from "./TypeGroupPick.vue";
 import TypeParamPanel from "./TypeParamPanel.vue";
 import { useUiStore } from "../../stores/ui";
@@ -146,6 +147,7 @@ onMounted(() => {
 
       <section class="settings-section">
         <p class="settings-caption">{{ t("fontTypes") }}</p>
+        <TypeFontSetting :target="BASE_TARGET" :label="t('pref.baseFont')" />
         <p class="sub-label type-group-title">{{ t("pref.groupTitle") }}</p>
         <button
           :id="UI_IDS.typeGroupTrigger"
@@ -178,5 +180,5 @@ onMounted(() => {
   </aside>
 
   <TypeGroupPick :group-id="group.id" />
-  <FontPicker :target="target" />
+  <FontPicker :target="view.pickerTarget" />
 </template>

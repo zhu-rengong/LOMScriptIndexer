@@ -1343,6 +1343,7 @@
   "pref.font.kai": "楷體",
   "pref.font.round": "圓體",
   "pref.font.mono": "等寬",
+  "pref.baseFont": "基準字體",
   "pref.followBase": "跟隨基準",
   "pref.followGroup": "跟隨大類",
   "pref.groupAll": "整組",

@@ -26,6 +26,7 @@ export const useViewStore = defineStore("view", () => {
   const railTab = ref("outline");
   const outlineChapter = ref<number | undefined>(undefined);
   const fontTarget = ref<FontTarget>({ scope: "slot", id: "dialog" });
+  const pickerTarget = ref<FontTarget>({ scope: "slot", id: "dialog" });
   const railOpen = ref(false);
   const inferEnabled = flagStored(keys.infer);
   const condInferEnabled = flagStored(keys.condInfer);
@@ -63,6 +64,10 @@ export const useViewStore = defineStore("view", () => {
 
   const setFontTarget = (target: FontTarget): void => {
     fontTarget.value = target;
+  };
+
+  const setPickerTarget = (target: FontTarget): void => {
+    pickerTarget.value = target;
   };
 
   watchEffect(() => {
@@ -129,6 +134,7 @@ export const useViewStore = defineStore("view", () => {
     railTab,
     outlineChapter,
     fontTarget,
+    pickerTarget,
     railOpen,
     inferEnabled,
     condInferEnabled,
@@ -140,6 +146,7 @@ export const useViewStore = defineStore("view", () => {
     setRailTab,
     setOutlineChapter,
     setFontTarget,
+    setPickerTarget,
     hideRail,
     openRail,
     closeRail,

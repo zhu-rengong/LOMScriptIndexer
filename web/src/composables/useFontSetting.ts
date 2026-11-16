@@ -11,6 +11,7 @@ export const useFontSetting = (target: () => FontTarget) => {
 
   const current = computed(() => {
     const entry = target();
+    if (entry.scope === "base") return prefs.baseFont;
     if (entry.scope === "group") return prefs.groups[entry.id]?.font || FOLLOW_BASE;
     return prefs.slots[entry.id]?.font || FOLLOW_GROUP;
   });
@@ -36,6 +37,10 @@ export const useFontSetting = (target: () => FontTarget) => {
 
   const apply = (value: string): void => {
     const entry = target();
+    if (entry.scope === "base") {
+      prefs.set({ baseFont: value });
+      return;
+    }
     if (entry.scope === "group") {
       prefs.set({ groups: { [entry.id]: { font: value } } });
       return;
