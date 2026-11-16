@@ -2,7 +2,6 @@
 import { t } from "../../i18n";
 import { byId, toNeedle } from "../../lib/browser";
 import { FOLLOW_BASE, FOLLOW_GROUP } from "../../lib/fontFamilies";
-import { fontFiles } from "../../lib/fontFiles";
 import { GROUPS, TYPE_SLOTS, groupById, slotById } from "../../lib/fontTypes";
 import { overlay } from "../../lib/overlay";
 import { fonts } from "../../lib/systemFonts";
@@ -27,7 +26,6 @@ type PickerItem = {
 };
 
 const searchInput = ref<HTMLInputElement | null>(null);
-const fileInput = ref<HTMLInputElement | null>(null);
 const query = ref("");
 const activeIndex = ref(0);
 
@@ -49,13 +47,7 @@ const pickerItems = computed<PickerItem[]>(() => {
     list.push({ value: "@group", label: t(prefs.labels.followGroup), hint: "" });
   }
   list.push({ value: "__custom__", label: t(prefs.labels.customFont), hint: "" });
-  list.push({ value: "__file__", label: t("fontLoadFile"), hint: "" });
-  const files = fontFiles.names();
-  files.forEach((family) => {
-    list.push({ value: family, label: family, hint: t("fontFileMeta"), family });
-  });
   fonts.families().forEach((family) => {
-    if (files.indexOf(family) >= 0) return;
     list.push({ value: family, label: family, hint: t("fontSystemMeta"), family });
   });
   return list;
@@ -99,28 +91,9 @@ const pick = (item: PickerItem) => {
     void nextTick(() => byId(UI_IDS.typeFontCustom)?.focus());
     return;
   }
-  if (item.value === "__file__") {
-    fileInput.value?.click();
-    return;
-  }
   patch(item.value);
   overlay.close("fontPicker");
   ui.toast(t("fontPicked", { name: item.label }));
-};
-
-const onFile = async (event: Event) => {
-  const input = event.target as HTMLInputElement;
-  const file = input.files?.[0];
-  input.value = "";
-  if (!file) return;
-  const family = await fontFiles.import(file);
-  if (!family) {
-    ui.toast(t("fontFileError"));
-    return;
-  }
-  patch(family);
-  overlay.close("fontPicker");
-  ui.toast(t("fontPicked", { name: family }));
 };
 
 const fontHint = computed(() => {
@@ -261,6 +234,5 @@ onMounted(() => {
       <div v-else class="picker-empty popover-empty">{{ t("fontNoMatch") }}</div>
     </div>
     <p v-if="fontHint" class="panel-hint">{{ fontHint }}</p>
-    <input ref="fileInput" type="file" accept=".ttf,.otf,.woff,.woff2" hidden @change="onFile" />
   </div>
 </template>
