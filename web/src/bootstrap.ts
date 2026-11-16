@@ -6,6 +6,7 @@ import { graph } from "./data/graph";
 import { textStore } from "./data/text";
 import { syncLocale } from "./i18n";
 import { applyFilter } from "./lib/filter";
+import { fontFiles } from "./lib/fontFiles";
 import { exportScripts } from "./lib/scriptExport";
 import { searchIndex } from "./lib/search";
 import { pinia } from "./stores";
@@ -13,6 +14,7 @@ import { usePrefsStore } from "./stores/prefs";
 import { useScriptStore } from "./stores/script";
 
 export const start = (): void => {
+  void fontFiles.load();
   const app = createApp(App);
   app.use(pinia);
   usePrefsStore(pinia);

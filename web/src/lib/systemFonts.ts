@@ -1,7 +1,13 @@
+export type FontSourceStatus = "idle" | "loading" | "ready" | "empty" | "unsupported";
+
 let detected: string[] | null = null;
 let pending: Promise<string[]> | null = null;
 
+const statusRef = ref<FontSourceStatus>("idle");
+
 export const familiesRef = ref<string[]>([]);
+
+const supported = (): boolean => typeof window.queryLocalFonts === "function";
 
 const orderFamilies = (names: string[]): string[] => {
   const seen = new Set<string>();
@@ -18,9 +24,10 @@ const orderFamilies = (names: string[]): string[] => {
 };
 
 const enumerateFamilies = async (): Promise<string[]> => {
-  if (typeof window.queryLocalFonts !== "function") return [];
+  const queryLocalFonts = window.queryLocalFonts;
+  if (!queryLocalFonts) return [];
   try {
-    const fonts = await window.queryLocalFonts();
+    const fonts = await queryLocalFonts();
     return orderFamilies(fonts.map((font) => font.family));
   } catch {
     return [];
@@ -30,9 +37,15 @@ const enumerateFamilies = async (): Promise<string[]> => {
 const ensureFamilies = (): Promise<string[]> => {
   if (detected) return Promise.resolve(detected);
   if (pending) return pending;
+  if (!supported()) {
+    statusRef.value = "unsupported";
+    return Promise.resolve([]);
+  }
+  statusRef.value = "loading";
   pending = enumerateFamilies().then((list) => {
-    detected = list;
     familiesRef.value = list;
+    statusRef.value = list.length ? "ready" : "empty";
+    if (list.length) detected = list;
     pending = null;
     return list;
   });
@@ -42,4 +55,5 @@ const ensureFamilies = (): Promise<string[]> => {
 export const fonts = {
   ensureFamilies,
   families: (): string[] => familiesRef.value,
+  status: (): FontSourceStatus => statusRef.value,
 };
