@@ -14,7 +14,6 @@
   "condLookup": "查看相關劇本",
   "branchEmpty": "空",
   "branchEmptyNote": "無匹配結果",
-  "previewMore": "…另有 {n} 條",
   "railTitle": "書目",
   "railTabsLabel": "左欄視圖",
   "railSummary": "共 {chapters} 卷，{scripts} 篇",

@@ -1,29 +1,35 @@
-import type MiniSearch from "minisearch";
 import { graph } from "../data/graph";
 import { specialScriptName, specialScripts } from "../data/special";
 import { chapterTitle } from "../i18n";
-import type { Chapter, GraphNode } from "../types/graph";
+import type { Chapter } from "../types/graph";
 import { toNeedle } from "./browser";
-import { createSearchEngine, searchCandidates, type SearchDoc } from "./searchEngine";
-import { scriptStore as script } from "./scriptStore";
 
-export const SEARCH_MEMBER_LIMIT = 200;
+export type RailRow =
+  | {
+      kind: "chapter";
+      key: string;
+      index: number;
+      chapter: Chapter;
+      title: string;
+      ordinal: string;
+      total: number;
+      open: boolean;
+    }
+  | {
+      kind: "node";
+      key: string;
+      id: string;
+      sayCount: number;
+    };
 
-export type ChapterRow = {
-  index: number;
-  chapter: Chapter;
-  title: string;
-  ordinal: string;
-  members: GraphNode[];
-  total: number;
-  hidden: number;
-  open: boolean;
+export type OutlineRows = {
+  rows: RailRow[];
+  matched: number;
 };
 
 export type BookmarkRow = {
   id: string;
   chapter: string;
-  index: number;
   known: boolean;
 };
 
@@ -33,138 +39,72 @@ export type SpecialRow = {
   known: boolean;
 };
 
-type MetaEntry = {
-  key: string;
-  text: string;
-  kind: "chapter" | "node" | "special";
-  ref: string;
-  verify: string[];
+const lowerIds = graph.nodes.map((node) => node.id.toLowerCase());
+
+const matchedNodeIds = (needle: string): Set<string> => {
+  const hits = new Set<string>();
+  for (let index = 0; index < lowerIds.length; index++) {
+    if (lowerIds[index].indexOf(needle) >= 0) hits.add(graph.nodes[index].id);
+  }
+  return hits;
 };
 
-type MetaState = {
-  key: string;
-  engine: MiniSearch<SearchDoc>;
-  entries: MetaEntry[];
-};
-
-export const nodeIndexOf = (id: string): number => graph.indexById.get(id) ?? -1;
-
-const buildMeta = (lang: string, key: string): MetaState => {
-  const entries: MetaEntry[] = [];
+const matchedChapterIndexes = (needle: string): Set<number> => {
+  const hits = new Set<number>();
   graph.chapters.forEach((chapter, index) => {
     const title = chapterTitle(chapter).toLowerCase();
     const id = String(chapter.id).toLowerCase();
-    entries.push({
-      key: `chapter:${index}`,
-      text: `${title}\n${id}`,
-      kind: "chapter",
-      ref: String(index),
-      verify: [title, id],
-    });
+    if (title.indexOf(needle) >= 0 || id.indexOf(needle) >= 0) hits.add(index);
   });
-  graph.nodes.forEach((node) => {
-    const id = node.id.toLowerCase();
-    entries.push({ key: `node:${node.id}`, text: id, kind: "node", ref: node.id, verify: [id] });
-  });
-  specialScripts.forEach((entry) => {
-    const name = specialScriptName(entry, lang).toLowerCase();
-    const id = entry.id.toLowerCase();
-    entries.push({
-      key: `special:${entry.id}`,
-      text: `${name}\n${id}`,
-      kind: "special",
-      ref: entry.id,
-      verify: [name, id],
-    });
-  });
-  const engine = createSearchEngine();
-  engine.addAll(entries.map((entry) => ({ key: entry.key, text: entry.text })));
-  return { key, engine, entries };
+  return hits;
 };
 
-let metaState: MetaState | null = null;
-
-const metaFor = (lang: string): MetaState => {
-  const key = `${script().lang}|${lang}`;
-  if (metaState && metaState.key === key) return metaState;
-  metaState = buildMeta(lang, key);
-  return metaState;
-};
-
-const matchedEntries = (state: MetaState, needle: string): MetaEntry[] => {
-  const keys = searchCandidates(state.engine, needle);
-  const allowed = keys === null ? null : new Set(keys);
-  const out: MetaEntry[] = [];
-  for (const entry of state.entries) {
-    if (allowed && !allowed.has(entry.key)) continue;
-    if (!entry.verify.some((value) => value.indexOf(needle) >= 0)) continue;
-    out.push(entry);
-  }
-  return out;
-};
-
-export const outlineRows = (query: string, openChapter: number): ChapterRow[] => {
+export const outlineRows = (query: string, openChapter: number): OutlineRows => {
   const needle = toNeedle(query);
   const byChapter = graph.nodesByChapter();
-  const chapterHits = new Set<number>();
-  const nodeHits = new Set<string>();
-  if (needle) {
-    for (const entry of matchedEntries(metaFor(script().lang), needle)) {
-      if (entry.kind === "chapter") chapterHits.add(Number(entry.ref));
-      else if (entry.kind === "node") nodeHits.add(entry.ref);
-    }
-  }
-  const rows: ChapterRow[] = [];
+  const nodeHits = needle ? matchedNodeIds(needle) : null;
+  const chapterHits = needle ? matchedChapterIndexes(needle) : null;
+  const rows: RailRow[] = [];
+  let matched = 0;
   graph.chapters.forEach((chapter, index) => {
-    const title = chapterTitle(chapter);
-    let members = byChapter[index] || [];
-    if (needle) {
-      if (!chapterHits.has(index)) members = members.filter((node) => nodeHits.has(node.id));
-      if (!members.length) return;
-    }
-    const total = members.length;
-    const shown = needle ? members.slice(0, SEARCH_MEMBER_LIMIT) : members;
+    const all = byChapter[index] || [];
+    const wholeChapter = chapterHits?.has(index) ?? false;
+    const hits = !needle || wholeChapter ? all : all.filter((node) => nodeHits?.has(node.id) ?? false);
+    if (needle && !hits.length) return;
+    matched += hits.length;
     rows.push({
+      kind: "chapter",
+      key: `chapter:${index}`,
       index,
       chapter,
-      title,
+      title: chapterTitle(chapter),
       ordinal: String(index + 1).padStart(2, "0"),
-      members: shown,
-      total,
-      hidden: total - shown.length,
+      total: hits.length,
       open: needle ? true : openChapter === index,
     });
+    if (!needle && openChapter !== index) return;
+    for (const node of hits) {
+      rows.push({ kind: "node", key: `node:${node.id}`, id: node.id, sayCount: node.sayCount });
+    }
   });
-  return rows;
+  return { rows, matched };
 };
 
 export const bookmarkRows = (query: string, ids: string[]): BookmarkRow[] => {
   const needle = toNeedle(query);
-  const state = needle ? metaFor(script().lang) : null;
-  const candidates = needle && state ? searchCandidates(state.engine, needle) : null;
-  const allowed = candidates === null ? null : new Set(candidates);
   const rows: BookmarkRow[] = [];
   for (const id of ids) {
     const node = graph.nodeById.get(id);
     const chapter = node ? chapterTitle(graph.chapterOf(node)) : "";
-    if (needle) {
-      const chapterKey = node ? `chapter:${node.chapterIndex}` : "";
-      const candidate =
-        !allowed || allowed.has(`node:${id}`) || (chapterKey !== "" && allowed.has(chapterKey));
-      if (!candidate) continue;
-      if (id.toLowerCase().indexOf(needle) < 0 && chapter.toLowerCase().indexOf(needle) < 0)
-        continue;
-    }
-    rows.push({ id, chapter, index: nodeIndexOf(id), known: !!node });
+    if (needle && id.toLowerCase().indexOf(needle) < 0 && chapter.toLowerCase().indexOf(needle) < 0)
+      continue;
+    rows.push({ id, chapter, known: !!node });
   }
   return rows;
 };
 
 export const specialRows = (query: string, lang: string): SpecialRow[] => {
   const needle = toNeedle(query);
-  const state = needle ? metaFor(lang) : null;
-  const candidates = needle && state ? searchCandidates(state.engine, needle) : null;
-  const allowed = candidates === null ? null : new Set(candidates);
   return specialScripts
     .map((entry) => ({
       id: entry.id,
@@ -173,12 +113,8 @@ export const specialRows = (query: string, lang: string): SpecialRow[] => {
     }))
     .filter((row) => {
       if (!needle) return true;
-      if (allowed && !allowed.has(`special:${row.id}`)) return false;
       return (
         row.name.toLowerCase().indexOf(needle) >= 0 || row.id.toLowerCase().indexOf(needle) >= 0
       );
     });
 };
-
-export const chapterMatchCount = (rows: ChapterRow[]): number =>
-  rows.reduce((sum, row) => sum + row.total, 0);

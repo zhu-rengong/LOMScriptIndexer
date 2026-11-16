@@ -396,12 +396,13 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: var(--sp-2) var(--sp-3) var(--sp-6);
+    padding: 0 var(--sp-3) var(--sp-6);
   }
 
   .cat-result {
-    margin: 0 0 var(--sp-2);
-    padding: 0 var(--sp-2) var(--sp-2);
+    flex: none;
+    margin: 0;
+    padding: var(--sp-2) var(--sp-3);
     border-bottom: 1px solid var(--line-1);
     color: var(--ink-think);
   }
@@ -412,9 +413,9 @@
     gap: var(--sp-2);
     width: 100%;
     min-height: 40px;
-    margin-top: var(--sp-1);
     padding: 8px var(--sp-2);
     border: 1px solid transparent;
+    border-top: var(--sp-1) solid transparent;
     border-radius: var(--r-sm);
     background: transparent;
     color: var(--ink-2);
@@ -496,12 +497,6 @@
     color: var(--accent);
   }
 
-  .cat-entries {
-    margin: 0 0 var(--sp-2) 11px;
-    padding-left: var(--sp-3);
-    border-left: 1px solid var(--line-1);
-  }
-
   .cat-row {
     position: relative;
     display: flex;
@@ -561,9 +556,11 @@
     color: var(--accent);
   }
 
-  .cat-more {
-    margin: var(--sp-1) var(--sp-2) var(--sp-2);
-    color: var(--ink-think);
+  .rail-vrow {
+    width: auto;
+    margin-left: 11px;
+    padding-left: calc(var(--sp-2) + var(--sp-3));
+    box-shadow: inset 1px 0 0 var(--line-1);
   }
 
   .cat-book {

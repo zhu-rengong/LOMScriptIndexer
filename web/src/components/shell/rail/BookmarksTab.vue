@@ -28,7 +28,6 @@ const emit = defineEmits<{
         class="cat-book-main"
         type="button"
         :disabled="!row.known"
-        :data-index="row.index"
         :aria-current="props.selectedId === row.id ? 'true' : undefined"
         @click="emit('pick', row.id)"
       >

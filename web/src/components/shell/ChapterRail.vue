@@ -1,15 +1,10 @@
 <script setup lang="ts">
+import { useVirtualList } from "@vueuse/core";
 import { graph } from "../../data/graph";
 import { specialScripts } from "../../data/special";
 import { t } from "../../i18n";
 import { toNeedle } from "../../lib/browser";
-import {
-  bookmarkRows,
-  chapterMatchCount,
-  nodeIndexOf,
-  outlineRows,
-  specialRows,
-} from "../../lib/rail";
+import { bookmarkRows, outlineRows, specialRows } from "../../lib/rail";
 import AppIcon from "../ui/AppIcon.vue";
 import BookmarksTab from "./rail/BookmarksTab.vue";
 import OutlineTab from "./rail/OutlineTab.vue";
@@ -45,7 +40,62 @@ const openChapter = computed(() => {
   return node ? node.chapterIndex : -1;
 });
 
-const chapterRows = computed(() => outlineRows(query.value, openChapter.value));
+const outline = computed(() => outlineRows(query.value, openChapter.value));
+const rows = computed(() => outline.value.rows);
+
+const rowHeight = reactive({ chapter: 44, node: 32 });
+
+const heightOf = (index: number): number => {
+  const row = rows.value[index];
+  return row && row.kind === "chapter" ? rowHeight.chapter : rowHeight.node;
+};
+
+const { list: outlineItems, wrapperProps, containerProps } = useVirtualList(rows, {
+  itemHeight: heightOf,
+  overscan: 12,
+});
+
+watchEffect(() => {
+  containerProps.ref.value = listRef.value;
+});
+
+let staleHeights = true;
+
+const measureRows = () => {
+  if (!staleHeights) return;
+  const element = listRef.value;
+  if (!element) return;
+  const chapter = element.querySelector<HTMLElement>(".cat-chap")?.offsetHeight ?? 0;
+  const node = element.querySelector<HTMLElement>(".rail-vrow")?.offsetHeight ?? 0;
+  if (chapter > 0) rowHeight.chapter = chapter;
+  if (node > 0) rowHeight.node = node;
+  staleHeights = chapter <= 0 || node <= 0;
+};
+
+const invalidateHeights = () => {
+  staleHeights = true;
+  measureRows();
+};
+
+watch(outlineItems, () => measureRows(), { flush: "post" });
+
+const coarse = window.matchMedia("(pointer: coarse)");
+const typography = new MutationObserver(invalidateHeights);
+
+onMounted(() => {
+  measureRows();
+  coarse.addEventListener("change", invalidateHeights);
+  typography.observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
+  void nextTick(() => {
+    containerProps.ref.value = listRef.value;
+    containerProps.onScroll();
+  });
+});
+
+onBeforeUnmount(() => {
+  coarse.removeEventListener("change", invalidateHeights);
+  typography.disconnect();
+});
 
 const bookmarks = computed(() => {
   void store.bookmarkVersion;
@@ -57,7 +107,7 @@ const specials = computed(() => specialRows(query.value, store.lang));
 const matchCount = computed(() => {
   if (view.railTab === "bookmarks") return bookmarks.value.length;
   if (view.railTab === "special") return specials.value.length;
-  return chapterMatchCount(chapterRows.value);
+  return outline.value.matched;
 });
 
 const tabs = computed(() => {
@@ -79,7 +129,7 @@ const setTab = (tab: RailTab) => {
   view.setRailTab(tab);
 };
 
-const focusTab = (id: RailTab) => {
+const focusTab = (id: string) => {
   const button = tablistRef.value?.querySelector<HTMLButtonElement>(`[data-rail="${id}"]`);
   button?.focus();
 };
@@ -104,6 +154,17 @@ const toggleChapter = (index: number) => {
   view.setOutlineChapter(view.outlineChapter === index ? -1 : index);
 };
 
+const scrollToRow = (index: number) => {
+  const element = containerProps.ref.value;
+  if (!element) return;
+  let top = 0;
+  for (let step = 0; step < index; step++) top += heightOf(step);
+  const height = heightOf(index);
+  if (top < element.scrollTop) element.scrollTop = top;
+  else if (top + height > element.scrollTop + element.clientHeight)
+    element.scrollTop = top + height - element.clientHeight;
+};
+
 const revealSelected = async (id: string) => {
   const node = graph.nodeById.get(id);
   if (!node) return;
@@ -111,10 +172,9 @@ const revealSelected = async (id: string) => {
   if (view.railTab !== "outline") return;
   if (view.isOverlayRail() && !view.railOpen) return;
   await nextTick();
-  const index = nodeIndexOf(id);
-  if (index < 0 || !listRef.value) return;
-  const row = listRef.value.querySelector<HTMLElement>(`[data-index="${index}"]`);
-  row?.scrollIntoView({ block: "nearest" });
+  const index = rows.value.findIndex((row) => row.kind === "node" && row.id === id);
+  if (index < 0) return;
+  scrollToRow(index);
 };
 
 const clearQuery = () => {
@@ -216,14 +276,16 @@ watch(
       </button>
     </div>
 
+    <p v-if="searching" class="cat-result">{{ t("searchCount", { n: matchCount }) }}</p>
+
     <div
       id="chapterList"
       ref="listRef"
       class="rail-list"
       role="tabpanel"
       :aria-labelledby="`railTab-${view.railTab}`"
+      @scroll="containerProps.onScroll"
     >
-      <p v-if="searching" class="cat-result">{{ t("searchCount", { n: matchCount }) }}</p>
       <BookmarksTab
         v-if="view.railTab === 'bookmarks'"
         :rows="bookmarks"
@@ -241,7 +303,8 @@ watch(
       />
       <OutlineTab
         v-else
-        :rows="chapterRows"
+        :items="outlineItems"
+        :wrapper-style="wrapperProps.style"
         :selected-id="store.selectedId"
         :searching="searching"
         @toggle="toggleChapter"
