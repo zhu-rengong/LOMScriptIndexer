@@ -174,6 +174,8 @@
   "fontDeniedHint": "Font access is blocked for this site. Allow local fonts in the browser's site settings, then reopen this menu.",
   "fontBlockedHint": "Font access is blocked for this page. Open the site directly in Chrome or Edge, not inside an embedded frame.",
   "fontFileError": "This font file could not be loaded",
+  "fontLoadingHint": "Requesting access to local fonts…",
+  "fontTimeoutHint": "The browser did not answer the font permission request. Check for a permission prompt or allow fonts in the site settings.",
   "filterBtn": "Filter",
   "filterBtnTitle": "Filter scripts by condition",
   "filterPlaceholder": "speaker:master AND (dice:yes OR lock:yes)",

@@ -137,6 +137,10 @@ const fontHint = computed(() => {
       return t("fontBlockedHint");
     case "empty":
       return t("fontEmptyHint");
+    case "loading":
+      return t("fontLoadingHint");
+    case "timeout":
+      return t("fontTimeoutHint");
     default:
       return "";
   }

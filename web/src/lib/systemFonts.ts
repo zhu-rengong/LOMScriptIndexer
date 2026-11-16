@@ -7,7 +7,10 @@ export type FontSourceStatus =
   | "insecure"
   | "denied"
   | "blocked"
-  | "file";
+  | "file"
+  | "timeout";
+
+const ENUMERATION_TIMEOUT = 10000;
 
 let detected: string[] | null = null;
 let pending: Promise<string[]> | null = null;
@@ -63,6 +66,12 @@ const ensureFamilies = (): Promise<string[]> => {
     return Promise.resolve([]);
   }
   statusRef.value = "loading";
+  let settled = false;
+  const timer = window.setTimeout(() => {
+    if (settled) return;
+    statusRef.value = "timeout";
+    console.warn("[ScriptIndexer] local font enumeration timed out");
+  }, ENUMERATION_TIMEOUT);
   pending = enumerateFamilies()
     .then((list) => {
       familiesRef.value = list;
@@ -77,6 +86,8 @@ const ensureFamilies = (): Promise<string[]> => {
       return [];
     })
     .finally(() => {
+      settled = true;
+      window.clearTimeout(timer);
       pending = null;
     });
   return pending;
