@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { t, typeLabel } from "../../i18n";
 import { GROUPS, groupById, slotById, slotsOfGroup } from "../../lib/fontTypes";
+import { fontDisplayName } from "../../lib/systemFonts";
 import type { FontScope, FontTarget } from "../../types/font";
 import { usePrefsStore } from "../../stores/prefs";
 import { useViewStore } from "../../stores/view";
@@ -29,7 +30,9 @@ const treeEl = ref<HTMLElement | null>(null);
 const faceOf = (target: FontTarget): string => {
   const key = prefs.fontLabelKeyOf(target);
   const following = key === prefs.labels.followBase || key === prefs.labels.followGroup;
-  return t(following ? "pref.followShort" : key);
+  if (following) return t("pref.followShort");
+  const text = t(key);
+  return text === key ? fontDisplayName(key) : text;
 };
 
 const metricsOf = (target: FontTarget): TreeMetrics | null => {

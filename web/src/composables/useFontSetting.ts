@@ -1,6 +1,6 @@
 import { t } from "../i18n";
 import { FOLLOW_BASE, FOLLOW_GROUP, fontPreset } from "../lib/fontFamilies";
-import { systemFamilies } from "../lib/systemFonts";
+import { fontDisplayName, systemFamilyNames } from "../lib/systemFonts";
 import { usePrefsStore } from "../stores/prefs";
 import type { FontTarget } from "../types/font";
 
@@ -19,10 +19,14 @@ export const useFontSetting = (target: () => FontTarget) => {
     const value = current.value;
     if (!value || value === FOLLOW_BASE || value === FOLLOW_GROUP) return "follow";
     if (fontPreset(value)) return "preset";
-    return systemFamilies.value.indexOf(value) >= 0 ? "system" : "manual";
+    return systemFamilyNames.value.has(value) ? "system" : "manual";
   });
 
-  const label = computed(() => t(prefs.fontLabelKeyOf(target())));
+  const label = computed(() => {
+    const key = prefs.fontLabelKeyOf(target());
+    const text = t(key);
+    return text === key ? fontDisplayName(key) : text;
+  });
 
   const followValue = computed(() => (target().scope === "group" ? FOLLOW_BASE : FOLLOW_GROUP));
 

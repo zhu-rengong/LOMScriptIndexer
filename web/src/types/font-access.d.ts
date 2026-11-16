@@ -1,3 +1,9 @@
+interface LocalFontData {
+  family: string;
+  fullName: string;
+  postscriptName: string;
+}
+
 interface Window {
-  queryLocalFonts?: () => Promise<{ family: string }[]>;
+  queryLocalFonts?: () => Promise<LocalFontData[]>;
 }

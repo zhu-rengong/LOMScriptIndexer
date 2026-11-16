@@ -10,36 +10,86 @@ type FontSourceStatus =
   | "file"
   | "timeout";
 
+export type SystemFont = {
+  family: string;
+  label: string;
+  aliases: string[];
+};
+
 type LocalFontsQuery = NonNullable<Window["queryLocalFonts"]>;
 
 const ENUMERATION_TIMEOUT = 10000;
 
-let detected: string[] | null = null;
-let pending: Promise<string[]> | null = null;
+const hasNonAscii = (value: string): boolean => {
+  for (const char of value) if ((char.codePointAt(0) || 0) > 0x7f) return true;
+  return false;
+};
 
-export const systemFamilies = ref<string[]>([]);
+let detected: SystemFont[] | null = null;
+let pending: Promise<SystemFont[]> | null = null;
+
+export const systemFonts = ref<SystemFont[]>([]);
 export const systemFontStatus = ref<FontSourceStatus>("idle");
+
+export const systemFamilyNames = computed<Set<string>>(
+  () => new Set(systemFonts.value.map((font) => font.family)),
+);
+
+const displayNames = computed<Map<string, string>>(
+  () => new Map(systemFonts.value.map((font) => [font.family, font.label])),
+);
+
+export const fontDisplayName = (value: string): string => displayNames.value.get(value) || value;
+
+const clean = (value: string | undefined): string => String(value || "").trim();
+
+const pushUnique = (list: string[], value: string): void => {
+  if (!value) return;
+  if (list.some((item) => item.toLowerCase() === value.toLowerCase())) return;
+  list.push(value);
+};
+
+const shortest = (list: string[]): string =>
+  list.reduce((best, name) => (name.length < best.length ? name : best));
+
+const pickLabel = (family: string, fullNames: string[]): string => {
+  const pool: string[] = [family];
+  fullNames.forEach((name) => pushUnique(pool, name));
+  const localized = pool.filter(hasNonAscii);
+  return shortest(localized.length ? localized : pool);
+};
+
+const groupFonts = (faces: LocalFontData[]): SystemFont[] => {
+  const groups = new Map<string, { family: string; fullNames: string[]; aliases: string[] }>();
+  for (const face of faces) {
+    const family = clean(face.family);
+    if (!family) continue;
+    const key = family.toLowerCase();
+    let entry = groups.get(key);
+    if (!entry) {
+      entry = { family, fullNames: [], aliases: [] };
+      groups.set(key, entry);
+    }
+    pushUnique(entry.fullNames, clean(face.fullName));
+    pushUnique(entry.aliases, clean(face.fullName));
+    pushUnique(entry.aliases, clean(face.postscriptName));
+  }
+  const list: SystemFont[] = [];
+  for (const entry of groups.values()) {
+    const aliases = entry.aliases.filter(
+      (name) => name.toLowerCase() !== entry.family.toLowerCase(),
+    );
+    list.push({ family: entry.family, label: pickLabel(entry.family, entry.fullNames), aliases });
+  }
+  return list.sort((a, b) => a.label.localeCompare(b.label) || a.family.localeCompare(b.family));
+};
 
 const localFontsQuery = (): LocalFontsQuery | null =>
   typeof window.queryLocalFonts === "function" ? window.queryLocalFonts : null;
 
-const orderFamilies = (names: string[]): string[] => {
-  const seen = new Set<string>();
-  const list: string[] = [];
-  for (const name of names) {
-    const clean = name.trim();
-    if (!clean) continue;
-    const key = clean.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    list.push(clean);
-  }
-  return list.sort((a, b) => a.localeCompare(b));
-};
-
-const enumerateFamilies = async (query: LocalFontsQuery): Promise<string[]> => {
+const enumerateFonts = async (query: LocalFontsQuery): Promise<SystemFont[]> => {
   const list = await query();
-  return orderFamilies(list.map((font) => font.family));
+  return groupFonts(list);
 };
 
 const failureStatus = (error: unknown): FontSourceStatus => {
@@ -61,7 +111,7 @@ const permissionState = async (): Promise<PermissionState | null> => {
   }
 };
 
-export const ensureSystemFonts = (): Promise<string[]> => {
+export const ensureSystemFonts = (): Promise<SystemFont[]> => {
   if (detected) return Promise.resolve(detected);
   if (pending) return pending;
   if (window.location.protocol === "file:") {
@@ -84,9 +134,9 @@ export const ensureSystemFonts = (): Promise<string[]> => {
     systemFontStatus.value = "timeout";
     console.warn("[ScriptIndexer] local font enumeration timed out");
   }, ENUMERATION_TIMEOUT);
-  pending = enumerateFamilies(query)
+  pending = enumerateFonts(query)
     .then(async (list) => {
-      systemFamilies.value = list;
+      systemFonts.value = list;
       if (list.length) {
         systemFontStatus.value = "ready";
         detected = list;
@@ -98,7 +148,7 @@ export const ensureSystemFonts = (): Promise<string[]> => {
     })
     .catch((error: unknown) => {
       console.warn("[ScriptIndexer] local font enumeration failed", error);
-      systemFamilies.value = [];
+      systemFonts.value = [];
       systemFontStatus.value = failureStatus(error);
       return [];
     })

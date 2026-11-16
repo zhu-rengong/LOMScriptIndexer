@@ -155,7 +155,6 @@
   "previewMark": "Combat event",
   "fontSearchPlaceholder": "Search fonts…",
   "fontPicked": "Font set to \"{name}\"",
-  "fontSystemMeta": "System",
   "fontNoMatch": "No matching fonts",
   "fontUnsupportedHint": "This browser cannot list installed fonts. Use Chrome or Edge, or type a font name manually.",
   "fontEmptyHint": "The browser returned no system fonts. Check that local fonts are allowed for this site, or type a font name manually.",

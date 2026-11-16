@@ -155,7 +155,6 @@
   "previewMark": "战斗事件",
   "fontSearchPlaceholder": "搜索字体…",
   "fontPicked": "字体已改为「{name}」",
-  "fontSystemMeta": "系统",
   "fontNoMatch": "没有匹配的字体",
   "fontUnsupportedHint": "此浏览器无法列出本机字体，请改用 Chrome/Edge，或直接输入字体名。",
   "fontEmptyHint": "浏览器没有返回任何系统字体。请确认站点权限中的「本地字体」已允许，或直接输入字体名。",

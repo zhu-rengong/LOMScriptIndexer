@@ -3,6 +3,7 @@ import { t, typeLabel } from "../../i18n";
 import { byId } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
 import { GROUPS, firstSlot, groupById, slotById } from "../../lib/fontTypes";
+import { ensureSystemFonts } from "../../lib/systemFonts";
 import type { FontTarget } from "../../types/font";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
@@ -77,6 +78,7 @@ const close = () => {
 
 watch(open, async (value) => {
   if (!value) return;
+  void ensureSystemFonts();
   await nextTick();
   byId(UI_IDS.typeGroupTrigger)?.focus();
 });

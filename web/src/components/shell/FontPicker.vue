@@ -2,7 +2,7 @@
 import { t } from "../../i18n";
 import { toNeedle } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
-import { ensureSystemFonts, systemFamilies, systemFontStatus } from "../../lib/systemFonts";
+import { ensureSystemFonts, systemFonts, systemFontStatus } from "../../lib/systemFonts";
 import type { FontTarget } from "../../types/font";
 import AppIcon from "../ui/AppIcon.vue";
 import { useFontSetting } from "../../composables/useFontSetting";
@@ -14,6 +14,7 @@ type PickerItem = {
   value: string;
   label: string;
   hint: string;
+  search: string;
   family?: string;
 };
 
@@ -35,11 +36,13 @@ const open = computed(() => overlay.isOpen("fontPicker"));
 
 const pickerItems = computed<PickerItem[]>(() => {
   const list: PickerItem[] = [
-    { value: followValue.value, label: followLabel.value, hint: "" },
-    { value: MANUAL, label: t("pref.customFont"), hint: "" },
+    { value: followValue.value, label: followLabel.value, hint: "", search: followLabel.value },
+    { value: MANUAL, label: t("pref.customFont"), hint: "", search: t("pref.customFont") },
   ];
-  systemFamilies.value.forEach((family) => {
-    list.push({ value: family, label: family, hint: t("fontSystemMeta"), family });
+  systemFonts.value.forEach((font) => {
+    const hint = font.label === font.family ? "" : font.family;
+    const search = [font.label, font.family].concat(font.aliases).join(" ").toLowerCase();
+    list.push({ value: font.family, label: font.label, hint, search, family: font.family });
   });
   return list;
 });
@@ -47,7 +50,8 @@ const pickerItems = computed<PickerItem[]>(() => {
 const visibleItems = computed(() => {
   const needle = toNeedle(query.value);
   return pickerItems.value.filter(
-    (item) => !needle || item.label.toLowerCase().indexOf(needle) >= 0,
+    (item) =>
+      !needle || item.label.toLowerCase().indexOf(needle) >= 0 || item.search.indexOf(needle) >= 0,
   );
 });
 
@@ -155,7 +159,7 @@ watch(open, async (value) => {
   searchInput.value?.focus();
 });
 
-watch(systemFamilies, async () => {
+watch(systemFonts, async () => {
   if (!open.value || query.value || moved.value) return;
   await nextTick();
   activeIndex.value = currentIndex();
