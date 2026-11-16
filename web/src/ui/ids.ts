@@ -26,7 +26,5 @@ export const UI_IDS = {
   showPortraits: "showPortraits",
   portraitSize: "portraitSize",
   typeGroupTrigger: "typeGroupTrigger",
-  typeFontTrigger: "typeFontTrigger",
-  fontPickerList: "fontPickerList",
   lookupPanel: "lookupPanel",
 } as const;

@@ -64,14 +64,10 @@ const LABELS = {
   followBase: "pref.followBase",
   followGroup: "pref.followGroup",
   groupAll: "pref.groupAll",
-  customFont: "pref.customFont",
 };
 
 const PRESETS = {
-  groups: GROUPS,
-  slots: TYPE_SLOTS,
   weights: WEIGHTS.slice(),
-  caps: CAPS.slice(),
 };
 
 const LIMITS = {
@@ -131,16 +127,7 @@ const clampPortraitSize = (value: unknown, fallback: number): number =>
 const defaultGroups = (): Record<string, PrefEntry> => {
   const out: Record<string, PrefEntry> = {};
   for (const group of GROUPS) {
-    out[group.id] = {
-      font: group.font || FOLLOW_BASE,
-      scale: group.scale ?? GROUP_DEFAULT.scale,
-      leading: group.leading ?? GROUP_DEFAULT.leading,
-      tracking: group.tracking ?? GROUP_DEFAULT.tracking,
-      weight: group.weight ?? GROUP_DEFAULT.weight,
-      italic: group.italic ?? GROUP_DEFAULT.italic,
-      caps: group.caps ?? GROUP_DEFAULT.caps,
-      numeric: group.numeric ?? GROUP_DEFAULT.numeric,
-    };
+    out[group.id] = { ...GROUP_DEFAULT, font: FOLLOW_BASE };
   }
   return out;
 };
@@ -259,7 +246,7 @@ export const usePrefsStore = defineStore("prefs", () => {
   });
 
   const groupStack = (groupId: string): string =>
-    fontStackOf((groups.value[groupId] || GROUP_DEFAULT).font);
+    fontStackOf(groups.value[groupId]?.font || FOLLOW_BASE);
 
   const slotStack = (slotId: string): string => {
     const slot = slotById(slotId);
@@ -404,11 +391,9 @@ export const usePrefsStore = defineStore("prefs", () => {
 
   const fontLabelKeyOf = (target: FontTarget): string => {
     if (target.scope === "group") {
-      const group = groups.value[target.id];
-      return fontLabelKey(group ? group.font : FOLLOW_BASE);
+      return fontLabelKey(groups.value[target.id]?.font || FOLLOW_BASE);
     }
-    const entry = slots.value[target.id];
-    return fontLabelKey(entry ? entry.font : FOLLOW_GROUP);
+    return fontLabelKey(slots.value[target.id]?.font || FOLLOW_GROUP);
   };
 
   return {

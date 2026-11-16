@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import { byId, toNeedle } from "../../lib/browser";
+import { toNeedle } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
-import { fonts } from "../../lib/systemFonts";
+import { ensureSystemFonts, systemFamilies, systemFontStatus } from "../../lib/systemFonts";
 import type { FontTarget } from "../../types/font";
-import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 import { useFontSetting } from "../../composables/useFontSetting";
-import { usePrefsStore } from "../../stores/prefs";
 import { useUiStore } from "../../stores/ui";
 
 const MANUAL = "__manual__";
@@ -21,29 +19,26 @@ type PickerItem = {
 
 const props = defineProps<{ target: FontTarget }>();
 
-const prefs = usePrefsStore();
 const ui = useUiStore();
-const { current, source, followValue, apply } = useFontSetting(() => props.target);
+const { current, source, followValue, followLabel, apply } = useFontSetting(() => props.target);
 
 const searchInput = ref<HTMLInputElement | null>(null);
 const manualInput = ref<HTMLInputElement | null>(null);
+const listRef = ref<HTMLElement | null>(null);
 const query = ref("");
 const activeIndex = ref(0);
 const manualOpen = ref(false);
 const manualValue = ref("");
+const moved = ref(false);
 
 const open = computed(() => overlay.isOpen("fontPicker"));
-
-const followLabel = computed(() =>
-  t(props.target.scope === "group" ? prefs.labels.followBase : prefs.labels.followGroup),
-);
 
 const pickerItems = computed<PickerItem[]>(() => {
   const list: PickerItem[] = [
     { value: followValue.value, label: followLabel.value, hint: "" },
-    { value: MANUAL, label: t(prefs.labels.customFont), hint: "" },
+    { value: MANUAL, label: t("pref.customFont"), hint: "" },
   ];
-  fonts.families().forEach((family) => {
+  systemFamilies.value.forEach((family) => {
     list.push({ value: family, label: family, hint: t("fontSystemMeta"), family });
   });
   return list;
@@ -102,7 +97,7 @@ const pick = (item: PickerItem) => {
 };
 
 const fontHint = computed(() => {
-  switch (fonts.status()) {
+  switch (systemFontStatus.value) {
     case "file":
       return t("fontFileProtocolHint");
     case "unsupported":
@@ -124,19 +119,14 @@ const fontHint = computed(() => {
   }
 });
 
-const close = () => overlay.close("fontPicker");
-
 const move = (step: number) => {
   if (!visibleItems.value.length) return;
+  moved.value = true;
   activeIndex.value =
     (activeIndex.value + step + visibleItems.value.length) % visibleItems.value.length;
 };
 
 const onKeydown = (event: KeyboardEvent) => {
-  if (event.key === "Escape") {
-    close();
-    return;
-  }
   if (event.key === "ArrowDown") {
     event.preventDefault();
     move(1);
@@ -159,16 +149,16 @@ watch(open, async (value) => {
   query.value = "";
   manualOpen.value = false;
   manualValue.value = "";
-  const job = fonts.ensureFamilies();
+  moved.value = false;
   await nextTick();
-  const initial = currentIndex();
-  activeIndex.value = initial;
+  activeIndex.value = currentIndex();
   searchInput.value?.focus();
-  await job;
+});
+
+watch(systemFamilies, async () => {
+  if (!open.value || query.value || moved.value) return;
   await nextTick();
-  if (open.value && !query.value && activeIndex.value === initial) {
-    activeIndex.value = currentIndex();
-  }
+  activeIndex.value = currentIndex();
 });
 
 watch(visibleItems, () => {
@@ -177,10 +167,9 @@ watch(visibleItems, () => {
 
 watch(activeIndex, async () => {
   await nextTick();
-  const list = byId(UI_IDS.fontPickerList);
-  const row = list
-    ? (list.querySelectorAll(".picker-item")[activeIndex.value] as HTMLElement | undefined)
-    : undefined;
+  const row = listRef.value?.querySelectorAll(".picker-item")[activeIndex.value] as
+    | HTMLElement
+    | undefined;
   if (row && row.scrollIntoView) row.scrollIntoView({ block: "nearest" });
 });
 
@@ -190,6 +179,9 @@ onMounted(() => {
     group: "menu",
     keep: ["settings"],
     placement: { align: "start", gap: 6, width: 300, fit: true },
+    onOpen: () => {
+      void ensureSystemFonts();
+    },
   });
 });
 </script>
@@ -230,11 +222,11 @@ onMounted(() => {
         @keydown.enter.prevent="applyManual"
       />
     </div>
-    <div id="fontPickerList" class="picker-list popover-list">
+    <div ref="listRef" class="picker-list popover-list">
       <template v-if="visibleItems.length">
         <button
           v-for="(item, index) in visibleItems"
-          :key="`${item.value}-${index}`"
+          :key="item.value"
           class="picker-item row"
           :class="{ 'is-active': index === activeIndex }"
           type="button"

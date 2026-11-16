@@ -1,22 +1,14 @@
 import { FOLLOW_GROUP } from "./fontFamilies";
 import type { CapsMode } from "../types/font";
 
-export type FontGroup = {
+type FontGroup = {
   id: string;
   label: string;
-  font?: string;
-  scale?: number;
-  leading?: number;
-  tracking?: number;
-  weight?: number;
-  italic?: boolean;
-  caps?: CapsMode;
-  numeric?: boolean;
 };
 
 export type Wrapper = { tag: string; cls?: string };
 
-export type TypeSlot = {
+type TypeSlot = {
   id: string;
   group: string;
   label: string;

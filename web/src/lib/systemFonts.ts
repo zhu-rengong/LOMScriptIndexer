@@ -1,4 +1,4 @@
-export type FontSourceStatus =
+type FontSourceStatus =
   | "idle"
   | "loading"
   | "ready"
@@ -10,22 +10,24 @@ export type FontSourceStatus =
   | "file"
   | "timeout";
 
+type LocalFontsQuery = NonNullable<Window["queryLocalFonts"]>;
+
 const ENUMERATION_TIMEOUT = 10000;
 
 let detected: string[] | null = null;
 let pending: Promise<string[]> | null = null;
 
-const statusRef = ref<FontSourceStatus>("idle");
+export const systemFamilies = ref<string[]>([]);
+export const systemFontStatus = ref<FontSourceStatus>("idle");
 
-export const familiesRef = ref<string[]>([]);
-
-const supported = (): boolean => typeof window.queryLocalFonts === "function";
+const localFontsQuery = (): LocalFontsQuery | null =>
+  typeof window.queryLocalFonts === "function" ? window.queryLocalFonts : null;
 
 const orderFamilies = (names: string[]): string[] => {
   const seen = new Set<string>();
   const list: string[] = [];
   for (const name of names) {
-    const clean = String(name || "").trim();
+    const clean = name.trim();
     if (!clean) continue;
     const key = clean.toLowerCase();
     if (seen.has(key)) continue;
@@ -35,11 +37,9 @@ const orderFamilies = (names: string[]): string[] => {
   return list.sort((a, b) => a.localeCompare(b));
 };
 
-const enumerateFamilies = async (): Promise<string[]> => {
-  const queryLocalFonts = window.queryLocalFonts;
-  if (!queryLocalFonts) return [];
-  const fonts = await queryLocalFonts();
-  return orderFamilies(fonts.map((font) => font.family));
+const enumerateFamilies = async (query: LocalFontsQuery): Promise<string[]> => {
+  const list = await query();
+  return orderFamilies(list.map((font) => font.family));
 };
 
 const failureStatus = (error: unknown): FontSourceStatus => {
@@ -61,44 +61,45 @@ const permissionState = async (): Promise<PermissionState | null> => {
   }
 };
 
-const ensureFamilies = (): Promise<string[]> => {
+export const ensureSystemFonts = (): Promise<string[]> => {
   if (detected) return Promise.resolve(detected);
   if (pending) return pending;
   if (window.location.protocol === "file:") {
-    statusRef.value = "file";
+    systemFontStatus.value = "file";
     return Promise.resolve([]);
   }
-  if (!supported()) {
-    statusRef.value = "unsupported";
+  const query = localFontsQuery();
+  if (!query) {
+    systemFontStatus.value = "unsupported";
     return Promise.resolve([]);
   }
   if (!window.isSecureContext) {
-    statusRef.value = "insecure";
+    systemFontStatus.value = "insecure";
     return Promise.resolve([]);
   }
-  statusRef.value = "loading";
+  systemFontStatus.value = "loading";
   let settled = false;
   const timer = window.setTimeout(() => {
     if (settled) return;
-    statusRef.value = "timeout";
+    systemFontStatus.value = "timeout";
     console.warn("[ScriptIndexer] local font enumeration timed out");
   }, ENUMERATION_TIMEOUT);
-  pending = enumerateFamilies()
+  pending = enumerateFamilies(query)
     .then(async (list) => {
-      familiesRef.value = list;
+      systemFamilies.value = list;
       if (list.length) {
-        statusRef.value = "ready";
+        systemFontStatus.value = "ready";
         detected = list;
         return list;
       }
       const state = await permissionState();
-      statusRef.value = state === "denied" ? "denied" : "empty";
+      systemFontStatus.value = state === "denied" ? "denied" : "empty";
       return list;
     })
     .catch((error: unknown) => {
       console.warn("[ScriptIndexer] local font enumeration failed", error);
-      familiesRef.value = [];
-      statusRef.value = failureStatus(error);
+      systemFamilies.value = [];
+      systemFontStatus.value = failureStatus(error);
       return [];
     })
     .finally(() => {
@@ -107,10 +108,4 @@ const ensureFamilies = (): Promise<string[]> => {
       pending = null;
     });
   return pending;
-};
-
-export const fonts = {
-  ensureFamilies,
-  families: (): string[] => familiesRef.value,
-  status: (): FontSourceStatus => statusRef.value,
 };

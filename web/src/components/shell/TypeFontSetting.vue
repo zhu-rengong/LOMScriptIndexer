@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import { byId } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
-import { fonts } from "../../lib/systemFonts";
 import type { FontTarget } from "../../types/font";
-import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 import { useFontSetting } from "../../composables/useFontSetting";
 
 const props = defineProps<{ target: FontTarget }>();
 
 const { label } = useFontSetting(() => props.target);
+
+const trigger = ref<HTMLButtonElement | null>(null);
 
 const pickerOpen = computed(() => overlay.isOpen("fontPicker"));
 
@@ -19,20 +18,15 @@ const togglePicker = () => {
     overlay.close("fontPicker");
     return;
   }
-  void fonts.ensureFamilies();
-  overlay.open("fontPicker", {
-    trigger: byId(UI_IDS.typeFontTrigger),
-    keep: ["settings"],
-    placement: { align: "start", gap: 6, width: 300, fit: true },
-  });
+  overlay.open("fontPicker", { trigger: trigger.value });
 };
 </script>
 
 <template>
   <p class="sub-label">{{ t("typeFont") }}</p>
   <button
-    :id="UI_IDS.typeFontTrigger"
-    class="btn select font-trigger settings-select"
+    ref="trigger"
+    class="btn select settings-select"
     type="button"
     aria-haspopup="listbox"
     aria-controls="fontPicker"
