@@ -101,7 +101,7 @@
   "done": "完成",
   "fontReading": "正文字體",
   "fontUi": "介面字體",
-  "fontCustomPlaceholder": "輸入系統字體名，如 Noto Serif TC",
+  "fontCustomPlaceholder": "輸入字體族名，如 Noto Serif TC",
   "fontSize": "正文字號",
   "lineHeight": "行距",
   "leadingTight": "緊湊",

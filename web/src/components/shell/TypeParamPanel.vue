@@ -1,13 +1,9 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import { byId } from "../../lib/browser";
-import { overlay } from "../../lib/overlay";
 import { slotById } from "../../lib/fontTypes";
-import { fonts } from "../../lib/systemFonts";
 import type { CapsMode, FontTarget } from "../../types/font";
-import { UI_IDS } from "../../ui/ids";
-import AppIcon from "../ui/AppIcon.vue";
 import ScaleSlider from "./ScaleSlider.vue";
+import TypeFontSetting from "./TypeFontSetting.vue";
 import { usePrefsStore } from "../../stores/prefs";
 
 const props = defineProps<{ target: FontTarget }>();
@@ -28,14 +24,6 @@ const groupId = computed(() => {
 });
 
 const groupTracking = computed(() => prefs.groups[groupId.value]?.tracking ?? 0);
-
-const fontText = computed(() => t(prefs.fontLabelKeyOf(props.target)));
-
-const showCustom = computed(
-  () => prefs.isCustomFont(entry.value?.font || "") || prefs.customFontOpen,
-);
-
-const pickerOpen = computed(() => overlay.isOpen("fontPicker"));
 
 const scaleValue = computed(() => entry.value?.scale ?? 100);
 
@@ -69,7 +57,6 @@ const capsValue = computed(() => entry.value?.caps ?? null);
 const numericValue = computed(() => entry.value?.numeric ?? null);
 
 const patch = (value: {
-  font?: string;
   scale?: number;
   leading?: number;
   tracking?: number;
@@ -80,23 +67,6 @@ const patch = (value: {
 }) => {
   if (isSlot.value) prefs.set({ slots: { [props.target.id]: value } });
   else prefs.set({ groups: { [props.target.id]: value } });
-};
-
-const openPicker = () => {
-  if (overlay.isOpen("fontPicker")) {
-    overlay.close("fontPicker");
-    return;
-  }
-  void fonts.ensureFamilies();
-  overlay.open("fontPicker", {
-    trigger: byId(UI_IDS.typeFontTrigger),
-    keep: ["settings"],
-    placement: { align: "start", gap: 6, width: 300, fit: true },
-  });
-};
-
-const onCustom = (event: Event) => {
-  patch({ font: (event.target as HTMLInputElement).value });
 };
 
 const onTracking = (value: number) => {
@@ -124,28 +94,7 @@ const onCaps = (value: CapsMode | null) => {
 
 <template>
   <div class="type-panel">
-    <p class="sub-label">{{ t("typeFont") }}</p>
-    <button
-      :id="UI_IDS.typeFontTrigger"
-      class="btn select font-trigger settings-select"
-      type="button"
-      aria-haspopup="listbox"
-      aria-controls="fontPicker"
-      :aria-expanded="pickerOpen"
-      @click="openPicker"
-    >
-      <span class="ft-name">{{ fontText }}</span>
-      <AppIcon name="chevron" class="caret" />
-    </button>
-    <input
-      :id="UI_IDS.typeFontCustom"
-      class="input input-sm text-input"
-      type="text"
-      :hidden="!showCustom"
-      :value="showCustom ? entry?.font || '' : ''"
-      :placeholder="t('fontCustomPlaceholder')"
-      @input="onCustom"
-    />
+    <TypeFontSetting :target="target" />
 
     <p class="sub-label type-panel-head">{{ t("pref.metrics") }}</p>
     <ScaleSlider

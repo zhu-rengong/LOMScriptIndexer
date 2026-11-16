@@ -4,7 +4,6 @@ import {
   FOLLOW_BASE,
   FOLLOW_GROUP,
   fontLabelKey,
-  fontPreset,
   fontStackOf,
 } from "../lib/fontFamilies";
 import { GROUPS, TYPE_SLOTS, slotById } from "../lib/fontTypes";
@@ -235,7 +234,6 @@ const decodePrefs = (raw: unknown): StoredPrefs => {
 
 export const usePrefsStore = defineStore("prefs", () => {
   const state = storedRef<StoredPrefs>(KEY, defaultState(), { decode: decodePrefs });
-  const customFontOpen = ref(false);
 
   const groups = computed(() => state.value.groups);
   const slots = computed(() => state.value.slots);
@@ -413,9 +411,6 @@ export const usePrefsStore = defineStore("prefs", () => {
     return fontLabelKey(entry ? entry.font : FOLLOW_GROUP);
   };
 
-  const isCustomFont = (value: string): boolean =>
-    !!value && value !== FOLLOW_BASE && value !== FOLLOW_GROUP && !fontPreset(value);
-
   return {
     labels: LABELS,
     presets: PRESETS,
@@ -425,12 +420,10 @@ export const usePrefsStore = defineStore("prefs", () => {
     measure,
     showPortraits,
     portraitSize,
-    customFontOpen,
     resolveEntry,
     get,
     set,
     reset,
     fontLabelKeyOf,
-    isCustomFont,
   };
 });

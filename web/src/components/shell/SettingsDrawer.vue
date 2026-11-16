@@ -81,10 +81,6 @@ watch(open, async (value) => {
   byId(UI_IDS.typeGroupTrigger)?.focus();
 });
 
-watch(target, () => {
-  prefs.customFontOpen = false;
-});
-
 onMounted(() => {
   overlay.register("settings", {
     id: UI_IDS.settingsDrawer,
@@ -180,5 +176,5 @@ onMounted(() => {
   </aside>
 
   <TypeGroupPick :group-id="group.id" />
-  <FontPicker />
+  <FontPicker :target="target" />
 </template>

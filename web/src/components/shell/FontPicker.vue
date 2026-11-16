@@ -1,22 +1,16 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 import { byId, toNeedle } from "../../lib/browser";
-import { FOLLOW_BASE, FOLLOW_GROUP } from "../../lib/fontFamilies";
-import { GROUPS, TYPE_SLOTS, groupById, slotById } from "../../lib/fontTypes";
 import { overlay } from "../../lib/overlay";
 import { fonts } from "../../lib/systemFonts";
 import type { FontTarget } from "../../types/font";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
-import { useScriptStore } from "../../stores/script";
-import { useUiStore } from "../../stores/ui";
+import { useFontSetting } from "../../composables/useFontSetting";
 import { usePrefsStore } from "../../stores/prefs";
-import { useViewStore } from "../../stores/view";
+import { useUiStore } from "../../stores/ui";
 
-const store = useScriptStore();
-const ui = useUiStore();
-const prefs = usePrefsStore();
-const view = useViewStore();
+const MANUAL = "__manual__";
 
 type PickerItem = {
   value: string;
@@ -25,28 +19,30 @@ type PickerItem = {
   family?: string;
 };
 
+const props = defineProps<{ target: FontTarget }>();
+
+const prefs = usePrefsStore();
+const ui = useUiStore();
+const { current, source, followValue, apply } = useFontSetting(() => props.target);
+
 const searchInput = ref<HTMLInputElement | null>(null);
+const manualInput = ref<HTMLInputElement | null>(null);
 const query = ref("");
 const activeIndex = ref(0);
+const manualOpen = ref(false);
+const manualValue = ref("");
 
 const open = computed(() => overlay.isOpen("fontPicker"));
 
-const target = computed<FontTarget>(() => {
-  const current = view.fontTarget;
-  if (current.scope === "group") {
-    return groupById(current.id) ? current : { scope: "group", id: GROUPS[0].id };
-  }
-  return slotById(current.id) ? current : { scope: "slot", id: TYPE_SLOTS[0].id };
-});
+const followLabel = computed(() =>
+  t(props.target.scope === "group" ? prefs.labels.followBase : prefs.labels.followGroup),
+);
 
 const pickerItems = computed<PickerItem[]>(() => {
-  const list: PickerItem[] = [];
-  if (target.value.scope === "group") {
-    list.push({ value: "@base", label: t(prefs.labels.followBase), hint: "" });
-  } else {
-    list.push({ value: "@group", label: t(prefs.labels.followGroup), hint: "" });
-  }
-  list.push({ value: "__custom__", label: t(prefs.labels.customFont), hint: "" });
+  const list: PickerItem[] = [
+    { value: followValue.value, label: followLabel.value, hint: "" },
+    { value: MANUAL, label: t(prefs.labels.customFont), hint: "" },
+  ];
   fonts.families().forEach((family) => {
     list.push({ value: family, label: family, hint: t("fontSystemMeta"), family });
   });
@@ -60,38 +56,47 @@ const visibleItems = computed(() => {
   );
 });
 
-const currentFont = computed(() => {
-  if (target.value.scope === "group") return prefs.groups[target.value.id]?.font || FOLLOW_BASE;
-  return prefs.slots[target.value.id]?.font || FOLLOW_GROUP;
-});
-
-const isCurrent = (item: PickerItem): boolean => item.value === currentFont.value;
+const isCurrent = (item: PickerItem): boolean =>
+  item.value === MANUAL ? source.value === "manual" : item.value === current.value;
 
 const currentIndex = (): number => {
-  const index = visibleItems.value.findIndex((item) => item.value === currentFont.value);
-  return index >= 0 ? index : 0;
+  const index = visibleItems.value.findIndex((item) => item.value === current.value);
+  if (index >= 0) return index;
+  if (source.value === "manual") {
+    const manual = visibleItems.value.findIndex((item) => item.value === MANUAL);
+    if (manual >= 0) return manual;
+  }
+  return 0;
 };
 
 const familyStyle = (family?: string) =>
   family ? { fontFamily: `"${family.replace(/"/g, "")}"` } : undefined;
 
-const patch = (font: string) => {
-  if (target.value.scope === "group") {
-    prefs.set({ groups: { [target.value.id]: { font } } });
-    return;
+const openManual = async () => {
+  const first = !manualOpen.value;
+  if (first) {
+    manualValue.value = source.value === "system" || source.value === "manual" ? current.value : "";
+    manualOpen.value = true;
   }
-  prefs.set({ slots: { [target.value.id]: { font } } });
+  await nextTick();
+  manualInput.value?.focus();
+  if (first) manualInput.value?.select();
+};
+
+const applyManual = () => {
+  const value = manualValue.value.trim();
+  if (!value) return;
+  apply(value);
+  overlay.close("fontPicker");
+  ui.toast(t("fontPicked", { name: value }));
 };
 
 const pick = (item: PickerItem) => {
-  if (item.value === "__custom__") {
-    overlay.close("fontPicker");
-    prefs.customFontOpen = true;
-    patch("");
-    void nextTick(() => byId(UI_IDS.typeFontCustom)?.focus());
+  if (item.value === MANUAL) {
+    void openManual();
     return;
   }
-  patch(item.value);
+  apply(item.value);
   overlay.close("fontPicker");
   ui.toast(t("fontPicked", { name: item.label }));
 };
@@ -152,6 +157,8 @@ const onKeydown = (event: KeyboardEvent) => {
 watch(open, async (value) => {
   if (!value) return;
   query.value = "";
+  manualOpen.value = false;
+  manualValue.value = "";
   const job = fonts.ensureFamilies();
   await nextTick();
   const initial = currentIndex();
@@ -208,6 +215,19 @@ onMounted(() => {
         :placeholder="t('fontSearchPlaceholder')"
         :aria-label="t('fontSearchPlaceholder')"
         @keydown="onKeydown"
+      />
+    </div>
+    <div v-if="manualOpen" class="picker-manual">
+      <input
+        ref="manualInput"
+        v-model="manualValue"
+        class="input"
+        type="text"
+        autocomplete="off"
+        spellcheck="false"
+        :placeholder="t('fontCustomPlaceholder')"
+        :aria-label="t('fontCustomPlaceholder')"
+        @keydown.enter.prevent="applyManual"
       />
     </div>
     <div id="fontPickerList" class="picker-list popover-list">

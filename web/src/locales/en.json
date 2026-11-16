@@ -101,7 +101,7 @@
   "done": "Done",
   "fontReading": "Body font",
   "fontUi": "Interface font",
-  "fontCustomPlaceholder": "Enter a system font name, such as Noto Serif TC",
+  "fontCustomPlaceholder": "Enter a font family name, such as Noto Serif TC",
   "fontSize": "Body size",
   "lineHeight": "Leading",
   "leadingTight": "Tight",
