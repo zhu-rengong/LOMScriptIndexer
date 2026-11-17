@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { t, typeLabel } from "../../i18n";
+import { FOLLOW_BASE, FOLLOW_GROUP, fontLabelKey } from "../../lib/fontFamilies";
 import { GROUPS, groupById, slotById, slotsOfGroup } from "../../lib/fontTypes";
+import { fontDisplayName } from "../../lib/systemFonts";
 import type { FontScope, FontTarget } from "../../types/font";
 import { usePrefsStore } from "../../stores/prefs";
 import { useViewStore } from "../../stores/view";
@@ -10,6 +12,7 @@ type TreeRow = {
   scope: FontScope;
   id: string;
   label: string;
+  font: string;
 };
 
 const props = defineProps<{ target: FontTarget }>();
@@ -27,6 +30,14 @@ const groupId = computed(() =>
 
 const current = computed(() => groupById(groupId.value) || GROUPS[0]);
 
+const fontText = (scope: FontScope, id: string): string => {
+  const value = scope === "group" ? prefs.groups[id]?.font : prefs.slots[id]?.font;
+  if (!value || value === FOLLOW_BASE || value === FOLLOW_GROUP) return t("pref.followShort");
+  const key = fontLabelKey(value);
+  const text = t(key);
+  return text === key ? fontDisplayName(key) : text;
+};
+
 const rows = computed<TreeRow[]>(() => {
   const group = current.value;
   const out: TreeRow[] = [
@@ -35,6 +46,7 @@ const rows = computed<TreeRow[]>(() => {
       scope: "group",
       id: group.id,
       label: t(prefs.labels.groupAll),
+      font: fontText("group", group.id),
     },
   ];
   for (const slot of slotsOfGroup(group.id)) {
@@ -43,6 +55,7 @@ const rows = computed<TreeRow[]>(() => {
       scope: "slot",
       id: slot.id,
       label: typeLabel(slot.id),
+      font: fontText("slot", slot.id),
     });
   }
   return out;
@@ -85,6 +98,7 @@ const onKeydown = (event: KeyboardEvent) => {
       @click="pick(row)"
     >
       <span class="type-tree-label">{{ row.label }}</span>
+      <span class="type-tree-font">{{ row.font }}</span>
     </button>
   </div>
 </template>

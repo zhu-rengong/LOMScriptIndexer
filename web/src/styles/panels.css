@@ -307,7 +307,7 @@
   .drawer-body {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
+    overflow: auto;
     padding: 0 var(--sp-5);
   }
 
@@ -502,9 +502,9 @@
 
   .type-tree-row {
     position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    display: flex;
     align-items: baseline;
+    gap: var(--sp-2);
     width: 100%;
     min-height: 28px;
     padding: 4px 6px 4px 10px;
@@ -558,10 +558,26 @@
   }
 
   .type-tree-label {
+    flex: 1;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .type-tree-font {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 55%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--ink-think);
+    text-align: right;
+  }
+
+  .type-tree-row.is-on .type-tree-font {
+    color: var(--accent);
   }
 
   .seg-btn:enabled.is-on,
@@ -581,7 +597,7 @@
 
   .glyph-row {
     display: grid;
-    grid-template-columns: 72px minmax(0, 1fr);
+    grid-template-columns: 72px minmax(min-content, 1fr);
     align-items: center;
     gap: var(--sp-2);
     margin-top: var(--sp-2);
@@ -599,10 +615,12 @@
   .settings-weight .tab {
     flex: 1;
     height: var(--ctl-sm);
+    padding: 0 6px;
     border: 0;
     border-radius: var(--r-sm);
     background: transparent;
     color: var(--ink-2);
+    white-space: nowrap;
     box-shadow: none;
   }
 
