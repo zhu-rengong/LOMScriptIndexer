@@ -145,62 +145,50 @@ onMounted(() => {
         </p>
       </template>
       <template v-else>
-        <div class="stats-table" role="table">
-          <div class="stats-head-row" role="row">
-            <span class="stats-cell" role="columnheader">{{ t("statsChapter") }}</span>
-            <span class="stats-cell num" role="columnheader">{{ t("statsScripts") }}</span>
-            <span class="stats-cell num" role="columnheader">{{ t("statsZh") }}</span>
-            <span class="stats-cell num" role="columnheader">{{ t("statsEn") }}</span>
-            <span class="stats-cell num" role="columnheader">{{ t("statsSum") }}</span>
+        <div class="stats-table">
+          <div class="stats-head-row">
+            <span class="stats-cell">{{ t("statsChapter") }}</span>
+            <span class="stats-cell num">{{ t("statsScripts") }}</span>
+            <span class="stats-cell num">{{ t("statsZh") }}</span>
+            <span class="stats-cell num">{{ t("statsEn") }}</span>
+            <span class="stats-cell num">{{ t("statsSum") }}</span>
           </div>
           <template v-for="(row, index) in tableRows" :key="`${row.type}-${row.id}-${index}`">
-            <div
+            <button
               v-if="row.type === 'chapter'"
               class="stats-chapter"
               :class="{ 'is-open': row.isOpen, 'is-solo': row.solo }"
-              role="row"
+              type="button"
+              :aria-expanded="row.isOpen"
+              @click="toggleChapter(row.id)"
             >
-              <span class="stats-cell" role="cell">
-                <button
-                  class="stats-expand"
-                  type="button"
-                  :aria-expanded="row.isOpen"
-                  @click="toggleChapter(row.id)"
-                >
-                  <AppIcon class="stats-arrow" name="chevron" />
-                  <span class="stats-name">{{ row.title }}</span>
-                </button>
+              <span class="stats-cell">
+                <AppIcon class="stats-arrow" name="chevron" />
+                <span class="stats-name">{{ row.title }}</span>
               </span>
-              <span class="stats-cell num" role="cell">{{ formatCount(row.scriptCount) }}</span>
-              <span class="stats-cell num" role="cell">{{ formatCount(row.counts[0]) }}</span>
-              <span class="stats-cell num" role="cell">{{ formatCount(row.counts[1]) }}</span>
-              <span class="stats-cell num" role="cell">
+              <span class="stats-cell num">{{ formatCount(row.scriptCount) }}</span>
+              <span class="stats-cell num">{{ formatCount(row.counts[0]) }}</span>
+              <span class="stats-cell num">{{ formatCount(row.counts[1]) }}</span>
+              <span class="stats-cell num">
                 {{ formatCount(row.counts[0] + row.counts[1]) }}
               </span>
-            </div>
-            <div
+            </button>
+            <button
               v-else
               class="stats-script"
-              :class="{ 'is-on': row.id === store.selectedId, 'is-card-end': row.last }"
-              role="row"
+              :class="{ 'is-card-end': row.last }"
+              type="button"
+              :title="t('statsOpen')"
+              @click="openScript(row.id)"
             >
-              <span class="stats-cell" role="cell">
-                <button
-                  class="stats-open btn-link"
-                  type="button"
-                  :title="t('statsOpen')"
-                  @click="openScript(row.id)"
-                >
-                  {{ row.id }}
-                </button>
-              </span>
-              <span class="stats-cell num" role="cell"></span>
-              <span class="stats-cell num" role="cell">{{ formatCount(row.counts[0]) }}</span>
-              <span class="stats-cell num" role="cell">{{ formatCount(row.counts[1]) }}</span>
-              <span class="stats-cell num" role="cell">
+              <span class="stats-cell">{{ row.id }}</span>
+              <span class="stats-cell num"></span>
+              <span class="stats-cell num">{{ formatCount(row.counts[0]) }}</span>
+              <span class="stats-cell num">{{ formatCount(row.counts[1]) }}</span>
+              <span class="stats-cell num">
                 {{ formatCount(row.counts[0] + row.counts[1]) }}
               </span>
-            </div>
+            </button>
           </template>
         </div>
       </template>

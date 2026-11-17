@@ -1515,6 +1515,7 @@
   .stats-cell {
     display: flex;
     align-items: center;
+    gap: var(--sp-2);
     min-width: 0;
     padding: 0 10px;
     overflow: hidden;
@@ -1527,10 +1528,13 @@
   }
 
   .stats-chapter {
+    width: 100%;
+    min-height: 40px;
     border-top: var(--sp-1) solid transparent;
     border-radius: var(--r-sm);
     background: transparent;
     color: var(--ink-2);
+    text-align: left;
     transition:
       color var(--t-fast) var(--ease),
       background-color var(--t-fast) var(--ease);
@@ -1558,19 +1562,6 @@
     border-radius: var(--r-sm);
   }
 
-  .stats-expand {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2);
-    width: 100%;
-    min-height: 40px;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    text-align: left;
-    cursor: pointer;
-  }
-
   .stats-name {
     flex: 1;
     min-width: 0;
@@ -1596,10 +1587,11 @@
   }
 
   .stats-script {
-    position: relative;
+    width: 100%;
     min-height: 32px;
     background: var(--surface-inset);
     color: var(--ink-2);
+    text-align: left;
     box-shadow:
       inset 1px 0 0 var(--line-1),
       inset -1px 0 0 var(--line-1);
@@ -1608,36 +1600,9 @@
       background-color var(--t-fast) var(--ease);
   }
 
-  .stats-script::before {
-    content: "";
-    position: absolute;
-    left: 2px;
-    top: 50%;
-    width: 3px;
-    height: 14px;
-    border-radius: 1px;
-    background: var(--accent);
-    opacity: 0;
-    transform: translateY(-50%) scaleY(0);
-    transition:
-      transform var(--t-base) var(--ease),
-      opacity var(--t-base) var(--ease);
-  }
-
   .stats-script:hover {
     background: var(--surface-hover);
     color: var(--ink-hover);
-  }
-
-  .stats-script.is-on,
-  .stats-script.is-on:hover {
-    background: var(--accent-soft);
-    color: var(--accent-strong);
-  }
-
-  .stats-script.is-on::before {
-    opacity: 1;
-    transform: translateY(-50%) scaleY(1);
   }
 
   .stats-script.is-card-end {
@@ -1646,20 +1611,6 @@
       inset 1px 0 0 var(--line-1),
       inset -1px 0 0 var(--line-1),
       inset 0 -1px 0 var(--line-1);
-  }
-
-  .stats-open {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: inherit;
-    border-bottom: 1px solid transparent;
-  }
-
-  .stats-open:hover {
-    color: var(--accent-strong);
-    border-bottom-color: var(--accent);
   }
 
   .stats-loading {
