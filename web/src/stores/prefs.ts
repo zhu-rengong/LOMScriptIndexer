@@ -196,7 +196,7 @@ const normalizeSlot = (raw: unknown, base: PrefEntry): PrefEntry => {
 
 const defaultState = (): StoredPrefs => ({
   version: PREFS_VERSION,
-  theme: "light",
+  theme: "system",
   baseFont: DEFAULT_BASE_FONT,
   groups: defaultGroups(),
   slots: defaultSlots(),
@@ -210,7 +210,7 @@ const decodePrefs = (raw: unknown): StoredPrefs => {
   const source = raw as Record<string, unknown>;
   if (source.version !== PREFS_VERSION) return defaultState();
   const next = defaultState();
-  next.theme = clampTheme(source.theme, "light");
+  next.theme = clampTheme(source.theme, next.theme);
   next.baseFont = normalizeBaseFont(source.baseFont);
   next.measure = Math.round(clampNumber(source.measure, MEASURE_MIN, MEASURE_MAX, MEASURE_DEFAULT));
   next.showPortraits = source.showPortraits !== false;

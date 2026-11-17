@@ -10,7 +10,10 @@
         try {
           const raw = localStorage.getItem("legend-of-mortal.scriptindexer.prefs");
           const stored = raw ? JSON.parse(raw) : null;
-          const mode = stored && typeof stored === "object" ? stored.theme : "";
+          const mode =
+            stored && typeof stored === "object" && typeof stored.theme === "string"
+              ? stored.theme
+              : "system";
           const dark =
             mode === "dark" ||
             (mode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
