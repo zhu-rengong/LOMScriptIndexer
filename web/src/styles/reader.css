@@ -75,15 +75,15 @@
     position: relative;
     display: block;
     flex: none;
-    width: var(--rd-portrait-w, 56px);
-    height: calc(var(--rd-portrait-w, 56px) * var(--portrait-aspect, 1.15));
+    width: var(--rd-portrait-w, 80px);
+    height: calc(var(--rd-portrait-w, 80px) * var(--portrait-aspect, 1.15));
     overflow: visible;
     border-radius: var(--r-sm);
     background-image: var(--portrait-sheet, none);
     background-repeat: no-repeat;
-    background-size: calc(var(--portrait-columns, 1) * var(--rd-portrait-w, 56px)) auto;
-    background-position: calc(var(--portrait-col, 0) * var(--rd-portrait-w, 56px) * -1)
-      calc(var(--portrait-row, 0) * var(--rd-portrait-w, 56px) * var(--portrait-aspect, 1.15) * -1);
+    background-size: calc(var(--portrait-columns, 1) * var(--rd-portrait-w, 80px)) auto;
+    background-position: calc(var(--portrait-col, 0) * var(--rd-portrait-w, 80px) * -1)
+      calc(var(--portrait-row, 0) * var(--rd-portrait-w, 80px) * var(--portrait-aspect, 1.15) * -1);
     box-shadow: inset 0 0 0 1px var(--line-1);
   }
 
@@ -112,8 +112,8 @@
 
   .portrait-offstage {
     flex: none;
-    width: var(--rd-portrait-w, 56px);
-    height: calc(var(--rd-portrait-w, 56px) * 1.15);
+    width: var(--rd-portrait-w, 80px);
+    height: calc(var(--rd-portrait-w, 80px) * 1.15);
     border: 1px dashed var(--line-2);
     border-radius: var(--r-sm);
   }

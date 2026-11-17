@@ -3,9 +3,10 @@ import { t } from "../../i18n";
 import { speakerName } from "../../lib/blocks";
 import {
   ensurePortraitManifest,
-  happyMoodUrl,
+  moodUrl,
   pickPortrait,
   portraitUrl,
+  type MoodKind,
 } from "../../lib/portraits";
 
 const props = defineProps<{ character: string; expression: string }>();
@@ -28,10 +29,14 @@ const loadPage = (url: string): Promise<boolean> => {
 
 const pick = computed(() => pickPortrait(props.character, props.expression));
 const src = computed(() => (pick.value ? portraitUrl(pick.value.file) : ""));
-const happyMood = computed(
-  () => !!pick.value && props.expression.toLowerCase().startsWith("laugh"),
-);
-const moodSrc = computed(() => (happyMood.value ? happyMoodUrl() : ""));
+const mood = computed<MoodKind | null>(() => {
+  if (!pick.value) return null;
+  const expression = props.expression.toLowerCase();
+  if (expression.startsWith("laugh")) return "happy";
+  if (expression.startsWith("nervous")) return "sweat";
+  return null;
+});
+const moodSrc = computed(() => (mood.value ? moodUrl(mood.value) : ""));
 const loadedPage = ref("");
 const failedPage = ref("");
 
@@ -82,6 +87,6 @@ watch(
       <circle cx="20" cy="14" r="7" />
       <path d="M6 42c0-10 6-15 14-15s14 5 14 15" />
     </svg>
-    <img v-if="happyMood" class="portrait-mood" :src="moodSrc" alt="" aria-hidden="true" />
+    <img v-if="mood" class="portrait-mood" :src="moodSrc" alt="" aria-hidden="true" />
   </span>
 </template>

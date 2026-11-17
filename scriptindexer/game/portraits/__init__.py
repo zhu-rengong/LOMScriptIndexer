@@ -18,7 +18,7 @@ from .models import (
     PREVIEW_VERSION,
     THUMBNAIL_SIZE,
 )
-from .mood import export_happy_mood
+from .mood import export_moods
 from .plan import character_expressions, plan_crops
 from .runner import export_crops
 from .store import (
@@ -85,8 +85,8 @@ def export_portraits(
     started = time.monotonic()
     workers = _worker_count(jobs)
     output.mkdir(parents=True, exist_ok=True)
-    if not export_happy_mood(layout, output):
-        reporter.warn("portraits: happy mood sprite not found")
+    if not export_moods(layout, output):
+        reporter.warn("portraits: mood sprites not found")
     game = game_fingerprint(layout)
     asset = asset_fingerprint(game)
     previous = None if force else load_previous(output, preview_dir, game, asset)
