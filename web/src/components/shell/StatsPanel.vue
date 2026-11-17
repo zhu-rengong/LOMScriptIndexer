@@ -167,8 +167,8 @@ onMounted(() => {
                   :aria-expanded="row.isOpen"
                   @click="toggleChapter(row.id)"
                 >
-                  <span class="stats-name">{{ row.title }}</span>
                   <AppIcon class="stats-arrow" name="chevron" />
+                  <span class="stats-name">{{ row.title }}</span>
                 </button>
               </span>
               <span class="stats-cell num" role="cell">{{ formatCount(row.scriptCount) }}</span>

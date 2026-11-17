@@ -29,8 +29,8 @@ const emit = defineEmits<{
         :aria-expanded="row.open"
         @click="emit('toggle', row.index)"
       >
-        <span class="cat-chap-title">{{ row.title }}</span>
         <AppIcon class="cat-chap-arrow" name="chevron" />
+        <span class="cat-chap-title">{{ row.title }}</span>
       </button>
       <button
         v-else
