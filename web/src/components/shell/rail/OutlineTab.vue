@@ -22,7 +22,7 @@ const emit = defineEmits<{
       <button
         v-if="row.kind === 'chapter'"
         class="cat-chap rail-vpos"
-        :class="{ 'is-open': row.open }"
+        :class="{ 'is-open': row.open, 'is-solo': row.solo }"
         :style="{ top: `${top}px` }"
         type="button"
         :disabled="props.searching"
@@ -35,7 +35,7 @@ const emit = defineEmits<{
       <button
         v-else
         class="cat-row rail-vrow rail-vpos"
-        :class="{ 'is-on': props.selectedId === row.id }"
+        :class="{ 'is-on': props.selectedId === row.id, 'is-card-end': row.last }"
         :style="{ top: `${top}px` }"
         type="button"
         :aria-current="props.selectedId === row.id ? 'true' : undefined"

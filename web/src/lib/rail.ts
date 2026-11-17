@@ -10,11 +10,13 @@ export type RailRow =
       index: number;
       title: string;
       open: boolean;
+      solo: boolean;
     }
   | {
       kind: "node";
       key: string;
       id: string;
+      last: boolean;
     };
 
 export type OutlineRows = {
@@ -68,17 +70,24 @@ export const outlineRows = (query: string, openChapter: number): OutlineRows => 
       !needle || wholeChapter ? all : all.filter((node) => nodeHits?.has(node.id) ?? false);
     if (needle && !hits.length) return;
     matched += hits.length;
+    const open = needle ? true : openChapter === index;
     rows.push({
       kind: "chapter",
       key: `chapter:${index}`,
       index,
       title: chapterTitle(chapter),
-      open: needle ? true : openChapter === index,
+      open,
+      solo: !open || !hits.length,
     });
-    if (!needle && openChapter !== index) return;
-    for (const node of hits) {
-      rows.push({ kind: "node", key: `node:${node.id}`, id: node.id });
-    }
+    if (!open) return;
+    hits.forEach((node, position) => {
+      rows.push({
+        kind: "node",
+        key: `node:${node.id}`,
+        id: node.id,
+        last: position === hits.length - 1,
+      });
+    });
   });
   return { rows, matched };
 };
