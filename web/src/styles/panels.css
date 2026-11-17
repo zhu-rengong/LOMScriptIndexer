@@ -631,10 +631,16 @@
   }
 
   .preview {
+    display: grid;
+    gap: var(--sp-5);
     padding: var(--sp-4);
     border: 1px solid var(--line-1);
     border-radius: var(--r-sm);
     background: var(--surface-inset);
+  }
+
+  .preview-block {
+    min-width: 0;
   }
 
   .preview-head {

@@ -6,29 +6,24 @@ import TypeSpecimen from "./TypeSpecimen.vue";
 
 const props = defineProps<{ target: FontTarget }>();
 
-const typeIds = computed(() => {
-  if (props.target.scope === "slot") return [props.target.id];
-  const first = slotsOfGroup(props.target.id)[0];
-  return first ? [first.id] : [];
+const specimens = computed(() => {
+  if (props.target.scope === "slot") {
+    const slot = slotById(props.target.id);
+    return slot ? [slot] : [];
+  }
+  return slotsOfGroup(props.target.id);
 });
-
-const specimenOf = (slotId: string) => slotById(slotId) || null;
 </script>
 
 <template>
   <div id="settingsPreview" class="preview">
-    <template v-for="slotId in typeIds" :key="slotId">
-      <template v-if="specimenOf(slotId)">
-        <div class="preview-head">
-          <span class="preview-tag">{{ t(specimenOf(slotId)!.label) }}</span>
-        </div>
-        <div class="preview-specimen">
-          <TypeSpecimen
-            :wrappers="specimenOf(slotId)!.wrappers"
-            :preview-text="t(specimenOf(slotId)!.previewKey)"
-          />
-        </div>
-      </template>
-    </template>
+    <div v-for="slot in specimens" :key="slot.id" class="preview-block">
+      <div class="preview-head">
+        <span class="preview-tag">{{ t(slot.label) }}</span>
+      </div>
+      <div class="preview-specimen">
+        <TypeSpecimen :wrappers="slot.wrappers" :preview-text="t(slot.previewKey)" />
+      </div>
+    </div>
   </div>
 </template>
