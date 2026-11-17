@@ -10,6 +10,7 @@ export type PortraitManifest = {
   pages: string[];
   characters: Record<string, Record<string, PortraitCell>>;
   moods: Record<string, PortraitCell>;
+  moodMap: Record<string, string>;
 };
 
 export type PortraitPick = {
@@ -21,7 +22,7 @@ export type PortraitPick = {
   fallback: boolean;
 };
 
-const VERSION = 8;
+const VERSION = 9;
 
 export const portraitManifest = shallowRef<PortraitManifest | null>(null);
 
@@ -37,6 +38,15 @@ const isFileName = (value: unknown): value is string =>
 const asIndex = (value: unknown, limit: number): number | null => {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0) return null;
   return value < limit ? value : null;
+};
+
+const readMoodMap = (value: unknown): Record<string, string> => {
+  const map: Record<string, string> = {};
+  if (!value || typeof value !== "object" || Array.isArray(value)) return map;
+  for (const [key, mood] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof mood === "string" && mood) map[key] = mood;
+  }
+  return map;
 };
 
 const readCells = (value: unknown, pageCount: number): Record<string, PortraitCell> => {
@@ -81,6 +91,7 @@ const normalize = (data: unknown): PortraitManifest | null => {
     pages: pages as string[],
     characters,
     moods: readCells(record.moods, pages.length),
+    moodMap: readMoodMap(record.moodMap),
   };
 };
 
@@ -132,21 +143,12 @@ export const pickPortrait = (character: string, expression: string): PortraitPic
 export const portraitUrl = (file: string): string =>
   new URL(dataset.assetUrl("portrait", { file }), document.baseURI).href;
 
-const MOOD_BASES = ["laugh", "nervous", "angry", "shy", "shock", "silent"];
-
-export const moodOf = (expression: string): string => {
-  const value = expression.toLowerCase();
-  const base = MOOD_BASES.find((item) => value.startsWith(item));
-  if (!base) return "";
-  if (base === "laugh") return "happy";
-  if (base === "nervous") return /^nervous\d+$/.test(value) ? value : "nervous1";
-  return base;
-};
-
-export const pickMood = (key: string): PortraitPick | null => {
+export const pickMood = (expression: string): PortraitPick | null => {
   const data = portraitManifest.value;
-  const cell = key ? data?.moods[key] : undefined;
-  if (!data || !cell) return null;
+  if (!data) return null;
+  const key = data.moodMap[expression.toLowerCase()];
+  const cell = key ? data.moods[key] : undefined;
+  if (!cell) return null;
   const file = data.pages[cell[0]];
   if (!file) return null;
   return {

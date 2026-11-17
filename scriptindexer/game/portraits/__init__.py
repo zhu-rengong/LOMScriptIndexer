@@ -18,7 +18,7 @@ from .models import (
     PREVIEW_VERSION,
     THUMBNAIL_SIZE,
 )
-from .mood import mood_cells
+from .mood import mood_cells, mood_map
 from .plan import character_expressions, plan_crops
 from .runner import export_crops
 from .store import (
@@ -134,6 +134,9 @@ def export_portraits(
     moods = mood_cells(layout)
     if not moods:
         reporter.warn("portraits: mood cells not found")
+    mapping = mood_map(layout)
+    if not mapping:
+        reporter.warn("portraits: mood mapping not found")
     pages, positions, mood_positions = paginate(cells, moods)
     page_files: list[str] = []
     for page_cells in pages:
@@ -179,6 +182,7 @@ def export_portraits(
         "settings": snapshot,
         "characters": available,
         "moods": mood_positions,
+        "moodMap": mapping,
         "missing": plan.missing,
         "issues": trim_issues(issues),
     }

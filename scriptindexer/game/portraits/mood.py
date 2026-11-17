@@ -1,11 +1,13 @@
 from PIL import Image, ImageOps
 
 from ...jsonio import atomic_write_bytes
-from ..assets import _dispose, unitypy
+from ..assets import AssetSession, FileScope, _dispose, try_build_generator, unitypy
 from ..layout import GameLayout
 from .models import THUMBNAIL_SIZE
 from .render import crop_digest, png_bytes
 from .store import crop_file
+
+MOOD_PANEL_CLASS = "CharacterMoodPanel"
 
 MOOD_SPRITES = {
     "happy": "vfx_mood_happy_right_1_15",
@@ -18,6 +20,8 @@ MOOD_SPRITES = {
     "shock": "vfx_mood_shock_1_15",
     "silent": "vfx_mood_silent_1_15",
 }
+
+SPRITE_MOODS = {sprite: key for key, sprite in MOOD_SPRITES.items()}
 
 
 def _mood_images(layout: GameLayout) -> dict[str, Image.Image]:
@@ -63,6 +67,55 @@ def _cell_digest(image: Image.Image) -> str:
     finally:
         scaled.close()
         cell.close()
+
+
+def _mood_key(session: AssetSession, scope: FileScope, entry: dict) -> str:
+    holder = scope(entry.get("Right"))
+    if holder is None:
+        return ""
+    tree = session.typetree(scope.path, holder) or {}
+    for slot in tree.get("m_Component") or []:
+        component = scope(slot.get("component"))
+        if component is None:
+            continue
+        component_tree = session.typetree(scope.path, component) or {}
+        sprite_ref = component_tree.get("m_Sprite")
+        if not sprite_ref:
+            continue
+        sprite = scope(sprite_ref)
+        if sprite is None:
+            continue
+        name = str(getattr(sprite.read(), "m_Name", "") or "")
+        key = SPRITE_MOODS.get(name)
+        if key:
+            return key
+    return ""
+
+
+def mood_map(layout: GameLayout) -> dict[str, str]:
+    mapping: dict[str, str] = {}
+    session = AssetSession(layout, try_build_generator(layout), lambda message: None)
+    try:
+        for path, obj, _ in session.iter_class({MOOD_PANEL_CLASS}):
+            tree = session.typetree(path, obj) or {}
+            scope = session.file_scope(path)
+            for entry in tree.get("_moods") or []:
+                key = _mood_key(session, scope, entry)
+                if not key:
+                    continue
+                for ref in entry.get("Mapping") or []:
+                    item = scope(ref)
+                    if item is None:
+                        continue
+                    value = (session.typetree(scope.path, item) or {}).get("Value")
+                    if isinstance(value, str) and value:
+                        mapping[value] = key
+            break
+    except Exception:
+        return {}
+    finally:
+        session.close()
+    return mapping
 
 
 def mood_cells(layout: GameLayout) -> dict[str, str]:

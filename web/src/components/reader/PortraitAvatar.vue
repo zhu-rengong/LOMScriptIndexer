@@ -1,13 +1,7 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 import { speakerName } from "../../lib/blocks";
-import {
-  ensurePortraitManifest,
-  moodOf,
-  pickMood,
-  pickPortrait,
-  portraitUrl,
-} from "../../lib/portraits";
+import { ensurePortraitManifest, pickMood, pickPortrait, portraitUrl } from "../../lib/portraits";
 
 const props = defineProps<{ character: string; expression: string }>();
 
@@ -29,7 +23,7 @@ const loadPage = (url: string): Promise<boolean> => {
 
 const pick = computed(() => pickPortrait(props.character, props.expression));
 const src = computed(() => (pick.value ? portraitUrl(pick.value.file) : ""));
-const mood = computed(() => (pick.value ? pickMood(moodOf(props.expression)) : null));
+const mood = computed(() => (pick.value ? pickMood(props.expression) : null));
 const loadedPage = ref("");
 const failedPage = ref("");
 
