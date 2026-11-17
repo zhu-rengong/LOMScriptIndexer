@@ -182,10 +182,6 @@ const tabs = computed(() => {
   return TAB_IDS.map((id) => ({ id, labelKey: TAB_LABEL_KEYS[id], count: counts[id] }));
 });
 
-const summary = computed(() =>
-  t("railSummary", { chapters: graph.chapters.length, scripts: graph.nodes.length }),
-);
-
 const setTab = (tab: RailTab) => {
   if (tab === view.railTab) return;
   view.setRailTab(tab);
@@ -273,10 +269,7 @@ watch(
 <template>
   <aside id="chapterRail" :aria-label="t('railTitle')">
     <header class="rail-head">
-      <div class="rail-head-text">
-        <h2 class="rail-title">{{ t("railTitle") }}</h2>
-        <p class="rail-summary">{{ summary }}</p>
-      </div>
+      <h2 class="rail-title">{{ t("railTitle") }}</h2>
       <button
         id="railClose"
         class="btn btn-icon rail-close"

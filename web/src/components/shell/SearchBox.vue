@@ -24,6 +24,7 @@ const hits = ref<SearchHit[]>([]);
 const total = ref(0);
 const excludedCount = ref(0);
 const renderedCount = ref(0);
+const activeIndex = ref(0);
 const building = ref(false);
 const buildProgress = ref({ done: 0, total: 0 });
 
@@ -93,6 +94,7 @@ const applyResult = (value: string, result: SearchResult, keepScroll: boolean) =
   excludedCount.value = result.excludedByFilter;
   const limit = keepScroll ? Math.max(renderedCount.value, PAGE) : PAGE;
   renderedCount.value = Math.min(hits.value.length, limit);
+  activeIndex.value = 0;
   updateStatus();
   renderedQuery = value;
   renderedFilterSet = store.filterSet;
@@ -207,8 +209,8 @@ const submit = () => {
 
 const onInput = useDebounceFn(submit, 160);
 
-const pickFirst = (): boolean => {
-  const hit = hits.value[0];
+const pickAt = (index: number): boolean => {
+  const hit = hits.value[Math.min(index, hits.value.length - 1)] ?? hits.value[0];
   if (!hit) return false;
   hide();
   panels.focusText(hit.id, needleOf(lastQuery));
@@ -228,9 +230,17 @@ const onKeydown = (event: KeyboardEvent) => {
     input.value?.blur();
     return;
   }
+  if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+    const count = Math.min(renderedCount.value, hits.value.length);
+    if (!count) return;
+    event.preventDefault();
+    const step = event.key === "ArrowDown" ? 1 : -1;
+    activeIndex.value = (activeIndex.value + step + count) % count;
+    return;
+  }
   if (event.key === "Enter") {
     event.preventDefault();
-    void searchNow().then(() => pickFirst());
+    void searchNow().then(() => pickAt(activeIndex.value));
   }
 };
 
@@ -246,6 +256,7 @@ const reset = () => {
   total.value = 0;
   excludedCount.value = 0;
   renderedCount.value = 0;
+  activeIndex.value = 0;
   renderedQuery = "";
   renderedFilterSet = null;
   isStale = true;
@@ -298,6 +309,7 @@ onMounted(() => {
       <SearchResults
         :hits="hits"
         :rendered-count="renderedCount"
+        :active-index="activeIndex"
         :excluded-count="excludedCount"
         :query="lastQuery"
         :status="status"

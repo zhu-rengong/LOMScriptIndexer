@@ -19,7 +19,6 @@ export type RailRow =
       kind: "node";
       key: string;
       id: string;
-      sayCount: number;
     };
 
 export type OutlineRows = {
@@ -69,7 +68,8 @@ export const outlineRows = (query: string, openChapter: number): OutlineRows => 
   graph.chapters.forEach((chapter, index) => {
     const all = byChapter[index] || [];
     const wholeChapter = chapterHits?.has(index) ?? false;
-    const hits = !needle || wholeChapter ? all : all.filter((node) => nodeHits?.has(node.id) ?? false);
+    const hits =
+      !needle || wholeChapter ? all : all.filter((node) => nodeHits?.has(node.id) ?? false);
     if (needle && !hits.length) return;
     matched += hits.length;
     rows.push({
@@ -84,7 +84,7 @@ export const outlineRows = (query: string, openChapter: number): OutlineRows => 
     });
     if (!needle && openChapter !== index) return;
     for (const node of hits) {
-      rows.push({ kind: "node", key: `node:${node.id}`, id: node.id, sayCount: node.sayCount });
+      rows.push({ kind: "node", key: `node:${node.id}`, id: node.id });
     }
   });
   return { rows, matched };

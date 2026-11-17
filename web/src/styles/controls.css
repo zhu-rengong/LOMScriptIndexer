@@ -311,19 +311,13 @@
     border-radius: var(--r-sm);
     background: var(--surface);
     color: var(--ink);
-    transition: border-color var(--t-base) var(--ease);
   }
 
-  .surface:hover,
-  .lore:hover,
-  .preview:hover,
-  .lookup-cond:hover {
+  .lore:hover {
     border-color: var(--line-2);
   }
 
-  .lore,
-  .preview,
-  .lookup-cond {
+  .lore {
     transition: border-color var(--t-base) var(--ease);
   }
 
@@ -493,17 +487,17 @@
     color: var(--ink-2);
   }
 
+  .drop-scope-text {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-1) var(--sp-2);
+    min-width: 0;
+  }
+
   .drop-empty,
   .popover-empty {
     padding: var(--sp-4) var(--sp-3);
     color: var(--ink-2);
-  }
-
-  .drop-more {
-    display: block;
-    width: 100%;
-    padding: var(--sp-2) var(--sp-3);
-    text-align: left;
   }
 
   #searchResults .drop-empty {

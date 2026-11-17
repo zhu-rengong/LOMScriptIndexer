@@ -8,9 +8,8 @@ const props = defineProps<{ target: FontTarget }>();
 
 const typeIds = computed(() => {
   if (props.target.scope === "slot") return [props.target.id];
-  return slotsOfGroup(props.target.id)
-    .slice(0, 3)
-    .map((slot) => slot.id);
+  const first = slotsOfGroup(props.target.id)[0];
+  return first ? [first.id] : [];
 });
 
 const specimenOf = (slotId: string) => slotById(slotId) || null;

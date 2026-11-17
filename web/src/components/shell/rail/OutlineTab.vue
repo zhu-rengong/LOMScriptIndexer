@@ -45,7 +45,6 @@ const emit = defineEmits<{
         @click="emit('pick', row.id)"
       >
         <span class="cat-id">{{ row.id }}</span>
-        <span class="cat-meta">{{ t("sayCount", { n: row.sayCount }) }}</span>
       </button>
     </template>
   </div>

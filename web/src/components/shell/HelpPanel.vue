@@ -20,6 +20,12 @@ const HELP_GROUPS: { title: string; rows: [string, string][] }[] = [
   },
 ];
 
+const FILTER_DOCS: { expr: string; desc: string }[] = [
+  { expr: "helpFilterField", desc: "helpFilterFieldDesc" },
+  { expr: "helpFilterLogic", desc: "helpFilterLogicDesc" },
+  { expr: "helpFilterExample", desc: "helpFilterExampleDesc" },
+];
+
 const open = computed(() => overlay.isOpen("help"));
 
 const close = () => overlay.close("help");
@@ -65,7 +71,16 @@ onMounted(() => {
           </template>
         </dl>
       </section>
+      <section class="help-group">
+        <h3 class="help-group-title">{{ t("helpGroupFilter") }}</h3>
+        <dl class="help-filter">
+          <template v-for="item in FILTER_DOCS" :key="item.expr">
+            <dt class="help-expr">{{ t(item.expr) }}</dt>
+            <dd class="help-desc">{{ t(item.desc) }}</dd>
+          </template>
+        </dl>
+      </section>
     </div>
-    <p class="panel-hint">{{ t("helpHint") }}</p>
+    <p class="panel-hint">{{ t("helpEscNote") }}</p>
   </div>
 </template>

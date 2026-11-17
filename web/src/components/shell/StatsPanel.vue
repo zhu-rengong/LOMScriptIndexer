@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { graph } from "../../data/graph";
 import { wordCount } from "../../data/wordcount";
 import { t } from "../../i18n";
 import { formatCount } from "../../lib/browser";
@@ -96,12 +95,7 @@ onMounted(() => {
     :hidden="!open"
   >
     <header class="panel-head stats-panel-head">
-      <div class="stats-head-text">
-        <h2 id="statsHeading" class="panel-title stats-title">{{ t("statsTitle") }}</h2>
-        <p class="stats-note">
-          {{ t("statsNote", { n: graph.nodes.length, chapters: graph.chapters.length }) }}
-        </p>
-      </div>
+      <h2 id="statsHeading" class="panel-title">{{ t("statsTitle") }}</h2>
       <button
         id="statsClose"
         class="btn btn-icon"
@@ -151,29 +145,20 @@ onMounted(() => {
         </p>
       </template>
       <template v-else>
-        <div class="stats-head">
-          <table class="stats-table">
-            <colgroup>
-              <col class="col-name" />
-              <col v-for="index in 4" :key="index" class="col-num" />
-            </colgroup>
-            <thead>
-              <tr>
-                <th class="name" scope="col">{{ t("statsChapter") }}</th>
-                <th class="num" scope="col">{{ t("statsScripts") }}</th>
-                <th class="num" scope="col">{{ t("statsZh") }}</th>
-                <th class="num" scope="col">{{ t("statsEn") }}</th>
-                <th class="num" scope="col">{{ t("statsSum") }}</th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-
         <table class="stats-table">
           <colgroup>
             <col class="col-name" />
             <col v-for="index in 4" :key="index" class="col-num" />
           </colgroup>
+          <thead>
+            <tr>
+              <th class="name" scope="col">{{ t("statsChapter") }}</th>
+              <th class="num" scope="col">{{ t("statsScripts") }}</th>
+              <th class="num" scope="col">{{ t("statsZh") }}</th>
+              <th class="num" scope="col">{{ t("statsEn") }}</th>
+              <th class="num" scope="col">{{ t("statsSum") }}</th>
+            </tr>
+          </thead>
           <tbody>
             <template v-for="(row, index) in tableRows" :key="`${row.type}-${row.id}-${index}`">
               <tr
@@ -212,7 +197,7 @@ onMounted(() => {
                     </button>
                   </span>
                 </td>
-                <td class="num muted">—</td>
+                <td class="num"></td>
                 <td class="num">{{ formatCount(row.counts[0]) }}</td>
                 <td class="num">{{ formatCount(row.counts[1]) }}</td>
                 <td class="num sum">{{ formatCount(row.counts[0] + row.counts[1]) }}</td>
@@ -222,7 +207,5 @@ onMounted(() => {
         </table>
       </template>
     </div>
-
-    <p class="panel-hint">{{ t("statsHint") }}</p>
   </div>
 </template>

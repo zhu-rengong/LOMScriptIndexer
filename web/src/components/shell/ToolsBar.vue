@@ -64,6 +64,7 @@ const toggle = (key: OverlayKey) => {
     <button
       id="helpBtn"
       class="btn btn-icon"
+      :class="{ 'is-on': helpOpen }"
       type="button"
       aria-haspopup="dialog"
       :aria-expanded="helpOpen"
@@ -117,6 +118,7 @@ const toggle = (key: OverlayKey) => {
     <button
       id="settingsBtn"
       class="btn btn-icon"
+      :class="{ 'is-on': settingsOpen }"
       type="button"
       aria-haspopup="dialog"
       :aria-expanded="settingsOpen"

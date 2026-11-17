@@ -129,109 +129,117 @@ const onCaps = (value: CapsMode | null) => {
     />
 
     <p class="sub-label type-panel-head">{{ t("pref.glyphs") }}</p>
-    <p class="sub-label">{{ t("typeWeight") }}</p>
-    <div id="weightSeg" class="seg seg-wide settings-weight" role="group">
-      <button
-        v-if="isSlot"
-        class="seg-btn tab"
-        type="button"
-        :class="{ 'is-on': isWeightOn(null) }"
-        :aria-pressed="isWeightOn(null)"
-        @click="patch({ weight: null })"
-      >
-        {{ inheritLabel }}
-      </button>
-      <button
-        v-for="value in weightOptions"
-        :key="value"
-        class="seg-btn tab"
-        type="button"
-        :class="{ 'is-on': isWeightOn(value) }"
-        :aria-pressed="isWeightOn(value)"
-        @click="patch({ weight: value })"
-      >
-        {{ value }}
-      </button>
+    <div class="glyph-row">
+      <span class="sub-label">{{ t("typeWeight") }}</span>
+      <div id="weightSeg" class="seg seg-wide settings-weight" role="group">
+        <button
+          v-if="isSlot"
+          class="seg-btn tab"
+          type="button"
+          :class="{ 'is-on': isWeightOn(null) }"
+          :aria-pressed="isWeightOn(null)"
+          @click="patch({ weight: null })"
+        >
+          {{ inheritLabel }}
+        </button>
+        <button
+          v-for="value in weightOptions"
+          :key="value"
+          class="seg-btn tab"
+          type="button"
+          :class="{ 'is-on': isWeightOn(value) }"
+          :aria-pressed="isWeightOn(value)"
+          @click="patch({ weight: value })"
+        >
+          {{ value }}
+        </button>
+      </div>
     </div>
 
-    <p class="sub-label">{{ t("pref.italic") }}</p>
-    <div class="seg seg-wide settings-weight" role="group">
-      <button
-        v-if="isSlot"
-        class="seg-btn tab"
-        type="button"
-        :class="{ 'is-on': italicValue === null }"
-        :aria-pressed="italicValue === null"
-        @click="patch({ italic: null })"
-      >
-        {{ inheritLabel }}
-      </button>
-      <button
-        class="seg-btn tab"
-        type="button"
-        :class="{ 'is-on': italicValue === false }"
-        :aria-pressed="italicValue === false"
-        @click="patch({ italic: false })"
-      >
-        {{ t("pref.upright") }}
-      </button>
-      <button
-        class="seg-btn tab"
-        type="button"
-        :class="{ 'is-on': italicValue === true }"
-        :aria-pressed="italicValue === true"
-        @click="patch({ italic: true })"
-      >
-        {{ t("pref.italicOn") }}
-      </button>
+    <div class="glyph-row">
+      <span class="sub-label">{{ t("pref.italic") }}</span>
+      <div class="seg seg-wide settings-weight" role="group">
+        <button
+          v-if="isSlot"
+          class="seg-btn tab"
+          type="button"
+          :class="{ 'is-on': italicValue === null }"
+          :aria-pressed="italicValue === null"
+          @click="patch({ italic: null })"
+        >
+          {{ inheritLabel }}
+        </button>
+        <button
+          class="seg-btn tab"
+          type="button"
+          :class="{ 'is-on': italicValue === false }"
+          :aria-pressed="italicValue === false"
+          @click="patch({ italic: false })"
+        >
+          {{ t("pref.upright") }}
+        </button>
+        <button
+          class="seg-btn tab"
+          type="button"
+          :class="{ 'is-on': italicValue === true }"
+          :aria-pressed="italicValue === true"
+          @click="patch({ italic: true })"
+        >
+          {{ t("pref.italicOn") }}
+        </button>
+      </div>
     </div>
 
-    <p class="sub-label">{{ t("pref.caps") }}</p>
-    <div class="seg seg-wide settings-weight" role="group">
-      <button
-        v-for="option in capsOptions"
-        :key="String(option.value)"
-        v-show="isSlot || option.value !== null"
-        class="seg-btn tab"
-        type="button"
-        :class="{ 'is-on': capsValue === option.value }"
-        :aria-pressed="capsValue === option.value"
-        @click="onCaps(option.value)"
-      >
-        {{ option.value === null ? inheritLabel : t(option.label) }}
-      </button>
+    <div class="glyph-row">
+      <span class="sub-label">{{ t("pref.caps") }}</span>
+      <div class="seg seg-wide settings-weight" role="group">
+        <button
+          v-for="option in capsOptions"
+          :key="String(option.value)"
+          v-show="isSlot || option.value !== null"
+          class="seg-btn tab"
+          type="button"
+          :class="{ 'is-on': capsValue === option.value }"
+          :aria-pressed="capsValue === option.value"
+          @click="onCaps(option.value)"
+        >
+          {{ option.value === null ? inheritLabel : t(option.label) }}
+        </button>
+      </div>
     </div>
 
-    <p class="sub-label">{{ t("pref.numeric") }}</p>
-    <div class="seg seg-wide settings-weight" role="group">
-      <button
-        v-if="isSlot"
-        class="seg-btn tab"
-        type="button"
-        :class="{ 'is-on': numericValue === null }"
-        :aria-pressed="numericValue === null"
-        @click="patch({ numeric: null })"
-      >
-        {{ inheritLabel }}
-      </button>
-      <button
-        class="seg-btn tab"
-        type="button"
-        :class="{ 'is-on': numericValue === false }"
-        :aria-pressed="numericValue === false"
-        @click="patch({ numeric: false })"
-      >
-        {{ t("pref.numericOff") }}
-      </button>
-      <button
-        class="seg-btn tab"
-        type="button"
-        :class="{ 'is-on': numericValue === true }"
-        :aria-pressed="numericValue === true"
-        @click="patch({ numeric: true })"
-      >
-        {{ t("pref.numeric") }}
-      </button>
+    <div class="glyph-row">
+      <span class="sub-label">{{ t("pref.numeric") }}</span>
+      <div class="seg seg-wide settings-weight" role="group">
+        <button
+          v-if="isSlot"
+          class="seg-btn tab"
+          type="button"
+          :class="{ 'is-on': numericValue === null }"
+          :aria-pressed="numericValue === null"
+          @click="patch({ numeric: null })"
+        >
+          {{ inheritLabel }}
+        </button>
+        <button
+          class="seg-btn tab"
+          type="button"
+          :class="{ 'is-on': numericValue === false }"
+          :aria-pressed="numericValue === false"
+          @click="patch({ numeric: false })"
+        >
+          {{ t("pref.numericOff") }}
+        </button>
+        <button
+          class="seg-btn tab"
+          type="button"
+          :class="{ 'is-on': numericValue === true }"
+          :aria-pressed="numericValue === true"
+          @click="patch({ numeric: true })"
+        >
+          {{ t("pref.numeric") }}
+        </button>
+      </div>
     </div>
   </div>
 </template>

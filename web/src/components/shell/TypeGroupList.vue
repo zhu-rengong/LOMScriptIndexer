@@ -1,23 +1,15 @@
 <script setup lang="ts">
 import { t, typeLabel } from "../../i18n";
 import { GROUPS, groupById, slotById, slotsOfGroup } from "../../lib/fontTypes";
-import { fontDisplayName } from "../../lib/systemFonts";
 import type { FontScope, FontTarget } from "../../types/font";
 import { usePrefsStore } from "../../stores/prefs";
 import { useViewStore } from "../../stores/view";
-
-type TreeMetrics = {
-  face: string;
-  size: string;
-};
 
 type TreeRow = {
   key: string;
   scope: FontScope;
   id: string;
   label: string;
-  ord: string;
-  metrics: TreeMetrics | null;
 };
 
 const props = defineProps<{ target: FontTarget }>();
@@ -26,23 +18,6 @@ const prefs = usePrefsStore();
 const view = useViewStore();
 
 const treeEl = ref<HTMLElement | null>(null);
-
-const faceOf = (target: FontTarget): string => {
-  const key = prefs.fontLabelKeyOf(target);
-  const following = key === prefs.labels.followBase || key === prefs.labels.followGroup;
-  if (following) return t("pref.followShort");
-  const text = t(key);
-  return text === key ? fontDisplayName(key) : text;
-};
-
-const metricsOf = (target: FontTarget): TreeMetrics | null => {
-  const style = prefs.resolveEntry(target.scope, target.id);
-  if (!style) return null;
-  return {
-    face: faceOf(target),
-    size: `${style.px.toFixed(1)}px`,
-  };
-};
 
 const groupId = computed(() =>
   props.target.scope === "group"
@@ -54,27 +29,22 @@ const current = computed(() => groupById(groupId.value) || GROUPS[0]);
 
 const rows = computed<TreeRow[]>(() => {
   const group = current.value;
-  const slots = slotsOfGroup(group.id);
   const out: TreeRow[] = [
     {
       key: group.id,
       scope: "group",
       id: group.id,
       label: t(prefs.labels.groupAll),
-      ord: "00",
-      metrics: metricsOf({ scope: "group", id: group.id }),
     },
   ];
-  slots.forEach((slot, index) => {
+  for (const slot of slotsOfGroup(group.id)) {
     out.push({
       key: slot.id,
       scope: "slot",
       id: slot.id,
       label: typeLabel(slot.id),
-      ord: String(index + 1).padStart(2, "0"),
-      metrics: metricsOf({ scope: "slot", id: slot.id }),
     });
-  });
+  }
   return out;
 });
 
@@ -114,12 +84,7 @@ const onKeydown = (event: KeyboardEvent) => {
       :aria-selected="isOn(row)"
       @click="pick(row)"
     >
-      <span class="type-tree-ord" aria-hidden="true">{{ row.ord }}</span>
       <span class="type-tree-label">{{ row.label }}</span>
-      <span v-if="row.metrics" class="type-tree-metrics">
-        <span class="type-tree-face" :title="t('typeFont')">{{ row.metrics.face }}</span>
-        <span class="type-tree-size" :title="t('typeScale')">{{ row.metrics.size }}</span>
-      </span>
     </button>
   </div>
 </template>

@@ -135,7 +135,6 @@
 
   .option-idx,
   .cat-chap-ord,
-  .type-tree-ord,
   .stats-ord {
     font-family: var(--rd-ff-ordinal, var(--font-base));
     font-size: calc(var(--rd-fs-ordinal, 16px) * var(--ts-ordinal, 1));
@@ -232,7 +231,6 @@
   .battle-rows .jump,
   .stats-name,
   .stats-kind,
-  .drop-more,
   .lc-row,
   .lc-add-type,
   .lc-add-tag,
@@ -278,13 +276,11 @@
   .drop-item .dmeta,
   .nav-item .nav-id,
   .cat-row .cat-id,
-  .cat-row .cat-meta,
   .cat-book-main .cat-id,
   .cat-book-main .cat-meta,
   .cat-special .cat-code,
   .cat-chap-count,
   .rail-tab-count,
-  .type-tree-size,
   .settings-select .ft-name,
   .badge-num,
   .filter-count,
@@ -295,9 +291,9 @@
   .lookup-item .li-id,
   .mission-link,
   .help-key,
+  .help-expr,
   .brand-build,
   .changelog-date,
-  .changelog-range,
   .stats-open,
   .stats-script,
   .stats-expand,
@@ -385,19 +381,12 @@
   }
 
   .panel-hint,
-  .settings-hint,
-  .settings-summary,
-  .filter-summary,
   .lookup-sub,
-  .lookup-hint,
-  .rail-summary,
-  .stats-note,
   .mission-cond-note,
   .mission-sub-label,
   .changelog-badge,
   .lc-result,
   .pi-meta,
-  .type-tree-face,
   .menu-note,
   .hint-line,
   .crumb .crumb-time {

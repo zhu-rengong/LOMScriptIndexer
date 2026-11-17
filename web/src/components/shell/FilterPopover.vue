@@ -14,7 +14,6 @@ import { useScriptStore } from "../../stores/script";
 
 const store = useScriptStore();
 
-const OPS = ["AND", "OR", "NOT", "(", ")"];
 const SUGGEST_LIMIT = 100;
 
 const POPOVER_KEY = UI_IDS.filterPopover;
@@ -210,10 +209,7 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
       :hidden="!isPopoverOpen"
     >
       <header class="filter-head">
-        <div class="filter-head-text">
-          <h2 id="filterHeading" class="filter-title">{{ t("filterBtn") }}</h2>
-          <p class="filter-summary">{{ t("filterBtnTitle") }}</p>
-        </div>
+        <h2 id="filterHeading" class="filter-title">{{ t("filterBtn") }}</h2>
         <button
           class="btn btn-icon filter-close"
           type="button"
@@ -294,21 +290,6 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
         </div>
       </div>
       <div class="filter-section">
-        <p class="filter-label">{{ t("filterOperators") }}</p>
-        <div id="filterOpChips" class="filter-chips">
-          <button
-            v-for="op in OPS"
-            :key="op"
-            class="filter-chip btn btn-mono"
-            type="button"
-            :data-insert="op === '(' || op === ')' ? op : ` ${op} `"
-            @click="onChipInsert(op === '(' || op === ')' ? op : ` ${op} `)"
-          >
-            {{ op }}
-          </button>
-        </div>
-      </div>
-      <div class="filter-section">
         <p class="filter-label">{{ t("filterExamples") }}</p>
         <div id="filterExampleChips" class="filter-chips">
           <button
@@ -330,7 +311,6 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
         :hidden="!hasAppliedFilter || !store.filterSource.trim()"
       >
         <div class="filter-results-title">
-          {{ t("filterResults", { n: hitNodeIndexes.length }) }}
           <span class="filter-count">
             {{ t("filterCount", { n: hitNodeIndexes.length, total: graph.nodes.length }) }}
           </span>

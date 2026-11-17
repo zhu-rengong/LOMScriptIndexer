@@ -267,6 +267,5 @@ onMounted(() => {
         </template>
       </template>
     </div>
-    <p class="lookup-hint">{{ t("lookupHint") }}</p>
   </div>
 </template>

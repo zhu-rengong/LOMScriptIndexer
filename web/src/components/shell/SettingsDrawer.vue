@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { t, typeLabel } from "../../i18n";
+import { t } from "../../i18n";
 import { byId } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
 import { BASE_TARGET, GROUPS, firstSlot, groupById, slotById } from "../../lib/fontTypes";
@@ -34,12 +34,6 @@ const group = computed(() => {
   if (target.value.scope === "group") return groupById(target.value.id) || GROUPS[0];
   const slot = slotById(target.value.id);
   return (slot ? groupById(slot.group) : null) || GROUPS[0];
-});
-
-const scopeLabel = computed(() => {
-  const leaf =
-    target.value.scope === "group" ? t(prefs.labels.groupAll) : typeLabel(target.value.id);
-  return `${t(group.value.label)} → ${leaf}`;
 });
 
 const open = computed(() => overlay.isOpen("settings"));
@@ -103,11 +97,8 @@ onMounted(() => {
     :aria-label="t('settingsTitle')"
     :hidden="!open"
   >
-    <header class="drawer-head settings-head">
-      <div class="settings-head-text">
-        <h2 class="drawer-title settings-title">{{ t("settingsTitle") }}</h2>
-        <p class="settings-summary">{{ scopeLabel }}</p>
-      </div>
+    <header class="drawer-head">
+      <h2 class="drawer-title">{{ t("settingsTitle") }}</h2>
       <button
         id="settingsClose"
         class="btn btn-icon settings-close"
@@ -131,7 +122,6 @@ onMounted(() => {
           />
           <span>{{ t("showPortraits") }}</span>
         </label>
-        <p class="settings-hint">{{ t("showPortraitsHint") }}</p>
         <ScaleSlider
           :id="UI_IDS.portraitSize"
           :label="t('portraitSize')"

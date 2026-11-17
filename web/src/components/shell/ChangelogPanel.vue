@@ -5,10 +5,10 @@ import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 
 const ENTRIES = [
-  { date: "2026-11-16", from: "32c756e", to: "0068111", key: "changelogEntry4" },
-  { date: "2026-11-14", from: "cdd547d", to: "5304cb5", key: "changelogEntry3" },
-  { date: "2026-11-12", from: "d4c13de", to: "7aeb894", key: "changelogEntry2" },
-  { date: "2026-11-07", from: "6a7e45e", to: "e3a4075", key: "changelogEntry1" },
+  { date: "2026-11-16", key: "changelogEntry4" },
+  { date: "2026-11-14", key: "changelogEntry3" },
+  { date: "2026-11-12", key: "changelogEntry2" },
+  { date: "2026-11-07", key: "changelogEntry1" },
 ];
 
 const open = computed(() => overlay.isOpen("changelog"));
@@ -50,12 +50,10 @@ onMounted(() => {
       <article v-for="(entry, index) in ENTRIES" :key="entry.key" class="changelog-entry">
         <div class="changelog-meta">
           <span class="changelog-date">{{ entry.date }}</span>
-          <span class="changelog-range">{{ `${entry.from} → ${entry.to}` }}</span>
           <span v-if="index === 0" class="changelog-badge">{{ t("changelogLatest") }}</span>
         </div>
         <p class="changelog-text">{{ t(entry.key) }}</p>
       </article>
     </div>
-    <p class="panel-hint">{{ t("changelogHint") }}</p>
   </div>
 </template>

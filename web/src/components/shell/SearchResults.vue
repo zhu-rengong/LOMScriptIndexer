@@ -8,6 +8,7 @@ const SCROLL_THRESHOLD = 96;
 const props = defineProps<{
   hits: SearchHit[];
   renderedCount: number;
+  activeIndex: number;
   excludedCount: number;
   query: string;
   status: { count: string; note: string; excluded: string; message: string };
@@ -42,6 +43,15 @@ const onScroll = () => {
   if (!node || !nearBottom(node, SCROLL_THRESHOLD)) return;
   emit("more");
 };
+
+watch(
+  () => props.activeIndex,
+  async (index) => {
+    await nextTick();
+    const node = panel.value?.querySelectorAll<HTMLElement>(".drop-item")[index];
+    node?.scrollIntoView({ block: "nearest" });
+  },
+);
 </script>
 
 <template>
@@ -54,15 +64,13 @@ const onScroll = () => {
     @scroll="onScroll"
   >
     <div class="drop-scope">
-      <span>{{ status.count }}</span>
-      <span :hidden="!status.note">{{ status.note }}</span>
+      <span class="drop-scope-text">
+        <span>{{ status.count }}</span>
+        <span :hidden="!status.note">{{ status.note }}</span>
+        <span :hidden="excludedCount <= 0">{{ status.excluded }}</span>
+      </span>
       <button v-if="hasFilter" class="btn-link" type="button" @click="emit('clear-filter')">
         {{ t("searchClearFilters") }}
-      </button>
-    </div>
-    <div class="drop-empty popover-empty" :hidden="excludedCount <= 0">
-      <button class="drop-more btn-link" type="button" @click="emit('clear-filter')">
-        {{ status.excluded }}
       </button>
     </div>
     <div class="drop-empty popover-empty" :hidden="!status.message">{{ status.message }}</div>
@@ -70,7 +78,7 @@ const onScroll = () => {
       v-for="(hit, position) in visibleHits"
       :key="hit.id"
       class="drop-item row row-tall"
-      :class="{ 'is-active': position === 0 }"
+      :class="{ 'is-active': position === activeIndex }"
       :data-id="hit.id"
       @click="emit('pick', hit)"
     >
