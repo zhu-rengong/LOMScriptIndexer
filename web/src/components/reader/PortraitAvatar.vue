@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import moodHappyIcon from "../../assets/mood-happy.png";
 import { t } from "../../i18n";
 import { speakerName } from "../../lib/blocks";
 import { ensurePortraitManifest, pickPortrait, portraitUrl } from "../../lib/portraits";
@@ -23,6 +24,7 @@ const loadPage = (url: string): Promise<boolean> => {
 
 const pick = computed(() => pickPortrait(props.character, props.expression));
 const src = computed(() => (pick.value ? portraitUrl(pick.value.file) : ""));
+const happyMood = computed(() => props.expression.toLowerCase().startsWith("laugh"));
 const loadedPage = ref("");
 const failedPage = ref("");
 
@@ -73,5 +75,6 @@ watch(
       <circle cx="20" cy="14" r="7" />
       <path d="M6 42c0-10 6-15 14-15s14 5 14 15" />
     </svg>
+    <img v-if="happyMood" class="portrait-mood" :src="moodHappyIcon" alt="" aria-hidden="true" />
   </span>
 </template>
