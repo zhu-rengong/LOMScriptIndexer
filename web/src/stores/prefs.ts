@@ -1,3 +1,4 @@
+import { usePreferredDark } from "@vueuse/core";
 import { defineStore } from "pinia";
 import {
   DEFAULT_BASE_FONT,
@@ -17,11 +18,12 @@ import type {
   PrefPatch,
   PrefState,
   ResolvedTypeStyle,
+  ThemeMode,
 } from "../types/font";
 
 const KEY = keys.prefs;
 
-const PREFS_VERSION = 11;
+const PREFS_VERSION = 12;
 
 type StoredPrefs = PrefState & { version: number };
 
@@ -33,6 +35,8 @@ const BASE_TRACKING = 0;
 const WEIGHTS = [300, 400, 500, 600, 700, 800];
 
 const CAPS: CapsMode[] = ["none", "upper", "small"];
+
+const THEMES: ThemeMode[] = ["light", "dark", "system"];
 
 const MEASURE_MIN = 520;
 const MEASURE_MAX = 1400;
@@ -117,6 +121,9 @@ const clampCaps = (value: unknown, fallback: CapsMode | null): CapsMode | null =
   return CAPS.indexOf(String(value) as CapsMode) >= 0 ? (value as CapsMode) : fallback;
 };
 
+const clampTheme = (value: unknown, fallback: ThemeMode): ThemeMode =>
+  THEMES.indexOf(String(value) as ThemeMode) >= 0 ? (value as ThemeMode) : fallback;
+
 const clampBool = (value: unknown, fallback: boolean | null): boolean | null => {
   if (value === null) return fallback;
   return typeof value === "boolean" ? value : fallback;
@@ -189,6 +196,7 @@ const normalizeSlot = (raw: unknown, base: PrefEntry): PrefEntry => {
 
 const defaultState = (): StoredPrefs => ({
   version: PREFS_VERSION,
+  theme: "light",
   baseFont: DEFAULT_BASE_FONT,
   groups: defaultGroups(),
   slots: defaultSlots(),
@@ -202,6 +210,7 @@ const decodePrefs = (raw: unknown): StoredPrefs => {
   const source = raw as Record<string, unknown>;
   if (source.version !== PREFS_VERSION) return defaultState();
   const next = defaultState();
+  next.theme = clampTheme(source.theme, "light");
   next.baseFont = normalizeBaseFont(source.baseFont);
   next.measure = Math.round(clampNumber(source.measure, MEASURE_MIN, MEASURE_MAX, MEASURE_DEFAULT));
   next.showPortraits = source.showPortraits !== false;
@@ -234,6 +243,12 @@ export const usePrefsStore = defineStore("prefs", () => {
     get: () => state.value.baseFont,
     set: (value: string) => {
       state.value.baseFont = normalizeBaseFont(value);
+    },
+  });
+  const theme = computed({
+    get: () => state.value.theme,
+    set: (value: ThemeMode) => {
+      state.value.theme = clampTheme(value, state.value.theme);
     },
   });
   const baseStack = computed(() => baseFontStack(baseFont.value));
@@ -346,7 +361,18 @@ export const usePrefsStore = defineStore("prefs", () => {
 
   watch(state, applyToDocument, { deep: true, flush: "post", immediate: true });
 
+  const preferredDark = usePreferredDark();
+
+  const applyTheme = (): void => {
+    const mode = state.value.theme;
+    const dark = mode === "dark" || (mode === "system" && preferredDark.value);
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+  };
+
+  watch([() => state.value.theme, preferredDark], applyTheme, { immediate: true, flush: "post" });
+
   const get = (): PrefState => ({
+    theme: state.value.theme,
     baseFont: state.value.baseFont,
     groups: state.value.groups,
     slots: state.value.slots,
@@ -381,6 +407,7 @@ export const usePrefsStore = defineStore("prefs", () => {
 
   const set = (patch: PrefPatch): PrefState => {
     if (patch && typeof patch === "object") {
+      if (patch.theme !== undefined) theme.value = patch.theme;
       if (typeof patch.baseFont === "string") baseFont.value = patch.baseFont;
       if (typeof patch.showPortraits === "boolean") showPortraits.value = patch.showPortraits;
       if (patch.portraitSize !== undefined) portraitSize.value = patch.portraitSize;
@@ -420,6 +447,7 @@ export const usePrefsStore = defineStore("prefs", () => {
     labels: LABELS,
     presets: PRESETS,
     limits: LIMITS,
+    theme,
     baseFont,
     groups,
     slots,

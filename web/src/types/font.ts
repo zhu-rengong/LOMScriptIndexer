@@ -2,6 +2,8 @@ export type FontScope = "base" | "group" | "slot";
 
 export type CapsMode = "none" | "upper" | "small";
 
+export type ThemeMode = "light" | "dark" | "system";
+
 export type FontTarget = { scope: FontScope; id: string };
 
 export type PrefEntry = {
@@ -16,6 +18,7 @@ export type PrefEntry = {
 };
 
 export type PrefState = {
+  theme: ThemeMode;
   baseFont: string;
   groups: Record<string, PrefEntry>;
   slots: Record<string, PrefEntry>;
@@ -25,6 +28,7 @@ export type PrefState = {
 };
 
 export type PrefPatch = {
+  theme?: ThemeMode;
   baseFont?: string;
   measure?: number;
   groups?: Record<string, Partial<PrefEntry>>;

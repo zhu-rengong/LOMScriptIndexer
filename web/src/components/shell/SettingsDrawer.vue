@@ -4,7 +4,7 @@ import { byId } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
 import { BASE_TARGET, GROUPS, firstSlot, groupById, slotById } from "../../lib/fontTypes";
 import { ensureSystemFonts } from "../../lib/systemFonts";
-import type { FontTarget } from "../../types/font";
+import type { FontTarget, ThemeMode } from "../../types/font";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 import FontPicker from "./FontPicker.vue";
@@ -37,6 +37,16 @@ const group = computed(() => {
 });
 
 const open = computed(() => overlay.isOpen("settings"));
+
+const themeOptions: { value: ThemeMode; label: string }[] = [
+  { value: "light", label: "pref.themeLight" },
+  { value: "dark", label: "pref.themeDark" },
+  { value: "system", label: "pref.themeSystem" },
+];
+
+const setTheme = (value: ThemeMode) => {
+  prefs.set({ theme: value });
+};
 
 const togglePortraits = (value: boolean) => {
   prefs.set({ showPortraits: value });
@@ -112,6 +122,22 @@ onMounted(() => {
 
     <div class="drawer-body">
       <section class="settings-section">
+        <div class="glyph-row theme-row">
+          <span class="sub-label">{{ t("pref.theme") }}</span>
+          <div class="seg settings-weight" role="group" :aria-label="t('pref.theme')">
+            <button
+              v-for="option in themeOptions"
+              :key="option.value"
+              class="seg-btn tab"
+              type="button"
+              :class="{ 'is-on': prefs.theme === option.value }"
+              :aria-pressed="prefs.theme === option.value"
+              @click="setTheme(option.value)"
+            >
+              {{ t(option.label) }}
+            </button>
+          </div>
+        </div>
         <p class="settings-caption">{{ t("readerDisplay") }}</p>
         <label class="settings-switch" :for="UI_IDS.showPortraits">
           <input

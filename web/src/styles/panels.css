@@ -347,6 +347,10 @@
     outline-offset: 2px;
   }
 
+  .theme-row {
+    margin-bottom: var(--sp-4);
+  }
+
   .field-row {
     display: flex;
     align-items: baseline;
@@ -584,7 +588,7 @@
   .seg-btn:enabled[aria-pressed="true"] {
     border-color: var(--ink-2);
     color: var(--accent-strong);
-    box-shadow: 0 1px 3px rgba(74, 65, 51, 0.2);
+    box-shadow: var(--shadow-control);
   }
 
   .type-panel {
