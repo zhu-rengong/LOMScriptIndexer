@@ -133,8 +133,7 @@
     font-variant-numeric: var(--rd-fn-condition, normal);
   }
 
-  .option-idx,
-  .stats-ord {
+  .option-idx {
     font-family: var(--rd-ff-ordinal, var(--font-base));
     font-size: calc(var(--rd-fs-ordinal, 16px) * var(--ts-ordinal, 1));
     font-weight: var(--rd-fw-ordinal, 400);
@@ -296,7 +295,7 @@
   .stats-open,
   .stats-script,
   .stats-expand,
-  .stats-table td.num,
+  .stats-cell.num,
   .field-value,
   .jump-target-id,
   .lc-add-rate,
@@ -367,7 +366,7 @@
   .scene-label,
   .crumb,
   .stat-card .stat-label,
-  .stats-table thead th {
+  .stats-head-row {
     font-family: var(--rd-ff-label, var(--font-base));
     font-size: calc(var(--rd-fs-label, 16px) * var(--ts-label, 1));
     font-weight: var(--rd-fw-label, 400);

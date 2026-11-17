@@ -384,24 +384,12 @@
     }
 
     .stats-table {
+      --stats-num: 56px;
       --ts-text: 0.85;
     }
 
-    .stats-table col.col-name {
-      width: 40%;
-    }
-
-    .stats-table col.col-num {
-      width: 15%;
-    }
-
-    .stats-table th,
-    .stats-table td {
-      padding: 7px 6px;
-    }
-
-    .stats-script td.name {
-      padding-left: 16px;
+    .stats-cell {
+      padding: 0 6px;
     }
 
     .filter-panel {

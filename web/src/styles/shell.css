@@ -452,14 +452,6 @@
     display: none;
   }
 
-  .stats-mark {
-    flex: none;
-    width: 3px;
-    height: 14px;
-    border-radius: 1px;
-    opacity: 0.72;
-  }
-
   .cat-chap-title {
     flex: 1;
     min-width: 0;

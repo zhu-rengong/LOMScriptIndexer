@@ -145,66 +145,64 @@ onMounted(() => {
         </p>
       </template>
       <template v-else>
-        <table class="stats-table">
-          <colgroup>
-            <col class="col-name" />
-            <col v-for="index in 4" :key="index" class="col-num" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th class="name" scope="col">{{ t("statsChapter") }}</th>
-              <th class="num" scope="col">{{ t("statsScripts") }}</th>
-              <th class="num" scope="col">{{ t("statsZh") }}</th>
-              <th class="num" scope="col">{{ t("statsEn") }}</th>
-              <th class="num" scope="col">{{ t("statsSum") }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="(row, index) in tableRows" :key="`${row.type}-${row.id}-${index}`">
-              <tr
-                v-if="row.type === 'chapter'"
-                class="stats-chapter"
-                :class="{ 'is-open': row.isOpen }"
-              >
-                <th class="name" scope="row">
-                  <button
-                    class="stats-expand"
-                    type="button"
-                    :aria-expanded="row.isOpen"
-                    @click="toggleChapter(row.id)"
-                  >
-                    <span class="stats-ord">{{ row.ordinal }}</span>
-                    <span class="stats-mark" :style="{ backgroundColor: row.color }"></span>
-                    <span class="stats-name">{{ row.title }}</span>
-                    <AppIcon class="stats-arrow" name="chevron" />
-                  </button>
-                </th>
-                <td class="num">{{ formatCount(row.scriptCount) }}</td>
-                <td class="num">{{ formatCount(row.counts[0]) }}</td>
-                <td class="num">{{ formatCount(row.counts[1]) }}</td>
-                <td class="num sum">{{ formatCount(row.counts[0] + row.counts[1]) }}</td>
-              </tr>
-              <tr v-else class="stats-script">
-                <td class="name">
-                  <span class="stats-script-name">
-                    <button
-                      class="stats-open btn-link"
-                      type="button"
-                      :title="t('statsOpen')"
-                      @click="openScript(row.id)"
-                    >
-                      {{ row.id }}
-                    </button>
-                  </span>
-                </td>
-                <td class="num"></td>
-                <td class="num">{{ formatCount(row.counts[0]) }}</td>
-                <td class="num">{{ formatCount(row.counts[1]) }}</td>
-                <td class="num sum">{{ formatCount(row.counts[0] + row.counts[1]) }}</td>
-              </tr>
-            </template>
-          </tbody>
-        </table>
+        <div class="stats-table" role="table">
+          <div class="stats-head-row" role="row">
+            <span class="stats-cell" role="columnheader">{{ t("statsChapter") }}</span>
+            <span class="stats-cell num" role="columnheader">{{ t("statsScripts") }}</span>
+            <span class="stats-cell num" role="columnheader">{{ t("statsZh") }}</span>
+            <span class="stats-cell num" role="columnheader">{{ t("statsEn") }}</span>
+            <span class="stats-cell num" role="columnheader">{{ t("statsSum") }}</span>
+          </div>
+          <template v-for="(row, index) in tableRows" :key="`${row.type}-${row.id}-${index}`">
+            <div
+              v-if="row.type === 'chapter'"
+              class="stats-chapter"
+              :class="{ 'is-open': row.isOpen, 'is-solo': row.solo }"
+              role="row"
+            >
+              <span class="stats-cell" role="cell">
+                <button
+                  class="stats-expand"
+                  type="button"
+                  :aria-expanded="row.isOpen"
+                  @click="toggleChapter(row.id)"
+                >
+                  <span class="stats-name">{{ row.title }}</span>
+                  <AppIcon class="stats-arrow" name="chevron" />
+                </button>
+              </span>
+              <span class="stats-cell num" role="cell">{{ formatCount(row.scriptCount) }}</span>
+              <span class="stats-cell num" role="cell">{{ formatCount(row.counts[0]) }}</span>
+              <span class="stats-cell num" role="cell">{{ formatCount(row.counts[1]) }}</span>
+              <span class="stats-cell num" role="cell">
+                {{ formatCount(row.counts[0] + row.counts[1]) }}
+              </span>
+            </div>
+            <div
+              v-else
+              class="stats-script"
+              :class="{ 'is-on': row.id === store.selectedId, 'is-card-end': row.last }"
+              role="row"
+            >
+              <span class="stats-cell" role="cell">
+                <button
+                  class="stats-open btn-link"
+                  type="button"
+                  :title="t('statsOpen')"
+                  @click="openScript(row.id)"
+                >
+                  {{ row.id }}
+                </button>
+              </span>
+              <span class="stats-cell num" role="cell"></span>
+              <span class="stats-cell num" role="cell">{{ formatCount(row.counts[0]) }}</span>
+              <span class="stats-cell num" role="cell">{{ formatCount(row.counts[1]) }}</span>
+              <span class="stats-cell num" role="cell">
+                {{ formatCount(row.counts[0] + row.counts[1]) }}
+              </span>
+            </div>
+          </template>
+        </div>
       </template>
     </div>
   </div>

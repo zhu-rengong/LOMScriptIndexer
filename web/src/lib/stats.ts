@@ -18,13 +18,12 @@ export type StatsTableRow =
       type: "chapter";
       id: string;
       title: string;
-      ordinal: string;
-      color: string;
       isOpen: boolean;
+      solo: boolean;
       scriptCount: number;
       counts: WordCount;
     }
-  | { type: "script"; id: string; counts: WordCount };
+  | { type: "script"; id: string; counts: WordCount; last: boolean };
 
 export const statsTableRows = (
   pack: WordPack | null,
@@ -36,22 +35,30 @@ export const statsTableRows = (
   const out: StatsTableRow[] = [];
   graph.chapters.forEach((chapter, index) => {
     const ids = (byChapter[index] || []).map((node) => node.id);
+    const open = openChapter === chapter.id;
+    const scripts = open
+      ? ids
+          .map((id) => ({ id, counts: wordCount.countsOf((pack.scripts || {})[id], kind) }))
+          .filter((item) => sum(item.counts) > 0)
+          .sort((a, b) => sum(b.counts) - sum(a.counts))
+      : [];
     out.push({
       type: "chapter",
       id: chapter.id,
       title: chapterTitle(chapter),
-      ordinal: String(index + 1).padStart(2, "0"),
-      color: chapter.color,
-      isOpen: openChapter === chapter.id,
+      isOpen: open,
+      solo: open && !scripts.length,
       scriptCount: ids.length,
       counts: wordCount.countsOf((pack.chapters || {})[chapter.id], kind),
     });
-    if (openChapter !== chapter.id) return;
-    ids
-      .map((id) => ({ id, counts: wordCount.countsOf((pack.scripts || {})[id], kind) }))
-      .filter((item) => sum(item.counts) > 0)
-      .sort((a, b) => sum(b.counts) - sum(a.counts))
-      .forEach((item) => out.push({ type: "script", id: item.id, counts: item.counts }));
+    scripts.forEach((item, position) => {
+      out.push({
+        type: "script",
+        id: item.id,
+        counts: item.counts,
+        last: position === scripts.length - 1,
+      });
+    });
   });
   return out;
 };
