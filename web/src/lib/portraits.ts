@@ -86,13 +86,22 @@ const normalize = (data: unknown): PortraitManifest | null => {
 
 export const ensurePortraitManifest = (): Promise<void> => {
   if (!loading) {
-    loading = fetch(dataset.assetUrl("portraitManifest"))
+    loading = fetch(`${dataset.assetUrl("portraitManifest")}?v=${VERSION}`, { cache: "no-cache" })
       .then((response) => (response.ok ? response.json() : null))
       .then((data: unknown) => {
         const manifest = normalize(data);
-        if (manifest) portraitManifest.value = manifest;
+        if (manifest) {
+          portraitManifest.value = manifest;
+          return;
+        }
+        const found = (data as { version?: unknown } | null)?.version;
+        console.warn(
+          `[ScriptIndexer] portrait manifest v${String(found)} ignored, expected v${VERSION}`,
+        );
       })
-      .catch(() => undefined);
+      .catch((error: unknown) => {
+        console.warn("[ScriptIndexer] portrait manifest failed", error);
+      });
   }
   return loading;
 };
