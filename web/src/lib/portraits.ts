@@ -114,3 +114,7 @@ export const pickPortrait = (character: string, expression: string): PortraitPic
 
 export const portraitUrl = (file: string): string =>
   new URL(dataset.assetUrl("portrait", { file }), document.baseURI).href;
+
+const HAPPY_MOOD_FILE = "mood-happy.png";
+
+export const happyMoodUrl = (): string => portraitUrl(HAPPY_MOOD_FILE);
