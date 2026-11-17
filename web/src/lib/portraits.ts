@@ -9,6 +9,7 @@ export type PortraitManifest = {
   columns: number;
   pages: string[];
   characters: Record<string, Record<string, PortraitCell>>;
+  moods: Record<string, PortraitCell>;
 };
 
 export type PortraitPick = {
@@ -20,7 +21,7 @@ export type PortraitPick = {
   fallback: boolean;
 };
 
-const VERSION = 7;
+const VERSION = 8;
 
 export const portraitManifest = shallowRef<PortraitManifest | null>(null);
 
@@ -36,6 +37,19 @@ const isFileName = (value: unknown): value is string =>
 const asIndex = (value: unknown, limit: number): number | null => {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0) return null;
   return value < limit ? value : null;
+};
+
+const readCells = (value: unknown, pageCount: number): Record<string, PortraitCell> => {
+  const cells: Record<string, PortraitCell> = {};
+  if (!value || typeof value !== "object" || Array.isArray(value)) return cells;
+  for (const [key, cell] of Object.entries(value as Record<string, unknown>)) {
+    if (!Array.isArray(cell) || cell.length !== 2) continue;
+    const page = asIndex(cell[0], pageCount);
+    const index = asIndex(cell[1], Number.MAX_SAFE_INTEGER);
+    if (page === null || index === null) continue;
+    cells[key] = [page, index];
+  }
+  return cells;
 };
 
 const normalize = (data: unknown): PortraitManifest | null => {
@@ -57,14 +71,7 @@ const normalize = (data: unknown): PortraitManifest | null => {
   const characters: Record<string, Record<string, PortraitCell>> = {};
   for (const [character, value] of Object.entries(rawCharacters)) {
     if (!value || typeof value !== "object" || Array.isArray(value)) continue;
-    const expressions: Record<string, PortraitCell> = {};
-    for (const [expression, cell] of Object.entries(value as Record<string, unknown>)) {
-      if (!Array.isArray(cell) || cell.length !== 2) continue;
-      const page = asIndex(cell[0], pages.length);
-      const index = asIndex(cell[1], Number.MAX_SAFE_INTEGER);
-      if (page === null || index === null) continue;
-      expressions[expression] = [page, index];
-    }
+    const expressions = readCells(value, pages.length);
     if (Object.keys(expressions).length) characters[character] = expressions;
   }
   return {
@@ -73,6 +80,7 @@ const normalize = (data: unknown): PortraitManifest | null => {
     columns,
     pages: pages as string[],
     characters,
+    moods: readCells(record.moods, pages.length),
   };
 };
 
@@ -115,11 +123,29 @@ export const pickPortrait = (character: string, expression: string): PortraitPic
 export const portraitUrl = (file: string): string =>
   new URL(dataset.assetUrl("portrait", { file }), document.baseURI).href;
 
-const MOOD_FILES = {
-  happy: "mood-happy.png",
-  sweat: "mood-sweat.png",
-} as const;
+const MOOD_BASES = ["laugh", "nervous", "angry", "shy", "shock", "silent"];
 
-export type MoodKind = keyof typeof MOOD_FILES;
+export const moodOf = (expression: string): string => {
+  const value = expression.toLowerCase();
+  const base = MOOD_BASES.find((item) => value.startsWith(item));
+  if (!base) return "";
+  if (base === "laugh") return "happy";
+  if (base === "nervous") return /^nervous\d+$/.test(value) ? value : "nervous1";
+  return base;
+};
 
-export const moodUrl = (kind: MoodKind): string => portraitUrl(MOOD_FILES[kind]);
+export const pickMood = (key: string): PortraitPick | null => {
+  const data = portraitManifest.value;
+  const cell = key ? data?.moods[key] : undefined;
+  if (!data || !cell) return null;
+  const file = data.pages[cell[0]];
+  if (!file) return null;
+  return {
+    file,
+    column: cell[1] % data.columns,
+    row: Math.floor(cell[1] / data.columns),
+    columns: data.columns,
+    aspect: data.size[1] / data.size[0],
+    fallback: false,
+  };
+};

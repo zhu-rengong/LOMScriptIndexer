@@ -18,7 +18,7 @@ from .models import (
     PREVIEW_VERSION,
     THUMBNAIL_SIZE,
 )
-from .mood import export_moods
+from .mood import mood_cells
 from .plan import character_expressions, plan_crops
 from .runner import export_crops
 from .store import (
@@ -85,8 +85,6 @@ def export_portraits(
     started = time.monotonic()
     workers = _worker_count(jobs)
     output.mkdir(parents=True, exist_ok=True)
-    if not export_moods(layout, output):
-        reporter.warn("portraits: mood sprites not found")
     game = game_fingerprint(layout)
     asset = asset_fingerprint(game)
     previous = None if force else load_previous(output, preview_dir, game, asset)
@@ -133,7 +131,10 @@ def export_portraits(
             "artifact": crop.artifact,
         }
     cells = {key: record["cell"] for key, record in records.items()}
-    pages, positions = paginate(cells)
+    moods = mood_cells(layout)
+    if not moods:
+        reporter.warn("portraits: mood cells not found")
+    pages, positions, mood_positions = paginate(cells, moods)
     page_files: list[str] = []
     for page_cells in pages:
         name = f"{page_key(page_cells)}.webp"
@@ -177,6 +178,7 @@ def export_portraits(
         "pages": page_files,
         "settings": snapshot,
         "characters": available,
+        "moods": mood_positions,
         "missing": plan.missing,
         "issues": trim_issues(issues),
     }
@@ -199,7 +201,13 @@ def export_portraits(
         nested.setdefault(character, {})[expression] = record
     save_crop_index(game, nested)
     sweep(output, set(page_files), (".dds", ".webp"))
-    sweep(CROP_DIR, {f"{cell}.png" for cell in cells.values()}, (".png",))
+    for stale in output.glob("mood-*.png"):
+        stale.unlink()
+    sweep(
+        CROP_DIR,
+        {f"{cell}.png" for cell in cells.values()} | {f"{cell}.png" for cell in moods.values()},
+        (".png",),
+    )
     sweep(
         preview_dir,
         {entry["file"] for entry in previews.values() if isinstance(entry.get("file"), str)},

@@ -104,8 +104,13 @@
     top: -14%;
     right: -14%;
     z-index: 1;
-    width: 42%;
-    height: auto;
+    width: calc(var(--rd-portrait-w, 80px) * 0.42);
+    height: calc(var(--rd-portrait-w, 80px) * 0.42 * var(--mood-aspect, 1.15));
+    background-image: var(--mood-sheet, none);
+    background-repeat: no-repeat;
+    background-size: calc(var(--mood-columns, 1) * var(--rd-portrait-w, 80px) * 0.42) auto;
+    background-position: calc(var(--mood-col, 0) * var(--rd-portrait-w, 80px) * 0.42 * -1)
+      calc(var(--mood-row, 0) * var(--rd-portrait-w, 80px) * 0.42 * var(--mood-aspect, 1.15) * -1);
     pointer-events: none;
     user-select: none;
   }

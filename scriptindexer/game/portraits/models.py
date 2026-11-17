@@ -5,7 +5,7 @@ from typing import Any
 from ...paths import PORTRAIT_CROP_DIR, PORTRAIT_PREVIEW_DIR, SITE_DATA_DIR
 from ..framing import AVATAR_SIZE, Frame
 
-PORTRAIT_VERSION = 7
+PORTRAIT_VERSION = 8
 PREVIEW_VERSION = 1
 CACHE_VERSION = 2
 PORTRAIT_DIR = SITE_DATA_DIR / "portraits"

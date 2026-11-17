@@ -225,6 +225,20 @@ def load_previews(preview_dir: Path, game: str) -> dict | None:
     return previews
 
 
+def cells_valid(value: Any, page_count: int) -> bool:
+    if not isinstance(value, dict):
+        return False
+    for cell in value.values():
+        if not isinstance(cell, list) or len(cell) != 2:
+            return False
+        page, index = cell
+        if not isinstance(page, int) or not isinstance(index, int):
+            return False
+        if not 0 <= page < page_count or not 0 <= index < ATLAS_CELLS:
+            return False
+    return True
+
+
 def valid_manifest(manifest: Any, asset: str) -> bool:
     if not isinstance(manifest, dict) or manifest.get("version") != PORTRAIT_VERSION:
         return False
@@ -240,18 +254,9 @@ def valid_manifest(manifest: Any, asset: str) -> bool:
     characters = manifest.get("characters")
     if not isinstance(characters, dict):
         return False
-    for table in characters.values():
-        if not isinstance(table, dict):
-            return False
-        for value in table.values():
-            if not isinstance(value, list) or len(value) != 2:
-                return False
-            page, cell = value
-            if not isinstance(page, int) or not isinstance(cell, int):
-                return False
-            if not 0 <= page < len(pages) or not 0 <= cell < ATLAS_CELLS:
-                return False
-    return True
+    if not all(cells_valid(table, len(pages)) for table in characters.values()):
+        return False
+    return cells_valid(manifest.get("moods"), len(pages))
 
 
 def load_previous(output: Path, preview_dir: Path, game: str, asset: str) -> Previous | None:
@@ -289,13 +294,21 @@ def page_key(cells: list[str]) -> str:
 
 def paginate(
     cells: dict[tuple[str, str], str],
-) -> tuple[list[list[str]], dict[tuple[str, str], list[int]]]:
+    moods: dict[str, str] | None = None,
+) -> tuple[list[list[str]], dict[tuple[str, str], list[int]], dict[str, list[int]]]:
     tables: dict[str, dict[str, str]] = {}
     for (character, expression), cell in cells.items():
         tables.setdefault(character, {})[expression] = cell
     pages: list[list[str]] = []
     positions: dict[tuple[str, str], list[int]] = {}
+    mood_positions: dict[str, list[int]] = {}
     current: list[str] = []
+    for mood in sorted(moods or {}):
+        if len(current) == ATLAS_CELLS:
+            pages.append(current)
+            current = []
+        mood_positions[mood] = [len(pages), len(current)]
+        current.append(moods[mood])
     for character in sorted(tables):
         names = sorted(tables[character])
         entries = [tables[character][name] for name in names]
@@ -314,7 +327,7 @@ def paginate(
             current = []
     if current:
         pages.append(current)
-    return pages, positions
+    return pages, positions, mood_positions
 
 
 def write_page(path: Path, cells: list[str]) -> None:

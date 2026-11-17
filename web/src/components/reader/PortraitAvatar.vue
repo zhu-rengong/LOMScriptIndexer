@@ -3,10 +3,10 @@ import { t } from "../../i18n";
 import { speakerName } from "../../lib/blocks";
 import {
   ensurePortraitManifest,
-  moodUrl,
+  moodOf,
+  pickMood,
   pickPortrait,
   portraitUrl,
-  type MoodKind,
 } from "../../lib/portraits";
 
 const props = defineProps<{ character: string; expression: string }>();
@@ -29,14 +29,7 @@ const loadPage = (url: string): Promise<boolean> => {
 
 const pick = computed(() => pickPortrait(props.character, props.expression));
 const src = computed(() => (pick.value ? portraitUrl(pick.value.file) : ""));
-const mood = computed<MoodKind | null>(() => {
-  if (!pick.value) return null;
-  const expression = props.expression.toLowerCase();
-  if (expression.startsWith("laugh")) return "happy";
-  if (expression.startsWith("nervous")) return "sweat";
-  return null;
-});
-const moodSrc = computed(() => (mood.value ? moodUrl(mood.value) : ""));
+const mood = computed(() => (pick.value ? pickMood(moodOf(props.expression)) : null));
 const loadedPage = ref("");
 const failedPage = ref("");
 
@@ -55,6 +48,14 @@ const style = computed<Record<string, string | number>>(() => ({
   "--portrait-col": pick.value?.column ?? 0,
   "--portrait-row": pick.value?.row ?? 0,
   "--portrait-aspect": pick.value?.aspect ?? 1.15,
+}));
+
+const moodStyle = computed<Record<string, string | number>>(() => ({
+  "--mood-sheet": mood.value ? `url("${portraitUrl(mood.value.file)}")` : "none",
+  "--mood-columns": mood.value?.columns ?? 1,
+  "--mood-col": mood.value?.column ?? 0,
+  "--mood-row": mood.value?.row ?? 0,
+  "--mood-aspect": mood.value?.aspect ?? 1.15,
 }));
 
 onMounted(() => {
@@ -87,6 +88,6 @@ watch(
       <circle cx="20" cy="14" r="7" />
       <path d="M6 42c0-10 6-15 14-15s14 5 14 15" />
     </svg>
-    <img v-if="mood" class="portrait-mood" :src="moodSrc" alt="" aria-hidden="true" />
+    <span v-if="mood" class="portrait-mood" :style="moodStyle" aria-hidden="true" />
   </span>
 </template>
