@@ -213,14 +213,14 @@ const pickAt = (index: number): boolean => {
   const hit = hits.value[Math.min(index, hits.value.length - 1)] ?? hits.value[0];
   if (!hit) return false;
   hide();
-  panels.focusText(hit.id, needleOf(lastQuery));
+  panels.focusText(hit.id, hit.anchor || needleOf(lastQuery));
   store.select(hit.id, { history: true });
   return true;
 };
 
 const pick = (hit: SearchHit) => {
   hide();
-  panels.focusText(hit.id, needleOf(lastQuery));
+  panels.focusText(hit.id, hit.anchor || needleOf(lastQuery));
   store.select(hit.id, { history: true });
 };
 

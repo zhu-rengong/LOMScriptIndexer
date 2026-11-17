@@ -16,8 +16,8 @@ const indexedMetaKinds = new Set([
 let lang = "";
 let converted = false;
 
-const plainTexts = new Map<string, string>();
-const searchTexts = new Map<string, string>();
+const plainParts = new Map<string, string[]>();
+const searchLines = new Map<string, string[]>();
 
 const sync = (): string => {
   const current = script().lang;
@@ -25,15 +25,15 @@ const sync = (): string => {
   if (current !== lang || ready !== converted) {
     lang = current;
     converted = ready;
-    plainTexts.clear();
-    searchTexts.clear();
+    plainParts.clear();
+    searchLines.clear();
   }
   return script().textLang();
 };
 
 const rowsOf = (textLang: string, id: string): unknown => textStore.beatRows(textLang, id);
 
-const metaOf = (rows: unknown): string => {
+const metaPartsOf = (rows: unknown): string[] => {
   const parts: string[] = [];
   beatRows.walkRows(rows, (row) => {
     if (!beatRows.isBeat(row, "meta")) return;
@@ -42,35 +42,46 @@ const metaOf = (rows: unknown): string => {
     const label = metaText(meta.kind, meta.key, meta.value, meta.extra);
     if (label) parts.push(label);
   });
-  return parts.join("\n");
+  return parts;
 };
 
-const plainOf = (textLang: string, id: string): string => {
-  const cached = plainTexts.get(id);
+const partsOf = (textLang: string, id: string): string[] => {
+  const cached = plainParts.get(id);
   if (cached !== undefined) return cached;
   const rows = rowsOf(textLang, id);
-  if (!rows) return "";
-  const text = beatRows.plainTextOf(rows).toLowerCase();
-  plainTexts.set(id, text);
-  return text;
+  if (!rows) return [];
+  const parts = beatRows.textPartsOf(rows).map((part) => part.toLowerCase());
+  plainParts.set(id, parts);
+  return parts;
 };
 
-export const plainTextOfId = (id: string): string => plainOf(sync(), id);
-
-export const searchTextOfId = (id: string): string => {
+export const plainTextOfId = (id: string): string => {
   const textLang = sync();
-  const cached = searchTexts.get(id);
+  return partsOf(textLang, id).join("\n");
+};
+
+export const searchLinesOfId = (id: string): string[] => {
+  const textLang = sync();
+  const cached = searchLines.get(id);
   if (cached !== undefined) return cached;
   const rows = rowsOf(textLang, id);
-  if (!rows) return "";
-  const text = normalizeSearchText(`${plainOf(textLang, id)}\n${metaOf(rows)}`);
-  searchTexts.set(id, text);
-  return text;
+  if (!rows) return [];
+  const lines: string[] = [];
+  for (const part of partsOf(textLang, id)) {
+    const text = normalizeSearchText(part);
+    if (text) lines.push(text);
+  }
+  for (const part of metaPartsOf(rows)) {
+    const text = normalizeSearchText(part);
+    if (text) lines.push(text);
+  }
+  searchLines.set(id, lines);
+  return lines;
 };
 
 export const resetSearchText = (): void => {
   lang = "";
   converted = false;
-  plainTexts.clear();
-  searchTexts.clear();
+  plainParts.clear();
+  searchLines.clear();
 };

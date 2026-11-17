@@ -220,7 +220,7 @@ export const walkRows = (rows: unknown, visit: (row: BeatNode) => void): void =>
   }
 };
 
-export const plainTextOf = (rows: unknown): string => {
+export const textPartsOf = (rows: unknown): string[] => {
   const parts: string[] = [];
   walkRows(rows, (row) => {
     if (isBeat(row, "say")) parts.push(stripMarkup(parseSay(row).text));
@@ -240,8 +240,10 @@ export const plainTextOf = (rows: unknown): string => {
       }
     }
   });
-  return parts.join("\n");
+  return parts;
 };
+
+export const plainTextOf = (rows: unknown): string => textPartsOf(rows).join("\n");
 
 export const firstSay = (rows: unknown): { speaker: string; text: string } | null => {
   let found: { speaker: string; text: string } | null = null;

@@ -4,13 +4,14 @@ import { textStore } from "../data/text";
 import type { Chapter } from "../types/graph";
 import { normalizeSearchText } from "./browser";
 import { createSearchEngine, searchCandidates, type SearchDoc } from "./searchEngine";
-import { resetSearchText, searchTextOfId } from "./searchText";
+import { resetSearchText, searchLinesOfId } from "./searchText";
 import { scriptStore as script } from "./scriptStore";
 
 export type SearchHit = {
   id: string;
   chapter: Chapter | null;
   snippet: string;
+  anchor: string;
 };
 
 export type SearchResult = {
@@ -25,10 +26,28 @@ type IndexEntry = {
   id: string;
   nodeIndex: number;
   chapter: SearchHit["chapter"];
-  text: string;
+  lines: string[];
 };
 
 const SLICE = 48;
+
+const snippetOf = (line: string, position: number): string =>
+  line.slice(Math.max(0, position - 16), position + 46);
+
+const hitsOf = (entry: IndexEntry, needle: string): SearchHit[] => {
+  const hits: SearchHit[] = [];
+  for (const line of entry.lines) {
+    const position = line.indexOf(needle);
+    if (position < 0) continue;
+    hits.push({
+      id: entry.id,
+      chapter: entry.chapter,
+      snippet: snippetOf(line, position),
+      anchor: line,
+    });
+  }
+  return hits;
+};
 
 let lang = "";
 let converted = false;
@@ -83,7 +102,7 @@ const syncIndex = (): void => {
       id,
       nodeIndex: nodeIndex === undefined ? -1 : nodeIndex,
       chapter: node ? graph.chapterOf(node) : null,
-      text: "",
+      lines: [],
     };
     entries.push(entry);
     byId.set(id, entry);
@@ -106,10 +125,10 @@ const drain = async (token: number): Promise<void> => {
       for (const id of batch) {
         const entry = byId.get(id);
         if (!entry) continue;
-        const text = searchTextOfId(id);
-        entry.text = text;
+        const lines = searchLinesOfId(id);
+        entry.lines = lines;
         prepared += 1;
-        docs.push({ key: id, text });
+        docs.push({ key: id, text: lines.join("\n") });
       }
       if (docs.length) {
         await engine.addAllAsync(docs, { chunkSize: SLICE });
@@ -171,18 +190,14 @@ const search = async (input: string, onProgress?: SearchProgress): Promise<Searc
   let excludedByFilter = 0;
   for (const entry of entries) {
     if (allowed && !allowed.has(entry.id)) continue;
-    const position = entry.text.indexOf(needle);
-    if (position < 0) continue;
     if (entry.nodeIndex < 0) continue;
+    const hits = hitsOf(entry, needle);
+    if (!hits.length) continue;
     if (!graph.passesFilter(entry.nodeIndex, script().filterSet)) {
       excludedByFilter++;
       continue;
     }
-    result.hits.push({
-      id: entry.id,
-      chapter: entry.chapter,
-      snippet: entry.text.slice(Math.max(0, position - 16), position + 46),
-    });
+    for (const hit of hits) result.hits.push(hit);
   }
   result.total = result.hits.length + excludedByFilter;
   result.excludedByFilter = excludedByFilter;
