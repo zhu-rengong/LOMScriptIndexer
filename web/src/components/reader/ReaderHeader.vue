@@ -138,7 +138,7 @@ const toggleBookmark = () => {
               :aria-label="t('revealBtnTitle')"
               @click="view.toggleReveal"
             >
-              <AppIcon :name="revealOn ? 'eye-off' : 'eye'" />
+              <AppIcon :name="revealOn ? 'eye' : 'eye-off'" />
             </button>
           </span>
           <div class="menu-wrap reader-nav" id="navWrap">
