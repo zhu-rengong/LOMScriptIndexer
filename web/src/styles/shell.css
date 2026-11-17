@@ -398,6 +398,7 @@
   }
 
   .cat-chap {
+    position: relative;
     display: flex;
     align-items: center;
     gap: var(--sp-2);
@@ -426,8 +427,32 @@
     color: var(--ink-hold);
   }
 
-  .cat-chap.is-open {
-    color: var(--ink);
+  .cat-chap::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 50%;
+    width: 3px;
+    height: 14px;
+    border-radius: 1px;
+    background: var(--accent);
+    opacity: 0;
+    transform: translateY(-50%) scaleY(0);
+    transition:
+      transform var(--t-base) var(--ease),
+      opacity var(--t-base) var(--ease);
+  }
+
+  .cat-chap.is-open,
+  .cat-chap.is-open:hover:not(:disabled),
+  .cat-chap.is-open:active:not(:disabled) {
+    background: var(--accent-soft);
+    color: var(--accent-strong);
+  }
+
+  .cat-chap.is-open::before {
+    opacity: 1;
+    transform: translateY(-50%) scaleY(1);
   }
 
   .cat-chap:disabled {
@@ -439,17 +464,15 @@
     display: none;
   }
 
-  .cat-chap-ord {
-    flex: none;
-    min-width: 18px;
-    color: var(--ink-think);
+  .cat-chap:disabled.is-open {
+    background: transparent;
+    color: var(--ink);
   }
 
-  .cat-chap.is-open .cat-chap-ord {
-    color: var(--accent);
+  .cat-chap:disabled.is-open::before {
+    opacity: 0;
   }
 
-  .cat-chap-mark,
   .stats-mark {
     flex: none;
     width: 3px;
@@ -464,11 +487,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .cat-chap-count {
-    flex: none;
-    color: var(--ink-think);
   }
 
   .cat-chap-arrow {
@@ -515,11 +533,32 @@
     color: var(--ink-hold);
   }
 
+  .cat-row::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 50%;
+    width: 3px;
+    height: 14px;
+    border-radius: 1px;
+    background: var(--accent);
+    opacity: 0;
+    transform: translateY(-50%) scaleY(0);
+    transition:
+      transform var(--t-base) var(--ease),
+      opacity var(--t-base) var(--ease);
+  }
+
   .cat-row.is-on,
   .cat-row.is-on:hover:not(:disabled),
   .cat-row.is-on:active:not(:disabled) {
     background: var(--accent-soft);
     color: var(--accent-strong);
+  }
+
+  .cat-row.is-on::before {
+    opacity: 1;
+    transform: translateY(-50%) scaleY(1);
   }
 
   .cat-row .cat-id {
@@ -548,8 +587,7 @@
 
   .rail-vrow {
     left: 11px;
-    padding-left: calc(var(--sp-2) + var(--sp-3));
-    box-shadow: inset 1px 0 0 var(--line-1);
+    padding-left: var(--sp-3);
   }
 
   .cat-book {

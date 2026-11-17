@@ -1,7 +1,6 @@
 import { graph } from "../data/graph";
 import { specialScriptName, specialScripts } from "../data/special";
 import { chapterTitle } from "../i18n";
-import type { Chapter } from "../types/graph";
 import { toNeedle } from "./browser";
 
 export type RailRow =
@@ -9,10 +8,7 @@ export type RailRow =
       kind: "chapter";
       key: string;
       index: number;
-      chapter: Chapter;
       title: string;
-      ordinal: string;
-      total: number;
       open: boolean;
     }
   | {
@@ -76,10 +72,7 @@ export const outlineRows = (query: string, openChapter: number): OutlineRows => 
       kind: "chapter",
       key: `chapter:${index}`,
       index,
-      chapter,
       title: chapterTitle(chapter),
-      ordinal: String(index + 1).padStart(2, "0"),
-      total: hits.length,
       open: needle ? true : openChapter === index,
     });
     if (!needle && openChapter !== index) return;

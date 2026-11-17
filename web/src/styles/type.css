@@ -134,7 +134,6 @@
   }
 
   .option-idx,
-  .cat-chap-ord,
   .stats-ord {
     font-family: var(--rd-ff-ordinal, var(--font-base));
     font-size: calc(var(--rd-fs-ordinal, 16px) * var(--ts-ordinal, 1));
@@ -279,7 +278,6 @@
   .cat-book-main .cat-id,
   .cat-book-main .cat-meta,
   .cat-special .cat-code,
-  .cat-chap-count,
   .rail-tab-count,
   .type-tree-font,
   .settings-select .ft-name,

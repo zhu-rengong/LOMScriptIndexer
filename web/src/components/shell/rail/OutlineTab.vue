@@ -29,10 +29,7 @@ const emit = defineEmits<{
         :aria-expanded="row.open"
         @click="emit('toggle', row.index)"
       >
-        <span class="cat-chap-ord">{{ row.ordinal }}</span>
-        <span class="cat-chap-mark" :style="{ backgroundColor: row.chapter.color }"></span>
         <span class="cat-chap-title">{{ row.title }}</span>
-        <span class="cat-chap-count">{{ t("railScripts", { n: row.total }) }}</span>
         <AppIcon class="cat-chap-arrow" name="chevron" />
       </button>
       <button
