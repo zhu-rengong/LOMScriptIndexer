@@ -178,6 +178,9 @@ importers:
       '@vueuse/integrations':
         specifier: ^15.0.0
         version: 15.0.0(focus-trap@8.2.5)(idb-keyval@6.3.0)(vue@3.6.0-rc.14(typescript@6.0.3))
+      fflate:
+        specifier: 0.8.3
+        version: 0.8.3
       focus-trap:
         specifier: ^8.2.5
         version: 8.2.5
@@ -876,6 +879,9 @@ packages:
     peerDependenciesMeta:
       picomatch:
         optional: true
+
+  fflate@0.8.3:
+    resolution: {integrity: sha512-tbZNuJrLwGUp3zshBtdy4W+ORxZuIh8a5ilyIEQDC5rY1f3U20JMry0Ll3WBzU58EZKsEuJFXhb5gwv8CsPvgA==}
 
   focus-trap@8.2.5:
     resolution: {integrity: sha512-VrqfyRXaHZ0EkhXlfyalszmhnSN9yjdYXwlwLSRoJrDJ0/eswY5J5Avj/Hcd/PrOHCMnsMhwx7+7+s1kmv9Asg==}
@@ -1768,6 +1774,8 @@ snapshots:
   fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
       picomatch: 4.0.7
+
+  fflate@0.8.3: {}
 
   focus-trap@8.2.5:
     dependencies:
