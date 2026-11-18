@@ -296,9 +296,14 @@ def _stage_render(context: BuildContext) -> None:
     context.reads = var_reads.collect_reads(checkpoints.items)
     context.flags = flag_facts.collect(checkpoints, context.missions, context.models)
     battle_facets = collect_battle_facets(context.models, context.battle_cards)
+    mission_owner: dict[str, str] = {}
+    if context.missions is not None:
+        for mission_id, record in context.missions.items.items():
+            for state_key in record.states:
+                mission_owner[state_key] = mission_id
     context.facets = {
         sid: merge(
-            collect_facets(context.models[sid].beats, context.models[sid].checks),
+            collect_facets(context.models[sid].beats, context.models[sid].checks, mission_owner),
             battle_facets.get(sid),
         )
         for sid in context.node_ids
@@ -635,7 +640,9 @@ def _write_report(context: BuildContext, graph: GraphPayload, wordcount: WordCou
         "stats": len({key for row in context.facets.values() for key in row.stats}),
         "relations": len({key for row in context.facets.values() for key in row.relations}),
         "endings": len({key for row in context.facets.values() for key in row.endings}),
+        "missions": len({key for row in context.facets.values() for key in row.missions}),
         "scripts_with_ending": sum(1 for row in context.facets.values() if row.endings),
+        "scripts_with_mission": sum(1 for row in context.facets.values() if row.missions),
         "scripts_with_flag": sum(1 for row in context.facets.values() if row.flags),
         "scripts_with_check": sum(1 for row in context.facets.values() if row.checks),
         "scripts_with_lock": sum(1 for row in context.facets.values() if row.lock_count),

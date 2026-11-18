@@ -110,19 +110,17 @@
     white-space: nowrap;
   }
 
-  .badge-num {
+  .filter-badge {
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
     min-width: 18px;
     height: 18px;
-    padding: 0 5px;
-    border-radius: var(--r-sm);
-    --tlh-code: 0.625;
-  }
-
-  .badge-solid {
-    border-color: var(--accent);
-    background: var(--surface-inset);
+    padding: 0 4px;
+    border: 0;
+    background: none;
     color: var(--accent-strong);
+    --tlh-code: 0.625;
   }
 
   .chip {

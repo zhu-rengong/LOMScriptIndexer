@@ -215,9 +215,7 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
     >
       <AppIcon name="filter" class="ico" />
       <span class="btn-label">{{ t("filterBtn") }}</span>
-      <span id="filterBadge" class="badge badge-solid badge-num" :hidden="!hasAppliedFilter">{{
-        badgeCount
-      }}</span>
+      <span class="filter-badge" :hidden="!hasAppliedFilter">{{ badgeCount }}</span>
     </button>
 
     <div

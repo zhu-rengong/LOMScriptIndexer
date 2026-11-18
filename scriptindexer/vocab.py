@@ -45,6 +45,7 @@ FACET_KINDS = (
     "stats",
     "relations",
     "endings",
+    "missions",
     "optionCount",
     "lockCount",
     "diceCheckCount",

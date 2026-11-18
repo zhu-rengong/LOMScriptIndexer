@@ -17,6 +17,7 @@ export type Facets = {
   stats: string[];
   relations: string[];
   endings: string[];
+  missions: string[];
   optionCount: number;
   lockCount: number;
   diceCheckCount: number;

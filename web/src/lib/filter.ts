@@ -16,6 +16,7 @@ export const FIELD_LABEL_KEYS: Record<string, string> = {
   stat: "fieldStat",
   rel: "fieldRel",
   ending: "fieldEnding",
+  mission: "fieldMission",
   chapter: "fieldChapter",
 };
 
@@ -48,9 +49,9 @@ const inferredFlagName = (flag: string, values: string[]): string => {
   return textOf(`measure.${flag}`);
 };
 
-const flagNames = (lang: string): Record<string, string> => {
+const flagNames = (): Record<string, string> => {
   const facts = dataset.flagFacts.flags || {};
-  const out: Record<string, string> = { ...textStore.names(lang).flag };
+  const out: Record<string, string> = {};
   const keys = new Set<string>(Object.keys(facts));
   for (const node of graph.nodes) for (const key of node.facets.flags) keys.add(key);
   for (const flag of keys) {
@@ -74,11 +75,12 @@ const buildIndex = (): QueryIndex => {
     facets: graph.nodes.map((node) => node.facets),
     names: {
       speakers: textStore.characters(lang),
-      flags: flagNames(lang),
+      flags: flagNames(),
       checks: names.check || {},
       stats: names.stat || {},
       relations: names.rel || {},
       endings: names.ending || {},
+      missions: { ...names.mission, main: t("missionMain") },
     },
   };
   compileCache = createIndex(context);

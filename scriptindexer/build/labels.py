@@ -16,7 +16,6 @@ from ..vocab import (
     VALUE_BOOK,
     VALUE_BOOK_LEVEL,
     VALUE_CHRONICLE,
-    VALUE_FLAG,
     VALUE_MISC,
     VALUE_REL,
     VALUE_SPECIAL,
@@ -32,7 +31,7 @@ _DIGIT_HEAD = re.compile(r"^[A-Za-z]+(\d+)")
 CHECK_NAMESPACE = "DiceHeader"
 PLAYER_INFO_NAMESPACE = "PlayerInfo"
 STAT_VALUE_PREFIXES: dict[str, str] = {"title": "Title/", "lover": "Lover/"}
-META_VALUE_KIND = {"library": VALUE_CHRONICLE, "setflag": VALUE_FLAG}
+META_VALUE_KIND = {"library": VALUE_CHRONICLE}
 STAT_GROUP_PREFIX = "數值_"
 STAT_ALIASES: dict[str, str] = {
     "ActionCount": "action",
@@ -89,7 +88,6 @@ class NameSpec:
 NAME_SPECS: dict[str, NameSpec] = {
     VALUE_STAT: NameSpec("PlayerStat", key_prefix="Player_", use_segments=True),
     VALUE_REL: NameSpec("Character", key_prefix="Relationship_", use_segments=True),
-    VALUE_FLAG: NameSpec("Flag", prefix="Name/"),
     VALUE_BOOK: NameSpec("Book", prefix="Name/", use_segments=True),
     VALUE_BOOK_LEVEL: NameSpec("Book", prefix="Name/", use_segments=True, asset_digits=True),
     VALUE_MISC: NameSpec("Misc", prefix="Name/", use_segments=True),
@@ -350,12 +348,6 @@ def canonicalize_missions(
     for state in states:
         for item in state.conditions:
             _canonicalize_expression(item.expr, locale, registry, stat_notes)
-        for change in (*state.modify_flags_true, *state.modify_flags_false):
-            if not change.key:
-                continue
-            canonical = canonical_key(VALUE_FLAG, change.key, "", locale, registry, stat_notes)
-            if canonical:
-                change.key = canonical
 
 
 def register_mission_names(

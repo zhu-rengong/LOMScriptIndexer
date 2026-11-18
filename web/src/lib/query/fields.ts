@@ -8,6 +8,7 @@ const FIELD_SPECS: QueryField[] = [
   { id: "stat", kind: "text", aliases: ["stat", "stats"] },
   { id: "rel", kind: "text", aliases: ["rel"] },
   { id: "ending", kind: "text", aliases: ["ending", "endings", "death"] },
+  { id: "mission", kind: "text", aliases: ["mission"] },
   { id: "chapter", kind: "string", aliases: ["chapter"] },
 ];
 
@@ -18,6 +19,7 @@ export const FACET_KEY: Record<string, string> = {
   stat: "stats",
   rel: "relations",
   ending: "endings",
+  mission: "missions",
 };
 
 export const ROOTS = ["AND", "OR", "NOT", "XOR"];
