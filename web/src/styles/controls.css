@@ -431,13 +431,9 @@
 
   .nav-badge {
     flex: none;
-    border-color: var(--warn);
-    color: var(--warn);
-  }
-
-  .nav-badge.is-mission {
     border: 0;
     background: none;
+    color: var(--warn);
   }
 
   .dropdown {

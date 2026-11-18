@@ -81,11 +81,7 @@ onMounted(() => {
           <span v-if="edgeLabelText(item.edge)" class="nav-label">
             {{ edgeLabelText(item.edge) }}
           </span>
-          <span
-            v-if="edgeGroupLabel(item.edge)"
-            class="nav-badge badge"
-            :class="{ 'is-mission': item.edge.kind === 'mission' }"
-          >
+          <span v-if="edgeGroupLabel(item.edge)" class="nav-badge badge">
             {{ edgeGroupLabel(item.edge) }}
           </span>
         </button>
@@ -108,11 +104,7 @@ onMounted(() => {
           <span v-if="edgeLabelText(item.edge)" class="nav-label">
             {{ edgeLabelText(item.edge) }}
           </span>
-          <span
-            v-if="edgeGroupLabel(item.edge)"
-            class="nav-badge badge"
-            :class="{ 'is-mission': item.edge.kind === 'mission' }"
-          >
+          <span v-if="edgeGroupLabel(item.edge)" class="nav-badge badge">
             {{ edgeGroupLabel(item.edge) }}
           </span>
         </button>
