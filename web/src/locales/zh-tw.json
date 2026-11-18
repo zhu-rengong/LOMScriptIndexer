@@ -11,7 +11,7 @@
   "workbuddyBtnTitle": "開啟 WorkBuddy 網站應用（新分頁）\n中國大陸快速訪問渠道，資料可能落後於 GitHub Pages",
   "changelogBtnTitle": "更新日誌（檢視近期改動）",
   "exportScripts": "匯出全部劇本（ZIP）",
-  "exportScriptsTitle": "每篇劇本匯出成一個純文字檔，依章節分目錄打包成 ZIP。",
+  "exportScriptsTitle": "每個章節匯出成一個純文字檔，打包成 ZIP。",
   "exportLoading": "正在載入劇本（{done}/{total}）…",
   "exportBuilding": "正在整理劇本內容…",
   "exportPacking": "正在打包 ZIP…",

@@ -11,7 +11,7 @@
   "workbuddyBtnTitle": "Open the WorkBuddy website app (new tab)\nFaster access channel inside mainland China; data may lag behind GitHub Pages",
   "changelogBtnTitle": "Changelog (recent changes)",
   "exportScripts": "Export all scripts (ZIP)",
-  "exportScriptsTitle": "Export every script as a plain-text file, grouped into chapter folders and packed as a ZIP.",
+  "exportScriptsTitle": "Export each chapter as a single plain-text file, packed as a ZIP.",
   "exportLoading": "Loading scripts ({done}/{total})…",
   "exportBuilding": "Building script text…",
   "exportPacking": "Packing the ZIP…",

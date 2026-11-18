@@ -372,7 +372,7 @@ const renderBlocks = (blocks: ReaderBlock[], indent = ""): string[] => {
   return out;
 };
 
-const folderName = (chapter: Chapter, index: number): string =>
+const chapterFileBase = (chapter: Chapter, index: number): string =>
   `${String(index + 1).padStart(2, "0")}-${safeSegment(chapterTitle(chapter) || chapter.id)}`;
 
 const scriptText = (node: GraphNode, rows: BeatRow[]): string => {
@@ -380,13 +380,14 @@ const scriptText = (node: GraphNode, rows: BeatRow[]): string => {
   if (typeof node.time === "number") {
     lines.push(`${t("metaTimeLabel")}: ${timeText(node.time)}`);
   }
-  lines.push("", ...renderBlocks(buildReaderBlocks(rows)), "");
+  lines.push("", ...renderBlocks(buildReaderBlocks(rows)));
   return lines.join("\n");
 };
 
 const readmeText = (
   lang: string,
   count: number,
+  chapters: number,
   skipped: number,
   checkpointOk: boolean,
 ): string => {
@@ -394,6 +395,7 @@ const readmeText = (
   const lines = [
     t("appTitle"),
     `language: ${lang}`,
+    `chapters: ${chapters}`,
     `scripts: ${count}`,
     `skipped: ${skipped}`,
     `generated: ${new Date().toISOString()}`,
@@ -415,24 +417,26 @@ const buildExportFiles = (
   let count = 0;
   let skipped = 0;
   graph.chapters.forEach((chapter, index) => {
-    const folder = folderName(chapter, index);
+    const parts: string[] = [];
     for (const node of byChapter[index] || []) {
       const rows = textStore.beatRows(lang, node.id);
       if (!rows || !rows.length) {
         skipped++;
         continue;
       }
-      files.push({
-        name: `${folder}/${safeSegment(node.id)}.txt`,
-        content: scriptText(node, rows),
-      });
+      parts.push(scriptText(node, rows));
       count++;
     }
+    if (!parts.length) return;
+    files.push({
+      name: `${chapterFileBase(chapter, index)}.txt`,
+      content: parts.join("\n\n"),
+    });
   });
   if (!count) return { files, count, skipped };
   files.unshift({
     name: "README.txt",
-    content: readmeText(lang, count, skipped, checkpointOk),
+    content: readmeText(lang, count, files.length, skipped, checkpointOk),
   });
   return { files, count, skipped };
 };
