@@ -198,10 +198,6 @@
     border-radius: 3px;
   }
 
-  .more-wrap {
-    display: none;
-  }
-
   #main {
     position: relative;
     flex: 1;
