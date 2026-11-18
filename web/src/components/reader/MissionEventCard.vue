@@ -36,6 +36,7 @@ const leadOf = (row: EventRow) => ({
   value: row.event.name,
   cancel: row.cancel,
   title: row.title,
+  lookupKey: row.state ? row.event.code : "",
 });
 </script>
 

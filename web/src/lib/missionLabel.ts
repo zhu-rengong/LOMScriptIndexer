@@ -15,8 +15,7 @@ const missionNameOf = (missionId: string): string => {
 
 export const missionLabel = (missionId: string): string => {
   if (!missionId) return "";
-  const name = missionNameOf(missionId);
-  return name === missionId ? missionId : `${name}${t("parenWrap", { text: missionId })}`;
+  return missionNameOf(missionId);
 };
 
 export const missionStateLabel = (stateKey: string): string => {
@@ -24,10 +23,10 @@ export const missionStateLabel = (stateKey: string): string => {
   const hit = missions.missionOfState(stateKey);
   const note = names.label("missionState", stateKey);
   const name = note && note !== stateKey ? note : "";
-  if (!hit) return name ? `${name}${t("parenWrap", { text: stateKey })}` : stateKey;
+  if (!hit) return name || stateKey;
   const mission = missionLabel(hit.mission);
   if (!name) return mission;
-  return `${mission}${t("missionJoin")}${name}${t("parenWrap", { text: stateKey })}`;
+  return `${mission}${t("missionJoin")}${name}`;
 };
 
 export const missionLabelTable = (): Record<string, string> => {

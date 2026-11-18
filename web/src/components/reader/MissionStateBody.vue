@@ -15,7 +15,13 @@ import CondExpr from "./CondExpr.vue";
 const props = defineProps<{
   state: MissionState;
   showTags?: boolean;
-  lead?: { label: string; value: string; cancel?: boolean; title?: string } | null;
+  lead?: {
+    label: string;
+    value: string;
+    cancel?: boolean;
+    title?: string;
+    lookupKey?: string;
+  } | null;
 }>();
 
 const store = useScriptStore();
@@ -75,6 +81,11 @@ const go = (id: string) => {
   panels.hideLookup();
   store.select(id, { history: true });
 };
+
+const openMission = (key: string, event: Event) => {
+  event.stopPropagation();
+  panels.openLookup("mission", key, event.currentTarget as HTMLElement);
+};
 </script>
 
 <template>
@@ -87,7 +98,18 @@ const go = (id: string) => {
     <dl class="mission-rows">
       <div v-if="lead" class="mission-row" :title="lead.title || undefined">
         <dt class="mission-label" :class="{ 'is-cancel': lead.cancel }">{{ lead.label }}</dt>
-        <dd class="mission-value">{{ lead.value }}</dd>
+        <dd class="mission-value">
+          <button
+            v-if="lead.lookupKey"
+            class="mission-link btn"
+            type="button"
+            aria-haspopup="dialog"
+            @click="openMission(lead.lookupKey, $event)"
+          >
+            {{ lead.value }}
+          </button>
+          <template v-else>{{ lead.value }}</template>
+        </dd>
       </div>
 
       <div class="mission-row">
