@@ -77,6 +77,7 @@ class NodeRow(Wire):
     say_count: int = 0
     flags: NodeFlags | None = None
     facets: Facets | None = None
+    mission_states: list[str] = msgspec.field(default_factory=list)
     time: int | None = None
 
 

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { checkpoints } from "../../data/checkpoints";
 import { graph } from "../../data/graph";
-import { missions } from "../../data/missions";
 import { names } from "../../data/names";
 import { chapterTitle, t } from "../../i18n";
 import { firstSayTextOf, speakerName } from "../../lib/blocks";
@@ -12,7 +11,6 @@ import type { GraphNode } from "../../types/graph";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 import CheckpointBranches from "./CheckpointBranches.vue";
-import MissionStateDetail from "./MissionStateDetail.vue";
 import NodeResultList from "./NodeResultList.vue";
 import { useScriptStore } from "../../stores/script";
 import { useViewStore } from "../../stores/view";
@@ -48,6 +46,7 @@ const matchedNodes = computed<GraphNode[]>(() => {
     }
     return out;
   }
+  if (kind.value === "mission") return graph.missionTriggerNodes(key.value);
   return graph.nodesWithFacet(kind.value, key.value);
 });
 
@@ -63,15 +62,11 @@ const totalCount = computed(() => {
 });
 
 const displayName = computed(() =>
-  kind.value === "speaker" ? speakerName(key.value) : names.label(kind.value, key.value),
-);
-
-const missionHit = computed(() =>
-  kind.value === "mission" ? missions.missionOfState(key.value) : null,
-);
-
-const missionRecord = computed(() =>
-  missionHit.value ? missions.recordOf(missionHit.value.mission) : null,
+  kind.value === "speaker"
+    ? speakerName(key.value)
+    : kind.value === "mission"
+      ? names.label("missionState", key.value)
+      : names.label(kind.value, key.value),
 );
 
 const title = computed(() =>
@@ -213,13 +208,17 @@ onMounted(() => {
     </header>
     <p v-if="subText" id="lookupSub" class="lookup-sub">{{ subText }}</p>
     <div id="lookupList" class="lookup-list popover-list">
-      <MissionStateDetail
-        v-if="kind === 'mission' && missionHit"
-        :mission-id="missionHit.mission"
-        :state-key="key"
-        :state="missionHit.state"
-        :record="missionRecord"
-      />
+      <template v-if="kind === 'mission'">
+        <p v-if="!totalCount" class="lookup-empty popover-empty">
+          {{ t("lookupEmpty") }}
+        </p>
+        <template v-else>
+          <p class="lookup-group">
+            {{ t("lookupGroupTriggers", { n: totalCount }) }}
+          </p>
+          <NodeResultList :items="mainRows" @pick="pickById" />
+        </template>
+      </template>
       <template v-else>
         <CheckpointBranches
           v-if="kind === 'check' && checkpoint"

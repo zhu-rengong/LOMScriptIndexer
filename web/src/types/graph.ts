@@ -38,6 +38,7 @@ export type GraphNode = {
   sayCount: number;
   flags: ScriptFlags;
   facets: Facets;
+  missionStates: string[];
   time: number | null;
 };
 

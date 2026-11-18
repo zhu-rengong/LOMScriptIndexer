@@ -439,7 +439,7 @@ class CallHandler:
             extra = arg_text(spec.extra_index) or ""
         if spec.kind == "story":
             self.analyzer.context.add_lore_key(key)
-        elif spec.kind == "mission":
+        elif spec.kind == "mission" and key != "clear":
             self.analyzer.context.add_mission_state(key)
         beats.append(MetaBeat(spec.kind, key, value, hidden, extra))
 

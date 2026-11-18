@@ -78,6 +78,7 @@ const normalizeNode = (node: NodeRow): GraphNode => ({
   sayCount: node.sayCount ?? 0,
   flags: normalizeFlags(node.flags),
   facets: node.facets ? normalizeFacets(node.facets) : { ...EMPTY_FACETS },
+  missionStates: list(node.missionStates),
   time: typeof node.time === "number" ? node.time : null,
 });
 

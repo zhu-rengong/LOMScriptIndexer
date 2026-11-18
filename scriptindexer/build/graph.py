@@ -219,6 +219,7 @@ def assemble_nodes(
                     has_no_incoming=in_degree.get(sid, 0) == 0,
                 ),
                 facets=facets.get(sid, Facets()),
+                mission_states=list(models[sid].mission_states),
                 time=time_by_script.get(sid),
             )
         )
