@@ -1087,19 +1087,6 @@
     color: inherit;
   }
 
-  .jump.dynamic {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    width: fit-content;
-    height: auto;
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--ink-2);
-    cursor: default;
-  }
-
   .jump-group:not(.is-open) .jump-body {
     display: none;
   }
