@@ -3,7 +3,6 @@ import type { Facets } from "./graph";
 export type QueryField = {
   id: string;
   kind: string;
-  node?: string;
   aliases: string[];
 };
 
@@ -29,18 +28,10 @@ export type QueryNode =
 
 export type QueryContext = {
   nodeCount: number;
-  nodes: {
-    id: string;
-    chapterIndex: number;
-    outDegree: number;
-    inDegree: number;
-    sayCount: number;
-  }[];
+  nodes: { chapterIndex: number }[];
   chapters: { id: string; scriptCount: number; [key: string]: unknown }[];
   facets: Facets[];
-  edgeGroup: (index: number, group: string) => boolean;
   names: Record<string, Record<string, string>>;
-  textAt: (index: number) => string;
 };
 
 export type QueryValue = {

@@ -7,8 +7,8 @@ import type {
   QueryTerm,
   QueryValue,
 } from "../../types/query";
-import { QueryFail, describeError } from "./error";
-import { FIELD_BY_ID, KIND_ALIAS, KIND_VALUES, NO_WORDS, YES_WORDS, facetKey } from "./fields";
+import { describeError } from "./error";
+import { FIELD_BY_ID, facetKey } from "./fields";
 import { parse, type ParseResult } from "./parser";
 
 const union = (a: Set<number> | null, b: Set<number> | null): Set<number> | null => {
@@ -33,29 +33,6 @@ const valuesOf = (row: unknown, field: QueryField): string[] => {
   const raw = row ? (row as Record<string, unknown>)[facetKey(field)] : undefined;
   if (!raw) return [];
   return Array.isArray(raw) ? raw.map(String) : String(raw).split(",");
-};
-
-const kindKey = (raw: string): string => {
-  const value = KIND_ALIAS.get(raw) || raw;
-  return value === "ending" ? "leaf" : value;
-};
-
-const kindPass = (kind: string, index: number, ctx: QueryContext): boolean => {
-  const node = ctx.nodes[index];
-  switch (kind) {
-    case "entry":
-      return node.inDegree === 0;
-    case "leaf":
-      return node.outDegree === 0;
-    case "orphan":
-      return node.inDegree === 0 && node.outDegree === 0;
-    case "temp":
-      return ctx.edgeGroup(index, "temp");
-    case "jump":
-      return node.outDegree > 0;
-    default:
-      return false;
-  }
 };
 
 export class QueryIndex {
@@ -121,15 +98,6 @@ export class QueryIndex {
   facetValues(field: QueryField): QueryValue[] {
     const cached = this.cache.get(field.id);
     if (cached) return cached;
-    if (field.id === "kind") {
-      const out = KIND_VALUES.map((value) => ({
-        value,
-        label: "",
-        count: this.kindCount(value),
-      })).sort((a, b) => b.count - a.count);
-      this.cache.set(field.id, out);
-      return out;
-    }
     if (field.id === "chapter") {
       const out = this.context.chapters.map((chapter) => ({
         value: String(chapter.id),
@@ -156,14 +124,6 @@ export class QueryIndex {
     return out;
   }
 
-  kindCount(kind: string): number {
-    let count = 0;
-    for (let index = 0; index < this.context.nodeCount; index++) {
-      if (kindPass(kind, index, this.context)) count++;
-    }
-    return count;
-  }
-
   textSet(term: QueryTerm, field: QueryField): Set<number> {
     const map = this.facetIndex(field);
     const needle = String(term.value).toLowerCase();
@@ -183,88 +143,13 @@ export class QueryIndex {
     return out;
   }
 
-  numberSet(term: QueryTerm, field: QueryField): Set<number> {
-    const text = String(term.value).trim().toLowerCase();
-    let op = term.op;
-    let needle: number;
-    if (YES_WORDS.indexOf(text) >= 0) {
-      needle = 1;
-      if (op === "contains" || op === "eq") op = "ge";
-    } else if (NO_WORDS.indexOf(text) >= 0) {
-      needle = 0;
-      if (op === "contains") op = "eq";
-    } else {
-      needle = Number(text);
-    }
-    if (!Number.isFinite(needle))
-      throw new QueryFail("qErrNumber", term.offset, { field: field.id });
-
-    const out = new Set<number>();
-    for (let index = 0; index < this.context.nodeCount; index++) {
-      const node = this.context.nodes[index];
-      const facet = this.context.facets[index] as unknown as Record<string, number> | undefined;
-      const value = field.node
-        ? node[field.node as "outDegree" | "inDegree" | "sayCount"]
-        : facet?.[facetKey(field)] || 0;
-      let pass = false;
-      switch (op) {
-        case "contains":
-        case "eq":
-          pass = value === needle;
-          break;
-        case "ne":
-          pass = value !== needle;
-          break;
-        case "gt":
-          pass = value > needle;
-          break;
-        case "ge":
-          pass = value >= needle;
-          break;
-        case "lt":
-          pass = value < needle;
-          break;
-        case "le":
-          pass = value <= needle;
-          break;
-        default:
-          break;
-      }
-      if (pass) out.add(index);
-    }
-    return out;
-  }
-
-  enumSet(term: QueryTerm): Set<number> {
-    const raw = String(term.value).toLowerCase();
-    const value = kindKey(raw);
-    if (KIND_VALUES.indexOf(value) < 0) {
-      throw new QueryFail("qErrKind", term.offset, {
-        value: term.value,
-        allowed: KIND_VALUES.join("/"),
-      });
-    }
-    const out = new Set<number>();
-    for (let index = 0; index < this.context.nodeCount; index++) {
-      if (kindPass(value, index, this.context)) out.add(index);
-    }
-    return term.op === "ne" ? this.complement(out) : out;
-  }
-
-  stringSet(term: QueryTerm, field: QueryField): Set<number> {
+  stringSet(term: QueryTerm): Set<number> {
     const needle = String(term.value).toLowerCase();
     const out = new Set<number>();
     for (let index = 0; index < this.context.nodeCount; index++) {
-      let haystack: string;
-      if (field.id === "id") {
-        haystack = this.context.nodes[index].id.toLowerCase();
-      } else if (field.id === "chapter") {
-        const chapter = this.context.chapters[this.context.nodes[index].chapterIndex] || { id: "" };
-        const title = chapterTitle(chapter as { kind?: string; number?: number | null });
-        haystack = `${title} ${String(chapter.id || "")}`.toLowerCase();
-      } else {
-        haystack = this.context.textAt(index) || "";
-      }
+      const chapter = this.context.chapters[this.context.nodes[index].chapterIndex] || { id: "" };
+      const title = chapterTitle(chapter as { kind?: string; number?: number | null });
+      const haystack = `${title} ${String(chapter.id || "")}`.toLowerCase();
       let pass = term.op === "eq" ? haystack === needle : haystack.indexOf(needle) >= 0;
       if (term.op === "ne") pass = !pass;
       if (pass) out.add(index);
@@ -291,9 +176,7 @@ export class QueryIndex {
         return this.complement(this.evaluate(node.operand));
       case "term": {
         const field = FIELD_BY_ID[node.field];
-        if (field.kind === "number") return this.numberSet(node, field);
-        if (field.kind === "enum") return this.enumSet(node);
-        if (field.kind === "string") return this.stringSet(node, field);
+        if (field.kind === "string") return this.stringSet(node);
         return this.textSet(node, field);
       }
       default:

@@ -55,11 +55,6 @@ const partsOf = (textLang: string, id: string): string[] => {
   return parts;
 };
 
-export const plainTextOfId = (id: string): string => {
-  const textLang = sync();
-  return partsOf(textLang, id).join("\n");
-};
-
 export const searchLinesOfId = (id: string): string[] => {
   const textLang = sync();
   const cached = searchLines.get(id);

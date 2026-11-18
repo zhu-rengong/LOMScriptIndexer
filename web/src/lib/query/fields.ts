@@ -7,17 +7,8 @@ const FIELD_SPECS: QueryField[] = [
   { id: "check", kind: "text", aliases: ["check", "checks"] },
   { id: "stat", kind: "text", aliases: ["stat", "stats"] },
   { id: "rel", kind: "text", aliases: ["rel"] },
-  { id: "option", kind: "number", aliases: ["option", "options"] },
-  { id: "lock", kind: "number", aliases: ["lock", "locks"] },
-  { id: "dice", kind: "number", aliases: ["dice"] },
   { id: "ending", kind: "text", aliases: ["ending", "endings", "death"] },
-  { id: "out", kind: "number", node: "outDegree", aliases: ["out"] },
-  { id: "in", kind: "number", node: "inDegree", aliases: ["in"] },
-  { id: "saycount", kind: "number", node: "sayCount", aliases: ["saycount"] },
-  { id: "id", kind: "string", aliases: ["id", "script"] },
   { id: "chapter", kind: "string", aliases: ["chapter"] },
-  { id: "text", kind: "string", aliases: ["text"] },
-  { id: "kind", kind: "enum", aliases: ["kind", "type"] },
 ];
 
 export const FACET_KEY: Record<string, string> = {
@@ -27,14 +18,9 @@ export const FACET_KEY: Record<string, string> = {
   stat: "stats",
   rel: "relations",
   ending: "endings",
-  option: "optionCount",
-  lock: "lockCount",
-  dice: "diceCheckCount",
 };
 
 export const ROOTS = ["AND", "OR", "NOT", "XOR"];
-
-export const KIND_VALUES = ["entry", "leaf", "orphan", "temp", "jump"];
 
 const aliasPairs = (key: string): Map<string, string> => {
   const map = new Map<string, string>();
@@ -75,11 +61,5 @@ export const FIELD_BY_ID = built.byId;
 export const FIELD_BY_ALIAS = built.byAlias;
 
 export const LOGIC_ALIAS = aliasPairs("q.logic");
-
-export const KIND_ALIAS = aliasPairs("q.enum.kind");
-
-export const YES_WORDS = ["yes", "y", "true"].concat(i18nAll("q.yes"));
-
-export const NO_WORDS = ["no", "n", "false"].concat(i18nAll("q.no"));
 
 export const facetKey = (field: QueryField): string => FACET_KEY[field.id] || field.id;

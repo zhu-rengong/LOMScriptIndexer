@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { dataset } from "../data/dataset";
 import { textStore } from "../data/text";
+import { syncLocale } from "../i18n";
 import { byId } from "../lib/browser";
 import { applyFilter, resetFilterContext } from "../lib/filter";
 import { lang } from "../lib/lang";
@@ -121,6 +122,7 @@ export const useViewStore = defineStore("view", () => {
     const ok = await textStore.ensureHead(content);
     if (token !== langToken || !ok) return;
     if (!script.setLang(id)) return;
+    syncLocale(id);
     lang.applyDocument(id);
     panels.hideLookup();
     searchIndex.invalidate();

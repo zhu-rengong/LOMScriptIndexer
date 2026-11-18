@@ -1,8 +1,6 @@
 import type { Chapter, GraphEdge, GraphNode } from "../types/graph";
 import { EMPTY_CHAPTER, dataset } from "./dataset";
 
-const EDGE_GROUP_MASK: Record<string, number> = { temp: 2 };
-
 const FACET_FIELDS: Record<string, keyof GraphNode["facets"]> = {
   speaker: "speakers",
   flag: "flags",
@@ -14,7 +12,6 @@ const FACET_FIELDS: Record<string, keyof GraphNode["facets"]> = {
 const nodes = dataset.nodes;
 const edges = dataset.edges;
 const chapters = dataset.chapters;
-const edgeGroupByKind = dataset.vocab.edgeGroupByKind || {};
 
 const nodeById = new Map<string, GraphNode>();
 const indexById = new Map<string, number>();
@@ -26,7 +23,6 @@ nodes.forEach((node, index) => {
 
 const outgoingByIndex: GraphEdge[][] = nodes.map(() => []);
 const incomingByIndex: GraphEdge[][] = nodes.map(() => []);
-const edgeGroupMaskByIndex = new Uint8Array(nodes.length);
 
 for (const edge of edges) {
   const sourceIndex = indexById.get(edge.source);
@@ -34,8 +30,6 @@ for (const edge of edges) {
   if (sourceIndex === undefined || targetIndex === undefined) continue;
   outgoingByIndex[sourceIndex].push(edge);
   incomingByIndex[targetIndex].push(edge);
-  const mask = EDGE_GROUP_MASK[edgeGroupByKind[edge.kind]];
-  if (mask) edgeGroupMaskByIndex[sourceIndex] |= mask;
 }
 
 const visibleMask = new Uint8Array(nodes.length);
@@ -53,11 +47,6 @@ const computeVisibility = (filterSet: Set<number> | null, selectedId: string): v
     if (!show && index === selectedIndex) show = true;
     visibleMask[index] = show ? 1 : 0;
   }
-};
-
-const hasEdgeGroup = (index: number, group: string): boolean => {
-  const mask = EDGE_GROUP_MASK[group] || 0;
-  return mask > 0 && (edgeGroupMaskByIndex[index] & mask) !== 0;
 };
 
 let chapterBuckets: GraphNode[][] | null = null;
@@ -139,7 +128,6 @@ export const graph = {
   computeVisibility,
   edges,
   flagUsage,
-  hasEdgeGroup,
   incomingByIndex,
   indexById,
   nextTargets,

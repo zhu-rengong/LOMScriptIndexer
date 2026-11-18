@@ -4,8 +4,6 @@ import { createSearchEngine, searchCandidates, type SearchDoc } from "../searchE
 import { FIELDS, FIELD_BY_ALIAS, LOGIC_ALIAS, ROOTS } from "./fields";
 import type { QueryIndex } from "./evaluate";
 
-const NUMBER_CANDIDATES = ["0", "1", "2", "3", "5", "10"];
-
 const logicWordAt = (rest: string): string => {
   for (const word of ROOTS) {
     if (new RegExp(`^${word}(?=[\\s(]|$)`, "i").test(rest)) return word;
@@ -178,26 +176,17 @@ export const suggest = (source: string, cursor: number, index: QueryIndex): Sugg
   const valuePrefix = text.slice(valueStart, at);
 
   const candidates: QuerySuggestion[] = [];
-  if (field.kind === "number") {
-    candidates.push({ value: "yes", label: "", count: null, insert: "yes" });
-    candidates.push({ value: "no", label: "", count: null, insert: "no" });
-    for (const number of NUMBER_CANDIDATES) {
-      candidates.push({ value: number, label: "", count: null, insert: number });
-    }
-  } else {
-    for (const entry of index.facetValues(field)) {
-      candidates.push({
-        value: entry.value,
-        label: entry.label,
-        count: entry.count,
-        insert: formatInsert(entry.value, quoted),
-      });
-    }
+  for (const entry of index.facetValues(field)) {
+    candidates.push({
+      value: entry.value,
+      label: entry.label,
+      count: entry.count,
+      insert: formatInsert(entry.value, quoted),
+    });
   }
 
   const needle = valuePrefix.toLowerCase();
-  const allowed =
-    needle !== "" && field.kind !== "number" ? facetFilter(index, field, needle) : null;
+  const allowed = needle !== "" ? facetFilter(index, field, needle) : null;
   const filtered =
     allowed === null
       ? candidates

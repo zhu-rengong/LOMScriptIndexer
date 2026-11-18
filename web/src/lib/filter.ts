@@ -1,10 +1,10 @@
+import { dataset } from "../data/dataset";
 import { graph } from "../data/graph";
 import { textStore } from "../data/text";
 import { t } from "../i18n";
 
 import type { QueryContext, QueryError } from "../types/query";
 import { createIndex, query, type QueryIndex } from "./query";
-import { plainTextOfId } from "./searchText";
 import { scriptStore as script } from "./scriptStore";
 
 export const RESULT_LIMIT = 50;
@@ -15,38 +15,49 @@ export const FIELD_LABEL_KEYS: Record<string, string> = {
   check: "fieldCheck",
   stat: "fieldStat",
   rel: "fieldRel",
-  option: "fieldOption",
-  lock: "fieldLock",
-  dice: "fieldDice",
   ending: "fieldEnding",
-  out: "fieldOut",
-  in: "fieldIn",
-  saycount: "fieldSay",
-  id: "fieldId",
   chapter: "fieldChapter",
-  text: "fieldText",
-  kind: "fieldKind",
 };
 
 export const EXAMPLES: { key: string; expr: string }[] = [
-  { key: "exLock", expr: "lock >= 1" },
-  { key: "exDice", expr: "dice >= 1" },
   { key: "exEnding", expr: "ending:*" },
-  { key: "exOptions", expr: "option >= 5" },
   { key: "exSpeaker", expr: "speaker:master" },
-  { key: "exLeaf", expr: "out = 0" },
-  { key: "exEntry", expr: "in = 0" },
   { key: "exChapter", expr: "chapter:ch1" },
-  { key: "exCombo", expr: "speaker:master AND (dice:yes OR lock:yes)" },
+  { key: "exCombo", expr: "speaker:master AND (flag:H00001 OR ending:*)" },
 ];
 
 let textLang = "";
 let textCount = -1;
 let compileCache: QueryIndex | null = null;
 
-const nodeText = (index: number): string => {
-  const node = graph.nodes[index];
-  return node ? plainTextOfId(node.id) : "";
+const textOf = (key: string): string => {
+  const text = t(key);
+  return text === key ? "" : text;
+};
+
+const isBinaryFlag = (values: string[]): boolean =>
+  values.length > 0 &&
+  values.indexOf("1") >= 0 &&
+  values.every((value) => value === "0" || value === "1");
+
+const inferredFlagName = (flag: string, values: string[]): string => {
+  if (isBinaryFlag(values)) {
+    const fact = textOf(`fact.${flag}.1`);
+    if (fact) return fact;
+  }
+  return textOf(`measure.${flag}`);
+};
+
+const flagNames = (lang: string): Record<string, string> => {
+  const facts = dataset.flagFacts.flags || {};
+  const out: Record<string, string> = { ...textStore.names(lang).flag };
+  const keys = new Set<string>(Object.keys(facts));
+  for (const node of graph.nodes) for (const key of node.facets.flags) keys.add(key);
+  for (const flag of keys) {
+    const name = inferredFlagName(flag, facts[flag]?.values || []);
+    if (name) out[flag] = name;
+  }
+  return out;
 };
 
 const buildIndex = (): QueryIndex => {
@@ -58,25 +69,17 @@ const buildIndex = (): QueryIndex => {
   const names = textStore.names(lang);
   const context: QueryContext = {
     nodeCount: graph.nodes.length,
-    nodes: graph.nodes.map((node) => ({
-      id: node.id,
-      chapterIndex: node.chapterIndex,
-      outDegree: node.outDegree,
-      inDegree: node.inDegree,
-      sayCount: node.sayCount,
-    })),
+    nodes: graph.nodes.map((node) => ({ chapterIndex: node.chapterIndex })),
     chapters: graph.chapters,
     facets: graph.nodes.map((node) => node.facets),
-    edgeGroup: graph.hasEdgeGroup,
     names: {
       speakers: textStore.characters(lang),
-      flags: names.flag || {},
+      flags: flagNames(lang),
       checks: names.check || {},
       stats: names.stat || {},
       relations: names.rel || {},
       endings: names.ending || {},
     },
-    textAt: nodeText,
   };
   compileCache = createIndex(context);
   return compileCache;

@@ -284,7 +284,9 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
                 @mousedown.prevent="acceptSuggestion(index)"
               >
                 <span class="sg-value">{{ suggestShown(item) }}</span>
-                <span v-if="suggestLabel(item)" class="sg-label">{{ suggestLabel(item) }}</span>
+                <span v-if="suggestLabel(item)" class="sg-label" :title="suggestLabel(item)">{{
+                  suggestLabel(item)
+                }}</span>
                 <span v-if="item.count" class="sg-count">
                   {{ t("suggestCount", { n: item.count }) }}
                 </span>
