@@ -298,7 +298,6 @@ watch(() => props.jump.position, loadCheckpoint, { immediate: true });
     }}<span v-if="dynamicHint" class="option-cond">{{ `  ${dynamicHint}` }}</span>
   </button>
   <span v-else class="scene-switch">
-    <AppIcon name="arrow-right" class="scene-arrow" />
-    <span class="scene-next">{{ display.text }}</span>
+    <span class="scene-name">{{ display.text }}</span>
   </span>
 </template>
