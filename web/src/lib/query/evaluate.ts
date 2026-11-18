@@ -132,15 +132,9 @@ export class QueryIndex {
       for (const bucket of map.values()) for (const value of bucket) out.add(value);
       return term.op === "ne" ? this.complement(out) : out;
     }
-    if (term.op === "eq" || term.op === "ne") {
-      const hit = map.get(needle);
-      if (hit) for (const value of hit) out.add(value);
-      return term.op === "ne" ? this.complement(out) : out;
-    }
-    for (const [key, bucket] of map) {
-      if (key.indexOf(needle) >= 0) for (const value of bucket) out.add(value);
-    }
-    return out;
+    const hit = map.get(needle);
+    if (hit) for (const value of hit) out.add(value);
+    return term.op === "ne" ? this.complement(out) : out;
   }
 
   stringSet(term: QueryTerm): Set<number> {
@@ -149,10 +143,9 @@ export class QueryIndex {
     for (let index = 0; index < this.context.nodeCount; index++) {
       const chapter = this.context.chapters[this.context.nodes[index].chapterIndex] || { id: "" };
       const title = chapterTitle(chapter as { kind?: string; number?: number | null });
-      const haystack = `${title} ${String(chapter.id || "")}`.toLowerCase();
-      let pass = term.op === "eq" ? haystack === needle : haystack.indexOf(needle) >= 0;
-      if (term.op === "ne") pass = !pass;
-      if (pass) out.add(index);
+      const hit =
+        String(chapter.id || "").toLowerCase() === needle || title.toLowerCase() === needle;
+      if (term.op === "ne" ? !hit : hit) out.add(index);
     }
     return out;
   }

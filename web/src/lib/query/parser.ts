@@ -4,6 +4,7 @@ import { FIELD_BY_ALIAS } from "./fields";
 import { tokenize, type Token } from "./tokenizer";
 
 const OP_NAMES: Record<string, string> = {
+  ":": "eq",
   "=": "eq",
   "!=": "ne",
   ">": "gt",
@@ -112,7 +113,7 @@ class Parser {
     else throw new QueryFail("qErrCompareValue", valueToken.at);
     this.next();
 
-    const op = opToken.value === ":" ? "contains" : OP_NAMES[String(opToken.value)];
+    const op = OP_NAMES[String(opToken.value)];
     if (field.kind !== "number" && ORDERED.indexOf(op) >= 0) {
       throw new QueryFail("qErrNoCompare", opToken.at, { field: field.id });
     }
