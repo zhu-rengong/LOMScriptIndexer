@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { t } from "../../i18n";
+import { sceneText, t } from "../../i18n";
 import type { BattleView } from "../../types/beats";
 import AppIcon from "../ui/AppIcon.vue";
 import BattleEvent from "./BattleEvent.vue";
@@ -79,7 +79,7 @@ const onHeadKey = (event: KeyboardEvent) => {
     <div v-else-if="isExpandable && battle.nextScene" class="scene-switch">
       <span class="scene-label">{{ t("battleAfter") }}</span>
       <AppIcon name="arrow-right" class="scene-arrow" />
-      <span class="scene-next">{{ battle.nextScene }}</span>
+      <span class="scene-next">{{ sceneText(battle.nextScene) }}</span>
     </div>
   </div>
 </template>

@@ -118,6 +118,19 @@ export const chapterTitle = (
   return t(key);
 };
 
+const SCENE_KEYS: Record<string, TranslationKey> = {
+  Free: "sceneFree",
+  Story: "sceneStory",
+  Title: "sceneTitle",
+};
+
+export const sceneLabel = (name: string): string => {
+  const key = SCENE_KEYS[name];
+  return key ? t(key) : "";
+};
+
+export const sceneText = (name: string): string => sceneLabel(name) || name;
+
 const dateOf = (rounds: number): { year: number; month: number; period: number } => {
   const calendar = dataset.calendar || {};
   const perYear = calendar.roundsPerYear || 36;
