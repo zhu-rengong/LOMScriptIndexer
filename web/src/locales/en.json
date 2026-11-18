@@ -226,7 +226,6 @@
   "loadTextProgress": "Loading full text {loaded}/{total}…",
   "filterLoadingText": "The full text is loading; showing what is available",
   "searchLoadingText": "Loading the full text ({loaded}/{total})…",
-  "recentChoices": "Pick a branch",
   "bookmarkAdd": "Add bookmark",
   "bookmarkRemove": "Remove bookmark",
   "bookmarkAddTitle": "Add bookmark (B)",

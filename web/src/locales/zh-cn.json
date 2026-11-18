@@ -226,7 +226,6 @@
   "loadTextProgress": "加载全文 {loaded}/{total}…",
   "filterLoadingText": "正在加载全文，先按已加载部分显示",
   "searchLoadingText": "正在加载全文（{loaded}/{total}）…",
-  "recentChoices": "选一个去向",
   "bookmarkAdd": "加入书签",
   "bookmarkRemove": "移除书签",
   "bookmarkAddTitle": "加入书签（B）",

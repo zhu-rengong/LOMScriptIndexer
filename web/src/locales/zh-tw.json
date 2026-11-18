@@ -226,7 +226,6 @@
   "loadTextProgress": "載入全文 {loaded}/{total}…",
   "filterLoadingText": "正在載入全文，先按已載入部分顯示",
   "searchLoadingText": "正在載入全文（{loaded}/{total}）…",
-  "recentChoices": "選一個去向",
   "bookmarkAdd": "加入書籤",
   "bookmarkRemove": "移除書籤",
   "bookmarkAddTitle": "加入書籤（B）",
