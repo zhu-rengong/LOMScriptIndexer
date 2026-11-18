@@ -125,6 +125,7 @@ class ScriptAnalysis(msgspec.Struct, rename="camel", omit_defaults=True):
     lore_keys: tuple[str, ...] = ()
     temp_writes: dict[str, tuple[str, ...]] = msgspec.field(default_factory=dict)
     travel_writes: tuple[str, ...] = ()
+    mission_states: tuple[str, ...] = ()
     unresolved_jumps: list[str] = msgspec.field(default_factory=list)
     time: int | None = None
     say_count: int = 0

@@ -57,10 +57,12 @@ from .graph import (
     CollectedEdges,
     SystemEntries,
     assemble_nodes,
+    build_mission_edges,
     build_system_entries,
     collect_edges,
     edge_rows,
     expand_positions,
+    mission_start_map,
     position_target_map,
     temp_target_map,
     travel_target_map,
@@ -182,6 +184,7 @@ def _stage_graph(context: BuildContext) -> None:
     context.entries = load_source("entries")
     if context.entries is None:
         reporter.warn("data/entries.json missing or outdated; position entries are unavailable")
+    context.missions = load_source("missions")
     entry_targets = context.entries.position_targets if context.entries is not None else {}
     models = context.models
     collected = collect_edges(models)
@@ -198,7 +201,6 @@ def _stage_graph(context: BuildContext) -> None:
     for edge in position_edges:
         position_in_degree[edge.target] += 1
     context.collected = collected
-    context.edges = edges
     context.position_edges = position_edges
     context.system = system
     context.position_stats = position_stats
@@ -206,6 +208,11 @@ def _stage_graph(context: BuildContext) -> None:
     context.position_targets = position_target_map(position_edges)
     context.temp_targets = temp_target_map(models, context.node_ids)
     context.travel_targets = travel_target_map(models, edges, context.node_ids)
+    mission_edges = build_mission_edges(
+        models, mission_start_map(context.missions), context.node_ids
+    )
+    edges.extend(mission_edges)
+    context.edges = edges
     context.unresolved_jumps = collected.unresolved_jumps
     context.scene_total = sum(model.scene_count for model in models.values())
     context.chapters, chapter_index_by_id = build_chapters(context.node_ids)
@@ -217,7 +224,8 @@ def _stage_graph(context: BuildContext) -> None:
         sid: model.time for sid, model in models.items() if model.time is not None
     }
     reporter.info(
-        f"{len(edges)} edges ({len(position_edges)} position),"
+        f"{len(edges)} edges ({len(position_edges)} position,"
+        f" {len(mission_edges)} mission),"
         f" {len(collected.unresolved_jumps)} dynamic jumps"
     )
     reporter.info(f"{context.scene_total} scene switches")
@@ -257,11 +265,12 @@ def _stage_inputs(context: BuildContext) -> None:
     context.stats = _load_document(
         "stats", reporter, "data/stats.json missing; stat names fall back to the locale table"
     )
-    context.missions = _load_document(
-        "missions",
-        reporter,
-        "data/missions.json missing; mission notes and start scripts are unavailable",
-    )
+    if context.missions is None:
+        context.missions = _load_document(
+            "missions",
+            reporter,
+            "data/missions.json missing; mission notes and start scripts are unavailable",
+        )
     context.battles = _load_document(
         "battles", reporter, "data/battles.json missing; battle switches fall back to scene lines"
     )

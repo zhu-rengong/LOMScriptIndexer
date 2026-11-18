@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { graph } from "../../data/graph";
+import { names } from "../../data/names";
 import { t } from "../../i18n";
 import { edgeLabelOf } from "../../lib/blocks";
 import { overlay } from "../../lib/overlay";
@@ -36,10 +37,14 @@ const incoming = computed(() => {
     .filter((item) => !!item.target);
 });
 
-const edgeLabelText = (edge: GraphEdge) => stripMarkup(edgeLabelOf(edge)) || "";
+const edgeLabelText = (edge: GraphEdge) => {
+  if (edge.kind === "mission") return names.label("missionState", edge.label);
+  return stripMarkup(edgeLabelOf(edge)) || "";
+};
 
 const edgeGroupLabel = (edge: GraphEdge) => {
   if (edge.kind === "temp" || edge.kind === "travel") return t("navTemp");
+  if (edge.kind === "mission") return t("navMission");
   return "";
 };
 

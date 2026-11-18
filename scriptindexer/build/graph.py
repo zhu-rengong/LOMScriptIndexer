@@ -2,9 +2,9 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 
 from ..game.unity_fields import HARDCODED_ENTRIES
-from ..schema import EdgeRow, Facets, NodeFlags, NodeRow, SystemEntryRow
+from ..schema import EdgeRow, Facets, MissionDocument, NodeFlags, NodeRow, SystemEntryRow
 from ..script_model import Edge, ScriptAnalysis
-from ..vocab import EDGE_POSITION
+from ..vocab import EDGE_MISSION, EDGE_POSITION
 
 MAX_EDGE_LABEL = 60
 
@@ -87,6 +87,38 @@ def travel_target_map(
         if candidates:
             found[sid] = tuple(sorted(candidates))
     return found
+
+
+def mission_start_map(missions: MissionDocument | None) -> dict[str, str]:
+    if missions is None:
+        return {}
+    starts: dict[str, str] = {}
+    for record in missions.items.values():
+        for state_key, state in record.states.items():
+            if state.start:
+                starts[state_key] = state.start
+    return starts
+
+
+def build_mission_edges(
+    models: Mapping[str, ScriptAnalysis],
+    starts: Mapping[str, str],
+    ids: Sequence[str],
+) -> list[Edge]:
+    id_set = set(ids)
+    seen: set[tuple[str, str, str]] = set()
+    edges: list[Edge] = []
+    for sid in sorted(models):
+        for state_key in models[sid].mission_states:
+            target = starts.get(state_key, "")
+            if not target or target not in id_set or target == sid:
+                continue
+            key = (sid, target, state_key)
+            if key in seen:
+                continue
+            seen.add(key)
+            edges.append(Edge(sid, target, EDGE_MISSION, state_key))
+    return edges
 
 
 def position_target_map(edges: Iterable[Edge]) -> dict[str, tuple[str, ...]]:

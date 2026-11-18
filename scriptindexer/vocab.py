@@ -29,12 +29,14 @@ EDGE_JUMP = "jump"
 EDGE_TEMP_SCRIPT = "temp"
 EDGE_TRAVEL = "travel"
 EDGE_POSITION = "position"
-EDGE_KINDS = (EDGE_JUMP, EDGE_TEMP_SCRIPT, EDGE_TRAVEL, EDGE_POSITION)
+EDGE_MISSION = "mission"
+EDGE_KINDS = (EDGE_JUMP, EDGE_TEMP_SCRIPT, EDGE_TRAVEL, EDGE_POSITION, EDGE_MISSION)
 EDGE_GROUP_BY_KIND = {
     EDGE_JUMP: "jump",
     EDGE_TEMP_SCRIPT: "temp",
     EDGE_TRAVEL: "temp",
     EDGE_POSITION: "position",
+    EDGE_MISSION: "mission",
 }
 
 FACET_LIST_FIELDS = ("speakers", "flags", "checks", "stats", "relations", "endings")

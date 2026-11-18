@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { graph } from "../../data/graph";
+import { names } from "../../data/names";
 import { chapterTitle, t } from "../../i18n";
 import { edgeLabelOf } from "../../lib/blocks";
 import { byId } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
 import { stripMarkup } from "../../lib/richText";
+import type { GraphEdge } from "../../types/graph";
 import { UI_IDS } from "../../ui/ids";
 import { useScriptStore } from "../../stores/script";
 
@@ -14,6 +16,11 @@ const open = computed(() => overlay.isOpen("moreMenu"));
 
 const selectedScript = computed(() => store.selected());
 
+const edgeLabelText = (edge: GraphEdge) => {
+  if (edge.kind === "mission") return names.label("missionState", edge.label);
+  return stripMarkup(edgeLabelOf(edge)) || "";
+};
+
 const nextJumpTargets = computed(() => {
   const current = selectedScript.value;
   if (!current) return [];
@@ -21,7 +28,7 @@ const nextJumpTargets = computed(() => {
     .nextTargets(current)
     .slice(0, 6)
     .map((item) => {
-      const label = stripMarkup(edgeLabelOf(item.edge)) || chapterTitle(graph.chapterOf(item.node));
+      const label = edgeLabelText(item.edge) || chapterTitle(graph.chapterOf(item.node));
       return { id: item.node.id, label };
     });
 });
