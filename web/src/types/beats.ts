@@ -49,6 +49,8 @@ export type JumpView = {
   dynamicSource: string;
   position?: string;
   targets?: string[];
+  dynamicKind?: string;
+  dynamicKey?: string;
 };
 
 export type SceneView = {

@@ -21,6 +21,7 @@ from ..script_model import (
     MetaBeat,
     SayBeat,
     SceneBeat,
+    ScriptSlot,
     TextRef,
     Unevaluated,
 )
@@ -32,6 +33,7 @@ from .state import (
     OptionDraft,
     PendingSay,
     lua_key_sort_key,
+    number_text,
     source_snippet,
     unwrap_text,
 )
@@ -123,6 +125,11 @@ class CallHandler:
             if key and method == "Position":
                 self.analyzer.context.add_position(key)
             return CheckMark(self.semantics.check_methods[method], key or lua.render_source(expr))
+        if obj == self.semantics.scene_object and method == self.semantics.temp_get_method:
+            slot = self.analyzer.expressions.eval(args[0], state) if args else None
+            return ScriptSlot("temp", number_text(slot) if isinstance(slot, int) else "")
+        if obj == self.semantics.scene_object and method == self.semantics.travel_get_method:
+            return ScriptSlot("travel", "")
         return Unevaluated(lua.render_source(expr))
 
     def handle_call(self, call: lua.Node, state: EvalState, beats: list[Any]) -> ChoiceDraft | None:
@@ -445,12 +452,22 @@ class CallHandler:
         if isinstance(value, CheckMark) and value.kind == CHECK_POSITION:
             beats.append(JumpBeat(None, "", value.key))
             return
+        if isinstance(value, ScriptSlot):
+            source = lua.render_source(target_expr) if target_expr is not None else ""
+            beats.append(JumpBeat(None, f"{method}({source})", "", value.kind, value.key))
+            return
         target = unwrap_text(value)
         if target is None:
             source = lua.render_source(target_expr) if target_expr is not None else ""
             self.analyzer.context.unresolved_jumps.append(f"{method}({source})")
             beats.append(JumpBeat(None, f"{method}({source})"))
             return
+        if method == self.semantics.temp_set_method:
+            index = self.analyzer.expressions.eval(args[0], state) if args else None
+            if isinstance(index, int):
+                self.analyzer.context.add_temp_write(number_text(index), target)
+        elif method == self.semantics.travel_set_method:
+            self.analyzer.context.add_travel_write(target)
         if method in self.semantics.story_jumps:
             state.pending_story_script = target
         beats.append(JumpBeat(target, ""))

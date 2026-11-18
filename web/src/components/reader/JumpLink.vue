@@ -23,7 +23,15 @@ const candidates = computed(() =>
 
 const isPosition = computed(() => !!props.jump.position);
 
-const collapsible = computed(() => isPosition.value && candidates.value.length > 1);
+const dynamicKind = computed(() => props.jump.dynamicKind || "");
+
+const slotCandidates = computed(() =>
+  isPosition.value || !dynamicKind.value ? [] : candidates.value,
+);
+
+const collapsible = computed(() =>
+  isPosition.value ? candidates.value.length > 1 : slotCandidates.value.length > 1,
+);
 
 const hasRows = computed(() => isPosition.value && candidates.value.length > 0);
 
@@ -83,13 +91,31 @@ const foldKey = props.foldKey || (props.jump.position ? `pos:${props.jump.positi
 
 useFoldable(foldKey, open, () => collapsible.value);
 
-const target = computed(() => props.jump.target);
+const target = computed(
+  () => props.jump.target || (slotCandidates.value.length === 1 ? slotCandidates.value[0] : ""),
+);
 
-const display = computed<{ mode: "rows" | "link" | "dynamic"; text: string }>(() => {
+const display = computed<{
+  mode: "rows" | "candidates" | "link" | "dynamic";
+  text: string;
+}>(() => {
   const missing = t("parenWrap", { text: t("jumpMissing") });
   if (hasRows.value) return { mode: "rows", text: "" };
   if (isPosition.value) {
     return { mode: "dynamic", text: `${t("jumpPosition")} ${props.jump.position}${missing}` };
+  }
+  if (dynamicKind.value === "travel" && !slotCandidates.value.length) {
+    return { mode: "dynamic", text: t("jumpTravelRuntime") };
+  }
+  if (slotCandidates.value.length > 1) {
+    const text =
+      dynamicKind.value === "temp"
+        ? t("jumpTempCandidates", {
+            slot: props.jump.dynamicKey,
+            count: slotCandidates.value.length,
+          })
+        : t("jumpTravelCandidates", { count: slotCandidates.value.length });
+    return { mode: "candidates", text };
   }
   if (!target.value) {
     return { mode: "dynamic", text: props.jump.dynamicSource || t("jumpDynamic") };
@@ -98,6 +124,12 @@ const display = computed<{ mode: "rows" | "link" | "dynamic"; text: string }>(()
     return { mode: "dynamic", text: `${target.value}${missing}` };
   }
   return { mode: "link", text: target.value };
+});
+
+const dynamicHint = computed(() => {
+  if (dynamicKind.value === "temp") return t("jumpTempSlot", { n: props.jump.dynamicKey });
+  if (dynamicKind.value === "travel") return t("jumpTravelScript");
+  return props.jump.dynamicSource;
 });
 
 const toggle = () => {
@@ -221,9 +253,49 @@ watch(() => props.jump.position, loadCheckpoint, { immediate: true });
       </div>
     </div>
   </div>
+  <div
+    v-else-if="display.mode === 'candidates'"
+    class="jump-group"
+    :class="{ 'is-open': open }"
+    :data-reveal="collapsible ? '' : undefined"
+    @reveal="open = true"
+  >
+    <div
+      class="option-head jump-head row"
+      :class="{ 'is-static': !collapsible }"
+      :role="collapsible ? 'button' : undefined"
+      :tabindex="collapsible ? 0 : undefined"
+      :aria-expanded="collapsible ? open : undefined"
+      @click="collapsible ? toggle() : undefined"
+      @keydown.enter.prevent="collapsible ? toggle() : undefined"
+      @keydown.space.prevent="collapsible ? toggle() : undefined"
+    >
+      <span class="option-main">
+        <span class="option-text">{{ display.text }}</span>
+      </span>
+    </div>
+    <div class="jump-body">
+      <div
+        v-for="id in slotCandidates"
+        :key="id"
+        class="jump jump-target"
+        role="button"
+        tabindex="0"
+        :aria-label="id"
+        @click="go(id)"
+        @keydown.enter.prevent="go(id)"
+        @keydown.space.prevent="go(id)"
+      >
+        <span class="jump-target-main">
+          <AppIcon name="arrow-right" class="arrow" />
+          <span class="jump-target-id">{{ id }}</span>
+        </span>
+      </div>
+    </div>
+  </div>
   <button v-else-if="display.mode === 'link'" class="jump btn" type="button" @click="go(target)">
     <AppIcon name="arrow-right" class="arrow" />{{ display.text
-    }}<span v-if="jump.dynamicSource" class="option-cond">{{ `  ${jump.dynamicSource}` }}</span>
+    }}<span v-if="dynamicHint" class="option-cond">{{ `  ${dynamicHint}` }}</span>
   </button>
   <span v-else class="jump dynamic">
     <AppIcon name="arrow-right" class="arrow" />{{ display.text }}

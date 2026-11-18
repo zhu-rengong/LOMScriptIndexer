@@ -58,6 +58,37 @@ def _prefix_targets(name: str, ids: Sequence[str]) -> list[str]:
     return [sid for sid in ids if sid.lower().startswith(prefix)]
 
 
+def temp_target_map(
+    models: Mapping[str, ScriptAnalysis], ids: Sequence[str]
+) -> dict[str, tuple[str, ...]]:
+    id_set = set(ids)
+    found: dict[str, set[str]] = {}
+    for model in models.values():
+        for slot, targets in model.temp_writes.items():
+            found.setdefault(slot, set()).update(target for target in targets if target in id_set)
+    return {slot: tuple(sorted(targets)) for slot, targets in sorted(found.items())}
+
+
+def travel_target_map(
+    models: Mapping[str, ScriptAnalysis], edges: Iterable[Edge], ids: Sequence[str]
+) -> dict[str, tuple[str, ...]]:
+    id_set = set(ids)
+    sources: dict[str, set[str]] = {}
+    for edge in edges:
+        sources.setdefault(edge.target, set()).add(edge.source)
+    found: dict[str, tuple[str, ...]] = {}
+    for sid, srcs in sources.items():
+        candidates: set[str] = set()
+        for src in srcs:
+            model = models.get(src)
+            if model is None:
+                continue
+            candidates.update(target for target in model.travel_writes if target in id_set)
+        if candidates:
+            found[sid] = tuple(sorted(candidates))
+    return found
+
+
 def position_target_map(edges: Iterable[Edge]) -> dict[str, tuple[str, ...]]:
     found: dict[str, set[str]] = {}
     for edge in edges:

@@ -110,11 +110,16 @@ class Renderer:
         stat_notes: dict[str, str] | None = None,
         battles: Any = None,
         position_targets: Mapping[str, Sequence[str]] | None = None,
+        temp_targets: Mapping[str, Sequence[str]] | None = None,
+        travel_targets: Mapping[str, Sequence[str]] | None = None,
     ) -> None:
         self.counter = TextCounter()
+        self.script_id = ""
         self.locale = locale
         self.battles = battles
         self.position_targets = position_targets or {}
+        self.temp_targets = temp_targets or {}
+        self.travel_targets = travel_targets or {}
         self.battle_count = 0
         self.battle_missing = 0
         self.registry = registry if registry is not None else labels.NameRegistry()
@@ -227,16 +232,31 @@ class Renderer:
         return out
 
     def _jump(self, beat: JumpBeat) -> JumpRow:
-        if not beat.position:
-            return JumpRow(target=beat.target or "", dynamic=beat.dynamic_source or "")
-        targets = list(self.position_targets.get(beat.position, ()))
-        target = targets[0] if len(targets) == 1 else ""
+        if beat.position:
+            targets = list(self.position_targets.get(beat.position, ()))
+            target = targets[0] if len(targets) == 1 else ""
+            return JumpRow(
+                target=target,
+                dynamic=beat.dynamic_source or "",
+                position=beat.position,
+                targets=targets,
+            )
+        targets = self._slot_targets(beat)
+        target = beat.target or (targets[0] if len(targets) == 1 else "")
         return JumpRow(
             target=target,
             dynamic=beat.dynamic_source or "",
-            position=beat.position,
+            dynamic_kind=beat.slot_kind,
+            dynamic_key=beat.slot_key,
             targets=targets,
         )
+
+    def _slot_targets(self, beat: JumpBeat) -> list[str]:
+        if beat.slot_kind == "temp":
+            return list(self.temp_targets.get(beat.slot_key, ()))
+        if beat.slot_kind == "travel":
+            return list(self.travel_targets.get(self.script_id, ()))
+        return []
 
     def _say(self, beat: SayBeat) -> SayRow:
         speaker = beat.speaker or ""

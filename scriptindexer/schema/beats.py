@@ -64,6 +64,8 @@ class BranchRow(BeatRow, tag="branch"):
 class JumpRow(BeatRow, tag="jump"):
     target: str = ""
     dynamic: str = ""
+    dynamic_kind: str = ""
+    dynamic_key: str = ""
     position: str = ""
     targets: list[str] = msgspec.field(default_factory=list)
 

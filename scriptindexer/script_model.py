@@ -25,6 +25,11 @@ class Unevaluated(msgspec.Struct, **BASE):
     source: str = ""
 
 
+class ScriptSlot(msgspec.Struct, **BASE):
+    kind: str = ""
+    key: str = ""
+
+
 class LockedOption(msgspec.Struct, **BASE):
     shown_text: Any = None
     locked_text: TextRef = msgspec.field(default_factory=TextRef)
@@ -78,6 +83,8 @@ class JumpBeat(BeatBase, tag="jump", frozen=True):
     target: str | None = None
     dynamic_source: str = ""
     position: str = ""
+    slot_kind: str = ""
+    slot_key: str = ""
 
 
 class MetaBeat(BeatBase, tag="meta", frozen=True):
@@ -116,6 +123,8 @@ class ScriptAnalysis(msgspec.Struct, rename="camel", omit_defaults=True):
     checks: dict[str, tuple[str, ...]] = msgspec.field(default_factory=dict)
     positions: tuple[str, ...] = ()
     lore_keys: tuple[str, ...] = ()
+    temp_writes: dict[str, tuple[str, ...]] = msgspec.field(default_factory=dict)
+    travel_writes: tuple[str, ...] = ()
     unresolved_jumps: list[str] = msgspec.field(default_factory=list)
     time: int | None = None
     say_count: int = 0

@@ -62,6 +62,8 @@ from .graph import (
     edge_rows,
     expand_positions,
     position_target_map,
+    temp_target_map,
+    travel_target_map,
 )
 from .report import build_report_payload, write_report
 from .script_render import LanguageRender, Renderer
@@ -107,6 +109,8 @@ class BuildContext:
     position_stats: dict[str, Any] = field(default_factory=dict)
     position_in_degree: dict[str, int] = field(default_factory=dict)
     position_targets: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    temp_targets: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    travel_targets: dict[str, tuple[str, ...]] = field(default_factory=dict)
     unresolved_jumps: list[str] = field(default_factory=list)
     scene_total: int = 0
     time_by_script: dict[str, int] = field(default_factory=dict)
@@ -200,6 +204,8 @@ def _stage_graph(context: BuildContext) -> None:
     context.position_stats = position_stats
     context.position_in_degree = position_in_degree
     context.position_targets = position_target_map(position_edges)
+    context.temp_targets = temp_target_map(models, context.node_ids)
+    context.travel_targets = travel_target_map(models, edges, context.node_ids)
     context.unresolved_jumps = collected.unresolved_jumps
     context.scene_total = sum(model.scene_count for model in models.values())
     context.chapters, chapter_index_by_id = build_chapters(context.node_ids)
@@ -228,6 +234,11 @@ def _stage_graph(context: BuildContext) -> None:
         f" positions exact {position_stats['exact_names']}"
         f" + prefix {position_stats['prefix_names']}"
         f"/{position_stats['names']}"
+    )
+    reporter.info(
+        f"dynamic slots: {len(context.temp_targets)} temp ("
+        f"{sum(len(targets) for targets in context.temp_targets.values())} targets),"
+        f" {len(context.travel_targets)} travel readers narrowed"
     )
     probe = summarize_probe(context.entries)
     if not probe["ok"]:
@@ -317,6 +328,8 @@ def _stage_render(context: BuildContext) -> None:
         stat_notes=stat_notes,
         battles=context.battle_cards,
         position_targets=context.position_targets,
+        temp_targets=context.temp_targets,
+        travel_targets=context.travel_targets,
     )
     started = time.time()
     script_rows: dict[str, list[Any]] = {}
@@ -324,6 +337,7 @@ def _stage_render(context: BuildContext) -> None:
     for sid in context.node_ids:
         counter = TextCounter()
         renderer.counter = counter
+        renderer.script_id = sid
         rows = renderer.render_rows(context.models[sid].beats)
         if rows:
             script_rows[sid] = rows

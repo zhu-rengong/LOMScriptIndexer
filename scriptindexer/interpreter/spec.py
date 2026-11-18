@@ -26,6 +26,10 @@ class Semantics:
     speaker_sentinels: frozenset[str] = frozenset()
     jumps: Mapping[str, str] = field(default_factory=dict)
     story_jumps: frozenset[str] = frozenset()
+    temp_get_method: str = "GetTempScript"
+    temp_set_method: str = "SetTempScript"
+    travel_get_method: str = "GetCurrentTravelScript"
+    travel_set_method: str = "SetCurrentTravelScript"
     scene_object: str = "luamanager"
     scene_method: str = "ChangeScene"
     scene_arg_count: int = 3

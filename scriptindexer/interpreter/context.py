@@ -12,6 +12,8 @@ class AnalysisContext:
     checks: dict[str, set[str]] = field(default_factory=dict)
     positions: set[str] = field(default_factory=set)
     lore_keys: set[str] = field(default_factory=set)
+    temp_writes: dict[str, set[str]] = field(default_factory=dict)
+    travel_writes: set[str] = field(default_factory=set)
     unresolved_jumps: list[str] = field(default_factory=list)
     time: int | None = None
     say_count: int = 0
@@ -39,6 +41,14 @@ class AnalysisContext:
         if key:
             self.lore_keys.add(key)
 
+    def add_temp_write(self, slot: str, target: str) -> None:
+        if slot and target:
+            self.temp_writes.setdefault(slot, set()).add(target)
+
+    def add_travel_write(self, target: str) -> None:
+        if target:
+            self.travel_writes.add(target)
+
     def set_time(self, rounds: int | None) -> None:
         if rounds is not None and self.time is None:
             self.time = rounds
@@ -51,6 +61,10 @@ class AnalysisContext:
             checks={key: tuple(sorted(kinds)) for key, kinds in sorted(self.checks.items())},
             positions=tuple(sorted(self.positions)),
             lore_keys=tuple(sorted(self.lore_keys)),
+            temp_writes={
+                slot: tuple(sorted(targets)) for slot, targets in sorted(self.temp_writes.items())
+            },
+            travel_writes=tuple(sorted(self.travel_writes)),
             unresolved_jumps=list(self.unresolved_jumps),
             time=self.time,
             say_count=self.say_count,

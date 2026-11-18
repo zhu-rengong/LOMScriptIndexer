@@ -109,9 +109,13 @@ export const parseJump = (row: BeatNode): JumpView => {
     dynamicSource: asString(record.dynamic),
   };
   const position = asString(record.position);
-  if (!position) return view;
-  view.position = position;
-  view.targets = asList<unknown>(record.targets).map(asString).filter(Boolean);
+  if (position) view.position = position;
+  const targets = asList<unknown>(record.targets).map(asString).filter(Boolean);
+  if (targets.length) view.targets = targets;
+  const dynamicKind = asString(record.dynamicKind);
+  if (dynamicKind) view.dynamicKind = dynamicKind;
+  const dynamicKey = asString(record.dynamicKey);
+  if (dynamicKey) view.dynamicKey = dynamicKey;
   return view;
 };
 
