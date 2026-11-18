@@ -29,7 +29,10 @@ const loadShard = (index: number): Promise<boolean> => {
       }
       return true;
     })
-    .catch(() => false);
+    .catch(() => {
+      pendingLoads.delete(index);
+      return false;
+    });
   pendingLoads.set(index, job);
   return job;
 };
@@ -40,13 +43,17 @@ const ensure = (key: string): Promise<boolean> => {
   return loadShard(index);
 };
 
-const loadAll = (): Promise<boolean> => {
+const loadAll = async (): Promise<boolean> => {
   const indices = new Set<number>();
   for (const value of Object.values(dataset.checkpointShardByKey)) {
     if (typeof value === "number" && value >= 0) indices.add(value);
   }
-  const jobs = Array.from(indices, (index) => loadShard(index));
-  return Promise.all(jobs).then((results) => results.every(Boolean));
+  const run = (): Promise<boolean> =>
+    Promise.all(Array.from(indices, (index) => loadShard(index))).then((results) =>
+      results.every(Boolean),
+    );
+  if (await run()) return true;
+  return run();
 };
 
 const getByKey = (key: string, kind?: string): CheckpointModel | null => {

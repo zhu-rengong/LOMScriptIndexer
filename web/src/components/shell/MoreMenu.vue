@@ -6,6 +6,7 @@ import { missionStateLabel } from "../../lib/missionLabel";
 import { byId } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
 import { stripMarkup } from "../../lib/richText";
+import { exportRunning, exportScripts } from "../../lib/scriptExport";
 import type { GraphEdge } from "../../types/graph";
 import { UI_IDS } from "../../ui/ids";
 import { useScriptStore } from "../../stores/script";
@@ -55,6 +56,11 @@ const pick = (id: string) => {
   store.select(id, { history: true });
 };
 
+const runExport = () => {
+  overlay.close("moreMenu");
+  void exportScripts();
+};
+
 onMounted(() => {
   overlay.register("moreMenu", {
     id: "moreMenu",
@@ -71,6 +77,16 @@ onMounted(() => {
     <button class="menu-item row" type="button" @click="openHelp">{{ t("helpTitle") }}</button>
     <button class="menu-item row" type="button" @click="openChangelog">
       {{ t("changelogTitle") }}
+    </button>
+    <div class="menu-sep"></div>
+    <button
+      class="menu-item row"
+      type="button"
+      :disabled="exportRunning"
+      :title="t('exportScriptsTitle')"
+      @click="runExport"
+    >
+      {{ t("exportScripts") }}
     </button>
     <template v-if="nextJumpTargets.length">
       <div class="menu-sep"></div>

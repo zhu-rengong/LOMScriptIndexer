@@ -278,9 +278,9 @@ const settleShard = (lang: string, key: string): Promise<boolean> =>
       resolve(false);
     }, SHARD_TIMEOUT);
     ensureShard(lang, key).then(
-      () => {
+      (ok) => {
         clearTimeout(timer);
-        resolve(true);
+        resolve(ok);
       },
       () => {
         clearTimeout(timer);
@@ -289,17 +289,21 @@ const settleShard = (lang: string, key: string): Promise<boolean> =>
     );
   });
 
-const ensureAll = (
+const ensureAll = async (
   lang: string,
   onProgress?: (loaded: number, total: number) => void,
-): Promise<boolean> =>
-  ensureHead(lang).then(async () => {
-    for (let index = 0; index < shardKeys.length; index++) {
-      await settleShard(lang, shardKeys[index]);
-      if (onProgress) onProgress(index + 1, shardKeys.length);
-    }
-    return true;
-  });
+): Promise<boolean> => {
+  const headOk = await ensureHead(lang);
+  if (!headOk) return false;
+  const failed: string[] = [];
+  for (let index = 0; index < shardKeys.length; index++) {
+    const ok = await settleShard(lang, shardKeys[index]);
+    if (!ok) failed.push(shardKeys[index]);
+    if (onProgress) onProgress(index + 1, shardKeys.length);
+  }
+  for (const key of failed) await settleShard(lang, key);
+  return shardKeys.every((key) => shardProgress.shards[key] === "ready");
+};
 
 const shardState = (id: string): ShardState => {
   const key = graphMeta.shardByNode[id];
