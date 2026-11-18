@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { graph } from "../../data/graph";
-import { names } from "../../data/names";
 import { chapterTitle, t } from "../../i18n";
 import { edgeLabelOf } from "../../lib/blocks";
+import { missionStateLabel } from "../../lib/missionLabel";
 import { byId } from "../../lib/browser";
 import { overlay } from "../../lib/overlay";
 import { stripMarkup } from "../../lib/richText";
@@ -17,7 +17,7 @@ const open = computed(() => overlay.isOpen("moreMenu"));
 const selectedScript = computed(() => store.selected());
 
 const edgeLabelText = (edge: GraphEdge) => {
-  if (edge.kind === "mission") return names.label("missionState", edge.label);
+  if (edge.kind === "mission") return missionStateLabel(edge.label);
   return stripMarkup(edgeLabelOf(edge)) || "";
 };
 

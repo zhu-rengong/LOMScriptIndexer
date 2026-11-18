@@ -2,9 +2,7 @@ import { missions } from "../data/missions";
 import { names } from "../data/names";
 import { t } from "../i18n";
 
-export const STATE_VALUE_PREFIX = "state-";
-
-export const stateFacetValue = (stateKey: string): string => `${STATE_VALUE_PREFIX}${stateKey}`;
+export const stateFacetValue = (stateKey: string): string => `state-${stateKey}`;
 
 const missionNameOf = (missionId: string): string => {
   if (!missionId) return "";

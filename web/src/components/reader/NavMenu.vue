@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { graph } from "../../data/graph";
-import { names } from "../../data/names";
 import { t } from "../../i18n";
 import { edgeLabelOf } from "../../lib/blocks";
+import { missionStateLabel } from "../../lib/missionLabel";
 import { overlay } from "../../lib/overlay";
 import { stripMarkup } from "../../lib/richText";
 import type { GraphEdge } from "../../types/graph";
@@ -38,7 +38,7 @@ const incoming = computed(() => {
 });
 
 const edgeLabelText = (edge: GraphEdge) => {
-  if (edge.kind === "mission") return names.label("missionState", edge.label);
+  if (edge.kind === "mission") return missionStateLabel(edge.label);
   return stripMarkup(edgeLabelOf(edge)) || "";
 };
 
@@ -80,7 +80,11 @@ onMounted(() => {
           <span v-if="edgeLabelText(item.edge)" class="nav-label">
             {{ edgeLabelText(item.edge) }}
           </span>
-          <span v-if="edgeGroupLabel(item.edge)" class="nav-badge badge">
+          <span
+            v-if="edgeGroupLabel(item.edge)"
+            class="nav-badge badge"
+            :class="{ 'is-mission': item.edge.kind === 'mission' }"
+          >
             {{ edgeGroupLabel(item.edge) }}
           </span>
         </button>
@@ -103,7 +107,11 @@ onMounted(() => {
           <span v-if="edgeLabelText(item.edge)" class="nav-label">
             {{ edgeLabelText(item.edge) }}
           </span>
-          <span v-if="edgeGroupLabel(item.edge)" class="nav-badge badge">
+          <span
+            v-if="edgeGroupLabel(item.edge)"
+            class="nav-badge badge"
+            :class="{ 'is-mission': item.edge.kind === 'mission' }"
+          >
             {{ edgeGroupLabel(item.edge) }}
           </span>
         </button>

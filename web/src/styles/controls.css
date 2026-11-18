@@ -435,6 +435,11 @@
     color: var(--warn);
   }
 
+  .nav-badge.is-mission {
+    border: 0;
+    background: none;
+  }
+
   .dropdown {
     position: absolute;
     top: calc(100% + 6px);
