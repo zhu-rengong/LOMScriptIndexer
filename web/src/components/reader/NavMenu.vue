@@ -45,6 +45,7 @@ const edgeLabelText = (edge: GraphEdge) => {
 const edgeGroupLabel = (edge: GraphEdge) => {
   if (edge.kind === "temp" || edge.kind === "travel") return t("navTemp");
   if (edge.kind === "mission") return t("navMission");
+  if (edge.kind === "after") return t("battleAfterStory");
   return "";
 };
 

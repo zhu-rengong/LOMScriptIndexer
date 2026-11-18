@@ -483,6 +483,7 @@ class CallHandler:
         if values[2].lower() == "story" and state.pending_story_script:
             after_script = state.pending_story_script
             self.drop_story_jump(beats, after_script)
+            self.analyzer.context.mark_after(after_script)
             state.pending_story_script = None
         beats.append(SceneBeat(values[0], values[1], values[2], after_script))
         self.analyzer.context.scene_count += 1

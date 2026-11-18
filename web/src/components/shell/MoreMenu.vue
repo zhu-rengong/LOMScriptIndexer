@@ -18,6 +18,7 @@ const selectedScript = computed(() => store.selected());
 
 const edgeLabelText = (edge: GraphEdge) => {
   if (edge.kind === "mission") return missionStateLabel(edge.label);
+  if (edge.kind === "after") return t("battleAfterStory");
   return stripMarkup(edgeLabelOf(edge)) || "";
 };
 

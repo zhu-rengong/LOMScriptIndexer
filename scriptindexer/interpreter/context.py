@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ..script_model import Edge, ScriptAnalysis
+from ..vocab import EDGE_AFTER, EDGE_JUMP
 
 
 @dataclass
@@ -53,6 +54,18 @@ class AnalysisContext:
     def add_mission_state(self, key: str) -> None:
         if key:
             self.mission_states.add(key)
+
+    def mark_after(self, target: str) -> None:
+        if not target:
+            return
+        for index in range(len(self.edges) - 1, -1, -1):
+            edge = self.edges[index]
+            if edge.target != target or edge.kind != EDGE_JUMP:
+                continue
+            self.edge_keys.discard((edge.target, edge.kind, edge.label))
+            self.edge_keys.add((edge.target, EDGE_AFTER, edge.label))
+            self.edges[index] = Edge(edge.source, edge.target, EDGE_AFTER, edge.label)
+            return
 
     def set_time(self, rounds: int | None) -> None:
         if rounds is not None and self.time is None:
