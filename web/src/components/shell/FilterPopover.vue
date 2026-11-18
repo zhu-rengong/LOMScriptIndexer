@@ -105,12 +105,31 @@ const suggestShown = (item: QuerySuggestion) =>
 
 const suggestRows = computed(() => suggestState.value.items.slice(0, suggestLimit.value));
 
+const activeOptionId = computed(() => {
+  const index = suggestState.value.activeIndex;
+  if (!isSuggestOpen.value || index < 0 || index >= suggestRows.value.length) return undefined;
+  return `${SUGGEST_KEY}-${index}`;
+});
+
 watch(suggestState, () => {
   suggestLimit.value = SUGGEST_LIMIT;
   void nextTick(() => {
     if (suggestPanel.value) suggestPanel.value.scrollTop = 0;
   });
 });
+
+watch(
+  () => suggestState.value.activeIndex,
+  async (index) => {
+    if (index >= suggestLimit.value) {
+      suggestLimit.value = Math.min(suggestState.value.items.length, index + SUGGEST_LIMIT);
+    }
+    await nextTick();
+    const rows = suggestPanel.value?.querySelectorAll<HTMLElement>(".suggest-item");
+    const row = rows?.[index];
+    if (row) row.scrollIntoView({ block: "nearest" });
+  },
+);
 
 const onSuggestScroll = (event: Event) => {
   const node = event.currentTarget as HTMLElement;
@@ -235,6 +254,7 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
             aria-autocomplete="list"
             :aria-expanded="isSuggestOpen"
             :aria-controls="SUGGEST_KEY"
+            :aria-activedescendant="activeOptionId"
             :placeholder="t('filterPlaceholder')"
             :aria-label="t('filterPlaceholder')"
             @input="onExpressionInput"
@@ -254,11 +274,13 @@ const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
             <template v-if="suggestRows.length">
               <button
                 v-for="(item, index) in suggestRows"
+                :id="`${SUGGEST_KEY}-${index}`"
                 :key="`${item.value}-${index}`"
                 class="suggest-item row row-sm"
                 :class="{ 'is-active': index === suggestState.activeIndex }"
                 type="button"
                 role="option"
+                :aria-selected="index === suggestState.activeIndex"
                 @mousedown.prevent="acceptSuggestion(index)"
               >
                 <span class="sg-value">{{ suggestShown(item) }}</span>

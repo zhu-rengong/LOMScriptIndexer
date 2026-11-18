@@ -22,6 +22,8 @@ type AutocompleteOptions = {
   onSubmit: () => void;
 };
 
+const REFRESH_SUFFIX = /(:|\(|\s)$/;
+
 const emptyState = (): SuggestState => ({
   isOpen: false,
   items: [],
@@ -44,38 +46,17 @@ export const useExprAutocomplete = (
     overlay.close(options.suggestKey);
   };
 
-  const { start: scheduleHide } = useTimeoutFn(hide, 120, { immediate: false });
+  const { start: scheduleHide, stop: cancelHide } = useTimeoutFn(hide, 120, { immediate: false });
 
-  const replaceRange = (start: number, end: number, text: string): void => {
-    const current = value.value || "";
-    value.value = current.slice(0, start) + text + current.slice(end);
-    const caret = start + text.length;
-    void nextTick(() => {
-      const node = input.value;
-      if (!node) return;
-      node.setSelectionRange(caret, caret);
-      node.focus();
-    });
-  };
-
-  const insert = (text: string): void => {
+  const refresh = (source: string, caret: number): void => {
     const node = input.value;
     if (!node) return;
-    replaceRange(node.selectionStart || 0, node.selectionEnd || 0, text);
-  };
-
-  const update = (): void => {
-    const node = input.value;
-    if (!node) return;
-    if (!node.value) {
+    if (!source) {
       hide();
       return;
     }
-    const result = query.suggest(
-      node.value,
-      node.selectionStart ?? node.value.length,
-      queryIndex(),
-    );
+    cancelHide();
+    const result = query.suggest(source, caret, queryIndex());
     state.value = {
       isOpen: true,
       items: result.items || [],
@@ -93,15 +74,47 @@ export const useExprAutocomplete = (
     });
   };
 
+  const update = (): void => {
+    const node = input.value;
+    if (!node) return;
+    refresh(node.value, node.selectionStart ?? node.value.length);
+  };
+
+  const replaceRange = (start: number, end: number, text: string): boolean => {
+    const current = value.value || "";
+    const next = current.slice(0, start) + text + current.slice(end);
+    const caret = start + text.length;
+    value.value = next;
+    void nextTick(() => {
+      const node = input.value;
+      if (!node) return;
+      node.setSelectionRange(caret, caret);
+      node.focus();
+    });
+    const keep = REFRESH_SUFFIX.test(text);
+    if (keep) refresh(next, caret);
+    return keep;
+  };
+
+  const insert = (text: string): void => {
+    const node = input.value;
+    if (!node) return;
+    replaceRange(node.selectionStart || 0, node.selectionEnd || 0, text);
+  };
+
   const accept = (index?: number): void => {
     const node = input.value;
     const item = state.value.items[index === undefined ? state.value.activeIndex : index];
     if (!node || !item) return;
     const text = item.insert || item.value;
-    replaceRange(state.value.from, state.value.to, text);
-    hide();
+    if (!replaceRange(state.value.from, state.value.to, text)) hide();
     options.onChange();
-    if (/(:|\(|\s)$/.test(text)) update();
+  };
+
+  const stepActive = (step: number): void => {
+    const count = state.value.items.length;
+    if (!count) return;
+    state.value.activeIndex = (state.value.activeIndex + step + count) % count;
   };
 
   const onInput = (): void => {
@@ -117,6 +130,15 @@ export const useExprAutocomplete = (
         event.stopPropagation();
       }
       hide();
+      return;
+    }
+    const navigating =
+      state.value.items.length > 0 &&
+      !event.shiftKey &&
+      (event.key === "ArrowDown" || event.key === "ArrowUp");
+    if (navigating) {
+      event.preventDefault();
+      stepActive(event.key === "ArrowDown" ? 1 : -1);
       return;
     }
     const picking =
