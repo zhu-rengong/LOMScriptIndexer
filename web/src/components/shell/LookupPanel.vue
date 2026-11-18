@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { checkpoints } from "../../data/checkpoints";
 import { graph } from "../../data/graph";
+import { missions } from "../../data/missions";
 import { names } from "../../data/names";
 import { chapterTitle, t } from "../../i18n";
 import { firstSayTextOf, speakerName } from "../../lib/blocks";
@@ -46,7 +47,11 @@ const matchedNodes = computed<GraphNode[]>(() => {
     }
     return out;
   }
-  if (kind.value === "mission") return graph.missionTriggerNodes(key.value);
+  if (kind.value === "mission") {
+    return missions.missionOfState(key.value)
+      ? graph.missionTriggerNodes(key.value)
+      : graph.missionEndNodes(key.value);
+  }
   return graph.nodesWithFacet(kind.value, key.value);
 });
 
@@ -61,22 +66,27 @@ const totalCount = computed(() => {
   return seen.size;
 });
 
-const displayName = computed(() =>
-  kind.value === "speaker"
-    ? speakerName(key.value)
-    : kind.value === "mission"
+const displayName = computed(() => {
+  if (kind.value === "speaker") return speakerName(key.value);
+  if (kind.value === "mission") {
+    return missions.missionOfState(key.value)
       ? names.label("missionState", key.value)
-      : names.label(kind.value, key.value),
-);
+      : names.label("mission", key.value);
+  }
+  return names.label(kind.value, key.value);
+});
 
-const title = computed(() =>
-  kind.value === "mission"
-    ? t("missionPanelTitle", { state: key.value })
-    : t("lookupTitle", {
-        name: displayName.value,
-        n: totalCount.value,
-      }),
-);
+const title = computed(() => {
+  if (kind.value === "mission") {
+    return missions.missionOfState(key.value)
+      ? t("missionPanelTitle", { state: key.value })
+      : t("missionTitle", { mission: key.value });
+  }
+  return t("lookupTitle", {
+    name: displayName.value,
+    n: totalCount.value,
+  });
+});
 
 const readsEmptyText = computed(() =>
   kind.value === "rel" ? "lookupGroupReadsEmptyRel" : "lookupGroupReadsEmptyStat",
@@ -214,7 +224,11 @@ onMounted(() => {
         </p>
         <template v-else>
           <p class="lookup-group">
-            {{ t("lookupGroupTriggers", { n: totalCount }) }}
+            {{
+              missions.missionOfState(key)
+                ? t("lookupGroupTriggers", { n: totalCount })
+                : t("lookupGroupEnds", { n: totalCount })
+            }}
           </p>
           <NodeResultList :items="mainRows" @pick="pickById" />
         </template>

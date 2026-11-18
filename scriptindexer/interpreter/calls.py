@@ -439,8 +439,11 @@ class CallHandler:
             extra = arg_text(spec.extra_index) or ""
         if spec.kind == "story":
             self.analyzer.context.add_lore_key(key)
-        elif spec.kind == "mission" and key != "clear":
-            self.analyzer.context.add_mission_state(key)
+        elif spec.kind == "mission":
+            if key == "clear":
+                self.analyzer.context.add_mission_end(extra)
+            else:
+                self.analyzer.context.add_mission_state(key)
         beats.append(MetaBeat(spec.kind, key, value, hidden, extra))
 
     def emit_jump(

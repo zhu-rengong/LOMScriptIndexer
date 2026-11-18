@@ -101,6 +101,15 @@ const missionTriggerNodes = (stateKey: string): GraphNode[] => {
   return out;
 };
 
+const missionEndNodes = (missionId: string): GraphNode[] => {
+  if (!missionId) return [];
+  const out: GraphNode[] = [];
+  for (const node of nodes) {
+    if (node.missionEnds.indexOf(missionId) >= 0) out.push(node);
+  }
+  return out;
+};
+
 type ReadKind = "flag" | "stat" | "rel";
 
 const checkpointKeysOf = (kind: ReadKind, key: string): string[] =>
@@ -139,6 +148,7 @@ export const graph = {
   flagUsage,
   incomingByIndex,
   indexById,
+  missionEndNodes,
   missionTriggerNodes,
   nextTargets,
   nodeById,

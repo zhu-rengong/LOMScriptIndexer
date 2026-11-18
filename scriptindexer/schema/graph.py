@@ -78,6 +78,7 @@ class NodeRow(Wire):
     flags: NodeFlags | None = None
     facets: Facets | None = None
     mission_states: list[str] = msgspec.field(default_factory=list)
+    mission_ends: list[str] = msgspec.field(default_factory=list)
     time: int | None = None
 
 

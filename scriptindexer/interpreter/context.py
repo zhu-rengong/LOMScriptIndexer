@@ -16,6 +16,7 @@ class AnalysisContext:
     temp_writes: dict[str, set[str]] = field(default_factory=dict)
     travel_writes: set[str] = field(default_factory=set)
     mission_states: set[str] = field(default_factory=set)
+    mission_ends: set[str] = field(default_factory=set)
     unresolved_jumps: list[str] = field(default_factory=list)
     time: int | None = None
     say_count: int = 0
@@ -55,6 +56,11 @@ class AnalysisContext:
         if key:
             self.mission_states.add(key)
 
+    def add_mission_end(self, mission_id: str) -> None:
+        if not mission_id:
+            return
+        self.mission_ends.add("main" if mission_id.lower() == "main" else mission_id)
+
     def mark_after(self, target: str) -> None:
         if not target:
             return
@@ -84,6 +90,7 @@ class AnalysisContext:
             },
             travel_writes=tuple(sorted(self.travel_writes)),
             mission_states=tuple(sorted(self.mission_states)),
+            mission_ends=tuple(sorted(self.mission_ends)),
             unresolved_jumps=list(self.unresolved_jumps),
             time=self.time,
             say_count=self.say_count,

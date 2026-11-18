@@ -220,6 +220,7 @@ def assemble_nodes(
                 ),
                 facets=facets.get(sid, Facets()),
                 mission_states=list(models[sid].mission_states),
+                mission_ends=list(models[sid].mission_ends),
                 time=time_by_script.get(sid),
             )
         )

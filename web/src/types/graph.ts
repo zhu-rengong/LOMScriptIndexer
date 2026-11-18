@@ -39,6 +39,7 @@ export type GraphNode = {
   flags: ScriptFlags;
   facets: Facets;
   missionStates: string[];
+  missionEnds: string[];
   time: number | null;
 };
 
