@@ -792,7 +792,6 @@
     border: 0;
     background: none;
     color: var(--ink-2);
-    user-select: none;
   }
 
   .scene-switch .scene-label {
