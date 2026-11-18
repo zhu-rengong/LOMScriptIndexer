@@ -4,6 +4,7 @@ import { textStore } from "../data/text";
 import { t } from "../i18n";
 
 import type { QueryContext, QueryError } from "../types/query";
+import { missionLabelTable } from "./missionLabel";
 import { createIndex, query, type QueryIndex } from "./query";
 import { scriptStore as script } from "./scriptStore";
 
@@ -80,7 +81,7 @@ const buildIndex = (): QueryIndex => {
       stats: names.stat || {},
       relations: names.rel || {},
       endings: names.ending || {},
-      missions: { ...names.mission, main: t("missionMain") },
+      missions: missionLabelTable(),
     },
   };
   compileCache = createIndex(context);

@@ -7,6 +7,7 @@ from ..vocab import DEATH_SCENE
 MISSION_KIND = "mission"
 MISSION_TRIGGER_KIND = "missionTrigger"
 MAIN_MISSION = "main"
+STATE_PREFIX = "state-"
 
 
 def _mission_id(kind: str, key: str, extra: str, owner: Mapping[str, str] | None) -> str:
@@ -17,10 +18,27 @@ def _mission_id(kind: str, key: str, extra: str, owner: Mapping[str, str] | None
     return MAIN_MISSION if value.lower() == MAIN_MISSION else value
 
 
+def _mission_values(
+    kind: str,
+    key: str,
+    extra: str,
+    owner: Mapping[str, str] | None,
+    named_states: set[str],
+) -> tuple[str, ...]:
+    values: list[str] = []
+    mission = _mission_id(kind, key, extra, owner)
+    if mission:
+        values.append(mission)
+    if kind == MISSION_KIND and key in named_states:
+        values.append(f"{STATE_PREFIX}{key}")
+    return tuple(values)
+
+
 def collect_facets(
     beats: Sequence[object],
     extra_check_keys: Iterable[str] | None = None,
     mission_owner: Mapping[str, str] | None = None,
+    named_states: Iterable[str] | None = None,
 ) -> Facets:
     speakers: set[str] = set()
     flags: set[str] = set()
@@ -29,6 +47,7 @@ def collect_facets(
     relations: set[str] = set()
     endings: set[str] = set()
     missions: set[str] = set()
+    named = set(named_states) if named_states else set()
     option_count = 0
     lock_count = 0
     dice_check_count = 0
@@ -45,9 +64,9 @@ def collect_facets(
                     speakers.add(beat.speaker)
             elif isinstance(beat, MetaBeat):
                 if beat.kind in (MISSION_KIND, MISSION_TRIGGER_KIND):
-                    mission = _mission_id(beat.kind, beat.key, beat.extra, mission_owner)
-                    if mission:
-                        missions.add(mission)
+                    missions.update(
+                        _mission_values(beat.kind, beat.key, beat.extra, mission_owner, named)
+                    )
                     continue
                 if not beat.key:
                     continue

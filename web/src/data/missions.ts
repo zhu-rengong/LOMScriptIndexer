@@ -61,4 +61,8 @@ const isMain = (missionId: string): boolean => {
   return record ? record.main : missionId === "main";
 };
 
-export const missions = { isMain, missionIdOf, missionOfState, recordOf };
+const missionIds = (): string[] => Object.keys(records);
+
+const stateKeys = (): string[] => Array.from(stateIndex.keys());
+
+export const missions = { isMain, missionIdOf, missionOfState, recordOf, missionIds, stateKeys };

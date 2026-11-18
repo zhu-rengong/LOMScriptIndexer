@@ -11,6 +11,7 @@ import { useViewStore } from "../stores/view";
 import type { CheckRef, MetaSeal, MissionEventView } from "../types/beats";
 import type { CheckpointModel, ConditionNode, PositionCandidate } from "../types/condition";
 import { signedNumber } from "./browser";
+import { missionLabel, missionStateLabel } from "./missionLabel";
 
 let viewHandle: ReturnType<typeof useViewStore> | null = null;
 
@@ -638,12 +639,17 @@ export const missionEventView = (
     return {
       type: value === 1 ? "trigger" : "cancel",
       code: missionId,
-      name: missionName(missionId),
+      name: missionId ? missionLabel(missionId) : "",
     };
   }
   const missionId = missions.missionIdOf(key, extra);
-  if (key === "clear") return { type: "end", code: missionId, name: missionName(missionId) };
-  return { type: "trigger", code: key, name: stateNoteOf(key) || missionName(missionId) };
+  if (key === "clear") {
+    return { type: "end", code: missionId, name: missionId ? missionLabel(missionId) : "" };
+  }
+  const name = missions.missionOfState(key)
+    ? missionStateLabel(key)
+    : missionLabel(missionId) || key;
+  return { type: "trigger", code: key, name };
 };
 
 export const metaText = (kind: string, key: string, value: number | null, extra = ""): string => {

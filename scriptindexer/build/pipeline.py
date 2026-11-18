@@ -308,13 +308,24 @@ def _stage_render(context: BuildContext) -> None:
     context.flags = flag_facts.collect(checkpoints, context.missions, context.models)
     battle_facets = collect_battle_facets(context.models, context.battle_cards)
     mission_owner: dict[str, str] = {}
+    named_states: set[str] = set()
     if context.missions is not None:
         for mission_id, record in context.missions.items.items():
-            for state_key in record.states:
+            for state_key, state in record.states.items():
                 mission_owner[state_key] = mission_id
+                if state.desc:
+                    named_states.add(state_key)
+    reporter.info(
+        f"mission states: {len(mission_owner)} total, {len(named_states)} named"
+    )
     context.facets = {
         sid: merge(
-            collect_facets(context.models[sid].beats, context.models[sid].checks, mission_owner),
+            collect_facets(
+                context.models[sid].beats,
+                context.models[sid].checks,
+                mission_owner,
+                named_states,
+            ),
             battle_facets.get(sid),
         )
         for sid in context.node_ids
