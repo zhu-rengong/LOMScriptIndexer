@@ -52,7 +52,10 @@ export const useDragValue = (options: DragOptions) => {
     (event: PointerEvent) => {
       const current = state.value;
       if (!current || event.pointerId !== current.pointerId) return;
-      options.apply({ dx: event.clientX - current.startX, dy: event.clientY - current.startY }, current);
+      options.apply(
+        { dx: event.clientX - current.startX, dy: event.clientY - current.startY },
+        current,
+      );
     },
   );
 

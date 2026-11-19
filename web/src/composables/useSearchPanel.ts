@@ -123,7 +123,12 @@ export const useSearchPanel = () => {
       return 0;
     }
     const filterSet = store.filterSet;
-    if (!isStale && value === renderedQuery && filterSet === renderedFilterSet && hits.value.length) {
+    if (
+      !isStale &&
+      value === renderedQuery &&
+      filterSet === renderedFilterSet &&
+      hits.value.length
+    ) {
       updateStatus();
       show();
       return hits.value.length;

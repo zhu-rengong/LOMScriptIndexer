@@ -123,7 +123,9 @@ export const suggest = (source: string, cursor: number, index: QueryIndex): Sugg
   const needle = valuePrefix.toLowerCase();
   const allowed = needle !== "" ? facetFilter(index, field, needle) : null;
   const filtered =
-    allowed === null ? candidates : candidates.filter((_, position) => allowed.has(String(position)));
+    allowed === null
+      ? candidates
+      : candidates.filter((_, position) => allowed.has(String(position)));
 
   return {
     mode: "value",

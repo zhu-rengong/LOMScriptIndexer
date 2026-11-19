@@ -40,7 +40,12 @@ const hitsOf = (entry: IndexEntry, needle: string): SearchHit[] => {
   for (const line of entry.lines) {
     const position = line.indexOf(needle);
     if (position < 0) continue;
-    hits.push({ id: entry.id, chapter: entry.chapter, snippet: snippetOf(line, position), anchor: line });
+    hits.push({
+      id: entry.id,
+      chapter: entry.chapter,
+      snippet: snippetOf(line, position),
+      anchor: line,
+    });
   }
   return hits;
 };

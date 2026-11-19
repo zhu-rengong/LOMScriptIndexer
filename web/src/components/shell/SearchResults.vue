@@ -40,9 +40,7 @@ const splitSnippet = (hit: SearchHit) => {
   };
 };
 
-const rows = computed(() =>
-  visibleHits.value.map((hit) => ({ hit, parts: splitSnippet(hit) })),
-);
+const rows = computed(() => visibleHits.value.map((hit) => ({ hit, parts: splitSnippet(hit) })));
 
 const onScroll = () => {
   const node = panel.value;

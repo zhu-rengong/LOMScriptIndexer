@@ -70,10 +70,6 @@ const visible = computed(() =>
     />
     <EndingBlock v-else-if="block.kind === 'ending'" :ending="block.ending" />
     <SceneSwitch v-else-if="block.kind === 'scene'" :view="block.scene" />
-    <JumpLink
-      v-else-if="block.kind === 'jump'"
-      :jump="block.jump"
-      :fold-key="foldKeyOf(index)"
-    />
+    <JumpLink v-else-if="block.kind === 'jump'" :jump="block.jump" :fold-key="foldKeyOf(index)" />
   </template>
 </template>

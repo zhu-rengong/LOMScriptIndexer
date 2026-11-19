@@ -8,7 +8,14 @@ import {
   fontLabelKey,
   fontStackOf,
 } from "../lib/fontFamilies";
-import { GROUPS, TYPE_SLOTS, slotById } from "../lib/fontTypes";
+import { TYPE_SLOTS, slotById } from "../lib/fontTypes";
+import {
+  PREFS_DEFAULTS,
+  PREFS_LIMITS,
+  decodePrefs,
+  defaultPrefs,
+  type StoredPrefs,
+} from "../lib/prefsSchema";
 import { keys, storedRef } from "../lib/storage";
 import type {
   CapsMode,
@@ -21,49 +28,13 @@ import type {
   ThemeMode,
 } from "../types/font";
 
-const KEY = keys.prefs;
-
-const PREFS_VERSION = 12;
-
-type StoredPrefs = PrefState & { version: number };
-
 const BASE_SIZE = 16;
 const BASE_LEADING = 1.6;
 const BASE_WEIGHT = 400;
-const BASE_TRACKING = 0;
 
-const WEIGHTS = [300, 400, 500, 600, 700, 800];
-
-const CAPS: CapsMode[] = ["none", "upper", "small"];
-
-const THEMES: ThemeMode[] = ["light", "dark", "system"];
-
-const MEASURE_MIN = 520;
-const MEASURE_MAX = 1400;
-const MEASURE_DEFAULT = 860;
-const SCALE_MIN = 25;
-const SCALE_MAX = 300;
-const SCALE_STEP = 5;
-const LEADING_MIN = 50;
-const LEADING_MAX = 250;
-const LEADING_STEP = 5;
-const TRACKING_MIN = -0.05;
-const TRACKING_MAX = 0.5;
-const TRACKING_STEP = 0.01;
-const PORTRAIT_SIZE_MIN = 60;
-const PORTRAIT_SIZE_MAX = 100;
-const PORTRAIT_SIZE_STEP = 4;
-const PORTRAIT_SIZE_DEFAULT = 80;
-
-const GROUP_DEFAULT = {
-  scale: 100,
-  leading: 100,
-  tracking: BASE_TRACKING,
-  weight: BASE_WEIGHT,
-  italic: false,
-  caps: "none" as CapsMode,
-  numeric: false,
-};
+const WEIGHTS = PREFS_DEFAULTS.weights;
+const CAPS = PREFS_DEFAULTS.caps;
+const THEMES = PREFS_DEFAULTS.themes;
 
 const LABELS = {
   followBase: "pref.followBase",
@@ -71,23 +42,9 @@ const LABELS = {
   groupAll: "pref.groupAll",
 };
 
-const PRESETS = {
-  weights: WEIGHTS.slice(),
-};
+const PRESETS = { weights: WEIGHTS.slice() };
 
-const LIMITS = {
-  measure: { min: MEASURE_MIN, max: MEASURE_MAX, fallback: MEASURE_DEFAULT },
-  scale: { min: SCALE_MIN, max: SCALE_MAX, step: SCALE_STEP },
-  leading: { min: LEADING_MIN, max: LEADING_MAX, step: LEADING_STEP },
-  tracking: { min: TRACKING_MIN, max: TRACKING_MAX, step: TRACKING_STEP },
-  weight: { min: WEIGHTS[0], max: WEIGHTS[WEIGHTS.length - 1], step: 100 },
-  portraitSize: {
-    min: PORTRAIT_SIZE_MIN,
-    max: PORTRAIT_SIZE_MAX,
-    step: PORTRAIT_SIZE_STEP,
-    fallback: PORTRAIT_SIZE_DEFAULT,
-  },
-};
+const LIMITS = PREFS_LIMITS;
 
 const clampNumber = (value: unknown, min: number, max: number, fallback: number): number => {
   const number = Number(value);
@@ -98,22 +55,21 @@ const clampNumber = (value: unknown, min: number, max: number, fallback: number)
 const roundTo = (value: number, step: number): number => Math.round(value / step) * step;
 
 const clampScale = (value: unknown, fallback: number): number =>
-  roundTo(clampNumber(value, SCALE_MIN, SCALE_MAX, fallback), SCALE_STEP);
+  roundTo(clampNumber(value, LIMITS.scale.min, LIMITS.scale.max, fallback), LIMITS.scale.step);
 
 const clampLeading = (value: unknown, fallback: number): number =>
-  Math.round(clampNumber(value, LEADING_MIN, LEADING_MAX, fallback) * 10) / 10;
+  Math.round(clampNumber(value, LIMITS.leading.min, LIMITS.leading.max, fallback) * 10) / 10;
 
 const clampTracking = (value: unknown, fallback: number): number =>
-  Math.round(clampNumber(value, TRACKING_MIN, TRACKING_MAX, fallback) * 100) / 100;
+  Math.round(clampNumber(value, LIMITS.tracking.min, LIMITS.tracking.max, fallback) * 100) / 100;
 
 const clampWeight = (value: unknown, fallback: number | null): number | null => {
   if (value === null) return fallback;
   const weight = Number(value);
   if (!Number.isFinite(weight)) return fallback;
-  const nearest = WEIGHTS.reduce((best, item) =>
+  return WEIGHTS.reduce((best, item) =>
     Math.abs(item - weight) < Math.abs(best - weight) ? item : best,
   );
-  return nearest;
 };
 
 const clampCaps = (value: unknown, fallback: CapsMode | null): CapsMode | null => {
@@ -129,115 +85,36 @@ const clampBool = (value: unknown, fallback: boolean | null): boolean | null => 
   return typeof value === "boolean" ? value : fallback;
 };
 
-const clampPortraitSize = (value: unknown, fallback: number): number =>
-  roundTo(clampNumber(value, PORTRAIT_SIZE_MIN, PORTRAIT_SIZE_MAX, fallback), PORTRAIT_SIZE_STEP);
-
 const normalizeBaseFont = (value: unknown): string => {
   const font = typeof value === "string" ? value.trim() : "";
   return font && font !== FOLLOW_BASE && font !== FOLLOW_GROUP ? font : DEFAULT_BASE_FONT;
 };
 
-const defaultGroups = (): Record<string, PrefEntry> => {
-  const out: Record<string, PrefEntry> = {};
-  for (const group of GROUPS) {
-    out[group.id] = { ...GROUP_DEFAULT, font: FOLLOW_BASE };
+const patchEntry = (current: PrefEntry, next: Partial<PrefEntry>, slotScope: boolean): void => {
+  if (typeof next.font === "string") current.font = next.font;
+  if (next.scale !== undefined) current.scale = clampScale(next.scale, current.scale);
+  if (next.leading !== undefined) current.leading = clampLeading(next.leading, current.leading);
+  if (next.tracking !== undefined)
+    current.tracking = clampTracking(next.tracking, current.tracking);
+  if (next.weight !== undefined) {
+    current.weight =
+      next.weight === null && slotScope ? null : clampWeight(next.weight, current.weight);
   }
-  return out;
-};
-
-const defaultSlots = (): Record<string, PrefEntry> => {
-  const out: Record<string, PrefEntry> = {};
-  for (const slot of TYPE_SLOTS) {
-    out[slot.id] = {
-      font: slot.font,
-      scale: slot.scale,
-      leading: slot.leading,
-      tracking: slot.tracking,
-      weight: slot.weight,
-      italic: slot.italic,
-      caps: slot.caps,
-      numeric: slot.numeric,
-    };
+  if (next.italic !== undefined) {
+    current.italic =
+      next.italic === null && slotScope ? null : clampBool(next.italic, current.italic);
   }
-  return out;
-};
-
-const normalizeGroup = (raw: unknown, base: PrefEntry): PrefEntry => {
-  const item = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
-  return {
-    font: typeof item.font === "string" ? item.font : base.font,
-    scale: clampScale(item.scale, base.scale),
-    leading: clampLeading(item.leading, base.leading),
-    tracking: clampTracking(item.tracking, base.tracking),
-    weight: clampWeight(item.weight === undefined ? base.weight : item.weight, base.weight),
-    italic: clampBool(item.italic === undefined ? base.italic : item.italic, base.italic),
-    caps: clampCaps(item.caps === undefined ? base.caps : item.caps, base.caps),
-    numeric: clampBool(item.numeric === undefined ? base.numeric : item.numeric, base.numeric),
-  };
-};
-
-const normalizeSlot = (raw: unknown, base: PrefEntry): PrefEntry => {
-  const item = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
-  const weight = item.weight === undefined ? base.weight : item.weight;
-  const italic = item.italic === undefined ? base.italic : item.italic;
-  const caps = item.caps === undefined ? base.caps : item.caps;
-  const numeric = item.numeric === undefined ? base.numeric : item.numeric;
-  return {
-    font: typeof item.font === "string" ? item.font : base.font,
-    scale: clampScale(item.scale, base.scale),
-    leading: clampLeading(item.leading, base.leading),
-    tracking: clampTracking(item.tracking, base.tracking),
-    weight: weight === null ? null : clampWeight(weight, base.weight),
-    italic: italic === null ? null : clampBool(italic, base.italic),
-    caps: caps === null ? null : clampCaps(caps, base.caps),
-    numeric: numeric === null ? null : clampBool(numeric, base.numeric),
-  };
-};
-
-const defaultState = (): StoredPrefs => ({
-  version: PREFS_VERSION,
-  theme: "system",
-  baseFont: DEFAULT_BASE_FONT,
-  groups: defaultGroups(),
-  slots: defaultSlots(),
-  measure: MEASURE_DEFAULT,
-  showPortraits: true,
-  portraitSize: PORTRAIT_SIZE_DEFAULT,
-});
-
-const decodePrefs = (raw: unknown): StoredPrefs => {
-  if (!raw || typeof raw !== "object") return defaultState();
-  const source = raw as Record<string, unknown>;
-  if (source.version !== PREFS_VERSION) return defaultState();
-  const next = defaultState();
-  next.theme = clampTheme(source.theme, next.theme);
-  next.baseFont = normalizeBaseFont(source.baseFont);
-  next.measure = Math.round(clampNumber(source.measure, MEASURE_MIN, MEASURE_MAX, MEASURE_DEFAULT));
-  next.showPortraits = source.showPortraits !== false;
-  next.portraitSize = clampPortraitSize(source.portraitSize, PORTRAIT_SIZE_DEFAULT);
-  const storedGroups =
-    source.groups && typeof source.groups === "object"
-      ? (source.groups as Record<string, unknown>)
-      : null;
-  if (storedGroups) {
-    for (const group of GROUPS) {
-      next.groups[group.id] = normalizeGroup(storedGroups[group.id], next.groups[group.id]);
-    }
+  if (next.caps !== undefined) {
+    current.caps = next.caps === null && slotScope ? null : clampCaps(next.caps, current.caps);
   }
-  const storedSlots =
-    source.slots && typeof source.slots === "object"
-      ? (source.slots as Record<string, unknown>)
-      : null;
-  if (storedSlots) {
-    for (const slot of TYPE_SLOTS) {
-      next.slots[slot.id] = normalizeSlot(storedSlots[slot.id], next.slots[slot.id]);
-    }
+  if (next.numeric !== undefined) {
+    current.numeric =
+      next.numeric === null && slotScope ? null : clampBool(next.numeric, current.numeric);
   }
-  return next;
 };
 
 export const usePrefsStore = defineStore("prefs", () => {
-  const state = storedRef<StoredPrefs>(KEY, defaultState(), { decode: decodePrefs });
+  const state = storedRef<StoredPrefs>(keys.prefs, defaultPrefs(), { decode: decodePrefs });
 
   const baseFont = computed({
     get: () => state.value.baseFont,
@@ -258,7 +135,7 @@ export const usePrefsStore = defineStore("prefs", () => {
     get: () => state.value.measure,
     set: (value: number) => {
       state.value.measure = Math.round(
-        clampNumber(value, MEASURE_MIN, MEASURE_MAX, state.value.measure),
+        clampNumber(value, LIMITS.measure.min, LIMITS.measure.max, state.value.measure),
       );
     },
   });
@@ -271,7 +148,15 @@ export const usePrefsStore = defineStore("prefs", () => {
   const portraitSize = computed({
     get: () => state.value.portraitSize,
     set: (value: number) => {
-      state.value.portraitSize = clampPortraitSize(value, state.value.portraitSize);
+      state.value.portraitSize = roundTo(
+        clampNumber(
+          value,
+          LIMITS.portraitSize.min,
+          LIMITS.portraitSize.max,
+          state.value.portraitSize,
+        ),
+        LIMITS.portraitSize.step,
+      );
     },
   });
 
@@ -381,30 +266,6 @@ export const usePrefsStore = defineStore("prefs", () => {
     portraitSize: state.value.portraitSize,
   });
 
-  const patchEntry = (current: PrefEntry, next: Partial<PrefEntry>, slotScope: boolean): void => {
-    if (typeof next.font === "string") current.font = next.font;
-    if (next.scale !== undefined) current.scale = clampScale(next.scale, current.scale);
-    if (next.leading !== undefined) current.leading = clampLeading(next.leading, current.leading);
-    if (next.tracking !== undefined) {
-      current.tracking = clampTracking(next.tracking, current.tracking);
-    }
-    if (next.weight !== undefined) {
-      current.weight =
-        next.weight === null && slotScope ? null : clampWeight(next.weight, current.weight);
-    }
-    if (next.italic !== undefined) {
-      current.italic =
-        next.italic === null && slotScope ? null : clampBool(next.italic, current.italic);
-    }
-    if (next.caps !== undefined) {
-      current.caps = next.caps === null && slotScope ? null : clampCaps(next.caps, current.caps);
-    }
-    if (next.numeric !== undefined) {
-      current.numeric =
-        next.numeric === null && slotScope ? null : clampBool(next.numeric, current.numeric);
-    }
-  };
-
   const set = (patch: PrefPatch): PrefState => {
     if (patch && typeof patch === "object") {
       if (patch.theme !== undefined) theme.value = patch.theme;
@@ -431,7 +292,7 @@ export const usePrefsStore = defineStore("prefs", () => {
   };
 
   const reset = (): PrefState => {
-    state.value = defaultState();
+    state.value = defaultPrefs();
     return get();
   };
 

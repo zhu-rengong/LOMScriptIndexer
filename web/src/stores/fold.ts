@@ -1,5 +1,7 @@
 import { defineStore } from "pinia";
 import type { Ref } from "vue";
+import { pinia } from "./index";
+import { useScriptStore } from "./script";
 
 export type FoldState = "none" | "collapsed" | "mixed" | "expanded";
 
@@ -7,6 +9,8 @@ export const useFoldStore = defineStore("fold", () => {
   const items = new Map<string, Ref<boolean>>();
   const states = new Map<string, boolean>();
   const revision = ref(0);
+
+  const scoped = (key: string): string => `${useScriptStore(pinia).selectedId}:${key}`;
 
   const register = (id: string, open: Ref<boolean>): void => {
     items.set(id, open);
@@ -18,10 +22,10 @@ export const useFoldStore = defineStore("fold", () => {
     revision.value++;
   };
 
-  const recall = (key: string): boolean | undefined => states.get(key);
+  const recall = (key: string): boolean | undefined => states.get(scoped(key));
 
   const remember = (key: string, open: boolean): void => {
-    states.set(key, open);
+    states.set(scoped(key), open);
   };
 
   const total = computed(() => {
