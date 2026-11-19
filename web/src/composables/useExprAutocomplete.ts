@@ -1,7 +1,7 @@
 import { useTimeoutFn } from "@vueuse/core";
 import { queryIndex } from "../lib/filter";
-import { overlay } from "../lib/overlay";
-import type { OverlayKey } from "../lib/overlayKeys";
+import { popovers } from "../lib/popover";
+import type { OverlayKey } from "../ui/ids";
 import { query } from "../lib/query";
 import type { QuerySuggestion } from "../types/query";
 
@@ -40,10 +40,10 @@ export const useExprAutocomplete = (
 ) => {
   const state = ref<SuggestState>(emptyState());
 
-  const isOpen = computed(() => overlay.isOpen(options.suggestKey));
+  const isOpen = computed(() => popovers.isOpen(options.suggestKey));
 
   const hide = (): void => {
-    overlay.close(options.suggestKey);
+    popovers.close(options.suggestKey);
   };
 
   const { start: scheduleHide, stop: cancelHide } = useTimeoutFn(hide, 120, { immediate: false });
@@ -66,7 +66,7 @@ export const useExprAutocomplete = (
       mode: result.mode,
     };
     void nextTick(() => {
-      overlay.open(options.suggestKey, {
+      popovers.open(options.suggestKey, {
         trigger: node,
         keep: [options.popoverKey],
         placement: { align: "start", gap: 6, matchWidth: true, fit: true },
@@ -165,7 +165,7 @@ export const useExprAutocomplete = (
   };
 
   onMounted(() => {
-    overlay.register(options.suggestKey, {
+    popovers.register(options.suggestKey, {
       id: options.domId,
       group: "menu",
       keep: [options.popoverKey],
@@ -177,7 +177,7 @@ export const useExprAutocomplete = (
   });
 
   onUnmounted(() => {
-    overlay.unregister(options.suggestKey);
+    popovers.unregister(options.suggestKey);
   });
 
   return { state, isOpen, update, hide, insert, accept, onInput, onKeydown, onKeyup, onBlur };

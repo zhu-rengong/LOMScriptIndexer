@@ -1,5 +1,5 @@
 import { useBreakpoints } from "@vueuse/core";
-import { overlay } from "../lib/overlay";
+import { popovers } from "../lib/popover";
 import { pinia } from "../stores";
 import { useViewStore } from "../stores/view";
 
@@ -15,10 +15,10 @@ export const useLayout = (onChange?: () => void): void => {
     if (next === view.layout && document.body.dataset.layout === next) return;
     view.setLayout(next);
     document.body.dataset.layout = next;
-    if (!view.isOverlayRail()) overlay.close("chapterRail");
-    overlay.close("moreMenu");
-    overlay.close("langMenu");
-    overlay.close("navMenu");
+    if (!view.isOverlayRail()) popovers.close("chapterRail");
+    popovers.close("moreMenu");
+    popovers.close("langMenu");
+    popovers.close("navMenu");
     if (onChange) onChange();
   };
 

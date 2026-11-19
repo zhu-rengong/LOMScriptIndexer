@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 import { byId } from "../../lib/browser";
-import { overlay } from "../../lib/overlay";
+import { popovers } from "../../lib/popover";
 import type { ReaderVisibleKind } from "../../types/beats";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
@@ -18,16 +18,16 @@ const items: { kind: ReaderVisibleKind; labelKey: string }[] = [
   { kind: "lore", labelKey: "typeLore" },
 ];
 
-const open = computed(() => overlay.isOpen(MENU_KEY));
+const open = computed(() => popovers.isOpen(MENU_KEY));
 
 const toggle = (event: MouseEvent) => {
   event.stopPropagation();
-  if (overlay.isOpen(MENU_KEY)) overlay.close(MENU_KEY);
-  else overlay.open(MENU_KEY, { trigger: byId(UI_IDS.displayFilterBtn) });
+  if (popovers.isOpen(MENU_KEY)) popovers.close(MENU_KEY);
+  else popovers.open(MENU_KEY, { trigger: byId(UI_IDS.displayFilterBtn) });
 };
 
 onMounted(() => {
-  overlay.register(MENU_KEY, {
+  popovers.register(MENU_KEY, {
     id: UI_IDS.displayFilterMenu,
     triggerId: UI_IDS.displayFilterBtn,
     group: "menu",

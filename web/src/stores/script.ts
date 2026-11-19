@@ -41,16 +41,10 @@ export const useScriptStore = defineStore("script", () => {
   const filterSet = shallowRef<Set<number> | null>(null);
   const filterError = ref("");
   const filterLoading = ref(false);
-  const visibilityRevision = ref(0);
   const filterRevision = ref(0);
 
   const bookmarks = bookmarksRef();
   const bookmarkVersion = ref(0);
-
-  const computeVisible = (): void => {
-    graph.computeVisibility(filterSet.value, selectedId.value);
-    visibilityRevision.value++;
-  };
 
   const selected = (): GraphNode | null =>
     selectedId.value ? graph.nodeById.get(selectedId.value) || null : null;
@@ -66,7 +60,6 @@ export const useScriptStore = defineStore("script", () => {
       history.value = next;
       historyIndex.value = next.length - 1;
     }
-    computeVisible();
     return true;
   };
 
@@ -76,7 +69,6 @@ export const useScriptStore = defineStore("script", () => {
     if (!graph.nodeById.has(id)) return null;
     historyIndex.value -= 1;
     selectedId.value = id;
-    computeVisible();
     return graph.nodeById.get(id) || null;
   };
 
@@ -86,7 +78,6 @@ export const useScriptStore = defineStore("script", () => {
     if (!graph.nodeById.has(id)) return null;
     historyIndex.value += 1;
     selectedId.value = id;
-    computeVisible();
     return graph.nodeById.get(id) || null;
   };
 
@@ -95,7 +86,6 @@ export const useScriptStore = defineStore("script", () => {
     filterSet.value = state.set === null ? null : markRaw(state.set);
     filterError.value = state.error;
     filterLoading.value = state.loading;
-    computeVisible();
     filterRevision.value++;
   };
 
@@ -120,7 +110,6 @@ export const useScriptStore = defineStore("script", () => {
     restored = true;
     lang.value = initialLang();
     applyDocumentLang(lang.value);
-    computeVisible();
     filterRevision.value++;
   };
 
@@ -157,7 +146,6 @@ export const useScriptStore = defineStore("script", () => {
     filterSet,
     filterError,
     filterLoading,
-    visibilityRevision,
     filterRevision,
     bookmarkVersion,
     selected,

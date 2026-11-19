@@ -1,45 +1,51 @@
-import { createApp } from "vue";
 import "./styles/index.css";
+import { createAppShell } from "./app";
 import App from "./components/App.vue";
-import { readHash } from "./composables/useHashRoute";
 import { graph } from "./data/graph";
 import { textStore } from "./data/text";
 import { syncLocale } from "./i18n";
 import { applyFilter } from "./lib/filter";
-import { exportScripts } from "./lib/scriptExport";
-import { searchIndex } from "./lib/search";
+import { router, scriptIdOf, showScript } from "./router";
 import { pinia } from "./stores";
 import { usePrefsStore } from "./stores/prefs";
 import { useScriptStore } from "./stores/script";
+import { useSearchStore } from "./stores/search";
 
 export const start = (): void => {
-  const app = createApp(App);
-  app.use(pinia);
+  const app = createAppShell(App);
+  app.use(router);
   usePrefsStore(pinia);
 
   const script = useScriptStore(pinia);
+  const search = useSearchStore(pinia);
   script.restoreLang();
   syncLocale(script.lang);
 
-  const appInstance = app.mount("#app");
-  void appInstance;
-
-  (window as unknown as { SR?: unknown }).SR = { exportScripts };
-  console.info("[ScriptIndexer] developer export: SR.exportScripts()");
+  app.mount("#app");
 
   watch(
     () => script.lang,
     (lang) => syncLocale(lang),
   );
 
-  const startId = readHash() || script.selectedId;
-  if (startId && graph.nodeById.has(startId)) {
-    script.select(startId, { history: true });
-  }
+  watch(
+    () => script.selectedId,
+    (id) => showScript(id),
+  );
+
+  watch(
+    () => router.currentRoute.value.params.id,
+    (raw) => {
+      const id = scriptIdOf(raw);
+      if (!id || !graph.nodeById.has(id)) return;
+      if (script.selectedId !== id) script.select(id, { history: false });
+    },
+    { immediate: true },
+  );
 
   textStore.ensureHead(script.textLang()).then(() => {
-    searchIndex.invalidate();
-    searchIndex.warm();
+    search.invalidate();
+    search.warm();
     if (script.filterSource.trim()) applyFilter(script.filterSource);
   });
 };

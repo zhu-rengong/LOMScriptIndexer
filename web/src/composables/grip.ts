@@ -1,6 +1,6 @@
 import { useEventListener } from "@vueuse/core";
 import type { Ref } from "vue";
-import { clamp } from "../lib/browser";
+import { clamp } from "../lib/math";
 import { pinia } from "../stores";
 import { usePrefsStore } from "../stores/prefs";
 import { useViewStore } from "../stores/view";

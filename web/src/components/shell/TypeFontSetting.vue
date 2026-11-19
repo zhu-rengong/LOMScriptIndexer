@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import { overlay } from "../../lib/overlay";
+import { popovers } from "../../lib/popover";
 import type { FontTarget } from "../../types/font";
 import AppIcon from "../ui/AppIcon.vue";
 import { useFontSetting } from "../../composables/useFontSetting";
@@ -15,15 +15,15 @@ const trigger = ref<HTMLButtonElement | null>(null);
 
 const caption = computed(() => props.label || t("typeFont"));
 
-const pickerOpen = computed(() => overlay.isOpen("fontPicker"));
+const pickerOpen = computed(() => popovers.isOpen("fontPicker"));
 
 const togglePicker = () => {
-  if (overlay.isOpen("fontPicker")) {
-    overlay.close("fontPicker");
+  if (popovers.isOpen("fontPicker")) {
+    popovers.close("fontPicker");
     return;
   }
   view.setPickerTarget(props.target);
-  overlay.open("fontPicker", { trigger: trigger.value });
+  popovers.open("fontPicker", { trigger: trigger.value });
 };
 </script>
 

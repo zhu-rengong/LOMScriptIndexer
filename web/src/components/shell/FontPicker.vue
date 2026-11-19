@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 import { toNeedle } from "../../lib/browser";
-import { overlay } from "../../lib/overlay";
+import { popovers } from "../../lib/popover";
 import { ensureSystemFonts, systemFonts, systemFontStatus } from "../../lib/systemFonts";
 import type { FontTarget } from "../../types/font";
 import AppIcon from "../ui/AppIcon.vue";
@@ -32,7 +32,7 @@ const manualOpen = ref(false);
 const manualValue = ref("");
 const moved = ref(false);
 
-const open = computed(() => overlay.isOpen("fontPicker"));
+const open = computed(() => popovers.isOpen("fontPicker"));
 
 const pickerItems = computed<PickerItem[]>(() => {
   const list: PickerItem[] = [];
@@ -92,7 +92,7 @@ const applyManual = () => {
   const value = manualValue.value.trim();
   if (!value) return;
   apply(value);
-  overlay.close("fontPicker");
+  popovers.close("fontPicker");
   ui.toast(t("fontPicked", { name: value }));
 };
 
@@ -102,7 +102,7 @@ const pick = (item: PickerItem) => {
     return;
   }
   apply(item.value);
-  overlay.close("fontPicker");
+  popovers.close("fontPicker");
   ui.toast(t("fontPicked", { name: item.label }));
 };
 
@@ -184,7 +184,7 @@ watch(activeIndex, async () => {
 });
 
 onMounted(() => {
-  overlay.register("fontPicker", {
+  popovers.register("fontPicker", {
     id: "fontPicker",
     group: "menu",
     keep: ["settings"],

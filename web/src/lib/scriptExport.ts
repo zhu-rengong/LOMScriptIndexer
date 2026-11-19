@@ -16,7 +16,7 @@ import type {
 import type { CheckpointModel, ConditionNode, PositionCandidate } from "../types/condition";
 import type { Chapter, GraphNode } from "../types/graph";
 import { buildReaderBlocks, speakerName } from "./blocks";
-import { signedNumber } from "./browser";
+import { signedNumber } from "./numbers";
 import {
   checkpointExpr,
   checkpointFallback,
@@ -29,8 +29,10 @@ import {
   requirementText,
 } from "./conditions";
 import { paragraphLines, stripMarkup } from "./richText";
-import { scriptStore as script } from "./scriptStore";
+import { useScriptStore } from "../stores/script";
 import { zipTextFiles } from "./zip";
+
+const script = () => useScriptStore(pinia);
 
 const SEPARATOR = "=".repeat(78);
 const INVALID_PATH = /[\\/:*?"<>|]/g;

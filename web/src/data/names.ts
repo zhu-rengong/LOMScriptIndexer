@@ -1,4 +1,7 @@
-import { scriptStore as script } from "../lib/scriptStore";
+import { pinia } from "../stores";
+import { useScriptStore } from "../stores/script";
+
+const script = () => useScriptStore(pinia);
 
 import { textStore } from "./text";
 

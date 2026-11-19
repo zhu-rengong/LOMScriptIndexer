@@ -32,22 +32,11 @@ for (const edge of edges) {
   incomingByIndex[targetIndex].push(edge);
 }
 
-const visibleMask = new Uint8Array(nodes.length);
-
 const chapterOf = (node: GraphNode | null | undefined): Chapter =>
   (node ? chapters[node.chapterIndex] : undefined) || EMPTY_CHAPTER;
 
 const passesFilter = (index: number, filterSet: Set<number> | null): boolean =>
   !filterSet || filterSet.has(index);
-
-const computeVisibility = (filterSet: Set<number> | null, selectedId: string): void => {
-  const selectedIndex = selectedId ? indexById.get(selectedId) : undefined;
-  for (let index = 0; index < nodes.length; index++) {
-    let show = passesFilter(index, filterSet);
-    if (!show && index === selectedIndex) show = true;
-    visibleMask[index] = show ? 1 : 0;
-  }
-};
 
 let chapterBuckets: GraphNode[][] | null = null;
 
@@ -59,21 +48,6 @@ const nodesByChapter = (): GraphNode[][] => {
     if (bucket) bucket.push(node);
   });
   return chapterBuckets;
-};
-
-const nextTargets = (node: GraphNode | null): { node: GraphNode; edge: GraphEdge }[] => {
-  if (!node) return [];
-  const index = indexById.get(node.id);
-  if (index === undefined) return [];
-  const seen = new Set<string>();
-  const targets: { node: GraphNode; edge: GraphEdge }[] = [];
-  for (const edge of outgoingByIndex[index]) {
-    const target = nodeById.get(edge.target);
-    if (!target || seen.has(target.id)) continue;
-    seen.add(target.id);
-    targets.push({ node: target, edge });
-  }
-  return targets;
 };
 
 const facetMatches = (node: GraphNode, kind: string, key: string): boolean => {
@@ -94,20 +68,12 @@ const nodesWithFacet = (kind: string, key: string): GraphNode[] => {
 
 const missionTriggerNodes = (stateKey: string): GraphNode[] => {
   if (!stateKey) return [];
-  const out: GraphNode[] = [];
-  for (const node of nodes) {
-    if (node.missionStates.indexOf(stateKey) >= 0) out.push(node);
-  }
-  return out;
+  return nodes.filter((node) => node.missionStates.indexOf(stateKey) >= 0);
 };
 
 const missionEndNodes = (missionId: string): GraphNode[] => {
   if (!missionId) return [];
-  const out: GraphNode[] = [];
-  for (const node of nodes) {
-    if (node.missionEnds.indexOf(missionId) >= 0) out.push(node);
-  }
-  return out;
+  return nodes.filter((node) => node.missionEnds.indexOf(missionId) >= 0);
 };
 
 type ReadKind = "flag" | "stat" | "rel";
@@ -143,14 +109,12 @@ export const graph = {
   chapters,
   chapterOf,
   checkpointReaderNodes,
-  computeVisibility,
   edges,
   flagUsage,
   incomingByIndex,
   indexById,
   missionEndNodes,
   missionTriggerNodes,
-  nextTargets,
   nodeById,
   nodes,
   nodesByChapter,

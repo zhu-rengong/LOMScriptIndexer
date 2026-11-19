@@ -1,6 +1,5 @@
 import type {
   CalendarInfo,
-  CheckpointDocument,
   DataIndex,
   FlagFactsPayload,
   MissionDocument,
@@ -107,7 +106,6 @@ export type Dataset = {
   varReads: VarReads;
   missions: MissionDocument;
   flagFacts: FlagFactsPayload;
-  checkpoints: CheckpointDocument;
   langs: string[];
   systemEntries: { id: string; label: string; origin: string }[];
   shardByNode: Record<string, string>;

@@ -1,31 +1,6 @@
 import * as v from "valibot";
+import { queryClient } from "../api/query";
 import type { DataIndex } from "../types/generated";
-
-const pending = new Map<string, Promise<unknown>>();
-const cache = new Map<string, unknown>();
-
-export const fetchJson = <T>(url: string): Promise<T> => {
-  const hit = cache.get(url);
-  if (hit !== undefined) return Promise.resolve(hit as T);
-  const job = pending.get(url);
-  if (job) return job as Promise<T>;
-  const next = fetch(url, { cache: "no-cache" })
-    .then((response) => {
-      if (!response.ok) throw new Error(`${url} -> ${response.status}`);
-      return response.json() as Promise<T>;
-    })
-    .then((payload) => {
-      cache.set(url, payload);
-      pending.delete(url);
-      return payload;
-    })
-    .catch((error: unknown) => {
-      pending.delete(url);
-      throw error;
-    });
-  pending.set(url, next);
-  return next;
-};
 
 const ArtifactSchema = v.object({
   url: v.string(),
@@ -42,6 +17,16 @@ const IndexSchema = v.object({
   sourceLang: v.string(),
   artifacts: v.record(v.string(), ArtifactSchema),
 });
+
+export const fetchJson = <T>(url: string): Promise<T> =>
+  queryClient.fetchQuery({
+    queryKey: ["artifact", url],
+    queryFn: async () => {
+      const response = await fetch(url, { cache: "no-cache" });
+      if (!response.ok) throw new Error(`${url} -> ${response.status}`);
+      return (await response.json()) as T;
+    },
+  });
 
 export const loadIndex = async (): Promise<DataIndex> =>
   v.parse(IndexSchema, await fetchJson<unknown>("data/index.json")) as DataIndex;

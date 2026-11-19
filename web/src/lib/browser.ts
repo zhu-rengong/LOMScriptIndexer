@@ -1,6 +1,3 @@
-export const clamp = (value: number, min: number, max: number): number =>
-  Math.max(min, Math.min(max, value));
-
 export const toNeedle = (value: unknown): string =>
   String(value ?? "")
     .trim()
@@ -17,13 +14,6 @@ export const normalizeSearchText = (value: unknown): string =>
     .replace(ZERO_WIDTH, "")
     .replace(HAN_GAP, "")
     .trim();
-
-const THOUSANDS = /\B(?=(\d{3})+(?!\d))/g;
-
-export const formatCount = (value: unknown): string =>
-  String(Number(value) || 0).replace(THOUSANDS, ",");
-
-export const signedNumber = (value: number): string => (value > 0 ? `+${value}` : String(value));
 
 export const nearBottom = (node: HTMLElement, threshold: number): boolean =>
   node.scrollHeight - node.scrollTop - node.clientHeight < threshold;

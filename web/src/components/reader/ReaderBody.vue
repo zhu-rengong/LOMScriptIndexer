@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { textStore } from "../../data/text";
 import { buildReaderBlocks } from "../../lib/blocks";
-import { clamp, normalizeSearchText } from "../../lib/browser";
+import { normalizeSearchText } from "../../lib/browser";
+import { clamp } from "../../lib/math";
 import type { FocusTarget } from "../../stores/panels";
 import BlockList from "./BlockList.vue";
 import EmptyState from "./EmptyState.vue";

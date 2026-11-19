@@ -4,7 +4,10 @@ import { textStore } from "../data/text";
 import { normalizeSearchText } from "./browser";
 import * as beatRows from "./beatRows";
 import { metaText } from "./conditions";
-import { scriptStore as script } from "./scriptStore";
+import { pinia } from "../stores";
+import { useScriptStore } from "../stores/script";
+
+const script = () => useScriptStore(pinia);
 
 const indexedMetaKinds = new Set([
   ...(dataset.vocab.itemKinds || []),

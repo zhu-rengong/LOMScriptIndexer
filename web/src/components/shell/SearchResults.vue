@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { chapterTitle, t } from "../../i18n";
 import { nearBottom } from "../../lib/browser";
-import { needleOf, type SearchHit } from "../../lib/search";
+import { useSearchStore, type SearchHit } from "../../stores/search";
 
 const SCROLL_THRESHOLD = 96;
 
@@ -22,21 +22,27 @@ const emit = defineEmits<{
   (event: "clear-filter"): void;
 }>();
 
+const search = useSearchStore();
 const panel = ref<HTMLElement | null>(null);
+
+const needle = computed(() => search.needle(props.query));
 
 const visibleHits = computed(() => props.hits.slice(0, props.renderedCount));
 
 const splitSnippet = (hit: SearchHit) => {
-  const needle = needleOf(props.query);
-  const lower = hit.snippet.toLowerCase();
-  const position = needle ? lower.indexOf(needle) : -1;
-  if (position < 0 || !needle) return null;
+  const value = needle.value;
+  const position = value ? hit.snippet.toLowerCase().indexOf(value) : -1;
+  if (position < 0) return null;
   return {
     head: hit.snippet.slice(0, position),
-    mark: hit.snippet.slice(position, position + needle.length),
-    tail: hit.snippet.slice(position + needle.length),
+    mark: hit.snippet.slice(position, position + value.length),
+    tail: hit.snippet.slice(position + value.length),
   };
 };
+
+const rows = computed(() =>
+  visibleHits.value.map((hit) => ({ hit, parts: splitSnippet(hit) })),
+);
 
 const onScroll = () => {
   const node = panel.value;
@@ -75,21 +81,20 @@ watch(
     </div>
     <div class="drop-empty popover-empty" :hidden="!status.message">{{ status.message }}</div>
     <div
-      v-for="(hit, position) in visibleHits"
-      :key="`${hit.id}:${position}`"
+      v-for="(row, position) in rows"
+      :key="`${row.hit.id}:${position}`"
       class="drop-item row row-tall"
       :class="{ 'is-active': position === activeIndex }"
-      :data-id="hit.id"
-      @click="emit('pick', hit)"
+      :data-id="row.hit.id"
+      @click="emit('pick', row.hit)"
     >
-      <span class="did">{{ hit.id }}</span>
-      <span class="dmeta">{{ hit.chapter ? chapterTitle(hit.chapter) : "" }}</span>
-      <span v-if="hit.snippet" class="dtext">
-        <template v-if="splitSnippet(hit)">
-          {{ splitSnippet(hit)?.head }}<mark>{{ splitSnippet(hit)?.mark }}</mark
-          >{{ splitSnippet(hit)?.tail }}
+      <span class="did">{{ row.hit.id }}</span>
+      <span class="dmeta">{{ row.hit.chapter ? chapterTitle(row.hit.chapter) : "" }}</span>
+      <span v-if="row.hit.snippet" class="dtext">
+        <template v-if="row.parts">
+          {{ row.parts.head }}<mark>{{ row.parts.mark }}</mark>{{ row.parts.tail }}
         </template>
-        <template v-else>{{ hit.snippet }}</template>
+        <template v-else>{{ row.hit.snippet }}</template>
       </span>
     </div>
   </div>

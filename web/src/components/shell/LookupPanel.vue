@@ -6,7 +6,7 @@ import { names } from "../../data/names";
 import { chapterTitle, t } from "../../i18n";
 import { firstSayTextOf, speakerName } from "../../lib/blocks";
 import { byId } from "../../lib/browser";
-import { overlay } from "../../lib/overlay";
+import { popovers } from "../../lib/popover";
 import type { CheckpointModel } from "../../types/condition";
 import type { GraphNode } from "../../types/graph";
 import { UI_IDS } from "../../ui/ids";
@@ -122,7 +122,7 @@ const readerRows = computed(() => checkpointReaders.value.map(rowOf));
 
 const close = () => {
   panels.hideLookup();
-  overlay.close("lookup");
+  popovers.close("lookup");
 };
 
 const pick = (node: GraphNode) => {
@@ -147,7 +147,7 @@ const positionLookup = () => {
     panel.style.position = "";
     return;
   }
-  overlay.place(panel, panels.lookupState.trigger, { align: "start", width: 380, fit: true });
+  popovers.place(panel, panels.lookupState.trigger, { align: "start", width: 380, fit: true });
 };
 
 const loadCheckpoint = async () => {
@@ -169,7 +169,7 @@ watch(
       void loadCheckpoint();
       return;
     }
-    overlay.open("lookup", { trigger: panels.lookupState.trigger });
+    popovers.open("lookup", { trigger: panels.lookupState.trigger });
     positionLookup();
     void loadCheckpoint();
   },
@@ -179,13 +179,13 @@ watch(
   () => panels.lookupState.open,
   (value) => {
     if (value) return;
-    if (overlay.isOpen("lookup")) overlay.close("lookup");
+    if (popovers.isOpen("lookup")) popovers.close("lookup");
     checkpoint.value = null;
   },
 );
 
 onMounted(() => {
-  overlay.register("lookup", {
+  popovers.register("lookup", {
     id: "lookupPanel",
     group: "pop",
     placement: { align: "start", width: 380, fit: true },

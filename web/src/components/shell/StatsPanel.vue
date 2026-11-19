@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { wordCount } from "../../data/wordcount";
 import { t } from "../../i18n";
-import { formatCount } from "../../lib/browser";
-import { overlay } from "../../lib/overlay";
+import { formatCount } from "../../lib/numbers";
+import { popovers } from "../../lib/popover";
 import { statsFilteredTotal, statsTableRows } from "../../lib/stats";
 import type { WordPack } from "../../types/text";
 import { UI_IDS } from "../../ui/ids";
@@ -24,7 +24,7 @@ const loading = ref(false);
 const activeKind = ref("all");
 const openChapter = ref("");
 
-const open = computed(() => overlay.isOpen("stats"));
+const open = computed(() => popovers.isOpen("stats"));
 
 const wordPack = computed<WordPack | null>(() => {
   void reloadTick.value;
@@ -45,7 +45,7 @@ const tableRows = computed(() =>
   statsTableRows(wordPack.value, activeKind.value, openChapter.value),
 );
 
-const close = () => overlay.close("stats");
+const close = () => popovers.close("stats");
 
 const pickKind = (id: string) => {
   if (activeKind.value === id) return;
@@ -57,7 +57,7 @@ const toggleChapter = (id: string) => {
 };
 
 const openScript = (id: string) => {
-  overlay.close("stats");
+  popovers.close("stats");
   store.select(id, { history: true });
 };
 
@@ -76,7 +76,7 @@ watch(open, (value) => {
 });
 
 onMounted(() => {
-  overlay.register("stats", {
+  popovers.register("stats", {
     id: UI_IDS.statsPanel,
     triggerId: UI_IDS.statsBtn,
     group: "modal",

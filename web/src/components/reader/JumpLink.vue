@@ -3,7 +3,7 @@ import { checkpoints } from "../../data/checkpoints";
 import { graph } from "../../data/graph";
 import { t } from "../../i18n";
 import { positionNeverReachable, positionTargetId } from "../../lib/conditions";
-import { signedNumber } from "../../lib/browser";
+import { signedNumber } from "../../lib/numbers";
 import type { JumpView } from "../../types/beats";
 import type { CheckpointModel, PositionCandidate } from "../../types/condition";
 import AppIcon from "../ui/AppIcon.vue";

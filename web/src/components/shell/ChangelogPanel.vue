@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import { overlay } from "../../lib/overlay";
+import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 
@@ -13,12 +13,12 @@ const ENTRIES = [
   { date: "2026-11-07", key: "changelogEntry1" },
 ];
 
-const open = computed(() => overlay.isOpen("changelog"));
+const open = computed(() => popovers.isOpen("changelog"));
 
-const close = () => overlay.close("changelog");
+const close = () => popovers.close("changelog");
 
 onMounted(() => {
-  overlay.register("changelog", {
+  popovers.register("changelog", {
     id: UI_IDS.changelogPanel,
     triggerId: UI_IDS.changelogBtn,
     group: "modal",

@@ -1,5 +1,8 @@
 import type { WordCountPayload } from "../types/generated";
-import { scriptStore as script } from "../lib/scriptStore";
+import { pinia } from "../stores";
+import { useScriptStore } from "../stores/script";
+
+const script = () => useScriptStore(pinia);
 import type { WordCount, WordCountPack, WordPack, WordRow } from "../types/text";
 import { EN_INDEX, ZH_INDEX } from "../types/text";
 import { dataset } from "./dataset";

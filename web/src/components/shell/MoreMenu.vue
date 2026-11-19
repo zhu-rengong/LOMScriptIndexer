@@ -1,35 +1,35 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 import { byId } from "../../lib/browser";
-import { overlay } from "../../lib/overlay";
+import { popovers } from "../../lib/popover";
 import { exportRunning, exportScripts } from "../../lib/scriptExport";
 import { UI_IDS } from "../../ui/ids";
 
-const open = computed(() => overlay.isOpen("moreMenu"));
+const open = computed(() => popovers.isOpen("moreMenu"));
 
 const openStats = () => {
-  overlay.close("moreMenu");
-  overlay.open("stats", { trigger: byId(UI_IDS.statsBtn) });
+  popovers.close("moreMenu");
+  popovers.open("stats", { trigger: byId(UI_IDS.statsBtn) });
 };
 
 const openHelp = () => {
-  overlay.close("moreMenu");
-  if (overlay.isOpen("help")) overlay.close("help");
-  else overlay.open("help", { trigger: byId(UI_IDS.helpBtn) });
+  popovers.close("moreMenu");
+  if (popovers.isOpen("help")) popovers.close("help");
+  else popovers.open("help", { trigger: byId(UI_IDS.helpBtn) });
 };
 
 const openChangelog = () => {
-  overlay.close("moreMenu");
-  overlay.open("changelog", { trigger: byId(UI_IDS.changelogBtn) });
+  popovers.close("moreMenu");
+  popovers.open("changelog", { trigger: byId(UI_IDS.changelogBtn) });
 };
 
 const runExport = () => {
-  overlay.close("moreMenu");
+  popovers.close("moreMenu");
   void exportScripts();
 };
 
 onMounted(() => {
-  overlay.register("moreMenu", {
+  popovers.register("moreMenu", {
     id: "moreMenu",
     triggerId: UI_IDS.moreBtn,
     group: "menu",

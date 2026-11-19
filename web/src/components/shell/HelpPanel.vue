@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import { overlay } from "../../lib/overlay";
+import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 
@@ -26,12 +26,12 @@ const FILTER_DOCS: { expr: string; desc: string }[] = [
   { expr: "helpFilterExample", desc: "helpFilterExampleDesc" },
 ];
 
-const open = computed(() => overlay.isOpen("help"));
+const open = computed(() => popovers.isOpen("help"));
 
-const close = () => overlay.close("help");
+const close = () => popovers.close("help");
 
 onMounted(() => {
-  overlay.register("help", {
+  popovers.register("help", {
     id: UI_IDS.helpPanel,
     triggerId: UI_IDS.helpBtn,
     group: "modal",

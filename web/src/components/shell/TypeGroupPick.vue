@@ -2,7 +2,7 @@
 import { t } from "../../i18n";
 import { byId } from "../../lib/browser";
 import { GROUPS, groupById, slotsOfGroup } from "../../lib/fontTypes";
-import { overlay } from "../../lib/overlay";
+import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 import { useViewStore } from "../../stores/view";
@@ -13,7 +13,7 @@ const PANEL = "typeGroupPick";
 
 const view = useViewStore();
 
-const open = computed(() => overlay.isOpen(PANEL));
+const open = computed(() => popovers.isOpen(PANEL));
 
 const current = computed(() => groupById(props.groupId) || GROUPS[0]);
 
@@ -27,7 +27,7 @@ const items = computed(() =>
 
 const pick = (id: string) => {
   view.setFontTarget({ scope: "group", id });
-  overlay.close(PANEL);
+  popovers.close(PANEL);
 };
 
 const onKeydown = (event: KeyboardEvent) => {
@@ -57,7 +57,7 @@ watch(open, async (value) => {
 });
 
 onMounted(() => {
-  overlay.register(PANEL, {
+  popovers.register(PANEL, {
     id: PANEL,
     triggerId: UI_IDS.typeGroupTrigger,
     group: "menu",

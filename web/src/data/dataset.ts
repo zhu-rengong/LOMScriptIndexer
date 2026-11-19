@@ -1,7 +1,6 @@
 import { DATA_SCHEMA } from "../types/contract";
 import type {
   CalendarInfo,
-  CheckpointDocument,
   DataIndex,
   Facets as WireFacets,
   FlagFactsPayload,
@@ -146,7 +145,6 @@ export const loadDataset = async (): Promise<Dataset> => {
     fetchJson<FlagFactsPayload>(assetUrl(index, "flagFacts")),
   ]);
   const meta = buildMeta(graph);
-  const emptyCheckpoints: CheckpointDocument = { schema: "", items: {} };
   dataset = {
     index,
     schema: index.schema,
@@ -163,7 +161,6 @@ export const loadDataset = async (): Promise<Dataset> => {
     },
     missions,
     flagFacts,
-    checkpoints: emptyCheckpoints,
     langs: meta.langs,
     systemEntries: meta.systemEntries,
     shardByNode: meta.shardByNode,

@@ -3,7 +3,7 @@ import { graph } from "../../data/graph";
 import { t } from "../../i18n";
 import { edgeLabelOf } from "../../lib/blocks";
 import { missionStateLabel } from "../../lib/missionLabel";
-import { overlay } from "../../lib/overlay";
+import { popovers } from "../../lib/popover";
 import { stripMarkup } from "../../lib/richText";
 import type { GraphEdge } from "../../types/graph";
 import { UI_IDS } from "../../ui/ids";
@@ -11,7 +11,7 @@ import { useScriptStore } from "../../stores/script";
 
 const store = useScriptStore();
 
-const open = computed(() => overlay.isOpen("navMenu"));
+const open = computed(() => popovers.isOpen("navMenu"));
 
 const node = computed(() => store.selected());
 
@@ -50,12 +50,12 @@ const edgeGroupLabel = (edge: GraphEdge) => {
 };
 
 const pick = (id: string) => {
-  overlay.close("navMenu");
+  popovers.close("navMenu");
   store.select(id, { history: true });
 };
 
 onMounted(() => {
-  overlay.register("navMenu", {
+  popovers.register("navMenu", {
     id: "navMenu",
     triggerId: UI_IDS.navBtn,
     group: "menu",

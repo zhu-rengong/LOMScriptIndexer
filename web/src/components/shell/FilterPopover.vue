@@ -4,7 +4,7 @@ import { graph } from "../../data/graph";
 import { chapterTitle, t } from "../../i18n";
 import { byId, nearBottom } from "../../lib/browser";
 import { applyFilter, EXAMPLES, FIELD_LABEL_KEYS, RESULT_LIMIT } from "../../lib/filter";
-import { overlay } from "../../lib/overlay";
+import { popovers } from "../../lib/popover";
 import { query } from "../../lib/query";
 import type { QuerySuggestion } from "../../types/query";
 import { UI_IDS } from "../../ui/ids";
@@ -140,7 +140,7 @@ const onSuggestScroll = (event: Event) => {
 
 const openPopover = () => {
   exprValue.value = store.filterSource;
-  overlay.open(POPOVER_KEY, { trigger: byId(UI_IDS.filterBtn) });
+  popovers.open(POPOVER_KEY, { trigger: byId(UI_IDS.filterBtn) });
   void nextTick(() => {
     const node = exprInput.value;
     if (!node) return;
@@ -150,11 +150,11 @@ const openPopover = () => {
 };
 
 const toggle = () => {
-  if (overlay.isOpen(POPOVER_KEY)) overlay.close(POPOVER_KEY);
+  if (popovers.isOpen(POPOVER_KEY)) popovers.close(POPOVER_KEY);
   else openPopover();
 };
 
-const closePanel = () => overlay.close(POPOVER_KEY);
+const closePanel = () => popovers.close(POPOVER_KEY);
 
 const applyExample = (expr: string) => {
   exprValue.value = expr;
@@ -173,7 +173,7 @@ const onResultsScroll = () => {
 };
 
 const pickNode = (id: string) => {
-  overlay.close(POPOVER_KEY);
+  popovers.close(POPOVER_KEY);
   store.select(id, { history: true });
 };
 
@@ -187,7 +187,7 @@ watch(
 );
 
 onMounted(() => {
-  overlay.register(POPOVER_KEY, {
+  popovers.register(POPOVER_KEY, {
     id: POPOVER_KEY,
     triggerId: UI_IDS.filterBtn,
     group: "pop",
@@ -197,7 +197,7 @@ onMounted(() => {
   });
 });
 
-const isPopoverOpen = computed(() => overlay.isOpen(POPOVER_KEY));
+const isPopoverOpen = computed(() => popovers.isOpen(POPOVER_KEY));
 </script>
 
 <template>

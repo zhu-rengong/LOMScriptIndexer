@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import { signedNumber } from "../../lib/browser";
+import { signedNumber } from "../../lib/numbers";
 import { condText, localizedName } from "../../lib/conditions";
 import type { CheckpointModel, DiceAddition, PositionCandidate } from "../../types/condition";
 import CondExpr from "../reader/CondExpr.vue";

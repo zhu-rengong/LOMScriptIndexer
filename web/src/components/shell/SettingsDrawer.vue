@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 import { byId } from "../../lib/browser";
-import { overlay } from "../../lib/overlay";
+import { popovers } from "../../lib/popover";
 import { BASE_TARGET, GROUPS, firstSlot, groupById, slotById } from "../../lib/fontTypes";
 import { ensureSystemFonts } from "../../lib/systemFonts";
 import type { FontTarget, ThemeMode } from "../../types/font";
@@ -36,7 +36,7 @@ const group = computed(() => {
   return (slot ? groupById(slot.group) : null) || GROUPS[0];
 });
 
-const open = computed(() => overlay.isOpen("settings"));
+const open = computed(() => popovers.isOpen("settings"));
 
 const themeOptions: { value: ThemeMode; label: string }[] = [
   { value: "light", label: "pref.themeLight" },
@@ -61,14 +61,14 @@ const reset = () => {
   ui.toast(t("toastReset"));
 };
 
-const groupPickOpen = computed(() => overlay.isOpen("typeGroupPick"));
+const groupPickOpen = computed(() => popovers.isOpen("typeGroupPick"));
 
 const toggleGroupPick = () => {
-  if (overlay.isOpen("typeGroupPick")) {
-    overlay.close("typeGroupPick");
+  if (popovers.isOpen("typeGroupPick")) {
+    popovers.close("typeGroupPick");
     return;
   }
-  overlay.open("typeGroupPick", {
+  popovers.open("typeGroupPick", {
     trigger: byId(UI_IDS.typeGroupTrigger),
     keep: ["settings"],
     placement: { align: "start", gap: 6, matchWidth: true },
@@ -76,9 +76,9 @@ const toggleGroupPick = () => {
 };
 
 const close = () => {
-  overlay.close("typeGroupPick");
-  overlay.close("fontPicker");
-  overlay.close("settings");
+  popovers.close("typeGroupPick");
+  popovers.close("fontPicker");
+  popovers.close("settings");
 };
 
 watch(open, async (value) => {
@@ -89,7 +89,7 @@ watch(open, async (value) => {
 });
 
 onMounted(() => {
-  overlay.register("settings", {
+  popovers.register("settings", {
     id: UI_IDS.settingsDrawer,
     triggerId: UI_IDS.settingsBtn,
     group: "sheet",

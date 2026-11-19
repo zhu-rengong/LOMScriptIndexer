@@ -10,7 +10,7 @@ import { pinia } from "../stores";
 import { useViewStore } from "../stores/view";
 import type { CheckRef, MetaSeal, MissionEventView } from "../types/beats";
 import type { CheckpointModel, ConditionNode, PositionCandidate } from "../types/condition";
-import { signedNumber } from "./browser";
+import { signedNumber } from "./numbers";
 import { missionLabel, missionStateLabel } from "./missionLabel";
 
 let viewHandle: ReturnType<typeof useViewStore> | null = null;

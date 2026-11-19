@@ -1,19 +1,12 @@
 import { defineStore } from "pinia";
-import { dataset } from "../data/dataset";
-import { textStore } from "../data/text";
-import { syncLocale } from "../i18n";
 import { byId } from "../lib/browser";
-import { applyFilter, resetFilterContext } from "../lib/filter";
-import { lang } from "../lib/lang";
-import { overlay } from "../lib/overlay";
-import { searchIndex } from "../lib/search";
+import { popovers } from "../lib/popover";
 import { keys, storedRef } from "../lib/storage";
 import type { ReaderVisibleKind, ReaderVisibility } from "../types/beats";
 import type { FontTarget } from "../types/font";
 import { UI_IDS } from "../ui/ids";
 import { pinia } from "./index";
-import { usePanelsStore } from "./panels";
-import { useScriptStore } from "./script";
+import { useLanguageStore } from "./language";
 
 const CHAPTER_RAIL = "chapterRail";
 
@@ -82,11 +75,11 @@ export const useViewStore = defineStore("view", () => {
   const openRail = (): void => {
     if (!isOverlayRail()) return;
     railOpen.value = true;
-    overlay.open(CHAPTER_RAIL, { trigger: byId(UI_IDS.railToggle) });
+    popovers.open(CHAPTER_RAIL, { trigger: byId(UI_IDS.railToggle) });
   };
 
   const closeRail = (): void => {
-    if (overlay.isOpen(CHAPTER_RAIL)) overlay.close(CHAPTER_RAIL);
+    if (popovers.isOpen(CHAPTER_RAIL)) popovers.close(CHAPTER_RAIL);
     else hideRail();
   };
 
@@ -111,25 +104,7 @@ export const useViewStore = defineStore("view", () => {
     revealOn.value = !revealOn.value;
   };
 
-  let langToken = 0;
-
-  const switchLang = async (id: string): Promise<void> => {
-    if (!id) return;
-    const script = useScriptStore(pinia);
-    const panels = usePanelsStore(pinia);
-    const token = ++langToken;
-    const content = dataset.meta.langs.indexOf(id) >= 0 ? id : script.textLang();
-    const ok = await textStore.ensureHead(content);
-    if (token !== langToken || !ok) return;
-    if (!script.setLang(id)) return;
-    syncLocale(id);
-    lang.applyDocument(id);
-    panels.hideLookup();
-    searchIndex.invalidate();
-    searchIndex.warm();
-    resetFilterContext();
-    if (script.filterSource.trim()) applyFilter(script.filterSource);
-  };
+  const switchLang = (id: string): Promise<void> => useLanguageStore(pinia).switchTo(id);
 
   return {
     layout,

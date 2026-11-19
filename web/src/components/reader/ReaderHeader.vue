@@ -2,7 +2,7 @@
 import { graph } from "../../data/graph";
 import { chapterTitle, t, timeText } from "../../i18n";
 import { byId } from "../../lib/browser";
-import { overlay } from "../../lib/overlay";
+import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 import DisplayFilterMenu from "./DisplayFilterMenu.vue";
@@ -27,7 +27,7 @@ const isBookmarked = computed(() => {
   return !!selectedScript.value && store.isBookmarked(selectedScript.value.id);
 });
 
-const navOpen = computed(() => overlay.isOpen("navMenu"));
+const navOpen = computed(() => popovers.isOpen("navMenu"));
 
 const inferOn = computed(() => view.inferEnabled);
 
@@ -41,8 +41,8 @@ const chapterTitleText = computed(() =>
 
 const toggleNav = (event: MouseEvent) => {
   event.stopPropagation();
-  if (overlay.isOpen("navMenu")) overlay.close("navMenu");
-  else overlay.open("navMenu", { trigger: byId(UI_IDS.navBtn) });
+  if (popovers.isOpen("navMenu")) popovers.close("navMenu");
+  else popovers.open("navMenu", { trigger: byId(UI_IDS.navBtn) });
 };
 
 const toggleBookmark = () => {

@@ -1,5 +1,5 @@
 import type { RichTextSegment } from "../types/beats";
-import { clamp } from "./browser";
+import { clamp } from "./math";
 
 const SIZE_BASE = 40;
 const SIZE_MIN_SCALE = 0.72;

@@ -16,7 +16,10 @@ import type { BeatKind } from "./beatRows";
 import * as beatRows from "./beatRows";
 import { condText, metaDisplay, metaTarget, missionEventView } from "./conditions";
 import { paragraphLines } from "./richText";
-import { scriptStore as script } from "./scriptStore";
+import { pinia } from "../stores";
+import { useScriptStore } from "../stores/script";
+
+const script = () => useScriptStore(pinia);
 
 export const speakerName = (id: string): string => {
   if (!id) return "";

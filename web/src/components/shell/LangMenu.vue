@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { languages, t } from "../../i18n";
-import { overlay } from "../../lib/overlay";
+import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
 import { useScriptStore } from "../../stores/script";
 import { useViewStore } from "../../stores/view";
@@ -10,15 +10,15 @@ const view = useViewStore();
 
 const items = computed(() => languages());
 
-const open = computed(() => overlay.isOpen("langMenu"));
+const open = computed(() => popovers.isOpen("langMenu"));
 
 const pick = (id: string) => {
-  overlay.close("langMenu");
+  popovers.close("langMenu");
   void view.switchLang(id);
 };
 
 onMounted(() => {
-  overlay.register("langMenu", {
+  popovers.register("langMenu", {
     id: "langMenu",
     triggerId: UI_IDS.langBtn,
     group: "menu",

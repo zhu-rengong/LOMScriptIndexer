@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import workbuddyIcon from "../../assets/workbuddy.png";
 import { langShort, t } from "../../i18n";
-import { overlay } from "../../lib/overlay";
-import type { OverlayKey } from "../../lib/overlayKeys";
+import { popovers } from "../../lib/popover";
+import type { OverlayKey } from "../../ui/ids";
 import AppIcon from "../ui/AppIcon.vue";
 import LangMenu from "./LangMenu.vue";
 import MoreMenu from "./MoreMenu.vue";
@@ -10,18 +10,18 @@ import { useScriptStore } from "../../stores/script";
 
 const store = useScriptStore();
 
-const langOpen = computed(() => overlay.isOpen("langMenu"));
-const moreOpen = computed(() => overlay.isOpen("moreMenu"));
-const statsOpen = computed(() => overlay.isOpen("stats"));
-const helpOpen = computed(() => overlay.isOpen("help"));
-const changelogOpen = computed(() => overlay.isOpen("changelog"));
-const settingsOpen = computed(() => overlay.isOpen("settings"));
+const langOpen = computed(() => popovers.isOpen("langMenu"));
+const moreOpen = computed(() => popovers.isOpen("moreMenu"));
+const statsOpen = computed(() => popovers.isOpen("stats"));
+const helpOpen = computed(() => popovers.isOpen("help"));
+const changelogOpen = computed(() => popovers.isOpen("changelog"));
+const settingsOpen = computed(() => popovers.isOpen("settings"));
 
 const langLabel = computed(() => langShort(store.lang));
 
 const toggle = (key: OverlayKey) => {
-  if (overlay.isOpen(key)) overlay.close(key);
-  else overlay.open(key);
+  if (popovers.isOpen(key)) popovers.close(key);
+  else popovers.open(key);
 };
 </script>
 
