@@ -527,7 +527,8 @@ def _combat_condition(reader: RefCache, path: Path, ref: Any) -> dict[str, Any] 
             "value": coerce_int(tree.get("_value")),
         }
     if name == "PlayerStat":
-        value_ref = tree.get("_stat") if isinstance(tree.get("_stat"), dict) else {}
+        raw_stat = tree.get("_stat")
+        value_ref = raw_stat if isinstance(raw_stat, dict) else {}
         check = coerce_int(value_ref.get("_checkType"), 1)
         return {
             "kind": "playerStat",

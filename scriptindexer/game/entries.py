@@ -4,6 +4,7 @@ from typing import Any
 from ..console import Reporter
 from ..schema import EntriesDocument, EntryStats, source_version
 from .assets import AssetSession, FileScope
+from .typetree import GENERATOR_MISSING
 from .unity_fields import POSITION_CLASS
 from .unity_objects import absent_fields
 
@@ -65,7 +66,7 @@ def probe_positions(session: AssetSession, ids: set[str], reporter: Reporter) ->
     )
 
     if session.generator is None:
-        stats.reason = "TypeTreeGeneratorAPI is not installed or its .NET runtime is unavailable"
+        stats.reason = GENERATOR_MISSING
         reporter.warn(stats.reason)
         return document
 

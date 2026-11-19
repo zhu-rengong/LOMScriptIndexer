@@ -1,6 +1,6 @@
 from cyclopts import App
 
-from . import build, extract, portraits
+from . import build, extract, portraits, schema
 from .common import run_app
 
 app = App(name="scriptindexer", help="Legend of Mortal script extraction and site data pipeline")
@@ -8,6 +8,7 @@ app = App(name="scriptindexer", help="Legend of Mortal script extraction and sit
 app.command(extract.app)
 app.command(build.app)
 app.command(portraits.app)
+app.command(schema.app)
 
 
 def main() -> None:

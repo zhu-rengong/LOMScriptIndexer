@@ -1,5 +1,5 @@
 import contextlib
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -15,12 +15,7 @@ def unitypy() -> Any:
     return UnityPy
 
 
-def typetree_available() -> bool:
-    try:
-        pass
-    except Exception:
-        return False
-    return True
+
 
 
 def _release_item(item: Any, seen: set[int]) -> None:
@@ -128,8 +123,6 @@ class RepairedTypeTreeGenerator:
 
 
 def try_build_generator(layout: GameLayout) -> Any | None:
-    if not typetree_available():
-        return None
     try:
         from UnityPy.helpers.TypeTreeGenerator import TypeTreeGenerator
 
@@ -409,17 +402,18 @@ class AssetSession:
 
     def iter_type(self, type_name: str) -> Iterator[tuple[Path, Any]]:
         self._ensure_index()
-        yield from self._type_index.get(type_name, ())
+        yield from (self._type_index or {}).get(type_name, ())
 
     def find_type(self, type_name: str) -> tuple[Path, Any] | None:
         self._ensure_index()
-        hits = self._type_index.get(type_name)
+        hits = (self._type_index or {}).get(type_name)
         return hits[0] if hits else None
 
-    def iter_class(self, classes: set[str]) -> Iterator[tuple[Path, Any, str]]:
+    def iter_class(self, classes: Iterable[str]) -> Iterator[tuple[Path, Any, str]]:
         self._ensure_index()
+        index = self._class_index or {}
         for name in classes:
-            for path, obj in self._class_index.get(name, ()):
+            for path, obj in index.get(name, ()):
                 yield path, obj, name
 
     def close(self) -> None:

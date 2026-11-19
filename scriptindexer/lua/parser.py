@@ -1,12 +1,10 @@
-from dataclasses import dataclass
-
 import tree_sitter_lua
 from tree_sitter import Language, Node, Parser
 
-_LANGUAGE = Language(tree_sitter_lua.language())
-_PARSER = Parser(_LANGUAGE)
+from ..scalars import normalize_newlines
 
 INDEX_KINDS = ("dot_index_expression", "bracket_index_expression")
+_LANGUAGE = Language(tree_sitter_lua.language())
 
 _ESCAPES = {
     "a": "\a",
@@ -22,22 +20,30 @@ _ESCAPES = {
 }
 
 
-@dataclass(frozen=True)
-class LuaChunk:
-    statements: list[Node]
-
-
 class LuaSyntaxError(Exception):
     def __init__(self, line: int, column: int) -> None:
         super().__init__(f"syntax error at line {line}, column {column}")
 
 
+class LuaChunk:
+    def __init__(self, statements: list[Node]) -> None:
+        self.statements = statements
+
+
+class LuaParser:
+    def __init__(self) -> None:
+        self._parser = Parser(_LANGUAGE)
+
+    def parse(self, source: str) -> LuaChunk:
+        tree = self._parser.parse(source.encode("utf-8"))
+        root = tree.root_node
+        if root.has_error:
+            raise LuaSyntaxError(*_error_point(root))
+        return LuaChunk(statements(root))
+
+
 def parse(source: str) -> LuaChunk:
-    tree = _PARSER.parse(source.encode("utf-8"))
-    root = tree.root_node
-    if root.has_error:
-        raise LuaSyntaxError(*_error_point(root))
-    return LuaChunk(statements(root))
+    return LuaParser().parse(source)
 
 
 def statements(node: Node | None) -> list[Node]:
@@ -121,11 +127,11 @@ def string_value(node: Node) -> str:
     if content is None:
         return ""
     start = node.child_by_field_name("start")
-    raw = content.text
+    raw = raw_text(content)
     if start is not None and start.type == "[[":
-        value = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+        value = normalize_newlines(raw)
         return value[1:] if value.startswith("\n") else value
-    return _unescape(raw.decode("utf-8"))
+    return _unescape(raw)
 
 
 def number_value(node: Node) -> int | float:
@@ -159,10 +165,8 @@ def render_source(node: Node | None) -> str:
     if kind in ("number", "identifier", "true", "false", "nil"):
         return raw_text(node)
     if kind == "dot_index_expression":
-        return (
-            f"{render_source(node.child_by_field_name('table'))}"
-            f'["{raw_text(node.child_by_field_name("field"))}"]'
-        )
+        table = render_source(node.child_by_field_name("table"))
+        return f'{table}["{raw_text(node.child_by_field_name("field"))}"]'
     if kind == "bracket_index_expression":
         return (
             f"{render_source(node.child_by_field_name('table'))}"
@@ -204,7 +208,9 @@ def _items(node: Node | None) -> list[Node]:
 
 
 def raw_text(node: Node | None) -> str:
-    return node.text.decode("utf-8") if node is not None else ""
+    if node is None or node.text is None:
+        return ""
+    return node.text.decode("utf-8")
 
 
 def _error_point(node: Node) -> tuple[int, int]:

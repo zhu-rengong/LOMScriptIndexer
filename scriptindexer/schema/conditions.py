@@ -5,7 +5,7 @@ import msgspec
 from .base import Wire
 
 
-class Condition(msgspec.Struct, rename="camel", omit_defaults=True, tag_field="tag"):
+class Condition(Wire, tag_field="tag"):
     pass
 
 
@@ -158,7 +158,3 @@ def check_keys(node: ConditionNode | None) -> set[str]:
 
     walk_conditions(node, on_check=collect)
     return found
-
-
-def has_expression(node: ConditionNode | None) -> bool:
-    return node is not None

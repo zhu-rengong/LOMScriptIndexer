@@ -7,7 +7,6 @@ from ..schema import (
     BattleRow,
     BeatNode,
     BranchRow,
-    CheckRef,
     ChoiceOption,
     ChoiceRow,
     EndingRow,
@@ -15,12 +14,12 @@ from ..schema import (
     LoreRow,
     MetaRow,
     OptionDetail,
-    Requirement,
     RequirementItem,
     SayRow,
     SceneRow,
 )
 from ..script_model import (
+    Beat,
     BranchBeat,
     ChoiceBeat,
     JumpBeat,
@@ -28,9 +27,6 @@ from ..script_model import (
     MetaBeat,
     SayBeat,
     SceneBeat,
-)
-from ..script_model import (
-    CheckRef as CheckRefModel,
 )
 from ..vocab import (
     BATTLE_LIKE_SCENE_NAMES,
@@ -76,29 +72,11 @@ class LanguageRender:
     seconds: float
 
 
-def check_to_schema(check: CheckRefModel | None) -> CheckRef | None:
-    if check is None:
-        return None
-    return CheckRef(kind=check.kind, key=check.key, expected_result=check.expected_result)
-
-
-def requirement_to_schema(requirement: Any) -> Requirement | None:
-    if requirement is None:
-        return None
-    return Requirement(op=requirement.op, operand=requirement.operand)
-
-
 def _requirement_items(view: OptionView) -> list[RequirementItem]:
-    items: list[RequirementItem] = []
-    for item in view.requirements:
-        items.append(
-            RequirementItem(
-                kind=str(item.get("kind") or ""),
-                op=str(item.get("op") or ""),
-                value=item.get("value"),
-            )
-        )
-    return items
+    return [
+        RequirementItem(kind=item.kind, op=item.op, value=item.value)
+        for item in view.requirements
+    ]
 
 
 class Renderer:
@@ -187,31 +165,37 @@ class Renderer:
         self.registry.register(labels.NAME_ENDING, key, title)
         return EndingRow(key=key, title=title, desc=desc)
 
-    def render_rows(self, beats: Sequence[object]) -> list[BeatNode]:
+    def row(self, beat: Beat) -> BeatNode | None:
+        match beat:
+            case SayBeat():
+                return self._say(beat)
+            case ChoiceBeat():
+                return self._choice(beat)
+            case BranchBeat():
+                return BranchRow(
+                    check=beat.check,
+                    condition=beat.cond,
+                    source=beat.source,
+                    rows=self.render_rows(beat.beats),
+                    group=beat.group,
+                )
+            case JumpBeat():
+                return self._jump(beat)
+            case LoreBeat():
+                return self._legend(beat.key)
+            case SceneBeat():
+                return self._scene(beat)
+        return None
+
+    def render_rows(self, beats: Sequence[Beat]) -> list[BeatNode]:
         out: list[BeatNode] = []
         for beat in beats:
-            if isinstance(beat, SayBeat):
-                out.append(self._say(beat))
-            elif isinstance(beat, ChoiceBeat):
-                out.append(self._choice(beat))
-            elif isinstance(beat, BranchBeat):
-                out.append(
-                    BranchRow(
-                        check=check_to_schema(beat.check),
-                        condition=beat.cond,
-                        source=beat.source,
-                        rows=self.render_rows(beat.beats),
-                        group=beat.group,
-                    )
-                )
-            elif isinstance(beat, JumpBeat):
-                out.append(self._jump(beat))
-            elif isinstance(beat, MetaBeat):
+            if isinstance(beat, MetaBeat):
                 self._meta(beat, out)
-            elif isinstance(beat, LoreBeat):
-                self._legend(beat.key, out)
-            elif isinstance(beat, SceneBeat):
-                self._scene(beat, out)
+                continue
+            row = self.row(beat)
+            if row is not None:
+                out.append(row)
         return out
 
     @staticmethod
@@ -293,7 +277,7 @@ class Renderer:
             options.append(
                 ChoiceOption(
                     text=text,
-                    requirement=requirement_to_schema(view.requirement or option.requirement),
+                    requirement=view.requirement or option.requirement,
                     rows=self.render_rows(option.beats),
                     lock=self._locked_label(option.lock),
                     detail=detail,
@@ -304,7 +288,9 @@ class Renderer:
 
     def _meta(self, beat: MetaBeat, out: list[BeatNode]) -> None:
         if beat.kind == "story":
-            self._legend(beat.key, out)
+            legend = self._legend(beat.key)
+            if legend is not None:
+                out.append(legend)
             return
         if beat.kind == "time":
             out.append(MetaRow(kind=beat.kind, value=beat.value))
@@ -336,52 +322,44 @@ class Renderer:
             self.registry.register(stat, str(value), name)
         out.append(MetaRow(kind=f"set{stat}", key=stat, value=value))
 
-    def _legend(self, key: str, out: list[BeatNode]) -> None:
+    def _legend(self, key: str) -> LoreRow | None:
         text = self.legend_info.get(key) or ""
         if not text:
             fallback = self.lore_fallback.get(key) or ""
-            if fallback:
-                text = fallback
-                self.lore_fallback_count += 1
-            else:
+            if not fallback:
                 self.lore_missing_count += 1
                 if len(self.lore_missing) < LORE_SAMPLE_LIMIT:
                     self.lore_missing.append(key)
-                return
+                return None
+            text = fallback
+            self.lore_fallback_count += 1
         self.counter.add_text("lore", text)
         self.lore_count += 1
-        out.append(LoreRow(text=text))
+        return LoreRow(text=text)
 
-    def _scene(self, beat: SceneBeat, out: list[BeatNode]) -> None:
+    def _scene(self, beat: SceneBeat) -> BeatNode:
         if beat.scene == DEATH_SCENE:
             ending = self._ending(beat.scene_key)
             if ending is not None:
-                out.append(ending)
-                return
+                return ending
         if beat.scene in BATTLE_LIKE_SCENE_NAMES and self.battles is not None:
             card = self.battles.card(beat.scene, beat.scene_key, beat.next_scene, beat.after_script)
             if card is not None:
                 self.battle_count += 1
-                for speaker in self._battle_speakers(card):
-                    self.character_ids.add(speaker)
-                out.append(
-                    BattleRow(
-                        scene=beat.scene,
-                        scene_key=beat.scene_key,
-                        next_scene=beat.next_scene,
-                        card=card,
-                        after_script=beat.after_script,
-                    )
+                self.character_ids.update(self._battle_speakers(card))
+                return BattleRow(
+                    scene=beat.scene,
+                    scene_key=beat.scene_key,
+                    next_scene=beat.next_scene,
+                    card=card,
+                    after_script=beat.after_script,
                 )
-                return
             self.battle_missing += 1
-        out.append(
-            SceneRow(
-                scene=beat.scene,
-                scene_key=beat.scene_key,
-                next_scene=beat.next_scene,
-                after_script=beat.after_script,
-            )
+        return SceneRow(
+            scene=beat.scene,
+            scene_key=beat.scene_key,
+            next_scene=beat.next_scene,
+            after_script=beat.after_script,
         )
 
     def edge_label(self, joined_labels: str) -> str:

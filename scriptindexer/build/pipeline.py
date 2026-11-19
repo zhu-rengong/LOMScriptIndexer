@@ -15,8 +15,9 @@ from ..game.build_info import read_build_info
 from ..game.entries import summarize as summarize_probe
 from ..game.layout import discover, game_root, install_folder_name, steamapps_dir
 from ..game.unity_objects import count_by_reason
-from ..jsonio import read_json
+from ..jsonio import read_payload
 from ..languages import DERIVED_LANGS, TEXT_SOURCE_LANG
+from ..manifest import load_manifest
 from ..output import format_bytes, prune, write
 from ..paths import LOCALE_DIR, LUA_DIR, MANIFEST_PATH, REPORT_PATH
 from ..schema import (
@@ -32,7 +33,9 @@ from ..schema import (
     GraphMeta,
     GraphPayload,
     LoreDocument,
+    Manifest,
     MissionDocument,
+    ReportPayload,
     ShardInfo,
     StatsDocument,
     TextHeadPayload,
@@ -41,8 +44,9 @@ from ..schema import (
     WordCountLang,
     WordCountPayload,
     artifact_paths,
+    artifact_version,
+    entry,
     load_source,
-    version_of,
 )
 from ..schema import (
     Facets as WireFacets,
@@ -67,7 +71,7 @@ from .graph import (
     temp_target_map,
     travel_target_map,
 )
-from .report import build_report_payload, write_report
+from .report import write_report
 from .script_render import LanguageRender, Renderer
 from .sharding import CHECKPOINT_SHARDS, pack_scripts, shard_index_by_key
 from .text_metrics import TEXT_KINDS, TextCounter, add_counts, empty_counts, sum_counts
@@ -98,7 +102,7 @@ class BuildContext:
     default_lang: str
     use_cache: bool
     jobs: int | None
-    manifest: dict[str, Any] = field(default_factory=dict)
+    manifest: Manifest = field(default_factory=Manifest)
     models: dict[str, ScriptAnalysis] = field(default_factory=dict)
     node_ids: list[str] = field(default_factory=list)
     chapters: list[ChapterRow] = field(default_factory=list)
@@ -149,7 +153,7 @@ def _load_sources(reporter: Reporter) -> dict[str, str]:
 
 
 def _load_locale(lang: str, reporter: Reporter) -> dict[str, Any] | None:
-    payload = read_json(LOCALE_DIR / f"{lang}.json")
+    payload = read_payload(LOCALE_DIR / f"{lang}.json")
     if not isinstance(payload, dict):
         reporter.error(f"missing or invalid locale table for {lang}, run scriptindexer-extract")
         return None
@@ -170,11 +174,9 @@ def _stage_analysis(context: BuildContext) -> None:
     context.models, context.reused, context.failed = analyze_all(
         sources, context.use_cache, context.reporter, context.jobs
     )
-    failed = [(sid, model.error) for sid, model in sorted(context.models.items()) if model.error]
-    for sid, error in failed[:20]:
-        context.reporter.warn(f"{sid} failed to parse: {error}")
-    if len(failed) > 20:
-        context.reporter.warn(f"{len(failed) - 20} more scripts failed to parse")
+    context.reporter.warn_failures(
+        [(sid, model.error) for sid, model in sorted(context.models.items()) if model.error]
+    )
     context.node_ids = sorted(context.models)
 
 
@@ -422,7 +424,7 @@ def _stage_output(context: BuildContext) -> None:
     )
     shard_keys = [shard.key for shard in context.shards]
     head = TextHeadPayload(
-        schema=version_of("textHead"),
+        schema=artifact_version("textHead"),
         lang=TEXT_SOURCE_LANG,
         characters=render.characters,
         titles=render.titles,
@@ -442,7 +444,7 @@ def _stage_output(context: BuildContext) -> None:
     shard_bytes = 0
     for shard in context.shards:
         payload = TextShardPayload(
-            schema=version_of("textShard"),
+            schema=artifact_version("textShard"),
             lang=TEXT_SOURCE_LANG,
             key=shard.key,
             scripts=buckets[shard.key],
@@ -476,7 +478,7 @@ def _stage_output(context: BuildContext) -> None:
         f", {len(context.shards)} shards {format_bytes(shard_bytes)}"
     )
     wordcount = WordCountPayload(
-        schema=version_of("wordcount"),
+        schema=artifact_version("wordcount"),
         kinds=list(TEXT_KINDS),
         langs={
             TEXT_SOURCE_LANG: WordCountLang(
@@ -498,7 +500,7 @@ def _stage_output(context: BuildContext) -> None:
             if context.checkpoint_mapping.get(key, 0) == index
         }
         payload = CheckpointDocument(
-            schema=version_of("checkpoints"), items=bucket, gaps=checkpoints.gaps
+            schema=artifact_version("checkpoints"), items=bucket, gaps=checkpoints.gaps
         )
         name, size = write("checkpoints", payload, index=str(index))
         context.parts.append((name, size))
@@ -509,7 +511,8 @@ def _stage_output(context: BuildContext) -> None:
     )
     if context.missions is not None:
         name, size = write(
-            "missions", MissionDocument(schema=version_of("missions"), items=context.missions.items)
+            "missions",
+            MissionDocument(schema=artifact_version("missions"), items=context.missions.items),
         )
         context.parts.append((name, size))
         reporter.info(f"mission definitions: {len(context.missions.items)} missions published")
@@ -517,7 +520,7 @@ def _stage_output(context: BuildContext) -> None:
     name, size = write(
         "varReads",
         VarReadsPayload(
-            schema=version_of("varReads"), flag=reads.flag, stat=reads.stat, rel=reads.rel
+            schema=artifact_version("varReads"), flag=reads.flag, stat=reads.stat, rel=reads.rel
         ),
     )
     context.parts.append((name, size))
@@ -531,7 +534,7 @@ def _stage_output(context: BuildContext) -> None:
     )
     flags = context.flags if context.flags is not None else FlagFactsPayload()
     name, size = write(
-        "flagFacts", FlagFactsPayload(schema=version_of("flagFacts"), flags=flags.flags)
+        "flagFacts", FlagFactsPayload(schema=artifact_version("flagFacts"), flags=flags.flags)
     )
     context.parts.append((name, size))
     reporter.info(f"flag facts: {len(flags.flags)} flags, {format_bytes(size)}")
@@ -552,7 +555,7 @@ def _stage_output(context: BuildContext) -> None:
     else:
         reporter.info("game version: unavailable (normal when the game is not installed)")
     graph = GraphPayload(
-        schema=version_of("graph"),
+        schema=artifact_version("graph"),
         meta=GraphMeta(
             generated=time.strftime("%Y-%m-%d %H:%M:%S"),
             game=game_info,
@@ -580,8 +583,8 @@ def _stage_output(context: BuildContext) -> None:
             context.collected.out_degree if context.collected is not None else {},
             context.collected.in_degree if context.collected is not None else {},
             context.facets,
-            set(context.manifest.get("anomalies", {}).get("empty_scripts") or []),
-            set(context.manifest.get("anomalies", {}).get("simplified_only_scripts") or []),
+            set(context.manifest.anomaly("empty_scripts")),
+            set(context.manifest.anomaly("simplified_only_scripts")),
             context.time_by_script,
         ),
         edges=edge_rows(context.edges),
@@ -595,37 +598,22 @@ def _stage_output(context: BuildContext) -> None:
         default_lang=graph.meta.default_lang,
         source_lang=graph.meta.source_lang,
         artifacts={
-            "graph": ArtifactEntry(url="data/graph.json", schema=version_of("graph")),
-            "textHead": ArtifactEntry(
-                url="data/text-{lang}-head.json",
-                schema=version_of("textHead"),
-                count=1,
-                shards=shard_keys,
+            "graph": entry("graph"),
+            "textHead": entry("textHead", count=1, shards=shard_keys),
+            "textShard": entry("textShard", count=len(shard_keys), shards=shard_keys),
+            "wordcount": entry("wordcount"),
+            "missions": entry(
+                "missions", count=len(context.missions.items) if context.missions else 0
             ),
-            "textShard": ArtifactEntry(
-                url="data/text-{lang}-{key}.json",
-                schema=version_of("textShard"),
-                count=len(shard_keys),
-                shards=shard_keys,
-            ),
-            "wordcount": ArtifactEntry(url="data/wordcount.json", schema=version_of("wordcount")),
-            "missions": ArtifactEntry(
-                url="data/missions.json",
-                schema=version_of("missions"),
-                count=len(context.missions.items) if context.missions is not None else 0,
-            ),
-            "checkpoints": ArtifactEntry(
-                url="data/checkpoints-{index}.json",
-                schema=version_of("checkpoints"),
+            "checkpoints": entry(
+                "checkpoints",
                 count=len(keys),
                 shards=[str(index) for index in range(CHECKPOINT_SHARDS)],
             ),
-            "varReads": ArtifactEntry(url="data/var-reads.json", schema=version_of("varReads")),
-            "flagFacts": ArtifactEntry(
-                url="data/flag-facts.json", schema=version_of("flagFacts"), count=len(flags.flags)
-            ),
-            "portraitManifest": ArtifactEntry(url="data/portraits/manifest.json", schema=""),
-            "portrait": ArtifactEntry(url="data/portraits/{file}", schema=""),
+            "varReads": entry("varReads"),
+            "flagFacts": entry("flagFacts", count=len(flags.flags)),
+            "portraitManifest": ArtifactEntry(url="data/portraits/manifest.json"),
+            "portrait": ArtifactEntry(url="data/portraits/{file}"),
         },
     )
     name, size = write("index", index)
@@ -697,7 +685,7 @@ def _write_report(context: BuildContext, graph: GraphPayload, wordcount: WordCou
     }
     wordcount_report = _wordcount_report(TEXT_SOURCE_LANG, wordcount, reporter)
     manifest = context.manifest
-    battle_manifest = manifest.get("battle_stats") or {}
+    battle_manifest = manifest.battle_stats
     battle_report = {
         "levels": len(context.battles.items) if context.battles is not None else 0,
         "used": metrics.battles,
@@ -708,7 +696,7 @@ def _write_report(context: BuildContext, graph: GraphPayload, wordcount: WordCou
         "actions": battle_manifest.get("actions", 0),
         "elapsed": battle_manifest.get("elapsed", 0),
     }
-    lore_manifest = manifest.get("lore_stats") or {}
+    lore_manifest = manifest.lore_stats
     lore_report = {
         "items": len(context.lore.items) if context.lore is not None else 0,
         "wanted": lore_manifest.get("wanted", 0),
@@ -718,7 +706,7 @@ def _write_report(context: BuildContext, graph: GraphPayload, wordcount: WordCou
         "missing": metrics.lore_missing,
         "samples": list(metrics.lore_missing_samples),
     }
-    mission_manifest = manifest.get("mission_stats") or {}
+    mission_manifest = manifest.mission_stats
     missions = context.missions
     mission_report = {
         "missions": len(missions.items) if missions is not None else 0,
@@ -760,12 +748,13 @@ def _write_report(context: BuildContext, graph: GraphPayload, wordcount: WordCou
         "with_position": mission_manifest.get("with_position", 0),
         "unresolved": mission_manifest.get("unresolved", 0),
     }
-    report_payload = build_report_payload(
+    report = ReportPayload(
+        schema=contract_version(),
         generated=time.strftime("%Y-%m-%d %H:%M:%S"),
-        script_count=script_count,
-        edge_counts=edge_counts,
-        node_counts=node_counts,
-        system_entries={
+        scripts=script_count,
+        edges=edge_counts,
+        nodes=node_counts,
+        entries={
             "hardcoded": msgspec.to_builtins(context.system.hardcoded) if context.system else [],
             "hardcoded_missing": context.system.absent_hardcoded_ids if context.system else [],
             "position": context.position_stats,
@@ -780,7 +769,7 @@ def _write_report(context: BuildContext, graph: GraphPayload, wordcount: WordCou
             "bytes": sum(size for name, size in context.parts if name == "wordcount.json"),
             "langs": wordcount_report,
         },
-        time_stats={
+        time={
             "explicit": len(context.time_by_script),
             "range": [
                 list(date_parts_of(min(context.time_by_script.values()))),
@@ -791,7 +780,7 @@ def _write_report(context: BuildContext, graph: GraphPayload, wordcount: WordCou
             "scripts": sorted(context.time_by_script),
         },
         chapters=msgspec.to_builtins(context.chapters),
-        text_artifact={
+        text={
             "shard_count": len(context.shards),
             "largest_shard_kb": max(
                 (round(shard.bytes / 1024) for shard in context.shards), default=0
@@ -799,7 +788,7 @@ def _write_report(context: BuildContext, graph: GraphPayload, wordcount: WordCou
             "shards": msgspec.to_builtins(context.shards),
         },
         languages={TEXT_SOURCE_LANG: context.language_report},
-        unresolved_jumps=collected.unresolved_jumps if collected is not None else [],
+        unresolved_jumps=list(collected.unresolved_jumps) if collected is not None else [],
         analysis={
             "failed": context.failed,
             "cache_reused": context.reused,
@@ -807,7 +796,7 @@ def _write_report(context: BuildContext, graph: GraphPayload, wordcount: WordCou
         },
         artifacts=[{"name": name, "size": size} for name, size in context.parts],
     )
-    write_report(REPORT_PATH, report_payload)
+    write_report(REPORT_PATH, report)
     reporter.info(
         "graph.json "
         + format_bytes(sum(size for name, size in context.parts if name == "graph.json"))
@@ -847,12 +836,10 @@ def _wordcount_report(lang: str, wordcount: WordCountPayload, reporter: Reporter
     return report
 
 
-def _game_info(manifest: dict[str, Any]) -> GameInfo:
+def _game_info(manifest: Manifest) -> GameInfo:
     root = game_root()
-    if root is None:
-        raw = manifest.get("game")
-        if isinstance(raw, str) and raw.strip():
-            root = Path(raw)
+    if root is None and manifest.game.strip():
+        root = Path(manifest.game)
     layout = discover(root)
     if layout is None:
         return GameInfo()
@@ -902,14 +889,13 @@ def run_build(
         reporter.warn(
             f"only {TEXT_SOURCE_LANG} is rendered; the other languages are derived at runtime"
         )
-    manifest = read_json(MANIFEST_PATH)
     context = BuildContext(
         reporter=reporter,
         langs=langs,
         default_lang=default_lang,
         use_cache=use_cache,
         jobs=jobs,
-        manifest=manifest if isinstance(manifest, dict) else {},
+        manifest=load_manifest(MANIFEST_PATH) or Manifest(),
     )
     try:
         for _title, step in BUILD_STEPS:

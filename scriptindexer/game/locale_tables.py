@@ -1,20 +1,20 @@
 import re
 import time
-from pathlib import Path
 from typing import Any
 
+import regex
+
 from ..console import Reporter
-from ..jsonio import read_json
+from ..jsonio import read_payload
 from ..languages import SUPPORTED_LANGS
 from ..paths import LOCALE_DIR
 from .assets import AssetSession
 
 _LOCALE_LINE = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)/([^\r\n=]{1,160}?) = (.*)$")
-
-TRADITIONAL_MARKERS = "這幾個們說為與後裡臺灣點麼樣還過對發現實當經開關無麼"
-SIMPLIFIED_MARKERS = "这几个们说为与后里台湾点么样还过对发现实当经开关无么"
-HANGUL_RANGE = ("\uac00", "\ud7a3")
-HAN_RANGE = ("\u4e00", "\u9fff")
+_HANGUL = regex.compile(r"\p{Hangul}")
+_HAN = regex.compile(r"\p{Han}")
+_TRADITIONAL_MARKERS = frozenset("這幾個們說為與後裡臺灣點麼樣還過對發現實當經開關無")
+_SIMPLIFIED_MARKERS = frozenset("这几个们说为与后里台湾点么样还过对发现实当经开关无")
 LOCALE_MIN_MATCHES = 8
 
 
@@ -29,23 +29,15 @@ def lang_from_filename(name: str) -> str | None:
     return None
 
 
-def _count_range(text: str, lo: str, hi: str) -> int:
-    return sum(1 for char in text if lo <= char <= hi)
-
-
-def _count_chars(text: str, charset: str) -> int:
-    return sum(1 for char in text if char in charset)
-
-
 def detect_language(text: str) -> str | None:
-    hangul = _count_range(text, *HANGUL_RANGE)
-    han = _count_range(text, *HAN_RANGE)
+    hangul = len(_HANGUL.findall(text))
+    han = len(_HAN.findall(text))
     if hangul > 0 and hangul >= han * 0.2:
         return "kr"
     if han == 0:
         return None
-    traditional = _count_chars(text, TRADITIONAL_MARKERS)
-    simplified = _count_chars(text, SIMPLIFIED_MARKERS)
+    traditional = sum(1 for char in text if char in _TRADITIONAL_MARKERS)
+    simplified = sum(1 for char in text if char in _SIMPLIFIED_MARKERS)
     if traditional > simplified:
         return "zh-tw"
     if simplified > traditional:
@@ -69,7 +61,7 @@ def parse_locale_text(text: str) -> tuple[dict[str, dict[str, str]], int]:
 
 
 def character_labels(lang: str) -> dict[str, str]:
-    payload = read_json(LOCALE_DIR / f"{lang}.json")
+    payload = read_payload(LOCALE_DIR / f"{lang}.json")
     table = payload.get("Character") if isinstance(payload, dict) else None
     return table if isinstance(table, dict) else {}
 
@@ -90,7 +82,7 @@ def merge_tables_into(
 def _locale_assets(session: AssetSession) -> list[tuple[Any, str | None]]:
     assets = list(session.iter_type("TextAsset"))
     suffixed: list[tuple[Any, str]] = []
-    locale_files: set[Path] = set()
+    locale_files: set[Any] = set()
     for path, obj in assets:
         lang = lang_from_filename(session.object_name(obj))
         if lang is not None and lang in SUPPORTED_LANGS:

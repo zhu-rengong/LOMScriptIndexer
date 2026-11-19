@@ -4,6 +4,7 @@ from typing import Any
 from ..console import Reporter
 from ..schema import LoreDocument, source_version
 from .assets import AssetSession
+from .typetree import require_generator
 from .unity_fields import LORE_CLASS, LORE_FIELDS
 from .unity_objects import absent_fields, count_by_reason, multiline_text
 
@@ -17,8 +18,7 @@ def probe_legend_texts(
 ) -> tuple[dict[str, str], list[dict[str, str]]]:
     if not wanted_keys:
         return {}, []
-    if session.generator is None:
-        raise RuntimeError("TypeTreeGeneratorAPI is not installed")
+    require_generator(session)
     items: dict[str, str] = {}
     seen: set[str] = set()
     failed: set[str] = set()

@@ -11,6 +11,8 @@ dependencies = [
   "typetreegeneratorapi>=0.0.10",
   "tree-sitter>=0.26.0",
   "tree-sitter-lua>=0.5.0",
+  "vdf>=3.4",
+  "regex>=2025.11.3",
 ]
 
 [project.scripts]
@@ -18,7 +20,7 @@ scriptindexer = "scriptindexer.cli.app:main"
 scriptindexer-extract = "scriptindexer.cli.extract:cli"
 scriptindexer-build = "scriptindexer.cli.build:cli"
 scriptindexer-portraits = "scriptindexer.cli.portraits:cli"
-scriptindexer-schema = "scriptindexer.schema.export:cli"
+scriptindexer-schema = "scriptindexer.cli.schema:cli"
 
 [dependency-groups]
 dev = [

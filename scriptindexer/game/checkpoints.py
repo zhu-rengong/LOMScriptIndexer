@@ -1,4 +1,5 @@
 import time
+from collections import Counter
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -6,6 +7,7 @@ from typing import Any
 import msgspec
 
 from ..console import Reporter
+from ..scalars import coerce_int
 from ..schema import (
     Branch,
     CheckpointCondition,
@@ -146,17 +148,6 @@ def _parse_dice(tree: dict[str, Any], scope: FileScope) -> CheckpointCondition:
     )
 
 
-def _int_field(value: Any) -> int:
-    if isinstance(value, bool):
-        return 0
-    if isinstance(value, int):
-        return value
-    try:
-        return int(value)
-    except TypeError, ValueError:
-        return 0
-
-
 def _has_items(node: Any) -> bool:
     return isinstance(node, dict) and bool(node.get("_items") or [])
 
@@ -174,17 +165,17 @@ def _position_candidate(event: dict[str, Any], scope: FileScope) -> PositionCand
         if not isinstance(item, dict):
             continue
         condition = item.get("_condition")
-        if not _has_items(condition):
+        if not isinstance(condition, dict) or not _has_items(condition):
             continue
         adjustments.append(
             PositionAdjustment(
-                rate=_int_field(item.get("_rate")),
+                rate=coerce_int(item.get("_rate")),
                 condition=condition_node(condition, scope),
             )
         )
     return PositionCandidate(
         name=name,
-        rate=_int_field(event.get("_defaultRate")),
+        rate=coerce_int(event.get("_defaultRate")),
         active=active,
         active_condition=condition_node(active_tree, scope) if active else None,
         active_empty=active and not _has_items(active_tree),
@@ -213,7 +204,7 @@ def _parse_flag(tree: dict[str, Any], scope: FileScope) -> CheckpointCondition:
     return CheckpointCondition(
         kind="flag",
         note=(tree.get("_devNote") or "").strip(),
-        default=_int_field(tree.get("_default", 0)),
+        default=coerce_int(tree.get("_default", 0)),
     )
 
 
@@ -316,11 +307,8 @@ def extract(
 def summarize(
     conditions: dict[str, CheckpointCondition], wanted_count: int, gaps: list[dict[str, Any]]
 ) -> dict[str, Any]:
-    by_kind: dict[str, int] = {}
-    variant_count = 0
-    for condition in conditions.values():
-        by_kind[condition.kind] = by_kind.get(condition.kind, 0) + 1
-        variant_count += len(condition.variants)
+    by_kind = Counter(condition.kind for condition in conditions.values())
+    variant_count = sum(len(condition.variants) for condition in conditions.values())
     return {
         "resolved": len(conditions),
         "wanted": wanted_count,

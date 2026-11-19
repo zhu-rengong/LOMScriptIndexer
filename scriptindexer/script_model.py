@@ -2,49 +2,40 @@ from typing import Any
 
 import msgspec
 
-from .schema import ConditionNode
-
-BASE = {"frozen": True, "rename": "camel", "omit_defaults": True}
+from .schema import CheckRef, ConditionNode, Requirement
 
 
-class TextRef(msgspec.Struct, **BASE):
+class Value(msgspec.Struct, frozen=True, rename="camel", omit_defaults=True):
+    pass
+
+
+class TextRef(Value, frozen=True):
     text: str = ""
     is_locale_key: bool = False
 
 
-class CharRef(msgspec.Struct, **BASE):
+class CharRef(Value, frozen=True):
     id: str = ""
 
 
-class CheckMark(msgspec.Struct, **BASE):
+class CheckMark(Value, frozen=True):
     kind: str = ""
     key: str = ""
 
 
-class Unevaluated(msgspec.Struct, **BASE):
+class Unevaluated(Value, frozen=True):
     source: str = ""
 
 
-class ScriptSlot(msgspec.Struct, **BASE):
+class ScriptSlot(Value, frozen=True):
     kind: str = ""
     key: str = ""
 
 
-class LockedOption(msgspec.Struct, **BASE):
+class LockedOption(Value, frozen=True):
     shown_text: Any = None
     locked_text: TextRef = msgspec.field(default_factory=TextRef)
     condition: ConditionNode | None = None
-
-
-class Requirement(msgspec.Struct, **BASE):
-    op: str = ""
-    operand: str = ""
-
-
-class CheckRef(msgspec.Struct, **BASE):
-    kind: str = ""
-    key: str = ""
-    expected_result: int | None = None
 
 
 class BeatBase(msgspec.Struct, frozen=True, rename="camel", omit_defaults=True, tag_field="t"):
@@ -59,7 +50,7 @@ class SayBeat(BeatBase, tag="say", frozen=True):
     offstage: bool = False
 
 
-class ChoiceOption(msgspec.Struct, **BASE):
+class ChoiceOption(Value, frozen=True):
     ref: TextRef = msgspec.field(default_factory=TextRef)
     requirement: Requirement | None = None
     lock: TextRef | None = None
@@ -109,7 +100,7 @@ class SceneBeat(BeatBase, tag="scene", frozen=True):
 Beat = SayBeat | ChoiceBeat | BranchBeat | JumpBeat | MetaBeat | LoreBeat | SceneBeat
 
 
-class Edge(msgspec.Struct, **BASE):
+class Edge(Value, frozen=True):
     source: str = ""
     target: str = ""
     kind: str = ""

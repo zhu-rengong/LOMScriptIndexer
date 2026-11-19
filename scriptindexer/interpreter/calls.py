@@ -1,9 +1,11 @@
 import re
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
+from functools import partial
 from typing import Any
 
 from .. import lua
 from ..calendar import rounds_of
+from ..scalars import number_text
 from ..schema import (
     CheckCondition,
     CompareCondition,
@@ -33,7 +35,6 @@ from .state import (
     OptionDraft,
     PendingSay,
     lua_key_sort_key,
-    number_text,
     source_snippet,
     unwrap_text,
 )
@@ -88,13 +89,54 @@ def dialog_style_of(arg: Any, table_name: str) -> str:
     return ""
 
 
+type CallRoute = Callable[[Sequence[lua.Node], EvalState, list[Any]], ChoiceDraft | None]
+type ObjectRoute = Callable[[str, Sequence[lua.Node], EvalState, list[Any]], ChoiceDraft | None]
+
+
 class CallHandler:
     def __init__(self, analyzer: Any) -> None:
         self.analyzer = analyzer
+        self._routes = self._build_routes()
+        self._object_routes: dict[str, ObjectRoute] = {
+            self.semantics.stat_object: self.apply_effect,
+        }
 
     @property
     def semantics(self) -> Semantics:
         return self.analyzer.semantics
+
+    def _build_routes(self) -> dict[tuple[str, str], CallRoute]:
+        semantics = self.semantics
+        routes: dict[tuple[str, str], CallRoute] = {
+            ("", semantics.say_method): self._say_call,
+            ("", semantics.speaker_method): self._speaker_call,
+            ("", semantics.dialog_method): self._dialog_call,
+            ("", semantics.choice_method): self._choice_call,
+            ("", semantics.view_block_method): self._view_block_call,
+            (semantics.think_object, semantics.think_method): self._think_call,
+            (semantics.scene_object, semantics.init_method): self._init_call,
+            (semantics.scene_object, semantics.scene_method): self._scene_call,
+            (semantics.time_object, semantics.time_method): self._time_call,
+            (
+                semantics.character_object,
+                semantics.character_load_portrait,
+            ): self._load_portrait_call,
+            (
+                semantics.stage_object,
+                semantics.stage_portrait_method,
+            ): self._stage_portrait_call,
+            (semantics.stage_object, semantics.stage_show_method): self._stage_show_call,
+            (semantics.stage_object, semantics.stage_hide_method): self._stage_hide_call,
+        }
+        for method in semantics.character_offset_methods:
+            routes[(semantics.character_object, method)] = self._offset_call
+        for method in semantics.jumps:
+            routes[(semantics.scene_object, method)] = partial(self.emit_jump, method)
+        for method in semantics.dice_roll_methods:
+            routes[(semantics.dice_object, method)] = self._dice_call
+        for method, kind in semantics.check_methods.items():
+            routes[(semantics.check_object, method)] = partial(self._check_call, kind)
+        return routes
 
     def eval_call(self, expr: lua.Node, state: EvalState) -> Any:
         obj, method = callee(expr)
@@ -135,147 +177,176 @@ class CallHandler:
     def handle_call(self, call: lua.Node, state: EvalState, beats: list[Any]) -> ChoiceDraft | None:
         obj, method = callee(call)
         args = lua.arguments(call)
-
         for arg in args:
             if arg.type == "function_call":
-                inner_obj, inner_method = callee(arg)
-                inner_args = lua.arguments(arg)
-                if (
-                    inner_obj == self.semantics.dice_object
-                    and inner_method == self.semantics.dice_roll_methods[0]
-                    and inner_args
-                ):
-                    state.menu_options = self.option_list(
-                        self.analyzer.expressions.eval(inner_args[0], state)
-                    )
-                if (
-                    method == self.semantics.call_runner
-                    and inner_obj == self.semantics.character_object
-                    and inner_method in self.semantics.character_offset_methods
-                ):
-                    self.apply_offset(state, inner_args)
+                self._scan_nested(method, arg, state)
+        route = self._routes.get((obj, method))
+        if route is not None:
+            return route(args, state, beats)
+        object_route = self._object_routes.get(obj)
+        if object_route is not None:
+            return object_route(method, args, state, beats)
+        return None
 
-        if method == self.semantics.say_method and not obj:
-            self._say(state, args, beats)
-            return None
-
-        if method == self.semantics.speaker_method and not obj:
-            if args:
-                value = self.analyzer.expressions.eval(args[0], state)
-                state.speaker = value.id.split(":")[0] if isinstance(value, CharRef) else None
-                if len(args) > 1:
-                    self.apply_portrait(state, self.analyzer.expressions.eval(args[1], state))
-            return None
-
+    def _scan_nested(self, method: str, arg: lua.Node, state: EvalState) -> None:
+        inner_obj, inner_method = callee(arg)
+        inner_args = lua.arguments(arg)
+        semantics = self.semantics
         if (
-            obj == self.semantics.character_object
-            and method == self.semantics.character_load_portrait
-            and len(args) > 1
+            inner_obj == semantics.dice_object
+            and inner_method == semantics.dice_roll_methods[0]
+            and inner_args
         ):
+            state.menu_options = self.option_list(
+                self.analyzer.expressions.eval(inner_args[0], state)
+            )
+        if (
+            method == semantics.call_runner
+            and inner_obj == semantics.character_object
+            and inner_method in semantics.character_offset_methods
+        ):
+            self.apply_offset(state, inner_args)
+
+    def _say_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        self._say(state, args, beats)
+        return None
+
+    def _speaker_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        if args:
+            value = self.analyzer.expressions.eval(args[0], state)
+            state.speaker = value.id.split(":")[0] if isinstance(value, CharRef) else None
+            if len(args) > 1:
+                self.apply_portrait(state, self.analyzer.expressions.eval(args[1], state))
+        return None
+
+    def _load_portrait_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        if len(args) > 1:
             character = unwrap_text(self.analyzer.expressions.eval(args[0], state))
             expression = unwrap_text(self.analyzer.expressions.eval(args[1], state))
             if character and expression:
                 state.portraits[character] = expression
-            return None
-
-        if (
-            obj == self.semantics.character_object
-            and method in self.semantics.character_offset_methods
-        ):
-            self.apply_offset(state, args)
-            return None
-
-        if obj == self.semantics.stage_object:
-            if method == self.semantics.stage_portrait_method and len(args) > 1:
-                self.apply_portrait(state, self.analyzer.expressions.eval(args[1], state))
-                return None
-            if method == self.semantics.stage_show_method and args:
-                settings = self.analyzer.expressions.eval(args[0], state)
-                if isinstance(settings, dict):
-                    self.apply_portrait(state, settings.get("portrait"))
-                    self.enter_stage(state, settings, beats)
-                return None
-            if method == self.semantics.stage_hide_method and args:
-                settings = self.analyzer.expressions.eval(args[0], state)
-                if isinstance(settings, dict):
-                    self.leave_stage(state, settings, beats)
-                return None
-
-        if (
-            not obj
-            and method == self.semantics.view_block_method
-            and len(args) > 1
-            and lua.render_source(args[0]) == self.semantics.view_object
-        ):
-            self.apply_view_block(state, args[1], beats)
-            return None
-
-        if method == self.semantics.dialog_method and not obj:
-            dialog_style = dialog_style_of(args[0], "saydialogs") if args else ""
-            if not dialog_style and args and args[0].type in lua.INDEX_KINDS:
-                dialog_style = unwrap_text(self.analyzer.expressions.eval(args[0], state)) or ""
-            if dialog_style:
-                state.dialog_style = dialog_style
-                state.is_think = dialog_style in self.semantics.think_dialogs
-            return None
-
-        if obj == self.semantics.think_object and method == self.semantics.think_method:
-            state.is_think = bool(args) and lua.render_source(args[0]) == "true"
-            return None
-
-        if obj == self.semantics.scene_object and method == self.semantics.init_method:
-            state.pending_story_script = None
-            state.portraits.clear()
-            state.stage_positions.clear()
-            state.hidden_characters.clear()
-            state.pending_says.clear()
-            state.view_hidden = False
-            return None
-
-        if obj == self.semantics.scene_object and method in self.semantics.jumps:
-            self.emit_jump(method, args, state, beats)
-            return None
-
-        if obj == self.semantics.scene_object and method == self.semantics.scene_method:
-            self.emit_scene(args, state, beats)
-            state.portraits.clear()
-            state.pending_says.clear()
-            return None
-
-        if obj == self.semantics.stat_object:
-            self.apply_effect(method, args, state, beats)
-            return None
-
-        if obj == self.semantics.check_object:
-            key = (
-                unwrap_text(self.analyzer.expressions.eval(args[0], state))
-                if method in self.semantics.check_methods and args
-                else None
-            )
-            if key:
-                kind = self.semantics.check_methods[method]
-                self.analyzer.context.add_check(kind, key)
-                if kind == "position":
-                    self.analyzer.context.add_position(key)
-            return None
-
-        if obj == self.semantics.time_object and method == self.semantics.time_method:
-            self.set_time(args, state, beats)
-            return None
-
-        if obj == self.semantics.dice_object and method in self.semantics.dice_roll_methods:
-            if method == self.semantics.dice_roll_methods[0] and args:
-                state.menu_options = self.option_list(
-                    self.analyzer.expressions.eval(args[0], state)
-                )
-            return None
-
-        if not obj and method == self.semantics.choice_method and args:
-            options = self.option_list(self.analyzer.expressions.eval(args[0], state))
-            beats.append(None)
-            return ChoiceDraft(len(beats) - 1, "", options)
-
         return None
+
+    def _offset_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        self.apply_offset(state, args)
+        return None
+
+    def _stage_portrait_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        if len(args) > 1:
+            self.apply_portrait(state, self.analyzer.expressions.eval(args[1], state))
+        return None
+
+    def _stage_show_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        if args:
+            settings = self.analyzer.expressions.eval(args[0], state)
+            if isinstance(settings, dict):
+                self.apply_portrait(state, settings.get("portrait"))
+                self.enter_stage(state, settings, beats)
+        return None
+
+    def _stage_hide_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        if args:
+            settings = self.analyzer.expressions.eval(args[0], state)
+            if isinstance(settings, dict):
+                self.leave_stage(state, settings, beats)
+        return None
+
+    def _view_block_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        if len(args) > 1 and lua.render_source(args[0]) == self.semantics.view_object:
+            self.apply_view_block(state, args[1], beats)
+        return None
+
+    def _dialog_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        dialog_style = dialog_style_of(args[0], "saydialogs") if args else ""
+        if not dialog_style and args and args[0].type in lua.INDEX_KINDS:
+            dialog_style = unwrap_text(self.analyzer.expressions.eval(args[0], state)) or ""
+        if dialog_style:
+            state.dialog_style = dialog_style
+            state.is_think = dialog_style in self.semantics.think_dialogs
+        return None
+
+    def _think_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        state.is_think = bool(args) and lua.render_source(args[0]) == "true"
+        return None
+
+    def _init_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        state.pending_story_script = None
+        state.portraits.clear()
+        state.stage_positions.clear()
+        state.hidden_characters.clear()
+        state.pending_says.clear()
+        state.view_hidden = False
+        return None
+
+    def _scene_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        self.emit_scene(args, state, beats)
+        state.portraits.clear()
+        state.pending_says.clear()
+        return None
+
+    def _time_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        self.set_time(args, state, beats)
+        return None
+
+    def _check_call(
+        self,
+        kind: str,
+        args: Sequence[lua.Node],
+        state: EvalState,
+        beats: list[Any],
+    ) -> ChoiceDraft | None:
+        if not args:
+            return None
+        key = unwrap_text(self.analyzer.expressions.eval(args[0], state))
+        if key:
+            self.analyzer.context.add_check(kind, key)
+            if kind == "position":
+                self.analyzer.context.add_position(key)
+        return None
+
+    def _dice_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        if args:
+            state.menu_options = self.option_list(
+                self.analyzer.expressions.eval(args[0], state)
+            )
+        return None
+
+    def _choice_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        if not args:
+            return None
+        options = self.option_list(self.analyzer.expressions.eval(args[0], state))
+        beats.append(None)
+        return ChoiceDraft(len(beats) - 1, "", options)
 
     def apply_portrait(self, state: EvalState, value: Any) -> None:
         if not isinstance(value, CharRef):

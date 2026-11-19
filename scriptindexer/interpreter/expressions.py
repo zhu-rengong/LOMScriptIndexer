@@ -1,6 +1,7 @@
 from typing import Any
 
 from .. import lua
+from ..scalars import number_text
 from ..schema import (
     CheckCondition,
     CompareCondition,
@@ -11,17 +12,17 @@ from ..schema import (
     VarCondition,
 )
 from ..script_model import CheckMark, LockedOption, MetaBeat, TextRef, Unevaluated
+from ..vocab import COMPARE_TOKEN_SYMBOLS
 from .calls import callee
-from .state import ChoiceDraft, EvalState, number_text, source_snippet, unwrap_text
+from .state import ChoiceDraft, EvalState, source_snippet, unwrap_text
 
-_COMPARE_SYMBOL = {
-    "==": "=",
-    "~=": "≠",
-    "<": "<",
-    "<=": "≤",
-    ">": ">",
-    ">=": "≥",
-}
+_COMPARE_SYMBOL = dict(COMPARE_TOKEN_SYMBOLS)
+
+
+def _required(node: lua.Node | None) -> lua.Node:
+    if node is None:
+        raise ValueError("expected a Lua node")
+    return node
 
 
 class ExpressionEvaluator:
@@ -32,7 +33,9 @@ class ExpressionEvaluator:
     def semantics(self) -> Any:
         return self.analyzer.semantics
 
-    def eval(self, expr: lua.Node, state: EvalState) -> Any:
+    def eval(self, expr: lua.Node | None, state: EvalState) -> Any:
+        if expr is None:
+            return Unevaluated("")
         kind = expr.type
         if kind == "string":
             return TextRef(lua.string_value(expr))
@@ -102,8 +105,8 @@ class ExpressionEvaluator:
 
     def _binary(self, expr: lua.Node, state: EvalState) -> Any:
         op = lua.operator_token(expr)
-        left_node = expr.child_by_field_name("left")
-        right_node = expr.child_by_field_name("right")
+        left_node = _required(expr.child_by_field_name("left"))
+        right_node = _required(expr.child_by_field_name("right"))
         if op == "..":
             left = unwrap_text(self.eval(left_node, state))
             right = unwrap_text(self.eval(right_node, state))
@@ -162,7 +165,9 @@ class ExpressionEvaluator:
             return self.eval(expr, state), None
         return self.eval(expr, state), None
 
-    def cond_node(self, cond: lua.Node, state: EvalState) -> ConditionNode:
+    def cond_node(self, cond: lua.Node | None, state: EvalState) -> ConditionNode:
+        if cond is None:
+            return RawCondition(text="")
         kind = cond.type
         if kind == "function_call":
             obj, method = callee(cond)

@@ -1,4 +1,6 @@
+import hashlib
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 
 from ..schema import ShardInfo
 
@@ -8,23 +10,33 @@ CHECKPOINT_SHARDS = 8
 
 
 def shard_key(index: int) -> str:
-    if 0 <= index < 26:
-        return chr(ord("a") + index)
-    return f"s{index}"
+    return chr(ord("a") + index) if 0 <= index < 26 else f"s{index}"
+
+
+@dataclass
+class Bin:
+    ids: list[str] = field(default_factory=list)
+    bytes: int = 0
+    chapter_indexes: set[int] = field(default_factory=set)
+
+    def add(self, ids: Sequence[str], size: int, chapter: int) -> None:
+        self.ids.extend(ids)
+        self.bytes += size
+        self.chapter_indexes.add(chapter)
 
 
 def _bins(
     ids: Sequence[str], sizes: dict[str, int], chapter_of: dict[str, int], limit: int
-) -> list[dict]:
+) -> list[Bin]:
     grouped: dict[int, list[str]] = {}
     for sid in ids:
         grouped.setdefault(chapter_of.get(sid, -1), []).append(sid)
-    bins: list[dict] = []
-    current: dict | None = None
+    bins: list[Bin] = []
+    current: Bin | None = None
 
     def flush() -> None:
         nonlocal current
-        if current and current["ids"]:
+        if current is not None and current.ids:
             bins.append(current)
         current = None
 
@@ -35,20 +47,16 @@ def _bins(
             flush()
             for sid in members:
                 size = sizes.get(sid, 0)
-                if current is None or current["bytes"] + size > limit:
+                if current is None or current.bytes + size > limit:
                     flush()
-                    current = {"ids": [], "bytes": 0, "chapter_indexes": set()}
-                current["ids"].append(sid)
-                current["bytes"] += size
-                current["chapter_indexes"].add(chapter)
+                    current = Bin()
+                current.add([sid], size, chapter)
             continue
-        if current is not None and current["bytes"] + weight > limit:
+        if current is not None and current.bytes + weight > limit:
             flush()
         if current is None:
-            current = {"ids": [], "bytes": 0, "chapter_indexes": set()}
-        current["ids"].extend(members)
-        current["bytes"] += weight
-        current["chapter_indexes"].add(chapter)
+            current = Bin()
+        current.add(members, weight, chapter)
     flush()
     return bins
 
@@ -62,7 +70,7 @@ def pack_scripts(
     max_shards: int = MAX_SCRIPT_SHARDS,
 ) -> tuple[dict[str, str], list[ShardInfo]]:
     total = sum(sizes.get(sid, 0) for sid in ids)
-    budget = max(1, min_bytes_per_shard, -(-total // max_shards))
+    budget = max(1, min(min_bytes_per_shard, -(-total // max_shards)))
     bins = _bins(ids, sizes, chapter_of, budget)
     while len(bins) > max_shards and budget < total:
         budget = int(budget * 1.25) + 1
@@ -72,16 +80,16 @@ def pack_scripts(
     shards: list[ShardInfo] = []
     for index, item in enumerate(bins):
         key = shard_key(index)
-        for sid in item["ids"]:
+        for sid in item.ids:
             assignment[sid] = key
         shards.append(
             ShardInfo(
                 key=key,
-                node_count=len(item["ids"]),
-                bytes=item["bytes"],
+                node_count=len(item.ids),
+                bytes=item.bytes,
                 chapter_ids=[
                     chapter_ids[chapter]
-                    for chapter in sorted(item["chapter_indexes"])
+                    for chapter in sorted(item.chapter_indexes)
                     if 0 <= chapter < len(chapter_ids)
                 ],
             )
@@ -90,10 +98,8 @@ def pack_scripts(
 
 
 def shard_index_by_key(keys: Sequence[str], shard_count: int) -> dict[str, int]:
-    mapping: dict[str, int] = {}
-    for key in keys:
-        value = 0
-        for character in key:
-            value = (value * 31 + ord(character)) & 0xFFFF
-        mapping[key] = value % shard_count
-    return mapping
+    return {
+        key: int.from_bytes(hashlib.blake2b(key.encode("utf-8"), digest_size=4).digest(), "big")
+        % shard_count
+        for key in keys
+    }

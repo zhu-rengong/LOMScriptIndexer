@@ -4,7 +4,7 @@ from typing import Any
 
 import msgspec
 
-from ..jsonio import atomic_write_bytes
+from ..jsonio import decode, encode, write_bytes
 from ..paths import (
     BATTLES_PATH,
     CACHE_DIR,
@@ -15,7 +15,7 @@ from ..paths import (
     SITE_DATA_DIR,
     STATS_PATH,
 )
-from .base import encode, schema_digest
+from .base import schema_digest
 from .checkpoints import CheckpointDocument
 from .extras import (
     BattleDocument,
@@ -26,41 +26,60 @@ from .extras import (
     VarReadsPayload,
 )
 from .graph import GraphPayload
-from .index import DataIndex
+from .index import ArtifactEntry, DataIndex
 from .missions import MissionDocument
 from .text import TextHeadPayload, TextShardPayload, WordCountPayload
 
 
 @dataclass(frozen=True)
-class Source:
+class Document:
     name: str
     model: type
-    path: Path
 
     @property
     def version(self) -> str:
         return schema_digest(self.model)
+
+    def decode(self, raw: bytes) -> Any | None:
+        try:
+            payload = decode(raw, self.model)
+        except msgspec.DecodeError:
+            return None
+        return payload if getattr(payload, "schema", "") == self.version else None
+
+
+@dataclass(frozen=True)
+class Source(Document):
+    path: Path
 
     @property
     def cache(self) -> Path:
         return CACHE_DIR / f"{self.name}.msgpack.gz"
 
+    def load(self) -> Any | None:
+        try:
+            raw = self.path.read_bytes()
+        except OSError:
+            return None
+        return self.decode(raw)
+
+    def save(self, payload: Any) -> int:
+        return write_bytes(self.path, encode(payload) + b"\n")
+
 
 @dataclass(frozen=True)
-class Artifact:
-    name: str
-    model: type
+class Artifact(Document):
     url: str
-
-    @property
-    def version(self) -> str:
-        return schema_digest(self.model)
 
     def path(self, **fields: str) -> Path:
         return SITE_DATA_DIR / self.url.format(**fields).removeprefix("data/")
 
     def url_for(self, **fields: str) -> str:
         return self.url.format(**fields)
+
+    def save(self, payload: Any, **fields: str) -> tuple[str, int]:
+        target = self.path(**fields)
+        return target.name, write_bytes(target, encode(payload) + b"\n")
 
 
 SOURCES: dict[str, Source] = {
@@ -85,56 +104,57 @@ ARTIFACTS: dict[str, Artifact] = {
 }
 
 
-def version_of(name: str) -> str:
-    artifact = ARTIFACTS.get(name)
-    return artifact.version if artifact is not None else ""
+def source(name: str) -> Source:
+    return SOURCES[name]
+
+
+def artifact(name: str) -> Artifact:
+    return ARTIFACTS[name]
 
 
 def source_version(name: str) -> str:
-    source = SOURCES.get(name)
-    return source.version if source is not None else ""
+    return source(name).version
+
+
+def artifact_version(name: str) -> str:
+    return artifact(name).version
 
 
 def load_source(name: str) -> Any | None:
-    source = SOURCES[name]
-    try:
-        raw = source.path.read_bytes()
-    except OSError:
-        return None
-    try:
-        document = msgspec.json.decode(raw, type=source.model)
-    except msgspec.DecodeError:
-        return None
-    if getattr(document, "schema", "") != source.version:
-        return None
-    return document
+    return source(name).load()
 
 
 def save_source(name: str, payload: Any) -> int:
-    source = SOURCES[name]
-    return atomic_write_bytes(source.path, encode(payload) + b"\n")
+    return source(name).save(payload)
 
 
 def write_artifact(name: str, payload: Any, **fields: str) -> tuple[str, int]:
-    artifact = ARTIFACTS[name]
-    target = artifact.path(**fields)
-    size = atomic_write_bytes(target, encode(payload) + b"\n")
-    return target.name, size
+    return artifact(name).save(payload, **fields)
+
+
+def entry(name: str, *, count: int = 0, shards: list[str] | None = None) -> ArtifactEntry:
+    document = artifact(name)
+    return ArtifactEntry(
+        url=document.url,
+        schema=document.version,
+        count=count,
+        shards=list(shards or []),
+    )
 
 
 def artifact_paths(langs: list[str], shard_keys: list[str], checkpoint_shards: int) -> set[str]:
     names = {
-        ARTIFACTS["index"].path().name,
-        ARTIFACTS["graph"].path().name,
-        ARTIFACTS["wordcount"].path().name,
-        ARTIFACTS["missions"].path().name,
-        ARTIFACTS["varReads"].path().name,
-        ARTIFACTS["flagFacts"].path().name,
+        artifact("index").path().name,
+        artifact("graph").path().name,
+        artifact("wordcount").path().name,
+        artifact("missions").path().name,
+        artifact("varReads").path().name,
+        artifact("flagFacts").path().name,
     }
     for lang in langs:
-        names.add(ARTIFACTS["textHead"].path(lang=lang).name)
+        names.add(artifact("textHead").path(lang=lang).name)
         for key in shard_keys:
-            names.add(ARTIFACTS["textShard"].path(lang=lang, key=key).name)
+            names.add(artifact("textShard").path(lang=lang, key=key).name)
     for index in range(checkpoint_shards):
-        names.add(ARTIFACTS["checkpoints"].path(index=str(index)).name)
+        names.add(artifact("checkpoints").path(index=str(index)).name)
     return names

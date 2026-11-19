@@ -2,6 +2,8 @@ import sys
 from collections.abc import Sequence
 from typing import TextIO
 
+FAILURE_SAMPLES = 20
+
 
 class Reporter:
     def __init__(self, stream: TextIO | None = None, stages: Sequence[str] = ()) -> None:
@@ -38,3 +40,9 @@ class Reporter:
 
     def blank(self) -> None:
         self.write("")
+
+    def warn_failures(self, failures: Sequence[tuple[str, str]]) -> None:
+        for script_id, error in failures[:FAILURE_SAMPLES]:
+            self.warn(f"{script_id} failed to parse: {error}")
+        if len(failures) > FAILURE_SAMPLES:
+            self.warn(f"{len(failures) - FAILURE_SAMPLES} more scripts failed to parse")

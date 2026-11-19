@@ -6,7 +6,7 @@ from .base import Wire
 from .conditions import ConditionNode
 
 
-class BeatRow(msgspec.Struct, rename="camel", omit_defaults=True, tag_field="t"):
+class BeatRow(Wire, tag_field="t"):
     pass
 
 
@@ -106,11 +106,3 @@ class EndingRow(BeatRow, tag="ending"):
 BeatNode = (
     SayRow | ChoiceRow | BranchRow | JumpRow | MetaRow | LoreRow | SceneRow | BattleRow | EndingRow
 )
-
-
-def rows_of(row: BeatNode) -> list[BeatNode]:
-    if isinstance(row, (ChoiceRow, BranchRow)):
-        if isinstance(row, ChoiceRow):
-            return [item for option in row.options for item in option.rows]
-        return list(row.rows)
-    return []

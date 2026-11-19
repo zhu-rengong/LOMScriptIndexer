@@ -1,6 +1,7 @@
 from .parser import (
     INDEX_KINDS,
     LuaChunk,
+    LuaParser,
     LuaSyntaxError,
     Node,
     arguments,
@@ -21,6 +22,7 @@ from .parser import (
 
 __all__ = [
     "INDEX_KINDS",
+    "LuaParser",
     "LuaSyntaxError",
     "LuaChunk",
     "Node",

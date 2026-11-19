@@ -154,17 +154,17 @@ def compare_node_of(item: dict[str, Any], scope: FileScope) -> ConditionNode | N
 
 
 def condition_node(item: dict[str, Any], scope: FileScope) -> ConditionNode | None:
-    subs = item.get("_items") or []
-    nodes = [compare_node_of(sub, scope) for sub in subs]
-    if not nodes or any(node is None for node in nodes):
+    resolved = [compare_node_of(sub, scope) for sub in item.get("_items") or []]
+    if not resolved or any(node is None for node in resolved):
         return None
+    nodes = [node for node in resolved if node is not None]
     if len(nodes) == 1:
         return nodes[0]
-    return logic_node(item.get("_logicOp", 0), [node for node in nodes if node is not None])
+    return logic_node(item.get("_logicOp", 0), nodes)
 
 
 def dice_branch_node(item: dict[str, Any]) -> ConditionNode | None:
-    nodes = [
+    nodes: list[ConditionNode] = [
         compare_node(sub.get("_compareOp", 0), dice_node(), const_node(sub.get("_value", 0)))
         for sub in item.get("_items") or []
     ]

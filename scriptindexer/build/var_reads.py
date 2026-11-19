@@ -1,44 +1,56 @@
 from collections.abc import Mapping
 
-from ..schema import CheckpointCondition, VarCondition, VarReadsPayload, walk_conditions
+from ..schema import (
+    CheckpointCondition,
+    ConditionNode,
+    VarCondition,
+    VarReadsPayload,
+    walk_conditions,
+)
 from ..vocab import VALUE_FLAG, VALUE_REL, VALUE_STAT
+from .checkpoint_visit import walk_checkpoint
 
 READ_KINDS = (VALUE_FLAG, VALUE_STAT, VALUE_REL)
 CHECKPOINT_KIND_FLAG = "flag"
 
 
-def _add(index: dict[str, dict[str, set[str]]], kind: str, key: str, checkpoint: str) -> None:
-    if not key or not checkpoint:
-        return
-    bucket = index.get(kind)
-    if bucket is None:
-        return
-    bucket.setdefault(key, set()).add(checkpoint)
+class _ReadIndex:
+    def __init__(self) -> None:
+        self.buckets: dict[str, dict[str, set[str]]] = {kind: {} for kind in READ_KINDS}
 
+    def add(self, kind: str, key: str, checkpoint: str) -> None:
+        bucket = self.buckets.get(kind)
+        if not key or not checkpoint or bucket is None:
+            return
+        bucket.setdefault(key, set()).add(checkpoint)
 
-def _walk_checkpoint(
-    checkpoint: CheckpointCondition, key: str, index: dict[str, dict[str, set[str]]]
-) -> None:
-    if checkpoint.kind == CHECKPOINT_KIND_FLAG:
-        _add(index, VALUE_FLAG, key, key)
+    def payload(self) -> VarReadsPayload:
+        return VarReadsPayload(
+            flag=self._sorted(VALUE_FLAG),
+            stat=self._sorted(VALUE_STAT),
+            rel=self._sorted(VALUE_REL),
+        )
 
-    def on_var(item: VarCondition) -> None:
-        _add(index, item.kind, item.key, key)
-
-    for branch in checkpoint.branches:
-        walk_conditions(branch.expr, on_var=on_var)
-    for addition in checkpoint.additions:
-        _add(index, addition.kind, addition.key, key)
-    for variant in checkpoint.variants:
-        _walk_checkpoint(variant, key, index)
+    def _sorted(self, kind: str) -> dict[str, list[str]]:
+        return {key: sorted(values) for key, values in sorted(self.buckets[kind].items())}
 
 
 def collect_reads(checkpoints: Mapping[str, CheckpointCondition]) -> VarReadsPayload:
-    index: dict[str, dict[str, set[str]]] = {kind: {} for kind in READ_KINDS}
+    index = _ReadIndex()
     for key, checkpoint in checkpoints.items():
-        _walk_checkpoint(checkpoint, str(key), index)
-    return VarReadsPayload(
-        flag={value: sorted(keys) for value, keys in sorted(index[VALUE_FLAG].items())},
-        stat={value: sorted(keys) for value, keys in sorted(index[VALUE_STAT].items())},
-        rel={value: sorted(keys) for value, keys in sorted(index[VALUE_REL].items())},
-    )
+        name = str(key)
+        if checkpoint.kind == CHECKPOINT_KIND_FLAG:
+            index.add(VALUE_FLAG, name, name)
+
+        def on_var(item: VarCondition, target: str = name) -> None:
+            index.add(item.kind, item.key, target)
+
+        def on_expr(node: ConditionNode | None, target: str = name) -> None:
+            walk_conditions(node, on_var=on_var)
+
+        walk_checkpoint(
+            checkpoint,
+            on_expr,
+            lambda addition, target=name: index.add(addition.kind, addition.key, target),
+        )
+    return index.payload()

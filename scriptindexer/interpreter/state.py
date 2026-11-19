@@ -1,8 +1,9 @@
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from .. import lua
+from ..schema import ConditionNode
 from ..script_model import CharRef, CheckMark, Requirement, SayBeat, TextRef
 
 
@@ -11,7 +12,7 @@ class OptionDraft:
     ref: TextRef
     requirement: Requirement | None = None
     lock: TextRef | None = None
-    condition: dict[str, Any] | None = None
+    condition: ConditionNode | None = None
 
 
 @dataclass
@@ -44,18 +45,14 @@ class EvalState:
     pending_says: dict[str, PendingSay] = field(default_factory=dict)
 
     def clone(self) -> EvalState:
-        return EvalState(
-            speaker=self.speaker,
-            dialog_style=self.dialog_style,
-            is_think=self.is_think,
+        return replace(
+            self,
             env=dict(self.env),
             menu_options=list(self.menu_options),
-            pending_story_script=self.pending_story_script,
             portraits=dict(self.portraits),
             stage_positions=dict(self.stage_positions),
             stage_offsets=dict(self.stage_offsets),
             hidden_characters=set(self.hidden_characters),
-            view_hidden=self.view_hidden,
             pending_says=dict(self.pending_says),
         )
 
@@ -121,16 +118,6 @@ def unwrap_text(value: Any) -> str | None:
 def source_snippet(expr: lua.Node, limit: int = 120) -> str:
     text = lua.render_source(expr)
     return text if len(text) <= limit else text[: limit - 1] + "…"
-
-
-def number_text(value: Any) -> str:
-    try:
-        number = float(value)
-    except TypeError, ValueError:
-        return str(value)
-    if number.is_integer():
-        return str(int(number))
-    return f"{number:g}"
 
 
 def lua_key_sort_key(value: str) -> tuple[int, int | str]:

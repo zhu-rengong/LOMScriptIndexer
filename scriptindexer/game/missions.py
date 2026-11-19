@@ -107,11 +107,15 @@ def _flag_changes(session: AssetSession, path: Any, items: Any) -> tuple[list[Fl
             gaps += 1
             continue
         hit = _resolve(session, path, item.get("_data"))
-        flag_tree = session.typetree(hit[1].path, hit[0]) if hit is not None else None
+        if hit is None:
+            gaps += 1
+            continue
+        obj, scope = hit
+        flag_tree = session.typetree(scope.path, obj)
         if not isinstance(flag_tree, Mapping):
             gaps += 1
             continue
-        key = collapse_text(flag_tree.get("m_Name")) or session.object_name(hit[0])
+        key = collapse_text(flag_tree.get("m_Name")) or session.object_name(obj)
         if not key:
             gaps += 1
             continue

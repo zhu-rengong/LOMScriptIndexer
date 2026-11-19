@@ -5,7 +5,6 @@ import time
 import zlib
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
-from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -14,7 +13,7 @@ import msgspec
 from . import interpreter
 from .console import Reporter
 from .game.lua_bindings import LUA_BINDINGS
-from .jsonio import atomic_write_bytes
+from .jsonio import write_bytes
 from .paths import ANALYSIS_CACHE_PATH
 from .schema import schema_digest
 from .script_model import ScriptAnalysis
@@ -30,11 +29,50 @@ class CacheCorrupted(Exception):
 @dataclass(frozen=True)
 class CacheStamp:
     version: str
-    fingerprint: str = ""
+    fingerprint: str
 
-    @classmethod
-    def of(cls, model: type) -> CacheStamp:
-        return cls(schema_digest(model), CORPUS_FINGERPRINT)
+
+class CacheEnvelope(msgspec.Struct):
+    version: str = ""
+    fingerprint: str = ""
+    data: bytes = b""
+
+
+class CacheStore:
+    def __init__(self, path: Path, stamp: CacheStamp) -> None:
+        self.path = path
+        self.stamp = stamp
+
+    def load[T](self, model: type[T]) -> T | None:
+        try:
+            raw = self.path.read_bytes()
+        except OSError:
+            return None
+        try:
+            payload = gzip.decompress(raw)
+        except (OSError, EOFError, zlib.error) as exc:
+            raise CacheCorrupted(f"{self.path.name} is not a readable cache") from exc
+        try:
+            envelope = msgspec.msgpack.decode(payload, type=CacheEnvelope)
+        except msgspec.DecodeError as exc:
+            raise CacheCorrupted(f"{self.path.name} does not match the current schema") from exc
+        if envelope.version != self.stamp.version:
+            return None
+        if envelope.fingerprint != self.stamp.fingerprint:
+            return None
+        try:
+            return msgspec.msgpack.decode(envelope.data, type=model)
+        except msgspec.DecodeError as exc:
+            raise CacheCorrupted(f"{self.path.name} holds unreadable data") from exc
+
+    def save(self, payload: Any) -> int:
+        envelope = CacheEnvelope(
+            version=self.stamp.version,
+            fingerprint=self.stamp.fingerprint,
+            data=msgspec.msgpack.encode(payload),
+        )
+        compressed = gzip.compress(msgspec.msgpack.encode(envelope), compresslevel=6, mtime=0)
+        return write_bytes(self.path, compressed)
 
 
 class AnalysisEntry(msgspec.Struct):
@@ -44,40 +82,6 @@ class AnalysisEntry(msgspec.Struct):
 
 class AnalysisCache(msgspec.Struct):
     entries: dict[str, AnalysisEntry] = msgspec.field(default_factory=dict)
-
-
-@cache
-def _envelope(model: Any) -> Any:
-    return msgspec.defstruct(
-        "CacheEnvelope",
-        [("version", str), ("fingerprint", str), ("data", model)],
-    )
-
-
-def load_cache(path: Path, stamp: CacheStamp, model: Any) -> Any | None:
-    try:
-        raw = path.read_bytes()
-    except OSError:
-        return None
-    try:
-        payload = gzip.decompress(raw)
-    except (OSError, EOFError, zlib.error) as exc:
-        raise CacheCorrupted(f"{path.name} is not a readable cache") from exc
-    try:
-        envelope = msgspec.json.decode(payload, type=_envelope(model))
-    except msgspec.DecodeError as exc:
-        raise CacheCorrupted(f"{path.name} does not match the current schema") from exc
-    if envelope.version != stamp.version or envelope.fingerprint != stamp.fingerprint:
-        return None
-    return envelope.data
-
-
-def save_cache(path: Path, stamp: CacheStamp, payload: Any) -> int:
-    envelope = _envelope(type(payload))(
-        version=stamp.version, fingerprint=stamp.fingerprint, data=payload
-    )
-    payload_bytes = gzip.compress(msgspec.json.encode(envelope), compresslevel=6, mtime=0)
-    return atomic_write_bytes(path, payload_bytes)
 
 
 def default_jobs() -> int:
@@ -112,19 +116,20 @@ def _interpreter_digest() -> str:
     return digest.hexdigest()[:12]
 
 
-def analysis_stamp() -> CacheStamp:
-    return CacheStamp(f"{schema_digest(AnalysisCache)}-{_interpreter_digest()}", CORPUS_FINGERPRINT)
+def analysis_store() -> CacheStore:
+    version = f"{schema_digest(AnalysisCache)}-{_interpreter_digest()}"
+    return CacheStore(ANALYSIS_CACHE_PATH, CacheStamp(version, CORPUS_FINGERPRINT))
 
 
 def analyze_all(
     sources: dict[str, str], use_cache: bool, reporter: Reporter, jobs: int | None = None
 ) -> tuple[dict[str, ScriptAnalysis], int, int]:
     reporter.stage(STAGE_ANALYSIS)
-    stamp = analysis_stamp()
+    store = analysis_store()
     cached = None
     if use_cache:
         try:
-            cached = load_cache(ANALYSIS_CACHE_PATH, stamp, AnalysisCache)
+            cached = store.load(AnalysisCache)
         except CacheCorrupted as exc:
             reporter.warn(f"{exc}; reanalyzing every script")
     entries = cached.entries if cached is not None else {}
@@ -153,7 +158,7 @@ def analyze_all(
         )
     if use_cache:
         kept = {sid: entry for sid, entry in entries.items() if sid in sources}
-        save_cache(ANALYSIS_CACHE_PATH, stamp, AnalysisCache(entries=kept))
+        store.save(AnalysisCache(entries=kept))
     reporter.info(
         f"{len(sources)} scripts (reused {reused}, analyzed {len(pending)},"
         f" failed {failed}, workers {workers}), {time.time() - started:.1f}s"

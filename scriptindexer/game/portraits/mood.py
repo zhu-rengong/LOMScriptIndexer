@@ -1,6 +1,6 @@
 from PIL import Image, ImageOps
 
-from ...jsonio import atomic_write_bytes
+from ...jsonio import write_bytes
 from ..assets import AssetSession, FileScope, _dispose, try_build_generator, unitypy
 from ..layout import GameLayout
 from .models import THUMBNAIL_SIZE
@@ -62,7 +62,7 @@ def _cell_digest(image: Image.Image) -> str:
         digest = crop_digest(cell)
         path = crop_file(digest)
         if not path.is_file():
-            atomic_write_bytes(path, png_bytes(cell))
+            write_bytes(path, png_bytes(cell))
         return digest
     finally:
         scaled.close()

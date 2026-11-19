@@ -2,9 +2,10 @@ import re
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from ..script_model import BranchBeat, ChoiceBeat, SceneBeat
+from ..script_model import SceneBeat
 from ..vocab import BATTLE_LIKE_SCENE_NAMES, COMPARE_OP_SYMBOL, FACET_LIST_FIELDS
 from . import labels
+from .visit import BeatWalker
 
 SIDE_NAMES = {1: "我方", 2: "敵方"}
 ENTITY_NAMES = {0: "玩家", 1: "我方", 2: "敵方", 3: "中立"}
@@ -735,33 +736,32 @@ class BattleCards:
         return lines
 
 
+class _BattleFacetWalker(BeatWalker):
+    def __init__(self, cards: BattleCards) -> None:
+        self.cards = cards
+        self.bucket: dict[str, set[str]] = {field: set() for field in FACET_LIST_FIELDS}
+
+    def scene(self, beat: SceneBeat) -> None:
+        if beat.scene not in BATTLE_LIKE_SCENE_NAMES:
+            return
+        scene_facets = self.cards.facets_for_scene(beat.scene, beat.scene_key)
+        if not scene_facets:
+            return
+        for field in FACET_LIST_FIELDS:
+            self.bucket[field].update(scene_facets.get(field) or ())
+
+
 def collect_battle_facets(
     models: Mapping[str, Any], cards: BattleCards | None
 ) -> dict[str, dict[str, tuple[str, ...]]]:
-    out: dict[str, dict[str, set[str]]] = {}
     if cards is None:
         return {}
-
-    def walk(sid: str, beats: Any) -> None:
-        for beat in beats:
-            if isinstance(beat, SceneBeat):
-                if beat.scene not in BATTLE_LIKE_SCENE_NAMES:
-                    continue
-                scene_facets = cards.facets_for_scene(beat.scene, beat.scene_key)
-                if not scene_facets:
-                    continue
-                bucket = out.setdefault(sid, {field: set() for field in FACET_LIST_FIELDS})
-                for field in FACET_LIST_FIELDS:
-                    bucket[field].update(scene_facets.get(field) or ())
-            elif isinstance(beat, BranchBeat):
-                walk(sid, beat.beats)
-            elif isinstance(beat, ChoiceBeat):
-                for option in beat.options:
-                    walk(sid, option.beats)
-
+    out: dict[str, dict[str, tuple[str, ...]]] = {}
     for sid, model in models.items():
-        walk(sid, model.beats)
-    return {
-        sid: {field: tuple(sorted(values)) for field, values in bucket.items()}
-        for sid, bucket in out.items()
-    }
+        walker = _BattleFacetWalker(cards)
+        walker.walk(model.beats)
+        if any(walker.bucket.values()):
+            out[sid] = {
+                field: tuple(sorted(values)) for field, values in walker.bucket.items()
+            }
+    return out

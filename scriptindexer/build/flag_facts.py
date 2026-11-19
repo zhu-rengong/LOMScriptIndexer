@@ -1,6 +1,7 @@
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping
 from typing import Any
 
+from ..scalars import number_text
 from ..schema import (
     CheckpointDocument,
     CompareCondition,
@@ -13,20 +14,10 @@ from ..schema import (
     children,
 )
 from ..script_model import BranchBeat, ChoiceBeat, MetaBeat, ScriptAnalysis
+from .visit import BeatWalker
 
 FLAG_KIND = "flag"
 SET_FLAG_KIND = "setflag"
-
-
-def _number_text(value: Any) -> str:
-    if isinstance(value, bool):
-        return "1" if value else "0"
-    if isinstance(value, (int, float)):
-        number = float(value)
-        return str(int(number)) if number.is_integer() else str(number)
-    if isinstance(value, str):
-        return value.strip()
-    return ""
 
 
 class _Table:
@@ -79,28 +70,29 @@ def _scan(node: ConditionNode | None, table: _Table) -> None:
         elif isinstance(right, VarCondition) and right.kind == FLAG_KIND:
             flag, other = right, left
         if flag is not None and not flag.negative and isinstance(other, ConstCondition):
-            value = _number_text(other.value)
+            value = number_text(other.value)
             if value:
                 table.add(flag.key, value, node.op == "≠")
     for child in children(node):
         _scan(child, table)
 
 
-def _scan_cond(node: ConditionNode | None, table: _Table) -> None:
-    _scan(node, table)
+class _FlagWalker(BeatWalker):
+    def __init__(self, table: _Table) -> None:
+        self.table = table
 
+    def meta(self, beat: MetaBeat) -> None:
+        if beat.kind == SET_FLAG_KIND and beat.key:
+            self.table.add(beat.key, number_text(beat.value))
 
-def _scan_beats(beats: Sequence[object], table: _Table) -> None:
-    for beat in beats:
-        if isinstance(beat, MetaBeat) and beat.kind == SET_FLAG_KIND and beat.key:
-            table.add(beat.key, _number_text(beat.value))
-        elif isinstance(beat, BranchBeat):
-            _scan(beat.cond, table)
-            _scan_beats(beat.beats, table)
-        elif isinstance(beat, ChoiceBeat):
-            for option in beat.options:
-                _scan(option.condition, table)
-                _scan_beats(option.beats, table)
+    def branch(self, beat: BranchBeat) -> None:
+        _scan(beat.cond, self.table)
+        super().branch(beat)
+
+    def choice(self, beat: ChoiceBeat) -> None:
+        for option in beat.options:
+            _scan(option.condition, self.table)
+        super().choice(beat)
 
 
 def collect(
@@ -118,9 +110,10 @@ def collect(
                 for item in state.conditions:
                     _scan(item.expr, table)
                 for change in (*state.modify_flags_true, *state.modify_flags_false):
-                    table.add(change.key, _number_text(change.value))
+                    table.add(change.key, number_text(change.value))
+    walker = _FlagWalker(table)
     for model in models.values():
-        _scan_beats(model.beats, table)
+        walker.walk(model.beats)
     return table.payload()
 
 

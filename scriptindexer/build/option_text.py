@@ -1,9 +1,8 @@
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any
 
-from ..game.unity_objects import coerce_int
-from ..script_model import Requirement
+from ..scalars import coerce_int
+from ..schema import Requirement, RequirementItem
 from ..vocab import COMPARE_TOKEN_SYMBOLS
 
 REQUIREMENT_SEPARATOR = "|"
@@ -19,7 +18,7 @@ class OptionView:
     text: str
     requirement: Requirement | None = None
     action: str = ""
-    requirements: tuple[dict[str, Any], ...] = field(default_factory=tuple)
+    requirements: tuple[RequirementItem, ...] = field(default_factory=tuple)
 
 
 def split_requirement(value: str) -> tuple[str, Requirement | None]:
@@ -31,8 +30,8 @@ def split_requirement(value: str) -> tuple[str, Requirement | None]:
         return head, None
     for token, symbol in COMPARE_TOKEN_SYMBOLS:
         if tail.startswith(token):
-            return head, Requirement(symbol, tail[len(token) :].strip())
-    return head, Requirement("", tail)
+            return head, Requirement(op=symbol, operand=tail[len(token) :].strip())
+    return head, Requirement(op="", operand=tail)
 
 
 def decode_composite_option(value: str, story_table: Mapping[str, str]) -> OptionView:
@@ -46,25 +45,21 @@ def decode_composite_option(value: str, story_table: Mapping[str, str]) -> Optio
             break
     if not title:
         title = " / ".join(parts[1:])
-    requirements: list[dict[str, Any]] = []
+    requirements: list[RequirementItem] = []
     if len(parts) >= 4:
         action_count = coerce_int(parts[2])
         contribution = coerce_int(parts[3])
         if action_count > 0:
             requirements.append(
-                {
-                    "kind": REQUIREMENT_ACTION,
-                    "op": MINIMUM_OPERATOR,
-                    "value": action_count,
-                }
+                RequirementItem(
+                    kind=REQUIREMENT_ACTION, op=MINIMUM_OPERATOR, value=action_count
+                )
             )
         if contribution > 0:
             requirements.append(
-                {
-                    "kind": REQUIREMENT_CONTRIBUTION,
-                    "op": MINIMUM_OPERATOR,
-                    "value": contribution,
-                }
+                RequirementItem(
+                    kind=REQUIREMENT_CONTRIBUTION, op=MINIMUM_OPERATOR, value=contribution
+                )
             )
     return OptionView(title, None, action, tuple(requirements))
 

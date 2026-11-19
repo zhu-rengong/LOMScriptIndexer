@@ -6,7 +6,7 @@ from typing import Any
 
 from PIL import Image
 
-from ...jsonio import atomic_write_bytes
+from ...jsonio import write_bytes
 from ..framing import HEAD_BAND, Frame, default_frame
 from .models import (
     PREVIEW_MAX,
@@ -93,7 +93,7 @@ def render_address(
     errors: list[tuple[str, str, str]] = []
     if preview_missing:
         try:
-            atomic_write_bytes(preview_dir / name, preview(picture))
+            write_bytes(preview_dir / name, preview(picture))
         except Exception:
             errors.append(("", "", "preview_write_failed"))
     rendered: dict[tuple[float, float, float], str] = {}
@@ -111,7 +111,7 @@ def render_address(
             digest = crop_digest(crop)
             path = crop_file(digest)
             if not path.is_file():
-                atomic_write_bytes(path, png_bytes(crop))
+                write_bytes(path, png_bytes(crop))
             rendered[key] = digest
         crops.append(Crop(character, expression, address, frame_value(frame), digest, artifact))
     return Render(artifact, crops, record, errors)

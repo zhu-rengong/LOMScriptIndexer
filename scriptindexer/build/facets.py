@@ -1,13 +1,26 @@
 from collections.abc import Iterable, Mapping, Sequence
 
 from ..schema import CheckCondition, Facets, walk_conditions
-from ..script_model import BranchBeat, ChoiceBeat, MetaBeat, SayBeat, SceneBeat
+from ..script_model import (
+    Beat,
+    BranchBeat,
+    ChoiceBeat,
+    LoreBeat,
+    MetaBeat,
+    SayBeat,
+    SceneBeat,
+)
 from ..vocab import DEATH_SCENE
+from .visit import BeatWalker
 
 MISSION_KIND = "mission"
 MISSION_TRIGGER_KIND = "missionTrigger"
 MAIN_MISSION = "main"
 STATE_PREFIX = "state-"
+FLAG_KINDS = frozenset({"flag", "setflag"})
+STAT_KINDS = frozenset({"stat", "setstat"})
+RELATION_KINDS = frozenset({"rel", "setrel"})
+DICE_KIND = "dice"
 
 
 def _mission_id(kind: str, key: str, extra: str, owner: Mapping[str, str] | None) -> str:
@@ -34,80 +47,99 @@ def _mission_values(
     return tuple(values)
 
 
+class FacetWalker(BeatWalker):
+    def __init__(
+        self,
+        mission_owner: Mapping[str, str] | None,
+        named_states: Iterable[str] | None,
+    ) -> None:
+        self.mission_owner = mission_owner
+        self.named_states = set(named_states) if named_states else set()
+        self.speakers: set[str] = set()
+        self.flags: set[str] = set()
+        self.checks: set[str] = set()
+        self.stats: set[str] = set()
+        self.relations: set[str] = set()
+        self.endings: set[str] = set()
+        self.missions: set[str] = set()
+        self.option_count = 0
+        self.lock_count = 0
+        self.dice_check_count = 0
+
+    def say(self, beat: SayBeat) -> None:
+        if beat.speaker:
+            self.speakers.add(beat.speaker)
+
+    def meta(self, beat: MetaBeat) -> None:
+        if beat.kind in (MISSION_KIND, MISSION_TRIGGER_KIND):
+            self.missions.update(
+                _mission_values(
+                    beat.kind, beat.key, beat.extra, self.mission_owner, self.named_states
+                )
+            )
+            return
+        if not beat.key:
+            return
+        if beat.kind in FLAG_KINDS:
+            self.flags.add(beat.key)
+        elif beat.kind in STAT_KINDS:
+            self.stats.add(beat.key)
+        elif beat.kind in RELATION_KINDS:
+            self.relations.add(beat.key)
+        elif beat.kind == DICE_KIND:
+            self.checks.add(beat.key)
+            self.dice_check_count += 1
+
+    def branch(self, beat: BranchBeat) -> None:
+        if beat.check:
+            self.checks.add(beat.check.key)
+        walk_conditions(beat.cond, on_check=self._on_check)
+        super().branch(beat)
+
+    def choice(self, beat: ChoiceBeat) -> None:
+        self.option_count += len(beat.options)
+        for option in beat.options:
+            if option.lock:
+                self.lock_count += 1
+        super().choice(beat)
+
+    def scene(self, beat: SceneBeat) -> None:
+        if beat.scene == DEATH_SCENE and beat.scene_key:
+            self.endings.add(beat.scene_key)
+
+    def lore(self, beat: LoreBeat) -> None:
+        pass
+
+    def _on_check(self, item: CheckCondition) -> None:
+        if item.key:
+            self.checks.add(item.key)
+
+    def facets(self) -> Facets:
+        return Facets(
+            speakers=sorted(self.speakers),
+            flags=sorted(self.flags),
+            checks=sorted(self.checks),
+            stats=sorted(self.stats),
+            relations=sorted(self.relations),
+            endings=sorted(self.endings),
+            missions=sorted(self.missions),
+            option_count=self.option_count,
+            lock_count=self.lock_count,
+            dice_check_count=self.dice_check_count,
+        )
+
+
 def collect_facets(
-    beats: Sequence[object],
+    beats: Sequence[Beat],
     extra_check_keys: Iterable[str] | None = None,
     mission_owner: Mapping[str, str] | None = None,
     named_states: Iterable[str] | None = None,
 ) -> Facets:
-    speakers: set[str] = set()
-    flags: set[str] = set()
-    checks: set[str] = set()
-    stats: set[str] = set()
-    relations: set[str] = set()
-    endings: set[str] = set()
-    missions: set[str] = set()
-    named = set(named_states) if named_states else set()
-    option_count = 0
-    lock_count = 0
-    dice_check_count = 0
-
-    def on_check(item: CheckCondition) -> None:
-        if item.key:
-            checks.add(item.key)
-
-    def walk(rows: Sequence[object]) -> None:
-        nonlocal option_count, lock_count, dice_check_count
-        for beat in rows:
-            if isinstance(beat, SayBeat):
-                if beat.speaker:
-                    speakers.add(beat.speaker)
-            elif isinstance(beat, MetaBeat):
-                if beat.kind in (MISSION_KIND, MISSION_TRIGGER_KIND):
-                    missions.update(
-                        _mission_values(beat.kind, beat.key, beat.extra, mission_owner, named)
-                    )
-                    continue
-                if not beat.key:
-                    continue
-                if beat.kind in ("flag", "setflag"):
-                    flags.add(beat.key)
-                elif beat.kind in ("stat", "setstat"):
-                    stats.add(beat.key)
-                elif beat.kind in ("rel", "setrel"):
-                    relations.add(beat.key)
-                elif beat.kind == "dice":
-                    checks.add(beat.key)
-                    dice_check_count += 1
-            elif isinstance(beat, BranchBeat):
-                if beat.check:
-                    checks.add(beat.check.key)
-                walk_conditions(beat.cond, on_check=on_check)
-                walk(beat.beats)
-            elif isinstance(beat, ChoiceBeat):
-                option_count += len(beat.options)
-                for option in beat.options:
-                    if option.lock:
-                        lock_count += 1
-                    walk(option.beats)
-            elif isinstance(beat, SceneBeat) and beat.scene == DEATH_SCENE and beat.scene_key:
-                endings.add(beat.scene_key)
-
-    walk(beats)
+    walker = FacetWalker(mission_owner, named_states)
+    walker.walk(beats)
     if extra_check_keys:
-        checks.update(key for key in extra_check_keys if key)
-    return Facets(
-        speakers=sorted(speakers),
-        flags=sorted(flags),
-        checks=sorted(checks),
-        stats=sorted(stats),
-        relations=sorted(relations),
-        endings=sorted(endings),
-        missions=sorted(missions),
-        option_count=option_count,
-        lock_count=lock_count,
-        dice_check_count=dice_check_count,
-    )
+        walker.checks.update(key for key in extra_check_keys if key)
+    return walker.facets()
 
 
 def merge(base: Facets, battle_facets: Mapping[str, Iterable[str]] | None) -> Facets:

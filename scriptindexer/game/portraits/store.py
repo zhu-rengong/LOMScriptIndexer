@@ -6,8 +6,8 @@ from typing import Any
 import msgspec
 from PIL import Image
 
-from ...cache import CacheCorrupted, CacheStamp, load_cache, save_cache
-from ...jsonio import atomic_write_bytes, read_json
+from ...cache import CacheCorrupted, CacheStamp, CacheStore
+from ...jsonio import read_payload, write_bytes
 from ...paths import PORTRAIT_CACHE_PATH, PORTRAIT_CROP_INDEX_PATH
 from ...schema import schema_digest
 from ..framing import Frame
@@ -123,9 +123,11 @@ def same_settings_snapshot(left: Any, right: Any) -> bool:
 def load_bundle_cache(
     layout: GameLayout, fingerprint: str
 ) -> tuple[dict[str, dict[str, str]], dict[str, Path], list[dict]] | None:
-    stamp = CacheStamp(schema_digest(BundleCache), f"{CACHE_VERSION}|{fingerprint}")
+    store = CacheStore(
+        PORTRAIT_CACHE_PATH, CacheStamp(schema_digest(BundleCache), f"{CACHE_VERSION}|{fingerprint}")
+    )
     try:
-        payload = load_cache(PORTRAIT_CACHE_PATH, stamp, BundleCache)
+        payload = store.load(BundleCache)
     except CacheCorrupted:
         return None
     if payload is None or not payload.addresses:
@@ -156,8 +158,10 @@ def save_bundle_cache(
         addresses={address: path.name for address, path in sorted(index.items())},
         issues=list(issues),
     )
-    stamp = CacheStamp(schema_digest(BundleCache), f"{CACHE_VERSION}|{fingerprint}")
-    save_cache(PORTRAIT_CACHE_PATH, stamp, payload)
+    store = CacheStore(
+        PORTRAIT_CACHE_PATH, CacheStamp(schema_digest(BundleCache), f"{CACHE_VERSION}|{fingerprint}")
+    )
+    store.save(payload)
 
 
 def crop_file(digest: str) -> Path:
@@ -165,9 +169,12 @@ def crop_file(digest: str) -> Path:
 
 
 def load_crop_index(fingerprint: str) -> dict[str, dict[str, dict]] | None:
-    stamp = CacheStamp(schema_digest(CropIndex), f"{CACHE_VERSION}|{fingerprint}")
+    store = CacheStore(
+        PORTRAIT_CROP_INDEX_PATH,
+        CacheStamp(schema_digest(CropIndex), f"{CACHE_VERSION}|{fingerprint}"),
+    )
     try:
-        payload = load_cache(PORTRAIT_CROP_INDEX_PATH, stamp, CropIndex)
+        payload = store.load(CropIndex)
     except CacheCorrupted:
         return None
     if payload is None:
@@ -203,12 +210,15 @@ def save_crop_index(fingerprint: str, characters: dict[str, dict[str, dict]]) ->
             for character, table in sorted(characters.items())
         }
     )
-    stamp = CacheStamp(schema_digest(CropIndex), f"{CACHE_VERSION}|{fingerprint}")
-    save_cache(PORTRAIT_CROP_INDEX_PATH, stamp, payload)
+    store = CacheStore(
+        PORTRAIT_CROP_INDEX_PATH,
+        CacheStamp(schema_digest(CropIndex), f"{CACHE_VERSION}|{fingerprint}"),
+    )
+    store.save(payload)
 
 
 def load_previews(preview_dir: Path, game: str) -> dict | None:
-    previews = read_json(preview_dir / "index.json")
+    previews = read_payload(preview_dir / "index.json")
     if not isinstance(previews, dict) or previews.get("version") != PREVIEW_VERSION:
         return None
     if previews.get("assets") != game:
@@ -260,7 +270,7 @@ def valid_manifest(manifest: Any, asset: str) -> bool:
 
 
 def load_previous(output: Path, preview_dir: Path, game: str, asset: str) -> Previous | None:
-    manifest = read_json(output / "manifest.json")
+    manifest = read_payload(output / "manifest.json")
     valid = valid_manifest(manifest, asset)
     previews = load_previews(preview_dir, game)
     crops = load_crop_index(game)
@@ -303,12 +313,13 @@ def paginate(
     positions: dict[tuple[str, str], list[int]] = {}
     mood_positions: dict[str, list[int]] = {}
     current: list[str] = []
-    for mood in sorted(moods or {}):
+    mood_cells = moods or {}
+    for mood in sorted(mood_cells):
         if len(current) == ATLAS_CELLS:
             pages.append(current)
             current = []
         mood_positions[mood] = [len(pages), len(current)]
-        current.append(moods[mood])
+        current.append(mood_cells[mood])
     for character in sorted(tables):
         names = sorted(tables[character])
         entries = [tables[character][name] for name in names]
@@ -347,7 +358,7 @@ def write_page(path: Path, cells: list[str]) -> None:
         page.save(output, format="WEBP", quality=ATLAS_QUALITY, method=ATLAS_METHOD)
     finally:
         page.close()
-    atomic_write_bytes(path, output.getvalue())
+    write_bytes(path, output.getvalue())
 
 
 def sweep(directory: Path, keep: set[str], suffixes: tuple[str, ...]) -> None:

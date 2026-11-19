@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from ..jsonio import read_json
+from ..jsonio import read_payload
 from ..paths import FRAMING_PATH
 
 FRAMING_VERSION = 1
@@ -78,7 +78,7 @@ def parse_frame(value: Any) -> Frame | None:
 
 
 def load_frames(path: Path = FRAMING_PATH) -> dict[str, dict[str, Frame]]:
-    payload = read_json(path)
+    payload = read_payload(path)
     if not isinstance(payload, dict) or payload.get("version") != FRAMING_VERSION:
         return {}
     raw = payload.get("frames")

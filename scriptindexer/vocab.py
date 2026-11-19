@@ -39,13 +39,14 @@ EDGE_KINDS = (
     EDGE_MISSION,
     EDGE_AFTER,
 )
+EDGE_TEMP_GROUP = "temp"
 EDGE_GROUP_BY_KIND = {
-    EDGE_JUMP: "jump",
-    EDGE_TEMP_SCRIPT: "temp",
-    EDGE_TRAVEL: "temp",
-    EDGE_POSITION: "position",
-    EDGE_MISSION: "mission",
-    EDGE_AFTER: "after",
+    EDGE_JUMP: EDGE_JUMP,
+    EDGE_TEMP_SCRIPT: EDGE_TEMP_GROUP,
+    EDGE_TRAVEL: EDGE_TEMP_GROUP,
+    EDGE_POSITION: EDGE_POSITION,
+    EDGE_MISSION: EDGE_MISSION,
+    EDGE_AFTER: EDGE_AFTER,
 }
 
 FACET_LIST_FIELDS = ("speakers", "flags", "checks", "stats", "relations", "endings")
@@ -68,29 +69,6 @@ CHECK_CONDITION_RESULT = "condition"
 CHECK_POSITION = "position"
 CHECK_FLAG = "flag"
 CHECK_KINDS = (CHECK_SWITCH, CHECK_DICE, CHECK_CONDITION_RESULT, CHECK_POSITION, CHECK_FLAG)
-
-COND_CONST = "const"
-COND_RANDOM = "random"
-COND_DICE = "dice"
-COND_VAR = "var"
-COND_GROUP = "group"
-COND_COMPARE = "compare"
-COND_LOGIC = "logic"
-COND_CHECK = "check"
-COND_RAW = "raw"
-COND_TAGS = frozenset(
-    {
-        COND_CONST,
-        COND_RANDOM,
-        COND_DICE,
-        COND_VAR,
-        COND_GROUP,
-        COND_COMPARE,
-        COND_LOGIC,
-        COND_CHECK,
-        COND_RAW,
-    }
-)
 
 VALUE_CONST = "const"
 VALUE_STAT = "stat"
@@ -136,6 +114,7 @@ COMPARE_TOKEN_SYMBOLS = (
     ("<=", "≤"),
     (">=", "≥"),
     ("==", "="),
+    ("~=", "≠"),
     ("≠", "≠"),
     ("≤", "≤"),
     ("≥", "≥"),

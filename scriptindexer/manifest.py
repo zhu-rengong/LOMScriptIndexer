@@ -1,20 +1,19 @@
 from pathlib import Path
-from typing import Any
 
 from .jsonio import read_json, write_json
+from .schema.manifest import Manifest
 
 
-def load_manifest(path: Path) -> dict[str, Any]:
-    payload = read_json(path)
-    return payload if isinstance(payload, dict) else {}
+def load_manifest(path: Path) -> Manifest | None:
+    return read_json(path, Manifest)
 
 
-def save_manifest(path: Path, manifest: dict[str, Any]) -> None:
+def save_manifest(path: Path, manifest: Manifest) -> None:
     write_json(path, manifest, indent=2)
 
 
 def manifest_matches(
-    manifest: dict[str, Any],
+    manifest: Manifest | None,
     fingerprint: str,
     langs: tuple[str, ...],
     lua_dir: Path,
@@ -22,11 +21,13 @@ def manifest_matches(
     stage_versions: dict[str, str],
     required: tuple[Path, ...] = (),
 ) -> bool:
-    if not manifest or manifest.get("fingerprint") != fingerprint:
+    if manifest is None:
         return False
-    if manifest.get("langs") != list(langs):
+    if manifest.fingerprint != fingerprint:
         return False
-    if manifest.get("stage_versions") != stage_versions:
+    if manifest.langs != list(langs):
+        return False
+    if manifest.stage_versions != stage_versions:
         return False
     if not lua_dir.is_dir() or not any(lua_dir.glob("*.lua")):
         return False
