@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { chapterTitle, t } from "../../i18n";
 import { nearBottom } from "../../lib/browser";
-import { useSearchStore, type SearchHit } from "../../stores/search";
+import type { SearchHit } from "../../stores/search";
 
 const SCROLL_THRESHOLD = 96;
 
@@ -10,7 +10,6 @@ const props = defineProps<{
   renderedCount: number;
   activeIndex: number;
   excludedCount: number;
-  query: string;
   status: { count: string; note: string; excluded: string; message: string };
   isHidden: boolean;
   hasFilter: boolean;
@@ -22,21 +21,17 @@ const emit = defineEmits<{
   (event: "clear-filter"): void;
 }>();
 
-const search = useSearchStore();
 const panel = ref<HTMLElement | null>(null);
-
-const needle = computed(() => search.needle(props.query));
 
 const visibleHits = computed(() => props.hits.slice(0, props.renderedCount));
 
 const splitSnippet = (hit: SearchHit) => {
-  const value = needle.value;
-  const position = value ? hit.snippet.toLowerCase().indexOf(value) : -1;
-  if (position < 0) return null;
+  const start = hit.matchStart;
+  const end = start + hit.matchLength;
   return {
-    head: hit.snippet.slice(0, position),
-    mark: hit.snippet.slice(position, position + value.length),
-    tail: hit.snippet.slice(position + value.length),
+    head: hit.snippet.slice(0, start),
+    mark: hit.snippet.slice(start, end),
+    tail: hit.snippet.slice(end),
   };
 };
 
@@ -89,10 +84,7 @@ watch(
       <span class="did">{{ row.hit.id }}</span>
       <span class="dmeta">{{ row.hit.chapter ? chapterTitle(row.hit.chapter) : "" }}</span>
       <span v-if="row.hit.snippet" class="dtext">
-        <template v-if="row.parts">
-          {{ row.parts.head }}<mark>{{ row.parts.mark }}</mark>{{ row.parts.tail }}
-        </template>
-        <template v-else>{{ row.hit.snippet }}</template>
+        {{ row.parts.head }}<mark>{{ row.parts.mark }}</mark>{{ row.parts.tail }}
       </span>
     </div>
   </div>

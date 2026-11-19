@@ -12,7 +12,6 @@ const {
   renderedCount,
   activeIndex,
   excludedCount,
-  lastQuery,
   status,
   openState,
   hasActiveFilter,
@@ -52,7 +51,6 @@ const {
         :rendered-count="renderedCount"
         :active-index="activeIndex"
         :excluded-count="excludedCount"
-        :query="lastQuery"
         :status="status"
         :is-hidden="!openState"
         :has-filter="hasActiveFilter()"

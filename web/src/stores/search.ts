@@ -13,6 +13,8 @@ export type SearchHit = {
   chapter: Chapter | null;
   snippet: string;
   anchor: string;
+  matchStart: number;
+  matchLength: number;
 };
 
 export type SearchResult = {
@@ -32,19 +34,19 @@ type IndexEntry = {
 
 const SLICE = 48;
 
-const snippetOf = (line: string, position: number): string =>
-  line.slice(Math.max(0, position - 16), position + 46);
-
 const hitsOf = (entry: IndexEntry, needle: string): SearchHit[] => {
   const hits: SearchHit[] = [];
   for (const line of entry.lines) {
     const position = line.indexOf(needle);
     if (position < 0) continue;
+    const start = Math.max(0, position - 16);
     hits.push({
       id: entry.id,
       chapter: entry.chapter,
-      snippet: snippetOf(line, position),
+      snippet: line.slice(start, position + 46),
       anchor: line,
+      matchStart: position - start,
+      matchLength: needle.length,
     });
   }
   return hits;
@@ -68,9 +70,8 @@ class SearchIndex {
     return useScriptStore();
   }
 
-  needle(input: unknown): string {
-    const script = this.script();
-    return normalizeSearchText(convert.text(script.textLang(), String(input ?? "")));
+  private needleOf(input: string): string {
+    return normalizeSearchText(convert.text(this.script().textLang(), input));
   }
 
   invalidate(): void {
@@ -93,7 +94,7 @@ class SearchIndex {
 
   async search(input: string, onProgress?: SearchProgress): Promise<SearchResult> {
     const result: SearchResult = { hits: [], total: 0, excludedByFilter: 0 };
-    const needle = this.needle(input);
+    const needle = this.needleOf(input);
     if (!needle) return result;
     if (onProgress) {
       this.listeners.add(onProgress);
@@ -219,6 +220,5 @@ export const useSearchStore = defineStore("search", () => {
     invalidate: () => index.invalidate(),
     warm: () => index.warm(),
     search: (input: string, onProgress?: SearchProgress) => index.search(input, onProgress),
-    needle: (input: unknown) => index.needle(input),
   };
 });

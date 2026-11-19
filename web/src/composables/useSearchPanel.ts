@@ -27,7 +27,6 @@ export const useSearchPanel = () => {
   const openState = ref(false);
   const status = ref({ count: "", note: "", excluded: "", message: "" });
 
-  let lastQuery = "";
   let renderedQuery = "";
   let renderedFilterSet: Set<number> | null = null;
   let isStale = true;
@@ -117,7 +116,6 @@ export const useSearchPanel = () => {
 
   const searchNow = async (): Promise<number> => {
     const value = query.value.trim();
-    lastQuery = value;
     if (!value) {
       hide();
       return 0;
@@ -140,7 +138,6 @@ export const useSearchPanel = () => {
   const runRefresh = async (): Promise<void> => {
     const value = query.value.trim();
     if (!value) return;
-    lastQuery = value;
     if (!openState.value) {
       isStale = true;
       return;
@@ -203,14 +200,14 @@ export const useSearchPanel = () => {
     const hit = hits.value[Math.min(index, hits.value.length - 1)] ?? hits.value[0];
     if (!hit) return false;
     hide();
-    panels.focusText(hit.id, hit.anchor || search.needle(lastQuery));
+    panels.focusText(hit.id, hit.anchor);
     store.select(hit.id, { history: true });
     return true;
   };
 
   const pick = (hit: SearchHit): void => {
     hide();
-    panels.focusText(hit.id, hit.anchor || search.needle(lastQuery));
+    panels.focusText(hit.id, hit.anchor);
     store.select(hit.id, { history: true });
   };
 
@@ -277,7 +274,6 @@ export const useSearchPanel = () => {
     renderedCount,
     activeIndex,
     excludedCount,
-    lastQuery,
     status,
     openState,
     hasActiveFilter,
