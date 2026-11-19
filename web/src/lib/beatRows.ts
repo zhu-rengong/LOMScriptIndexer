@@ -224,17 +224,18 @@ export const walkRows = (rows: unknown, visit: (row: BeatNode) => void): void =>
   }
 };
 
-export const textPartsOf = (rows: unknown): string[] => {
+export const searchPartsOf = (rows: unknown): string[] => {
   const parts: string[] = [];
   walkRows(rows, (row) => {
     if (isBeat(row, "say")) parts.push(stripMarkup(parseSay(row).text));
     else if (isBeat(row, "choice")) {
       for (const item of parseChoice(row)) parts.push(stripMarkup(item.text));
-    } else if (isBeat(row, "lore")) parts.push(stripMarkup(parseLore(row)));
-    else if (isBeat(row, "ending")) {
+    } else if (isBeat(row, "lore")) {
+      for (const line of paragraphLines(parseLore(row))) parts.push(line);
+    } else if (isBeat(row, "ending")) {
       const ending = parseEnding(row);
       if (ending.title) parts.push(stripMarkup(ending.title));
-      if (ending.desc.length) parts.push(ending.desc.join("\n"));
+      for (const line of ending.desc) parts.push(line);
     } else if (isBeat(row, "battle")) {
       for (const event of parseBattle(row).events) {
         for (const line of event.lines) {
@@ -246,8 +247,6 @@ export const textPartsOf = (rows: unknown): string[] => {
   });
   return parts;
 };
-
-export const plainTextOf = (rows: unknown): string => textPartsOf(rows).join("\n");
 
 export const firstSay = (rows: unknown): { speaker: string; text: string } | null => {
   let found: { speaker: string; text: string } | null = null;

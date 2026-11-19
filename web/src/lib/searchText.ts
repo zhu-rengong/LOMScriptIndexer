@@ -53,7 +53,7 @@ const partsOf = (textLang: string, id: string): string[] => {
   if (cached !== undefined) return cached;
   const rows = rowsOf(textLang, id);
   if (!rows) return [];
-  const parts = beatRows.textPartsOf(rows).map((part) => part.toLowerCase());
+  const parts = beatRows.searchPartsOf(rows);
   plainParts.set(id, parts);
   return parts;
 };
