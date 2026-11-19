@@ -21,6 +21,8 @@ from ..vocab import (
     VALUE_SPECIAL,
     VALUE_STAT,
     VALUE_TALENT,
+    VALUE_UPGRADE,
+    VALUE_UPGRADE_LEVEL,
 )
 
 _SEGMENT_SPLIT = re.compile(r"[^0-9A-Za-z]+")
@@ -93,6 +95,8 @@ NAME_SPECS: dict[str, NameSpec] = {
     VALUE_MISC: NameSpec("Misc", prefix="Name/", use_segments=True),
     VALUE_SPECIAL: NameSpec("Special", prefix="Name/", use_segments=True),
     VALUE_TALENT: NameSpec("PlayerTalent", prefix="Name/", use_segments=True),
+    VALUE_UPGRADE: NameSpec("Equip", prefix="Name/"),
+    VALUE_UPGRADE_LEVEL: NameSpec("Equip", prefix="Name/"),
     VALUE_CHRONICLE: NameSpec("Library", prefix="Title/"),
 }
 

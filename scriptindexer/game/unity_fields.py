@@ -1,4 +1,5 @@
 from ..vocab import (
+    ITEM_KINDS,
     VALUE_BOOK,
     VALUE_BOOK_LEVEL,
     VALUE_BOOK_MASTER,
@@ -160,6 +161,11 @@ VALUE_FIELD_BY_KIND: dict[str, str] = {
     VALUE_BOOK_MASTER: "_bookCollection",
     VALUE_CHRONICLE: "_libraryAchieve",
     VALUE_CONDITION: "_condition",
+}
+
+ITEM_ID_FIELD_BY_KIND: dict[str, str] = {kind: "_id" for kind in ITEM_KINDS} | {
+    VALUE_UPGRADE: "_key",
+    VALUE_UPGRADE_LEVEL: "_key",
 }
 
 DICE_FIELD_BY_KIND: dict[str, str] = {

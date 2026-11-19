@@ -14,7 +14,6 @@ from ..schema import (
 from ..vocab import (
     COMPARE_OP_SYMBOL,
     GROUP_OP_KIND,
-    ITEM_KINDS,
     LOGIC_OP_KIND,
     VALUE_CONST,
     VALUE_GROUP,
@@ -23,7 +22,12 @@ from ..vocab import (
     VALUE_TALENT,
 )
 from .assets import FileScope
-from .unity_fields import DICE_FIELD_BY_KIND, DICE_NAME_KINDS, VALUE_FIELD_BY_KIND
+from .unity_fields import (
+    DICE_FIELD_BY_KIND,
+    DICE_NAME_KINDS,
+    ITEM_ID_FIELD_BY_KIND,
+    VALUE_FIELD_BY_KIND,
+)
 from .unity_objects import object_name, typetree_or_none
 
 MAX_BRANCH_DEPTH = 3
@@ -37,9 +41,9 @@ def typetree_of(obj: Any) -> dict[str, Any] | None:
     return typetree_or_none(obj)
 
 
-def unity_item_id(obj: Any) -> str:
+def unity_item_id(obj: Any, field: str) -> str:
     tree = typetree_of(obj) or {}
-    value = tree.get("_id")
+    value = tree.get(field)
     if isinstance(value, bool):
         return ""
     if isinstance(value, str):
@@ -141,7 +145,8 @@ def value_node(
     target = scope(ref)
     if target is None:
         return None
-    unity_id = unity_item_id(target) if kind in ITEM_KINDS else ""
+    id_field = ITEM_ID_FIELD_BY_KIND.get(kind)
+    unity_id = unity_item_id(target, id_field) if id_field else ""
     return var_node(kind, display_name_of(target), negative, unity_id)
 
 
