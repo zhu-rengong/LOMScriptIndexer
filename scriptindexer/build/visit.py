@@ -55,7 +55,3 @@ class BeatWalker:
 
     def scene(self, beat: SceneBeat) -> None:
         pass
-
-
-def walk_beats(beats: Sequence[Beat], walker: BeatWalker) -> None:
-    walker.walk(beats)
