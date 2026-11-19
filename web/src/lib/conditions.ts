@@ -581,9 +581,10 @@ export const missionEventView = (
   key: string,
   value: number | null,
   extra: string,
-): MissionEventView => {
+): MissionEventView | null => {
   if (kind === "missionTrigger") {
     const missionId = key && key !== "0" ? key : "";
+    if (value !== 1 && !missionId) return null;
     return {
       type: value === 1 ? "trigger" : "cancel",
       code: missionId,

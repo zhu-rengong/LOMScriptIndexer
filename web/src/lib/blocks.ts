@@ -142,12 +142,11 @@ const builders: Record<BeatKind, Builder> = {
       return;
     }
     if (meta.kind === "mission" || meta.kind === "missionTrigger") {
+      const event = missionEventView(meta.kind, meta.key, meta.value, meta.extra);
+      if (!event) return;
       buffer.flushMeta();
       buffer.flushDice();
-      buffer.push({
-        kind: "missionEvent",
-        event: missionEventView(meta.kind, meta.key, meta.value, meta.extra),
-      });
+      buffer.push({ kind: "missionEvent", event });
       return;
     }
     buffer.metaQueue.push(meta);

@@ -45,13 +45,12 @@ const metaLinesOf = (rows: unknown): SearchLine[] => {
     if (!beatRows.isBeat(row, "meta")) return;
     const meta = beatRows.parseMeta(row);
     if (!indexedMetaKinds.has(meta.kind)) return;
+    const mission = meta.kind === "mission" || meta.kind === "missionTrigger";
+    const event = mission ? missionEventView(meta.kind, meta.key, meta.value, meta.extra) : null;
+    if (mission && !event) return;
     const label = metaText(meta.kind, meta.key, meta.value, meta.extra);
     if (!label) return;
-    const target =
-      meta.kind === "mission" || meta.kind === "missionTrigger"
-        ? missionEventTarget(missionEventView(meta.kind, meta.key, meta.value, meta.extra))
-        : null;
-    lines.push({ text: label, target });
+    lines.push({ text: label, target: event ? missionEventTarget(event) : null });
   });
   return lines;
 };
