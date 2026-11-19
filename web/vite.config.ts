@@ -9,6 +9,7 @@ import AutoImport from "unplugin-auto-import/vite";
 import Components from "unplugin-vue-components/vite";
 import { defineConfig } from "vite";
 import { parseSettings } from "./src/framing/frames.ts";
+import { STORAGE_KEYS } from "./src/lib/storageKeys.ts";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 const docs = resolve(root, "..", "docs");
@@ -144,10 +145,16 @@ const docsData = (): Plugin => {
   };
 };
 
+const storageKeys = (): Plugin => ({
+  name: "scriptindexer-storage-keys",
+  transformIndexHtml: (html) => html.replaceAll("__PREFS_STORAGE_KEY__", STORAGE_KEYS.prefs),
+});
+
 export default defineConfig({
   base: "./",
   plugins: [
     vue(),
+    storageKeys(),
     AutoImport({
       imports: ["vue", "pinia"],
       dirs: ["src/stores"],

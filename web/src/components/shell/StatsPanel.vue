@@ -74,7 +74,7 @@ const {
 
     <div id="statsBody" class="stats-body">
       <template v-if="!wordPack">
-        <p :class="loading ? 'stats-loading' : 'stats-empty empty-state'">
+        <p :class="loading ? 'stats-loading' : 'stats-empty'">
           {{ t(loading ? "statsLoading" : "statsEmpty") }}
         </p>
       </template>

@@ -1,15 +1,8 @@
 import { useStorage } from "@vueuse/core";
 import type { RemovableRef, Serializer } from "@vueuse/core";
+import { STORAGE_KEYS } from "./storageKeys";
 
-const NAMESPACE = "legend-of-mortal.scriptindexer";
-
-export const keys = {
-  lang: `${NAMESPACE}.lang.v1`,
-  prefs: `${NAMESPACE}.prefs`,
-  bookmarks: `${NAMESPACE}.bookmarks.v1`,
-  infer: `${NAMESPACE}.infer.v1`,
-  condInfer: `${NAMESPACE}.condInfer.v1`,
-};
+export const keys = STORAGE_KEYS;
 
 export type StoredOptions<T> = {
   decode: (raw: unknown, base: T) => T;

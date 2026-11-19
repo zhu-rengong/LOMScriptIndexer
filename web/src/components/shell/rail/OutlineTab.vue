@@ -54,5 +54,5 @@ const setRef = (element: Element | ComponentPublicInstance | null) => {
       </button>
     </template>
   </div>
-  <p v-else class="cat-empty empty-state">{{ t("searchEmpty") }}</p>
+  <p v-else class="cat-empty">{{ t("searchEmpty") }}</p>
 </template>
