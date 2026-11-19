@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useMediaQuery, useMutationObserver } from "@vueuse/core";
+import { useVirtualizer } from "@tanstack/vue-virtual";
 import { graph } from "../../data/graph";
 import { specialScripts } from "../../data/special";
 import { t } from "../../i18n";
@@ -42,121 +44,45 @@ const openChapter = computed(() => {
 const outline = computed(() => outlineRows(query.value, openChapter.value));
 const rows = computed(() => outline.value.rows);
 
-const OVERSCAN = 12;
+const rowSize = reactive({ chapter: 44, node: 32 });
 
-const rowHeight = reactive({ chapter: 44, node: 32 });
+const virtualizer = useVirtualizer(
+  computed(() => ({
+    count: rows.value.length,
+    getScrollElement: () => listRef.value,
+    estimateSize: (index: number) =>
+      rows.value[index]?.kind === "chapter" ? rowSize.chapter : rowSize.node,
+    overscan: 12,
+    getItemKey: (index: number) => rows.value[index]?.key ?? index,
+  })),
+);
 
-const offsets = computed(() => {
-  const list = rows.value;
-  const spans = new Float64Array(list.length + 1);
-  for (let index = 0; index < list.length; index++) {
-    spans[index + 1] =
-      spans[index] + (list[index].kind === "chapter" ? rowHeight.chapter : rowHeight.node);
-  }
-  return spans;
-});
+const visible = computed(() =>
+  virtualizer.value.getVirtualItems().map((item) => ({
+    row: rows.value[item.index] as RailRow,
+    top: item.start,
+    index: item.index,
+  })),
+);
 
-const totalHeight = computed(() => offsets.value[rows.value.length] ?? 0);
+const totalHeight = computed(() => virtualizer.value.getTotalSize());
 
-const scrollTop = ref(0);
-const viewHeight = ref(0);
-
-const indexAt = (position: number): number => {
-  const spans = offsets.value;
-  const count = rows.value.length;
-  if (count === 0) return 0;
-  if (position <= 0) return 0;
-  if (position >= spans[count]) return count - 1;
-  let low = 0;
-  let high = count - 1;
-  while (low < high) {
-    const mid = Math.floor((low + high) / 2);
-    if (spans[mid + 1] <= position) low = mid + 1;
-    else high = mid;
-  }
-  return low;
+const measureElement = (element: Element | null): void => {
+  if (element) virtualizer.value.measureElement(element);
 };
 
-const visible = computed(() => {
-  const list = rows.value;
-  const spans = offsets.value;
-  if (!list.length) return [] as { row: RailRow; top: number }[];
-  const first = indexAt(scrollTop.value);
-  const last = indexAt(scrollTop.value + Math.max(viewHeight.value, 1));
-  const from = Math.max(0, first - OVERSCAN);
-  const to = Math.min(list.length, last + 1 + OVERSCAN);
-  const items: { row: RailRow; top: number }[] = [];
-  for (let index = from; index < to; index += 1) {
-    items.push({ row: list[index], top: spans[index] });
-  }
-  return items;
-});
+const coarse = useMediaQuery("(pointer: coarse)");
 
-const readScroll = () => {
-  const element = listRef.value;
-  if (!element) return;
-  scrollTop.value = element.scrollTop;
-  viewHeight.value = element.clientHeight;
-};
+watch(coarse, () => virtualizer.value.measure());
 
-const onScroll = () => {
-  const element = listRef.value;
-  if (!element) return;
-  scrollTop.value = element.scrollTop;
-};
-
-let staleHeights = true;
-
-const measureRows = () => {
-  if (!staleHeights) return;
-  const element = listRef.value;
-  if (!element) return;
-  const chapter =
-    element.querySelector<HTMLElement>(".cat-chap")?.getBoundingClientRect().height ?? 0;
-  const node =
-    element.querySelector<HTMLElement>(".rail-vrow")?.getBoundingClientRect().height ?? 0;
-  if (chapter > 0) rowHeight.chapter = chapter;
-  if (node > 0) rowHeight.node = node;
-  staleHeights = chapter <= 0 || node <= 0;
-};
-
-const invalidateHeights = () => {
-  staleHeights = true;
-  measureRows();
-};
-
-watch(visible, () => measureRows(), { flush: "post" });
+useMutationObserver(
+  () => document.documentElement,
+  () => virtualizer.value.measure(),
+  { attributes: true, attributeFilter: ["style"] },
+);
 
 watch(rows, () => {
-  void nextTick(readScroll);
-});
-
-watch(totalHeight, () => {
-  void nextTick(readScroll);
-});
-
-let observer: ResizeObserver | null = null;
-
-const coarse = window.matchMedia("(pointer: coarse)");
-const typography = new MutationObserver(invalidateHeights);
-
-onMounted(() => {
-  readScroll();
-  measureRows();
-  coarse.addEventListener("change", invalidateHeights);
-  typography.observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
-  const element = listRef.value;
-  if (element) {
-    observer = new ResizeObserver(readScroll);
-    observer.observe(element);
-  }
-});
-
-onBeforeUnmount(() => {
-  observer?.disconnect();
-  observer = null;
-  coarse.removeEventListener("change", invalidateHeights);
-  typography.disconnect();
+  void nextTick(() => virtualizer.value.measure());
 });
 
 const bookmarks = computed(() => {
@@ -213,16 +139,8 @@ const toggleChapter = (index: number) => {
 };
 
 const scrollToRow = (index: number) => {
-  const element = listRef.value;
-  if (!element) return;
-  const spans = offsets.value;
-  const top = spans[index];
-  if (top === undefined) return;
-  const bottom = spans[index + 1] ?? top;
-  if (top < element.scrollTop) element.scrollTop = top;
-  else if (bottom > element.scrollTop + element.clientHeight)
-    element.scrollTop = bottom - element.clientHeight;
-  scrollTop.value = element.scrollTop;
+  if (index < 0) return;
+  virtualizer.value.scrollToIndex(index, { align: "auto" });
 };
 
 const revealSelected = async (id: string) => {
@@ -341,7 +259,6 @@ watch(
       class="rail-list"
       role="tabpanel"
       :aria-labelledby="`railTab-${view.railTab}`"
-      @scroll.passive="onScroll"
     >
       <BookmarksTab
         v-if="view.railTab === 'bookmarks'"
@@ -364,6 +281,7 @@ watch(
         :height="totalHeight"
         :selected-id="store.selectedId"
         :searching="searching"
+        :measure="measureElement"
         @toggle="toggleChapter"
         @pick="pick"
       />

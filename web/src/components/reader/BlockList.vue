@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { sayKindOf } from "../../lib/beatRows";
 import type { ReaderBlock } from "../../types/beats";
-import type { Component } from "vue";
 import BattleCard from "./BattleCard.vue";
 import BranchGroup from "./BranchGroup.vue";
 import ChoiceBlock from "./ChoiceBlock.vue";
@@ -21,60 +20,9 @@ const props = defineProps<{ blocks: ReaderBlock[]; path?: string }>();
 const view = useViewStore();
 const prefs = usePrefsStore();
 
-const components: Record<ReaderBlock["kind"], Component> = {
-  say: SayLine,
-  time: TimeLine,
-  meta: MetaChips,
-  missionEvent: MissionEventCard,
-  dice: MetaChips,
-  choice: ChoiceBlock,
-  branches: BranchGroup,
-  lore: LoreLines,
-  battle: BattleCard,
-  ending: EndingBlock,
-  scene: SceneSwitch,
-  jump: JumpLink,
-};
-
 const foldKeyOf = (index: number): string => {
   const base = props.path || "";
   return base ? `${base}/${index}` : String(index);
-};
-
-const blockProps = (block: ReaderBlock, index: number): Record<string, unknown> => {
-  switch (block.kind) {
-    case "say":
-      return {
-        mode: block.mode,
-        speaker: block.speaker,
-        text: block.text,
-        expression: block.expression || "",
-        offstage: block.offstage === true,
-        showPortrait: prefs.showPortraits,
-      };
-    case "time":
-      return { rounds: block.rounds };
-    case "meta":
-      return { chips: block.chips };
-    case "missionEvent":
-      return { events: block.events };
-    case "dice":
-      return { chips: block.chips, dice: true };
-    case "choice":
-      return { options: block.options, diceChips: block.diceChips, foldKey: foldKeyOf(index) };
-    case "branches":
-      return { branches: block.branches, foldKey: foldKeyOf(index) };
-    case "lore":
-      return { lines: block.lines };
-    case "battle":
-      return { battle: block.battle, foldKey: foldKeyOf(index) };
-    case "ending":
-      return { ending: block.ending };
-    case "scene":
-      return { view: block.scene };
-    case "jump":
-      return { jump: block.jump, foldKey: foldKeyOf(index) };
-  }
 };
 
 const visible = computed(() =>
@@ -89,10 +37,43 @@ const visible = computed(() =>
 </script>
 
 <template>
-  <component
-    :is="components[block.kind]"
-    v-for="{ block, index } in visible"
-    :key="`${block.kind}:${index}`"
-    v-bind="blockProps(block, index)"
-  />
+  <template v-for="{ block, index } in visible" :key="`${block.kind}:${index}`">
+    <SayLine
+      v-if="block.kind === 'say'"
+      :mode="block.mode"
+      :speaker="block.speaker"
+      :text="block.text"
+      :expression="block.expression || ''"
+      :offstage="block.offstage === true"
+      :show-portrait="prefs.showPortraits"
+    />
+    <TimeLine v-else-if="block.kind === 'time'" :rounds="block.rounds" />
+    <MetaChips v-else-if="block.kind === 'meta'" :chips="block.chips" />
+    <MetaChips v-else-if="block.kind === 'dice'" :chips="block.chips" dice />
+    <MissionEventCard v-else-if="block.kind === 'missionEvent'" :events="block.events" />
+    <ChoiceBlock
+      v-else-if="block.kind === 'choice'"
+      :options="block.options"
+      :dice-chips="block.diceChips"
+      :fold-key="foldKeyOf(index)"
+    />
+    <BranchGroup
+      v-else-if="block.kind === 'branches'"
+      :branches="block.branches"
+      :fold-key="foldKeyOf(index)"
+    />
+    <LoreLines v-else-if="block.kind === 'lore'" :lines="block.lines" />
+    <BattleCard
+      v-else-if="block.kind === 'battle'"
+      :battle="block.battle"
+      :fold-key="foldKeyOf(index)"
+    />
+    <EndingBlock v-else-if="block.kind === 'ending'" :ending="block.ending" />
+    <SceneSwitch v-else-if="block.kind === 'scene'" :view="block.scene" />
+    <JumpLink
+      v-else-if="block.kind === 'jump'"
+      :jump="block.jump"
+      :fold-key="foldKeyOf(index)"
+    />
+  </template>
 </template>
