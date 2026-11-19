@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { missions } from "../../data/missions";
 import { t } from "../../i18n";
+import { missionEventTarget } from "../../lib/conditions";
+import type { FocusTarget } from "../../stores/panels";
 import { usePanelsStore } from "../../stores/panels";
 import type { MissionEventType, MissionEventView } from "../../types/beats";
 import type { MissionState } from "../../types/missions";
@@ -20,6 +22,7 @@ type EventRow = {
   title: string;
   state: MissionState | null;
   lookupKey: string;
+  target: FocusTarget;
 };
 
 const props = defineProps<{ events: MissionEventView[] }>();
@@ -37,6 +40,7 @@ const rows = computed<EventRow[]>(() =>
       title: event.name,
       state,
       lookupKey,
+      target: missionEventTarget(event),
     };
   }),
 );
@@ -58,7 +62,13 @@ const openMission = (key: string, event: Event) => {
 <template>
   <div class="mission-event" :class="{ 'is-cancel': allCancel }">
     <div class="mission-event-panel">
-      <div v-for="(row, index) in rows" :key="index" class="mission-event-item">
+      <div
+        v-for="(row, index) in rows"
+        :key="index"
+        class="mission-event-item"
+        :data-kind="row.target.kind"
+        :data-key="row.target.key"
+      >
         <MissionStateBody
           v-if="row.state"
           :state="row.state"

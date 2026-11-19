@@ -200,14 +200,14 @@ export const useSearchPanel = () => {
     const hit = hits.value[Math.min(index, hits.value.length - 1)] ?? hits.value[0];
     if (!hit) return false;
     hide();
-    panels.focusText(hit.id, hit.anchor);
+    panels.focusText(hit.id, hit.anchor, hit.target);
     store.select(hit.id, { history: true });
     return true;
   };
 
   const pick = (hit: SearchHit): void => {
     hide();
-    panels.focusText(hit.id, hit.anchor);
+    panels.focusText(hit.id, hit.anchor, hit.target);
     store.select(hit.id, { history: true });
   };
 

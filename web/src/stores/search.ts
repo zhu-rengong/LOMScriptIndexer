@@ -5,7 +5,8 @@ import { textStore } from "../data/text";
 import type { Chapter } from "../types/graph";
 import { normalizeSearchText } from "../lib/browser";
 import { createSearchEngine, searchCandidates, type SearchDoc } from "../lib/searchEngine";
-import { resetSearchText, searchLinesOfId } from "../lib/searchText";
+import { resetSearchText, searchLinesOfId, type SearchLine } from "../lib/searchText";
+import type { FocusTarget } from "./panels";
 import { useScriptStore } from "./script";
 
 export type SearchHit = {
@@ -13,6 +14,7 @@ export type SearchHit = {
   chapter: Chapter | null;
   snippet: string;
   anchor: string;
+  target: FocusTarget | null;
   matchStart: number;
   matchLength: number;
 };
@@ -29,7 +31,7 @@ type IndexEntry = {
   id: string;
   nodeIndex: number;
   chapter: SearchHit["chapter"];
-  lines: string[];
+  lines: SearchLine[];
 };
 
 const SLICE = 48;
@@ -37,14 +39,15 @@ const SLICE = 48;
 const hitsOf = (entry: IndexEntry, needle: string): SearchHit[] => {
   const hits: SearchHit[] = [];
   for (const line of entry.lines) {
-    const position = line.indexOf(needle);
+    const position = line.text.indexOf(needle);
     if (position < 0) continue;
     const start = Math.max(0, position - 16);
     hits.push({
       id: entry.id,
       chapter: entry.chapter,
-      snippet: line.slice(start, position + 46),
-      anchor: line,
+      snippet: line.text.slice(start, position + 46),
+      anchor: line.text,
+      target: line.target,
       matchStart: position - start,
       matchLength: needle.length,
     });
@@ -187,7 +190,7 @@ class SearchIndex {
           const lines = searchLinesOfId(id);
           entry.lines = lines;
           this.prepared += 1;
-          docs.push({ key: id, text: lines.join("\n") });
+          docs.push({ key: id, text: lines.map((line) => line.text).join("\n") });
         }
         if (docs.length) {
           await this.engine.addAllAsync(docs, { chunkSize: SLICE });

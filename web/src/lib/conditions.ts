@@ -8,6 +8,7 @@ import type { SumFact } from "../data/sumFacts";
 import { t } from "../i18n";
 import { timeNameOf } from "./conditions/numbers";
 import { pinia } from "../stores";
+import type { FocusTarget } from "../stores/panels";
 import { useViewStore } from "../stores/view";
 import type { CheckRef, MetaSeal, MissionEventView } from "../types/beats";
 import type { CheckpointModel, ConditionNode, PositionCandidate } from "../types/condition";
@@ -598,6 +599,9 @@ export const missionEventView = (
     : missionLabel(missionId) || key;
   return { type: "trigger", code: key, name };
 };
+
+export const missionEventTarget = (event: MissionEventView): FocusTarget =>
+  event.code ? { kind: "mission", key: event.code } : { kind: "missionEvent", key: event.type };
 
 export const metaText = (kind: string, key: string, value: number | null, extra = ""): string => {
   if (kind === "stat") {
