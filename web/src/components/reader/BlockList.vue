@@ -50,7 +50,7 @@ const visible = computed(() =>
     <TimeLine v-else-if="block.kind === 'time'" :rounds="block.rounds" />
     <MetaChips v-else-if="block.kind === 'meta'" :chips="block.chips" />
     <MetaChips v-else-if="block.kind === 'dice'" :chips="block.chips" dice />
-    <MissionEventCard v-else-if="block.kind === 'missionEvent'" :events="block.events" />
+    <MissionEventCard v-else-if="block.kind === 'missionEvent'" :event="block.event" />
     <ChoiceBlock
       v-else-if="block.kind === 'choice'"
       :options="block.options"

@@ -313,17 +313,17 @@ const renderBlocks = (blocks: ReaderBlock[], indent = ""): string[] => {
       case "meta":
         out.push(...chipBlockLines(block.chips, indent));
         break;
-      case "missionEvent":
-        for (const event of block.events) {
-          const label =
-            event.type === "trigger"
-              ? t("missionEventTrigger")
-              : event.type === "cancel"
-                ? t("missionEventCancel")
-                : t("missionEventEnd");
-          out.push(`${indent}[${label}] ${event.name || event.code}`);
-        }
+      case "missionEvent": {
+        const event = block.event;
+        const label =
+          event.type === "trigger"
+            ? t("missionEventTrigger")
+            : event.type === "cancel"
+              ? t("missionEventCancel")
+              : t("missionEventEnd");
+        out.push(`${indent}[${label}] ${event.name || event.code}`);
         break;
+      }
       case "dice":
         out.push(...chipBlockLines(block.chips, indent, t("cDice")));
         break;

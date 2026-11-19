@@ -152,7 +152,7 @@ export type ReaderBlock =
     }
   | { kind: "time"; rounds: number }
   | { kind: "meta"; chips: MetaChip[] }
-  | { kind: "missionEvent"; events: MissionEventView[] }
+  | { kind: "missionEvent"; event: MissionEventView }
   | { kind: "dice"; chips: MetaChip[] }
   | { kind: "choice"; options: ChoiceOption[]; diceChips: MetaChip[] }
   | { kind: "branches"; branches: BranchView[] }

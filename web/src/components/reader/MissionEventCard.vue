@@ -25,33 +25,29 @@ type EventRow = {
   target: FocusTarget;
 };
 
-const props = defineProps<{ events: MissionEventView[] }>();
+const props = defineProps<{ event: MissionEventView }>();
 
-const allCancel = computed(() => props.events.every((event) => event.type === "cancel"));
-
-const rows = computed<EventRow[]>(() =>
-  props.events.map((event) => {
-    const state =
-      event.type === "trigger" ? (missions.missionOfState(event.code)?.state ?? null) : null;
-    const lookupKey = state ? event.code : event.type === "end" ? event.code : "";
-    return {
-      event,
-      cancel: event.type === "cancel",
-      title: event.name,
-      state,
-      lookupKey,
-      target: missionEventTarget(event),
-    };
-  }),
-);
-
-const leadOf = (row: EventRow) => ({
-  label: t(LABELS[row.event.type]),
-  value: row.event.name,
-  cancel: row.cancel,
-  title: row.title,
-  lookupKey: row.lookupKey,
+const row = computed<EventRow>(() => {
+  const event = props.event;
+  const state =
+    event.type === "trigger" ? (missions.missionOfState(event.code)?.state ?? null) : null;
+  return {
+    event,
+    cancel: event.type === "cancel",
+    title: event.name,
+    state,
+    lookupKey: state ? event.code : event.type === "end" ? event.code : "",
+    target: missionEventTarget(event),
+  };
 });
+
+const lead = computed(() => ({
+  label: t(LABELS[row.value.event.type]),
+  value: row.value.event.name,
+  cancel: row.value.cancel,
+  title: row.value.title,
+  lookupKey: row.value.lookupKey,
+}));
 
 const openMission = (key: string, event: Event) => {
   event.stopPropagation();
@@ -60,41 +56,33 @@ const openMission = (key: string, event: Event) => {
 </script>
 
 <template>
-  <div class="mission-event" :class="{ 'is-cancel': allCancel }">
+  <div
+    class="mission-event"
+    :class="{ 'is-cancel': row.cancel }"
+    :data-kind="row.target.kind"
+    :data-key="row.target.key"
+  >
     <div class="mission-event-panel">
-      <div
-        v-for="(row, index) in rows"
-        :key="index"
-        class="mission-event-item"
-        :data-kind="row.target.kind"
-        :data-key="row.target.key"
-      >
-        <MissionStateBody
-          v-if="row.state"
-          :state="row.state"
-          :show-tags="false"
-          :lead="leadOf(row)"
-        />
-        <dl v-else class="mission-rows">
-          <div class="mission-row" :title="row.title || undefined">
-            <dt class="mission-label" :class="{ 'is-cancel': row.cancel }">
-              {{ t(LABELS[row.event.type]) }}
-            </dt>
-            <dd class="mission-value">
-              <button
-                v-if="row.lookupKey"
-                class="mission-link btn"
-                type="button"
-                aria-haspopup="dialog"
-                @click="openMission(row.lookupKey, $event)"
-              >
-                {{ row.event.name }}
-              </button>
-              <template v-else>{{ row.event.name }}</template>
-            </dd>
-          </div>
-        </dl>
-      </div>
+      <MissionStateBody v-if="row.state" :state="row.state" :show-tags="false" :lead="lead" />
+      <dl v-else class="mission-rows">
+        <div class="mission-row" :title="row.title || undefined">
+          <dt class="mission-label" :class="{ 'is-cancel': row.cancel }">
+            {{ t(LABELS[row.event.type]) }}
+          </dt>
+          <dd class="mission-value">
+            <button
+              v-if="row.lookupKey"
+              class="mission-link btn"
+              type="button"
+              aria-haspopup="dialog"
+              @click="openMission(row.lookupKey, $event)"
+            >
+              {{ row.event.name }}
+            </button>
+            <template v-else>{{ row.event.name }}</template>
+          </dd>
+        </div>
+      </dl>
     </div>
   </div>
 </template>
