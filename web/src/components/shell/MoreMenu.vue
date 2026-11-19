@@ -2,7 +2,7 @@
 import { t } from "../../i18n";
 import { byId } from "../../lib/browser";
 import { popovers } from "../../lib/popover";
-import { exportRunning, exportScripts } from "../../lib/scriptExport";
+import { exportRunning, exportScripts } from "../../lib/export/download";
 import { UI_IDS } from "../../ui/ids";
 
 const open = computed(() => popovers.isOpen("moreMenu"));

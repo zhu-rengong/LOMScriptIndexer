@@ -1,5 +1,6 @@
 import { LOGIC_ALIAS, ROOTS } from "./fields";
 import { QueryFail } from "./error";
+import { isSpace } from "./scan";
 
 export type Token = {
   type: string;
@@ -22,8 +23,6 @@ const OPERATORS: { prefix: string; type: string; value: string }[] = [
   { prefix: ":", type: "op", value: ":" },
   { prefix: ",", type: "comma", value: "," },
 ];
-
-const isSpace = (ch: string): boolean => ch === " " || ch === "\t" || ch === "\n" || ch === "\r";
 
 const isStop = (ch: string): boolean => isSpace(ch) || "()!:,=\"'<>".indexOf(ch) >= 0;
 

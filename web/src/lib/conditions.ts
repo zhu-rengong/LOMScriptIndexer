@@ -1,5 +1,5 @@
 import { checkpoints } from "../data/checkpoints";
-import { flagFacts, flagFactKey, flagMeasureKey } from "../data/flagFacts";
+import { flagFactKey, flagMeasureKey, isBinaryFlag } from "../data/flagFacts";
 import { graph } from "../data/graph";
 import { missions } from "../data/missions";
 import { names } from "../data/names";
@@ -39,18 +39,6 @@ export type ConditionPart =
 type FlagFact = { text: string; flag: string; seal: "true" | "false" };
 const LOOKUP_KINDS = new Set(["stat", "rel", "flag"]);
 const INLINE_LOOKUP_KINDS = new Set(["stat", "rel", "flag", "check"]);
-const BINARY_FLAGS = new Set(
-  Object.entries(flagFacts)
-    .filter(([, table]) => {
-      const values = Object.keys(table.values);
-      return (
-        values.length > 0 &&
-        values.includes("1") &&
-        values.every((value) => value === "0" || value === "1")
-      );
-    })
-    .map(([flag]) => flag),
-);
 
 export const kindText = (kind: string): string => t(`vk.${kind}`, { defaultValue: kind || "" });
 
@@ -201,7 +189,7 @@ const flagValueText = (flag: string, value: string, negated: boolean): string =>
 };
 
 const binaryFlagFact = (flag: string, op: string, value: string): FlagFact | null => {
-  if (!BINARY_FLAGS.has(flag)) return null;
+  if (!isBinaryFlag(flag)) return null;
   if (op !== "=" && op !== "≠") return null;
   if (value !== "0" && value !== "1") return null;
   const text = flagValueText(flag, "1", false);
@@ -710,7 +698,7 @@ const flagSetFact = (
   value: number | null,
 ): { text: string; seal: MetaSeal } | null => {
   if (typeof value !== "number") return null;
-  if (BINARY_FLAGS.has(flag)) {
+  if (isBinaryFlag(flag)) {
     if (value !== 0 && value !== 1) return null;
     const text = flagValueText(flag, "1", false);
     return text ? { text, seal: value === 1 ? "true" : "false" } : null;

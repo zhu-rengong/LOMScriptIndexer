@@ -1,71 +1,9 @@
 import type MiniSearch from "minisearch";
 import type { QueryField, QuerySuggestion } from "../../types/query";
 import { createSearchEngine, searchCandidates, type SearchDoc } from "../searchEngine";
-import { FIELDS, FIELD_BY_ALIAS, LOGIC_ALIAS, ROOTS } from "./fields";
+import { FIELDS, FIELD_BY_ALIAS } from "./fields";
 import type { QueryIndex } from "./evaluate";
-
-const logicWordAt = (rest: string): string => {
-  for (const word of ROOTS) {
-    if (new RegExp(`^${word}(?=[\\s(]|$)`, "i").test(rest)) return word;
-  }
-  for (const word of LOGIC_ALIAS.keys()) {
-    if (word && rest.toLowerCase().indexOf(word) === 0) return word;
-  }
-  return "";
-};
-
-const termStart = (source: string, cursor: number): number => {
-  let start = 0;
-  let quote: string | null = null;
-  let index = 0;
-  while (index < cursor) {
-    const ch = source[index];
-    if (quote) {
-      if (ch === quote) quote = null;
-      index++;
-      continue;
-    }
-    if (ch === '"' || ch === "'") {
-      quote = ch;
-      index++;
-      continue;
-    }
-    if (ch === "(" || ch === ")") {
-      start = index + 1;
-      index++;
-      continue;
-    }
-    const boundary = index === 0 || /[\s()]/.test(source[index - 1]);
-    if (boundary) {
-      const word = logicWordAt(source.slice(index, cursor));
-      if (word) {
-        start = index + word.length;
-        index = start;
-        continue;
-      }
-    }
-    index++;
-  }
-  while (start < cursor && /\s/.test(source[start])) start++;
-  return start;
-};
-
-const findOperator = (segment: string): number => {
-  let quote: string | null = null;
-  for (let index = 0; index < segment.length; index++) {
-    const ch = segment[index];
-    if (quote) {
-      if (ch === quote) quote = null;
-      continue;
-    }
-    if (ch === '"' || ch === "'") {
-      quote = ch;
-      continue;
-    }
-    if (":=><!".indexOf(ch) >= 0) return index;
-  }
-  return -1;
-};
+import { findOperator, termStart } from "./scan";
 
 const needsQuote = (value: string): boolean => !/^[A-Za-z0-9_.\-\u4e00-\u9fff]+$/.test(value);
 
@@ -175,22 +113,17 @@ export const suggest = (source: string, cursor: number, index: QueryIndex): Sugg
   }
   const valuePrefix = text.slice(valueStart, at);
 
-  const candidates: QuerySuggestion[] = [];
-  for (const entry of index.facetValues(field)) {
-    candidates.push({
-      value: entry.value,
-      label: entry.label,
-      count: entry.count,
-      insert: formatInsert(entry.value, quoted),
-    });
-  }
+  const candidates: QuerySuggestion[] = index.facetValues(field).map((entry) => ({
+    value: entry.value,
+    label: entry.label,
+    count: entry.count,
+    insert: formatInsert(entry.value, quoted),
+  }));
 
   const needle = valuePrefix.toLowerCase();
   const allowed = needle !== "" ? facetFilter(index, field, needle) : null;
   const filtered =
-    allowed === null
-      ? candidates
-      : candidates.filter((_, position) => allowed.has(String(position)));
+    allowed === null ? candidates : candidates.filter((_, position) => allowed.has(String(position)));
 
   return {
     mode: "value",

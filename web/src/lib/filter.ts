@@ -1,15 +1,12 @@
 import { dataset } from "../data/dataset";
+import { flagFacts, isBinaryValues } from "../data/flagFacts";
 import { graph } from "../data/graph";
 import { textStore } from "../data/text";
 import { t } from "../i18n";
-
 import type { QueryContext, QueryError } from "../types/query";
 import { missionLabelTable } from "./missionLabel";
 import { createIndex, query, type QueryIndex } from "./query";
-import { pinia } from "../stores";
 import { useScriptStore } from "../stores/script";
-
-const script = () => useScriptStore(pinia);
 
 export const RESULT_LIMIT = 50;
 
@@ -31,73 +28,71 @@ export const EXAMPLES: { key: string; expr: string }[] = [
   { key: "exCombo", expr: "speaker:master AND (flag:H00001 OR ending:*)" },
 ];
 
-let textLang = "";
-let textCount = -1;
-let compileCache: QueryIndex | null = null;
-
 const textOf = (key: string): string => {
   const text = t(key);
   return text === key ? "" : text;
 };
 
-const isBinaryFlag = (values: string[]): boolean =>
-  values.length > 0 &&
-  values.indexOf("1") >= 0 &&
-  values.every((value) => value === "0" || value === "1");
-
-const inferredFlagName = (flag: string, values: string[]): string => {
-  if (isBinaryFlag(values)) {
-    const fact = textOf(`fact.${flag}.1`);
-    if (fact) return fact;
-  }
-  return textOf(`measure.${flag}`);
-};
-
 const flagNames = (): Record<string, string> => {
-  const facts = dataset.flagFacts.flags || {};
-  const out: Record<string, string> = {};
-  const keys = new Set<string>(Object.keys(facts));
-  for (const node of graph.nodes) for (const key of node.facets.flags) keys.add(key);
-  for (const flag of keys) {
-    const name = inferredFlagName(flag, facts[flag]?.values || []);
-    if (name) out[flag] = name;
+  const names: Record<string, string> = {};
+  const known = new Set<string>(Object.keys(dataset.flagFacts.flags || {}));
+  for (const node of graph.nodes) for (const key of node.facets.flags) known.add(key);
+  for (const flag of known) {
+    const fact = isBinaryValues(flagFacts[flag]?.values || []) ? textOf(`fact.${flag}.1`) : "";
+    const name = fact || textOf(`measure.${flag}`);
+    if (name) names[flag] = name;
   }
-  return out;
+  return names;
 };
 
-const buildIndex = (): QueryIndex => {
-  const lang = script().textLang();
-  const count = textStore.scriptCount();
-  if (compileCache && textLang === lang && textCount === count) return compileCache;
-  textLang = lang;
-  textCount = count;
-  const names = textStore.names(lang);
-  const context: QueryContext = {
-    nodeCount: graph.nodes.length,
-    nodes: graph.nodes.map((node) => ({ chapterIndex: node.chapterIndex })),
-    chapters: graph.chapters,
-    facets: graph.nodes.map((node) => node.facets),
-    names: {
-      speakers: textStore.characters(lang),
-      flags: flagNames(),
-      checks: names.check || {},
-      stats: names.stat || {},
-      relations: names.rel || {},
-      endings: names.ending || {},
-      missions: missionLabelTable(),
-    },
-  };
-  compileCache = createIndex(context);
-  return compileCache;
-};
+export class FilterCompiler {
+  private lang = "";
+  private count = -1;
+  private cached: QueryIndex | null = null;
 
-export const queryIndex = (): QueryIndex => buildIndex();
+  build(): QueryIndex {
+    const script = useScriptStore();
+    const lang = script.textLang();
+    const count = textStore.scriptCount();
+    if (this.cached && this.lang === lang && this.count === count) return this.cached;
+    this.lang = lang;
+    this.count = count;
+    const names = textStore.names(lang);
+    const context: QueryContext = {
+      nodeCount: graph.nodes.length,
+      nodes: graph.nodes.map((node) => ({ chapterIndex: node.chapterIndex })),
+      chapters: graph.chapters,
+      facets: graph.nodes.map((node) => node.facets),
+      names: {
+        speakers: textStore.characters(lang),
+        flags: flagNames(),
+        checks: names.check || {},
+        stats: names.stat || {},
+        relations: names.rel || {},
+        endings: names.ending || {},
+        missions: missionLabelTable(),
+      },
+    };
+    this.cached = createIndex(context);
+    return this.cached;
+  }
 
-export const resetFilterContext = (): void => {
-  textLang = "";
-  textCount = -1;
-  compileCache = null;
-};
+  reset(): void {
+    this.lang = "";
+    this.count = -1;
+    this.cached = null;
+  }
+
+  compile(source: string): ReturnType<typeof query.compile> {
+    return query.compile(source, this.build());
+  }
+}
+
+export const filterCompiler = new FilterCompiler();
+
+export const resetFilterContext = (): void => filterCompiler.reset();
+
+export const queryIndex = (): QueryIndex => filterCompiler.build();
 
 export const filterErrorText = (error: QueryError): string =>
   t("filterSyntax", {
@@ -108,15 +103,16 @@ export const filterErrorText = (error: QueryError): string =>
 export type ApplyResult = { ok: boolean; matchCount: number | null };
 
 export const applyFilter = (source: string): ApplyResult => {
+  const script = useScriptStore();
   const value = source || "";
   if (!value.trim()) {
-    script().setFilterState({ source: "", set: null, error: "", loading: false });
+    script.setFilterState({ source: "", set: null, error: "", loading: false });
     return { ok: true, matchCount: null };
   }
   const loading = query.needsText(value) && !textStore.progress().done;
-  const result = query.compile(value, buildIndex());
+  const result = filterCompiler.compile(value);
   if (!result.ok) {
-    script().setFilterState({
+    script.setFilterState({
       source: value,
       set: null,
       error: filterErrorText(result.error),
@@ -124,13 +120,13 @@ export const applyFilter = (source: string): ApplyResult => {
     });
     return { ok: false, matchCount: 0 };
   }
-  script().setFilterState({ source: value, set: result.set, error: "", loading });
+  script.setFilterState({ source: value, set: result.set, error: "", loading });
   if (loading) {
-    textStore.ensureAll(script().textLang()).then(() => {
-      resetFilterContext();
-      if (script().filterSource !== value) return;
-      const later = query.compile(value, buildIndex());
-      script().setFilterState({
+    textStore.ensureAll(script.textLang()).then(() => {
+      filterCompiler.reset();
+      if (script.filterSource !== value) return;
+      const later = filterCompiler.compile(value);
+      script.setFilterState({
         source: value,
         set: later.ok ? later.set : null,
         error: later.ok ? "" : filterErrorText(later.error),

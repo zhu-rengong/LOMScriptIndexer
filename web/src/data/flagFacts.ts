@@ -5,11 +5,15 @@ export type FlagFactTable = {
   negated: string[];
 };
 
+let cached: Record<string, FlagFactTable> | null = null;
+
 const tables = (): Record<string, FlagFactTable> => {
+  if (cached) return cached;
   const out: Record<string, FlagFactTable> = {};
   for (const [flag, table] of Object.entries(dataset.flagFacts.flags ?? {})) {
     out[flag] = { values: table.values ?? [], negated: table.negated ?? [] };
   }
+  cached = out;
   return out;
 };
 
@@ -24,6 +28,13 @@ export const flagFacts: Record<string, FlagFactTable> = new Proxy(
     },
   },
 ) as Record<string, FlagFactTable>;
+
+export const isBinaryValues = (values: readonly string[]): boolean =>
+  values.length > 0 &&
+  values.indexOf("1") >= 0 &&
+  values.every((value) => value === "0" || value === "1");
+
+export const isBinaryFlag = (flag: string): boolean => isBinaryValues(tables()[flag]?.values || []);
 
 export const flagFactKey = (flag: string, value: string, negated: boolean): string => {
   const table = tables()[flag];

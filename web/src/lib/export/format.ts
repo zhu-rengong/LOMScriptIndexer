@@ -1,10 +1,8 @@
-import { checkpoints } from "../data/checkpoints";
-import { dataset } from "../data/dataset";
-import { graph } from "../data/graph";
-import { textStore } from "../data/text";
-import { chapterTitle, sceneLabel, sceneText, t, timeText } from "../i18n";
-import { pinia } from "../stores";
-import { useUiStore } from "../stores/ui";
+import { checkpoints } from "../../data/checkpoints";
+import { dataset } from "../../data/dataset";
+import { graph } from "../../data/graph";
+import { textStore } from "../../data/text";
+import { chapterTitle, sceneLabel, sceneText, t, timeText } from "../../i18n";
 import type {
   BattleLine,
   BattleView,
@@ -12,11 +10,10 @@ import type {
   BranchView,
   OptionView,
   ReaderBlock,
-} from "../types/beats";
-import type { CheckpointModel, ConditionNode, PositionCandidate } from "../types/condition";
-import type { Chapter, GraphNode } from "../types/graph";
-import { buildReaderBlocks, speakerName } from "./blocks";
-import { signedNumber } from "./numbers";
+} from "../../types/beats";
+import type { CheckpointModel, ConditionNode, PositionCandidate } from "../../types/condition";
+import type { Chapter, GraphNode } from "../../types/graph";
+import { buildReaderBlocks, speakerName } from "../blocks";
 import {
   checkpointExpr,
   checkpointFallback,
@@ -27,19 +24,15 @@ import {
   positionNeverReachable,
   positionTargetId,
   requirementText,
-} from "./conditions";
-import { paragraphLines, stripMarkup } from "./richText";
-import { useScriptStore } from "../stores/script";
-import { zipTextFiles } from "./zip";
+} from "../conditions";
+import { signedNumber } from "../numbers";
+import { paragraphLines, stripMarkup } from "../richText";
+import { useScriptStore } from "../../stores/script";
 
-const script = () => useScriptStore(pinia);
+const script = () => useScriptStore();
 
 const SEPARATOR = "=".repeat(78);
 const INVALID_PATH = /[\\/:*?"<>|]/g;
-
-const running = ref(false);
-
-export const exportRunning = running;
 
 const cleanText = (value: unknown): string => stripMarkup(value ?? "").replace(/\r\n?/g, "\n");
 
@@ -410,10 +403,13 @@ const readmeText = (
   return lines.join("\n");
 };
 
-const buildExportFiles = (
-  lang: string,
-  checkpointOk: boolean,
-): { files: { name: string; content: string }[]; count: number; skipped: number } => {
+export type ExportBundle = {
+  files: { name: string; content: string }[];
+  count: number;
+  skipped: number;
+};
+
+export const buildExportFiles = (lang: string, checkpointOk: boolean): ExportBundle => {
   const files: { name: string; content: string }[] = [];
   const byChapter = graph.nodesByChapter();
   let count = 0;
@@ -443,59 +439,9 @@ const buildExportFiles = (
   return { files, count, skipped };
 };
 
-const filenameOf = (lang: string): string => {
+export const exportFileName = (lang: string): string => {
   const stamp = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, "");
   return `legend-of-mortal-scripts-${lang}-${stamp}.zip`;
 };
 
-const saveBlob = (filename: string, blob: Blob): void => {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-};
-
-export const exportScripts = async (): Promise<void> => {
-  if (running.value) {
-    console.info("[ScriptIndexer] script export is already running");
-    return;
-  }
-  running.value = true;
-  const lang = script().textLang();
-  const ui = useUiStore(pinia);
-  try {
-    const total = textStore.progress().total;
-    ui.setIoStatus(t("exportLoading", { done: 0, total }));
-    console.info(`[ScriptIndexer] loading scripts (0/${total})…`);
-    const textOk = await textStore.ensureAll(lang, (done, count) => {
-      ui.setIoStatus(t("exportLoading", { done, total: count }));
-      console.info(`[ScriptIndexer] loading scripts (${done}/${count})…`);
-    });
-    if (!textOk) throw new Error("text shards failed to load");
-    ui.setIoStatus(t("exportBuilding"));
-    console.info("[ScriptIndexer] loading checkpoints…");
-    const checkpointOk = await checkpoints.loadAll();
-    if (!checkpointOk) {
-      console.warn("[ScriptIndexer] some checkpoint shards failed; raw references remain");
-    }
-    const { files, count, skipped } = buildExportFiles(lang, checkpointOk);
-    if (!count) throw new Error("no scripts to export");
-    ui.setIoStatus(t("exportPacking"));
-    console.info(`[ScriptIndexer] packing ${files.length} files…`);
-    const blob = await zipTextFiles(files);
-    const filename = filenameOf(lang);
-    saveBlob(filename, blob);
-    ui.toast(t("exportDone", { n: count }));
-    console.info(`[ScriptIndexer] exported ${count} scripts (${skipped} skipped) to ${filename}`);
-  } catch (error) {
-    console.error("[ScriptIndexer] script export failed", error);
-    ui.toast(t("exportFailed"));
-  } finally {
-    ui.setIoStatus("");
-    running.value = false;
-  }
-};
+export const exportLanguage = (): string => script().textLang();
