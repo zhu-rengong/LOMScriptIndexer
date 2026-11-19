@@ -37,6 +37,10 @@ venv/
 # local CodeBuddy plan archive, rule files stay tracked
 .codebuddy/plans/
 
+# per-machine instruction paths, template stays tracked
+AGENTS.local.md
+CLAUDE.local.md
+
 # WorkBuddy published-app marker (machine-specific absolute path, stays local);
 # .workbuddy/applications.yaml is tracked on purpose for cross-machine deploys
 .wbapp_*.genie
