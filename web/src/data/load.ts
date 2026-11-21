@@ -18,6 +18,42 @@ const IndexSchema = v.object({
   artifacts: v.record(v.string(), ArtifactSchema),
 });
 
+const looseArray = v.custom<unknown[]>((value) => Array.isArray(value), "expected an array");
+
+const looseRecord = v.custom<Record<string, unknown>>(
+  (value) => typeof value === "object" && value !== null && !Array.isArray(value),
+  "expected an object",
+);
+
+export const GraphSchema = v.object({
+  schema: v.string(),
+  meta: v.object({
+    langs: v.array(v.string()),
+    sourceLang: v.optional(v.string(), ""),
+    shards: looseArray,
+    shardByNode: looseRecord,
+    checkpointShardByKey: looseRecord,
+  }),
+  nodes: looseArray,
+  edges: looseArray,
+  chapters: looseArray,
+});
+
+export const MissionSchema = v.object({
+  schema: v.string(),
+  items: looseRecord,
+});
+
+export const TextHeadSchema = v.object({
+  schema: v.string(),
+  lang: v.string(),
+  characters: looseRecord,
+  titles: looseRecord,
+  names: looseRecord,
+  edgeLabels: looseRecord,
+  shardKeys: v.array(v.string()),
+});
+
 export const fetchJson = <T>(url: string): Promise<T> =>
   queryClient.fetchQuery({
     queryKey: ["artifact", url],
@@ -28,8 +64,26 @@ export const fetchJson = <T>(url: string): Promise<T> =>
     },
   });
 
-export const loadIndex = async (): Promise<DataIndex> =>
-  v.parse(IndexSchema, await fetchJson<unknown>("data/index.json")) as DataIndex;
+const check = <T>(schema: v.GenericSchema, label: string, value: unknown): T => {
+  const result = v.safeParse(schema, value);
+  if (!result.success) {
+    const issue = result.issues[0];
+    const path = issue.path?.map((item) => String(item.key)).join(".") || "root";
+    throw new Error(`${label} payload is invalid at ${path}: ${issue.message}`);
+  }
+  return value as T;
+};
+
+export const fetchValidated = <T>(
+  url: string,
+  schema: v.GenericSchema,
+  label: string,
+): Promise<T> => fetchJson<unknown>(url).then((raw) => check<T>(schema, label, raw));
+
+export const loadIndex = async (): Promise<DataIndex> => {
+  const raw = await fetchJson<unknown>("data/index.json");
+  return check<DataIndex>(IndexSchema, "index", raw);
+};
 
 export const assetUrl = (
   index: DataIndex,

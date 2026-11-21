@@ -140,11 +140,6 @@ STAT_FIELDS: tuple[str, ...] = ("m_Name", "_type", "_name")
 LORE_CLASS = "StoryData"
 LORE_FIELDS: tuple[str, ...] = ("_text",)
 
-HARDCODED_ENTRIES: tuple[dict[str, str], ...] = (
-    {"id": "ch1_1", "label": "New game start", "origin": "SaveSystem new game"},
-    {"id": "act1", "label": "New act start", "origin": "SaveSystem new act"},
-)
-
 VALUE_FIELD_BY_KIND: dict[str, str] = {
     VALUE_STAT: "_stat",
     VALUE_REL: "_relationship",

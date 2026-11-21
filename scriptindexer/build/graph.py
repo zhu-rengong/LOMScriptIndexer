@@ -1,10 +1,9 @@
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 
-from ..game.unity_fields import HARDCODED_ENTRIES
 from ..schema import EdgeRow, Facets, MissionDocument, NodeFlags, NodeRow, SystemEntryRow
 from ..script_model import Edge, ScriptAnalysis
-from ..vocab import EDGE_MISSION, EDGE_POSITION
+from ..vocab import EDGE_MISSION, EDGE_POSITION, HARDCODED_ENTRIES
 
 MAX_EDGE_LABEL = 60
 

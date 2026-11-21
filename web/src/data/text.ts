@@ -6,7 +6,7 @@ import { pinia } from "../stores";
 import { useUiStore } from "../stores/ui";
 import { convert } from "./convert";
 import { dataset } from "./dataset";
-import { fetchJson } from "./load";
+import { TextHeadSchema, fetchJson, fetchValidated } from "./load";
 
 let uiHandle: ReturnType<typeof useUiStore> | null = null;
 
@@ -80,7 +80,11 @@ const ensureConvert = (lang: string): Promise<boolean> => {
 
 const loadHead = (): Promise<boolean> => {
   shardProgress.headState = "loading";
-  headPromise = fetchJson<TextHeadPayload>(dataset.assetUrl("textHead", { lang: sourceLang }))
+  headPromise = fetchValidated<TextHeadPayload>(
+    dataset.assetUrl("textHead", { lang: sourceLang }),
+    TextHeadSchema,
+    "text head",
+  )
     .then((head) => {
       pack = {
         schema: head.schema,

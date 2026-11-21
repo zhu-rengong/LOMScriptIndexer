@@ -23,6 +23,11 @@ BEAT_TAGS = (
 BATTLE_LIKE_SCENE_NAMES = ("Battle", "Combat")
 DEATH_SCENE = "GameOver"
 
+HARDCODED_ENTRIES: tuple[dict[str, str], ...] = (
+    {"id": "ch1_1", "label": "New game start", "origin": "SaveSystem new game"},
+    {"id": "act1", "label": "New act start", "origin": "SaveSystem new act"},
+)
+
 SAY_MODES = ("dialog", "narration", "think")
 
 EDGE_JUMP = "jump"

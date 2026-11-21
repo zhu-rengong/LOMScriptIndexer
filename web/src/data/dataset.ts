@@ -22,7 +22,7 @@ import type {
   Shard,
   Vocab,
 } from "../types/graph";
-import { assetUrl, fetchJson, loadIndex } from "./load";
+import { GraphSchema, MissionSchema, assetUrl, fetchJson, fetchValidated, loadIndex } from "./load";
 
 const DEFAULT_CHAPTER_COLOR = "#8A8578";
 
@@ -139,9 +139,9 @@ export const loadDataset = async (): Promise<Dataset> => {
     );
   }
   const [graph, varReads, missions, flagFacts] = await Promise.all([
-    fetchJson<GraphPayload>(assetUrl(index, "graph")),
+    fetchValidated<GraphPayload>(assetUrl(index, "graph"), GraphSchema, "graph"),
     fetchJson<VarReadsPayload>(assetUrl(index, "varReads")),
-    fetchJson<MissionDocument>(assetUrl(index, "missions")),
+    fetchValidated<MissionDocument>(assetUrl(index, "missions"), MissionSchema, "missions"),
     fetchJson<FlagFactsPayload>(assetUrl(index, "flagFacts")),
   ]);
   const meta = buildMeta(graph);

@@ -42,8 +42,18 @@ class LuaParser:
         return LuaChunk(statements(root))
 
 
+_PARSER: LuaParser | None = None
+
+
 def parse(source: str) -> LuaChunk:
-    return LuaParser().parse(source)
+    global _PARSER
+    if _PARSER is None:
+        _PARSER = LuaParser()
+    try:
+        return _PARSER.parse(source)
+    except Exception:
+        _PARSER = None
+        raise
 
 
 def statements(node: Node | None) -> list[Node]:
