@@ -3,6 +3,8 @@ import type {
   BattleLine,
   BattlePart,
   BattleTableRow,
+  BattleText,
+  BattleVar,
   BattleView,
   BattleWhen,
   BeatNode,
@@ -16,6 +18,7 @@ import type {
   SceneView,
 } from "../types/beats";
 import type { ConditionNode } from "../types/condition";
+import { battleText } from "./battleText";
 import { paragraphLines, stripMarkup } from "./richText";
 
 export const BEAT_TAG = {
@@ -149,6 +152,23 @@ export const parseMeta = (row: BeatNode): MetaView => {
   };
 };
 
+const tightenCjk = (text: string): string =>
+  text.replace(/(?<=[\u4e00-\u9fff])\s+(?=\d)|(?<=\d)\s+(?=[\u4e00-\u9fff])/g, "");
+
+const textOf = (value: unknown): BattleText => {
+  const record = asRecord(value) || {};
+  const textKey = asString(record.textKey);
+  if (textKey) {
+    const vars = asRecord(record.vars);
+    const joiner = asString(record.joiner);
+    const out: BattleText = { textKey };
+    if (vars) out.vars = vars as Record<string, BattleVar>;
+    if (joiner) out.joiner = joiner;
+    return out;
+  }
+  return { text: tightenCjk(asString(record.text)) };
+};
+
 const parseBattleLine = (value: unknown): BattleLine => {
   const row = asRecord(value) || {};
   return {
@@ -158,20 +178,13 @@ const parseBattleLine = (value: unknown): BattleLine => {
     target: asString(row.target),
     key: asString(row.key),
     sceneName: asString(row.scene),
-    text: asString(row.text),
+    text: textOf(row),
   };
 };
 
-const tightenCjk = (text: string): string =>
-  text.replace(/(?<=[\u4e00-\u9fff])\s+(?=\d)|(?<=\d)\s+(?=[\u4e00-\u9fff])/g, "");
-
 const parseBattlePart = (value: unknown): BattlePart => {
   const item = asRecord(value) || {};
-  return {
-    text: tightenCjk(asString(item.text)),
-    kind: asString(item.kind),
-    key: asString(item.key),
-  };
+  return { ...textOf(item), kind: asString(item.kind), key: asString(item.key) };
 };
 
 const parseBattleWhen = (value: unknown): BattleWhen => {
@@ -188,16 +201,16 @@ export const parseBattle = (row: BeatNode): BattleView => {
     nextScene: asString(outer.nextScene),
     afterScript: asString(outer.afterScript),
     kind: asString(info.kind),
-    title: asString(info.title),
+    title: textOf(info.title),
     speaker: asString(info.speaker),
     note: asString(info.note),
-    goals: asList<unknown>(info.goals).map(asString),
-    facts: asList<unknown>(info.facts).map(asString),
+    goals: asList<unknown>(info.goals).map(textOf),
+    facts: asList<unknown>(info.facts).map(textOf),
     rows: asList<unknown>(info.rows).map((item) => {
       const record = asRecord(item) || {};
       return {
-        label: asString(record.label),
-        value: tightenCjk(asString(record.value)),
+        label: textOf(record.label),
+        value: textOf(record.value),
       } as BattleTableRow;
     }),
     events: asList<unknown>(info.events).map((item) => {
@@ -240,7 +253,8 @@ export const searchPartsOf = (rows: unknown): string[] => {
       for (const event of parseBattle(row).events) {
         for (const line of event.lines) {
           if (line.kind !== "say" && line.kind !== "status" && line.kind !== "support") continue;
-          if (line.text) parts.push(stripMarkup(line.text));
+          const text = battleText(line.text);
+          if (text) parts.push(stripMarkup(text));
         }
       }
     }

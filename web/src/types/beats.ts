@@ -74,6 +74,15 @@ export type MetaView = {
   extra: string;
 };
 
+export type BattleText = {
+  textKey?: string;
+  vars?: Record<string, BattleVar>;
+  joiner?: string;
+  text?: string;
+};
+
+export type BattleVar = string | number | BattleText | BattleVar[];
+
 export type BattleLine = {
   kind: string;
   speaker: string;
@@ -81,11 +90,10 @@ export type BattleLine = {
   target: string;
   key: string;
   sceneName: string;
-  text: string;
+  text: BattleText;
 };
 
-export type BattlePart = {
-  text: string;
+export type BattlePart = BattleText & {
   kind: string;
   key: string;
 };
@@ -101,8 +109,8 @@ export type BattleEvent = {
 };
 
 export type BattleTableRow = {
-  label: string;
-  value: string;
+  label: BattleText;
+  value: BattleText;
 };
 
 export type BattleView = {
@@ -111,11 +119,11 @@ export type BattleView = {
   nextScene: string;
   afterScript: string;
   kind: string;
-  title: string;
+  title: BattleText;
   speaker: string;
   note: string;
-  goals: string[];
-  facts: string[];
+  goals: BattleText[];
+  facts: BattleText[];
   rows: BattleTableRow[];
   events: BattleEvent[];
 };

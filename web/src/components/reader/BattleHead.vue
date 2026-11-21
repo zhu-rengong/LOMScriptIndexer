@@ -3,6 +3,7 @@ import { t } from "../../i18n";
 import type { BattleView } from "../../types/beats";
 import { usePanelsStore } from "../../stores/panels";
 import JumpLink from "./JumpLink.vue";
+import { battleText } from "../../lib/battleText";
 
 const panels = usePanelsStore();
 
@@ -15,19 +16,22 @@ const openSpeaker = (event: Event) => {
   panels.openLookup("speaker", props.battle.speaker, event.currentTarget as HTMLElement);
 };
 
-const facts = computed(() =>
-  props.battle.facts.map((fact) => {
-    const parts = fact.match(/^(\S+)\s+(.*)$/);
-    return parts ? { label: parts[1], value: parts[2] } : { label: "", value: fact };
-  }),
-);
+const titleText = computed(() => battleText(props.battle.title));
+
+const goalTexts = computed(() => props.battle.goals.map(battleText).filter(Boolean));
+
+const factTexts = computed(() => props.battle.facts.map(battleText).filter(Boolean));
+
+const factSummary = computed(() => factTexts.value.join(t("battle.joinList")));
 
 const rowGroups = computed(() => {
   const groups: { label: string; values: string[] }[] = [];
   for (const row of props.battle.rows) {
+    const label = battleText(row.label);
+    const value = battleText(row.value);
     const last = groups[groups.length - 1];
-    if (last && last.label === row.label) last.values.push(row.value);
-    else groups.push({ label: row.label, values: [row.value] });
+    if (last && last.label === label) last.values.push(value);
+    else groups.push({ label, values: [value] });
   }
   return groups;
 });
@@ -49,16 +53,16 @@ const rowGroups = computed(() => {
           </span>
         </div>
 
-        <div v-if="battle.goals.length" class="battle-head-line">
-          <span v-for="(goal, index) in battle.goals" :key="`goal-${index}`" class="cx-var">
+        <div v-if="goalTexts.length" class="battle-head-line">
+          <span v-for="(goal, index) in goalTexts" :key="`goal-${index}`" class="cx-var">
             <span class="cx-type">{{ t("battleGoalType") }}</span>
             <span class="cx-name">{{ goal }}</span>
           </span>
         </div>
 
-        <div v-if="battle.title || battle.facts.length" class="battle-head-line">
+        <div v-if="titleText || factTexts.length" class="battle-head-line">
           <span
-            v-if="battle.title"
+            v-if="titleText"
             class="cx-var"
             :class="{ 'is-link': !!battle.speaker }"
             :role="battle.speaker ? 'button' : undefined"
@@ -70,9 +74,9 @@ const rowGroups = computed(() => {
             @keydown.space.prevent="openSpeaker"
           >
             <span class="cx-type">{{ t("battleOpponentType") }}</span>
-            <span class="cx-name">{{ battle.title }}</span>
+            <span class="cx-name">{{ titleText }}</span>
           </span>
-          <span v-for="(fact, index) in battle.facts" :key="`fact-${index}`" class="battle-fact">{{
+          <span v-for="(fact, index) in factTexts" :key="`fact-${index}`" class="battle-fact">{{
             fact
           }}</span>
         </div>
@@ -87,12 +91,12 @@ const rowGroups = computed(() => {
         <dd class="mission-value">{{ battle.note }}</dd>
       </div>
 
-      <div v-for="(goal, index) in battle.goals" :key="`goal-${index}`" class="mission-row">
+      <div v-for="(goal, index) in goalTexts" :key="`goal-${index}`" class="mission-row">
         <dt class="mission-label">{{ t("battleGoalType") }}</dt>
         <dd class="mission-value">{{ goal }}</dd>
       </div>
 
-      <div v-if="battle.title" class="mission-row">
+      <div v-if="titleText" class="mission-row">
         <dt class="mission-label">{{ t("battleOpponentType") }}</dt>
         <dd class="mission-value">
           <button
@@ -102,18 +106,16 @@ const rowGroups = computed(() => {
             aria-haspopup="dialog"
             :title="t('lookupSpeaker')"
             @click="openSpeaker"
-            @keydown.enter.prevent="openSpeaker"
-            @keydown.space.prevent="openSpeaker"
           >
-            {{ battle.title }}
+            {{ titleText }}
           </button>
-          <span v-else>{{ battle.title }}</span>
+          <span v-else>{{ titleText }}</span>
         </dd>
       </div>
 
-      <div v-for="(fact, index) in facts" :key="`fact-${index}`" class="mission-row">
-        <dt class="mission-label">{{ fact.label }}</dt>
-        <dd class="mission-value">{{ fact.value }}</dd>
+      <div v-if="factTexts.length" class="mission-row">
+        <dt class="mission-label">{{ t("battleFactsLabel") }}</dt>
+        <dd class="mission-value">{{ factSummary }}</dd>
       </div>
 
       <div v-for="(group, index) in rowGroups" :key="`row-${index}`" class="mission-row">

@@ -3,6 +3,7 @@ import { t } from "../../i18n";
 import type { BattleEvent, BattlePart } from "../../types/beats";
 import BattleLines from "./BattleLines.vue";
 import { usePanelsStore } from "../../stores/panels";
+import { battleText } from "../../lib/battleText";
 
 const panels = usePanelsStore();
 
@@ -31,9 +32,9 @@ const openChip = (part: BattlePart, event: Event) => {
           aria-haspopup="dialog"
           @click="openChip(part, $event)"
         >
-          {{ part.text }}
+          {{ battleText(part) }}
         </button>
-        <span v-else class="chip-stat chip chip-sm">{{ part.text }}</span>
+        <span v-else class="chip-stat chip chip-sm">{{ battleText(part) }}</span>
       </template>
     </div>
     <div v-if="event.lines.length" class="battle-lines">

@@ -5,6 +5,7 @@ import AppIcon from "../ui/AppIcon.vue";
 import JumpLink from "./JumpLink.vue";
 import SayLine from "./SayLine.vue";
 import { usePanelsStore } from "../../stores/panels";
+import { battleText } from "../../lib/battleText";
 
 const panels = usePanelsStore();
 
@@ -68,7 +69,7 @@ const openChip = (line: BattleLine, event: Event) => {
       :in-battle="true"
       :mode="item.line.mode"
       :speaker="item.line.speaker"
-      :text="item.line.text"
+      :text="battleText(item.line.text)"
     />
     <JumpLink
       v-else-if="item.kind === 'jump'"
@@ -94,9 +95,9 @@ const openChip = (line: BattleLine, event: Event) => {
           aria-haspopup="dialog"
           @click="openChip(chip, $event)"
         >
-          {{ chip.text }}
+          {{ battleText(chip.text) }}
         </button>
-        <span v-else class="chip-stat chip chip-sm">{{ chip.text }}</span>
+        <span v-else class="chip-stat chip chip-sm">{{ battleText(chip.text) }}</span>
       </template>
     </div>
   </template>

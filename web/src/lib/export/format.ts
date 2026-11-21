@@ -13,6 +13,7 @@ import type {
 } from "../../types/beats";
 import type { CheckpointModel, ConditionNode, PositionCandidate } from "../../types/condition";
 import type { Chapter, GraphNode } from "../../types/graph";
+import { battleText } from "../battleText";
 import { buildReaderBlocks, speakerName } from "../blocks";
 import {
   checkpointExpr,
@@ -143,7 +144,7 @@ const battleEventLines = (lines: BattleLine[], indent: string): string[] => {
   const out: string[] = [];
   for (const line of lines) {
     if (line.kind === "say") {
-      out.push(...sayLines(line.mode, line.speaker, line.text, indent));
+      out.push(...sayLines(line.mode, line.speaker, battleText(line.text), indent));
     } else if (line.kind === "jump") {
       if (line.target) out.push(`${indent}→ ${line.target}`);
     } else if (line.kind === "scene") {
@@ -151,7 +152,7 @@ const battleEventLines = (lines: BattleLine[], indent: string): string[] => {
     } else if (line.kind === "after") {
       if (line.target) out.push(`${indent}${t("battleAfterStory")}: → ${line.target}`);
     } else if (line.text) {
-      out.push(`${indent}- ${inlineText(line.text)}`);
+      out.push(`${indent}- ${inlineText(battleText(line.text))}`);
     }
   }
   return out;
@@ -161,16 +162,19 @@ const battleLines = (battle: BattleView, indent: string): string[] => {
   const out: string[] = [];
   const kind = battle.kind === "combat" ? t("battleDuel") : t("battleCampaign");
   out.push(`${indent}[${kind}]${battle.note ? ` ${inlineText(battle.note)}` : ""}`);
-  for (const goal of battle.goals) {
+  for (const goal of battle.goals.map(battleText)) {
     if (goal) out.push(`${indent}  ${t("battleGoalType")}: ${inlineText(goal)}`);
   }
-  if (battle.title) out.push(`${indent}  ${t("battleOpponentType")}: ${inlineText(battle.title)}`);
-  for (const fact of battle.facts) {
+  const title = battleText(battle.title);
+  if (title) out.push(`${indent}  ${t("battleOpponentType")}: ${inlineText(title)}`);
+  for (const fact of battle.facts.map(battleText)) {
     if (fact) out.push(`${indent}  ${inlineText(fact)}`);
   }
   for (const row of battle.rows) {
-    if (row.label || row.value) {
-      out.push(`${indent}  ${inlineText(row.label)}: ${inlineText(row.value)}`);
+    const label = battleText(row.label);
+    const value = battleText(row.value);
+    if (label || value) {
+      out.push(`${indent}  ${inlineText(label)}: ${inlineText(value)}`);
     }
   }
   for (const event of battle.events) {
@@ -178,7 +182,7 @@ const battleLines = (battle: BattleView, indent: string): string[] => {
       ? ` ${event.when.logic === "or" ? t("cxOr") : t("cxAnd")} `
       : " ";
     const when = event.when.parts
-      .map((part) => inlineText(part.text))
+      .map((part) => inlineText(battleText(part)))
       .filter(Boolean)
       .join(joiner);
     if (when) out.push(`${indent}  [${t("typeBranchCond")}] ${when}`);
