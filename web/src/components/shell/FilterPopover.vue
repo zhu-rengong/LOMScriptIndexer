@@ -8,9 +8,7 @@ import { popovers } from "../../lib/popover";
 import { query } from "../../lib/query";
 import type { QuerySuggestion } from "../../types/query";
 import { UI_IDS } from "../../ui/ids";
-import AppIcon from "../ui/AppIcon.vue";
 import { useExprAutocomplete } from "../../composables/useExprAutocomplete";
-import { useScriptStore } from "../../stores/script";
 
 const store = useScriptStore();
 

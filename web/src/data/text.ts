@@ -3,8 +3,6 @@ import type { BeatRow } from "../types/beats";
 import type { ShardState, TextPack, TextProgress } from "../types/text";
 import { t } from "../i18n";
 import { measure } from "../lib/perf";
-import { pinia } from "../stores";
-import { useUiStore } from "../stores/ui";
 import { convert } from "./convert";
 import { dataset } from "./dataset";
 import { TextHeadSchema, fetchJson, fetchValidated } from "./load";

@@ -11,12 +11,7 @@ import {
 } from "../../lib/conditions";
 import type { CheckRef, ChoiceOption } from "../../types/beats";
 import type { ConditionNode } from "../../types/condition";
-import AppIcon from "../ui/AppIcon.vue";
-import BlockList from "./BlockList.vue";
-import CondExpr from "./CondExpr.vue";
-import RichText from "./RichText.vue";
 import { useFoldable } from "../../composables/useFoldable";
-import { usePanelsStore } from "../../stores/panels";
 
 const panels = usePanelsStore();
 

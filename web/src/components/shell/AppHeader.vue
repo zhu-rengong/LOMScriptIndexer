@@ -1,10 +1,5 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import AppIcon from "../ui/AppIcon.vue";
-import BrandMark from "./BrandMark.vue";
-import SearchBox from "./SearchBox.vue";
-import ToolsBar from "./ToolsBar.vue";
-import { useViewStore } from "../../stores/view";
 
 const view = useViewStore();
 </script>

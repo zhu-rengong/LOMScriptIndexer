@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { sceneLabel, sceneText, t } from "../../i18n";
 import type { SceneView } from "../../types/beats";
-import AppIcon from "../ui/AppIcon.vue";
-import JumpLink from "./JumpLink.vue";
 
 const props = defineProps<{ view: SceneView }>();
 

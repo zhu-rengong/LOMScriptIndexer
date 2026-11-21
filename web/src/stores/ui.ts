@@ -1,5 +1,4 @@
 import { useTimeoutFn } from "@vueuse/core";
-import { defineStore } from "pinia";
 
 export const useUiStore = defineStore("ui", () => {
   const toastText = ref("");

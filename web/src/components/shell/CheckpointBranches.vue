@@ -3,9 +3,6 @@ import { t } from "../../i18n";
 import { signedNumber } from "../../lib/numbers";
 import { condText, localizedName } from "../../lib/conditions";
 import type { CheckpointModel, DiceAddition, PositionCandidate } from "../../types/condition";
-import CondExpr from "../reader/CondExpr.vue";
-import CondRow from "./CondRow.vue";
-import { usePanelsStore } from "../../stores/panels";
 
 const panels = usePanelsStore();
 

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { BranchView } from "../../types/beats";
-import BranchBlock from "./BranchBlock.vue";
 
 const props = defineProps<{ branches: BranchView[]; foldKey: string }>();
 

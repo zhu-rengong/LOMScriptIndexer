@@ -1,9 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
 import { useDebounceFn } from "@vueuse/core";
 import { artUrl } from "../api";
 import { frameBox } from "../frames";
-import { useFramingStore } from "../../stores/framing";
 
 const store = useFramingStore();
 const canvas = ref<HTMLCanvasElement | null>(null);

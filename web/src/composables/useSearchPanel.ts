@@ -3,10 +3,6 @@ import { textStore } from "../data/text";
 import { t } from "../i18n";
 import { popovers } from "../lib/popover";
 import { UI_IDS } from "../ui/ids";
-import { usePanelsStore } from "../stores/panels";
-import { useScriptStore } from "../stores/script";
-import { useSearchStore, type SearchHit, type SearchResult } from "../stores/search";
-import { useUiStore } from "../stores/ui";
 
 const PAGE = 50;
 

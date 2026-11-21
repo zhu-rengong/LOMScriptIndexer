@@ -2,10 +2,6 @@
 import { langShort, t } from "../../i18n";
 import { popovers } from "../../lib/popover";
 import type { OverlayKey } from "../../ui/ids";
-import AppIcon from "../ui/AppIcon.vue";
-import LangMenu from "./LangMenu.vue";
-import MoreMenu from "./MoreMenu.vue";
-import { useScriptStore } from "../../stores/script";
 
 const store = useScriptStore();
 

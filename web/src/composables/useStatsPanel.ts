@@ -3,7 +3,6 @@ import { popovers } from "../lib/popover";
 import { statsFilteredTotal, statsTableRows } from "../lib/stats";
 import type { WordPack } from "../types/text";
 import { UI_IDS } from "../ui/ids";
-import { useScriptStore } from "../stores/script";
 
 const KIND_LABEL_KEYS: Record<string, string> = {
   dialog: "typeDialog",

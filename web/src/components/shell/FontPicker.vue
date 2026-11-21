@@ -4,9 +4,7 @@ import { toNeedle } from "../../lib/browser";
 import { popovers } from "../../lib/popover";
 import { ensureSystemFonts, systemFonts, systemFontStatus } from "../../lib/systemFonts";
 import type { FontTarget } from "../../types/font";
-import AppIcon from "../ui/AppIcon.vue";
 import { useFontSetting } from "../../composables/useFontSetting";
-import { useUiStore } from "../../stores/ui";
 
 const MANUAL = "__manual__";
 

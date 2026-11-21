@@ -1,6 +1,3 @@
-import { useFoldStore } from "../stores/fold";
-import type { Ref } from "vue";
-
 export const useFoldMemory = (key: string, open: Ref<boolean>): void => {
   if (!key) return;
   const fold = useFoldStore();

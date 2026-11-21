@@ -1,4 +1,3 @@
-import { shallowRef } from "vue";
 import { dataset } from "../data/dataset";
 
 export type PortraitCell = [number, number];

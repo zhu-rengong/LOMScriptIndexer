@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
 import { useResizeObserver } from "@vueuse/core";
 import type { Frame } from "../frames";
 import { MIN_WIDTH, clamp, frameBox } from "../frames";
 import { artUrl } from "../api";
-import { useFramingStore } from "../../stores/framing";
 
 type Drag = { id: number; x: number; y: number; rect: DOMRect; frame: Frame };
 

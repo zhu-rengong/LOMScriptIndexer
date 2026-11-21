@@ -4,9 +4,6 @@ import { textStore } from "../data/text";
 import { normalizeSearchText } from "./browser";
 import * as beatRows from "./beatRows";
 import { metaText, missionEventTarget, missionEventView } from "./conditions";
-import { pinia } from "../stores";
-import type { FocusTarget } from "../stores/panels";
-import { useScriptStore } from "../stores/script";
 
 const script = () => useScriptStore(pinia);
 

@@ -2,9 +2,6 @@
 import { t } from "../../i18n";
 import { useSearchPanel } from "../../composables/useSearchPanel";
 import { UI_IDS } from "../../ui/ids";
-import AppIcon from "../ui/AppIcon.vue";
-import FilterPopover from "./FilterPopover.vue";
-import SearchResults from "./SearchResults.vue";
 
 const {
   query,

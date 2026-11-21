@@ -9,9 +9,6 @@ import { popovers } from "../lib/popover";
 import type { CheckpointModel } from "../types/condition";
 import type { GraphNode } from "../types/graph";
 import { UI_IDS } from "../ui/ids";
-import { usePanelsStore } from "../stores/panels";
-import { useScriptStore } from "../stores/script";
-import { useViewStore } from "../stores/view";
 
 const LOOKUP_TITLE_KEYS: Record<string, string> = {
   speaker: "lookupSpeaker",

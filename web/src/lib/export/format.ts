@@ -28,7 +28,6 @@ import {
 } from "../conditions";
 import { signedNumber } from "../numbers";
 import { paragraphLines, stripMarkup } from "../richText";
-import { useScriptStore } from "../../stores/script";
 
 const script = () => useScriptStore();
 

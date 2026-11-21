@@ -1,8 +1,4 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import type { CharacterRow } from "../../stores/framing";
-import { useFramingStore } from "../../stores/framing";
-
 const store = useFramingStore();
 const expanded = ref<Set<string>>(new Set());
 

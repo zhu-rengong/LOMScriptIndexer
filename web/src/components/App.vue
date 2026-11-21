@@ -4,10 +4,6 @@ import { useShortcuts } from "../composables/useShortcuts";
 import { t } from "../i18n";
 import { byId } from "../lib/browser";
 import { popovers } from "../lib/popover";
-import { useFoldStore } from "../stores/fold";
-import { useScriptStore } from "../stores/script";
-import { useViewStore } from "../stores/view";
-import { useUiStore } from "../stores/ui";
 import { UI_IDS } from "../ui/ids";
 
 const store = useScriptStore();

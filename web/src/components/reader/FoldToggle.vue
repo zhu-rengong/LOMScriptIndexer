@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import type { FoldState } from "../../stores/fold";
 import { UI_IDS } from "../../ui/ids";
-import AppIcon from "../ui/AppIcon.vue";
-import { useFoldStore } from "../../stores/fold";
 
 const ICONS: Record<FoldState, string> = {
   none: "fold-close",

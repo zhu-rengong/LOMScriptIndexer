@@ -2,9 +2,6 @@
 import { t } from "../../i18n";
 import { slotById } from "../../lib/fontTypes";
 import type { CapsMode, FontTarget } from "../../types/font";
-import ScaleSlider from "./ScaleSlider.vue";
-import TypeFontSetting from "./TypeFontSetting.vue";
-import { usePrefsStore } from "../../stores/prefs";
 
 const props = defineProps<{ target: FontTarget }>();
 

@@ -1,11 +1,9 @@
-import { defineStore } from "pinia";
 import { byId } from "../lib/browser";
 import { popovers } from "../lib/popover";
 import { keys, storedRef } from "../lib/storage";
 import type { ReaderVisibleKind, ReaderVisibility } from "../types/beats";
 import type { FontTarget } from "../types/font";
 import { UI_IDS } from "../ui/ids";
-import { pinia } from "./index";
 import { useLanguageStore } from "./language";
 
 const CHAPTER_RAIL = "chapterRail";

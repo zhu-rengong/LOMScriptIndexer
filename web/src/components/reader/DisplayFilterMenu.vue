@@ -4,8 +4,6 @@ import { byId } from "../../lib/browser";
 import { popovers } from "../../lib/popover";
 import type { ReaderVisibleKind } from "../../types/beats";
 import { UI_IDS } from "../../ui/ids";
-import AppIcon from "../ui/AppIcon.vue";
-import { useViewStore } from "../../stores/view";
 
 const MENU_KEY = "displayFilter";
 

@@ -2,9 +2,6 @@
 import { t } from "../../i18n";
 import { sayKindOf } from "../../lib/beatRows";
 import { speakerName } from "../../lib/blocks";
-import RichText from "./RichText.vue";
-import PortraitAvatar from "./PortraitAvatar.vue";
-import { usePanelsStore } from "../../stores/panels";
 
 const panels = usePanelsStore();
 

@@ -4,8 +4,6 @@ import { byId } from "../../lib/browser";
 import { GROUPS, groupById, slotsOfGroup } from "../../lib/fontTypes";
 import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
-import AppIcon from "../ui/AppIcon.vue";
-import { useViewStore } from "../../stores/view";
 
 const props = defineProps<{ groupId: string }>();
 

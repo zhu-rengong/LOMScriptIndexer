@@ -6,7 +6,6 @@ import { t } from "../i18n";
 import type { QueryContext, QueryError } from "../types/query";
 import { missionLabelTable } from "./missionLabel";
 import { createIndex, query, type QueryIndex } from "./query";
-import { useScriptStore } from "../stores/script";
 
 export const RESULT_LIMIT = 50;
 

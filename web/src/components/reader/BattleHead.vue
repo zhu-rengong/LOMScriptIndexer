@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 import type { BattleView } from "../../types/beats";
-import { usePanelsStore } from "../../stores/panels";
-import JumpLink from "./JumpLink.vue";
 import { battleText } from "../../lib/battleText";
 
 const panels = usePanelsStore();

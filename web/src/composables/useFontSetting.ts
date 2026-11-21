@@ -1,7 +1,6 @@
 import { t } from "../i18n";
 import { FOLLOW_BASE, FOLLOW_GROUP, fontPreset } from "../lib/fontFamilies";
 import { fontDisplayName, systemFamilyNames } from "../lib/systemFonts";
-import { usePrefsStore } from "../stores/prefs";
 import type { FontTarget } from "../types/font";
 
 type FontSource = "follow" | "preset" | "system" | "manual";

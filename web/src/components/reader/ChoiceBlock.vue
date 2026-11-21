@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import type { ChoiceOption, MetaChip } from "../../types/beats";
-import OptionBlock from "./OptionBlock.vue";
-import { usePanelsStore } from "../../stores/panels";
 
 const panels = usePanelsStore();
 

@@ -2,8 +2,6 @@
 import { t } from "../../i18n";
 import { byId } from "../../lib/browser";
 import { popovers } from "../../lib/popover";
-import { pinia } from "../../stores";
-import { useUiStore } from "../../stores/ui";
 import { UI_IDS } from "../../ui/ids";
 
 const open = computed(() => popovers.isOpen("moreMenu"));

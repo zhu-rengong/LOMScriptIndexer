@@ -1,9 +1,6 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import AvatarPreview from "./AvatarPreview.vue";
 import type { Frame } from "../frames";
 import { MIN_WIDTH, clamp, frameBox, sameFrame } from "../frames";
-import { useFramingStore } from "../../stores/framing";
 
 const store = useFramingStore();
 

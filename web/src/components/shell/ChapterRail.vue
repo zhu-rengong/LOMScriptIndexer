@@ -6,13 +6,6 @@ import { specialScripts } from "../../data/special";
 import { t } from "../../i18n";
 import { toNeedle } from "../../lib/browser";
 import { bookmarkRows, outlineRows, specialRows, type RailRow } from "../../lib/rail";
-import AppIcon from "../ui/AppIcon.vue";
-import BookmarksTab from "./rail/BookmarksTab.vue";
-import OutlineTab from "./rail/OutlineTab.vue";
-import SpecialTab from "./rail/SpecialTab.vue";
-import { useScriptStore } from "../../stores/script";
-import { useUiStore } from "../../stores/ui";
-import { useViewStore } from "../../stores/view";
 
 type RailTab = "outline" | "bookmarks" | "special";
 

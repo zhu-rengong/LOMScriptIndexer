@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { sceneText, t } from "../../i18n";
 import type { BattleView } from "../../types/beats";
-import AppIcon from "../ui/AppIcon.vue";
-import BattleEvent from "./BattleEvent.vue";
-import BattleHead from "./BattleHead.vue";
-import JumpLink from "./JumpLink.vue";
 import { useFoldMemory } from "../../composables/useFoldable";
 
 const props = defineProps<{ battle: BattleView; foldKey: string }>();

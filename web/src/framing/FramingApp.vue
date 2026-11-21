@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
 import { useEventListener, useTimeoutFn } from "@vueuse/core";
-import CharacterPanel from "./components/CharacterPanel.vue";
-import FrameStage from "./components/FrameStage.vue";
-import InspectorPanel from "./components/InspectorPanel.vue";
-import { useFramingStore } from "../stores/framing";
 
 const store = useFramingStore();
 const file = ref<HTMLInputElement | null>(null);

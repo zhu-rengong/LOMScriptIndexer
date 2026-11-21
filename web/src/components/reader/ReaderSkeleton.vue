@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { textStore } from "../../data/text";
 import { t } from "../../i18n";
-import { useScriptStore } from "../../stores/script";
 
 const store = useScriptStore();
 

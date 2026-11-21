@@ -1,5 +1,4 @@
 import { useEventListener } from "@vueuse/core";
-import { ref, shallowRef } from "vue";
 
 type DragState = {
   pointerId: number;

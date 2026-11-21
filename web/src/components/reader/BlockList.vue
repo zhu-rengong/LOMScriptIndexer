@@ -1,19 +1,6 @@
 <script setup lang="ts">
 import { sayKindOf } from "../../lib/beatRows";
 import type { ReaderBlock } from "../../types/beats";
-import BattleCard from "./BattleCard.vue";
-import BranchGroup from "./BranchGroup.vue";
-import ChoiceBlock from "./ChoiceBlock.vue";
-import EndingBlock from "./EndingBlock.vue";
-import JumpLink from "./JumpLink.vue";
-import LoreLines from "./LoreLines.vue";
-import MetaChips from "./MetaChips.vue";
-import MissionEventCard from "./MissionEventCard.vue";
-import SayLine from "./SayLine.vue";
-import SceneSwitch from "./SceneSwitch.vue";
-import TimeLine from "./TimeLine.vue";
-import { usePrefsStore } from "../../stores/prefs";
-import { useViewStore } from "../../stores/view";
 
 const props = defineProps<{ blocks: ReaderBlock[]; path?: string }>();
 

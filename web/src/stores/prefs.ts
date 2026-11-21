@@ -1,5 +1,4 @@
 import { usePreferredDark } from "@vueuse/core";
-import { defineStore } from "pinia";
 import {
   DEFAULT_BASE_FONT,
   FOLLOW_BASE,

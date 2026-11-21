@@ -4,13 +4,6 @@ import { chapterTitle, t, timeText } from "../../i18n";
 import { byId } from "../../lib/browser";
 import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
-import AppIcon from "../ui/AppIcon.vue";
-import DisplayFilterMenu from "./DisplayFilterMenu.vue";
-import FoldToggle from "./FoldToggle.vue";
-import NavMenu from "./NavMenu.vue";
-import { useScriptStore } from "../../stores/script";
-import { useViewStore } from "../../stores/view";
-import { useUiStore } from "../../stores/ui";
 
 const store = useScriptStore();
 const view = useViewStore();

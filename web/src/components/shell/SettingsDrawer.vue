@@ -6,17 +6,6 @@ import { BASE_TARGET, GROUPS, firstSlot, groupById, slotById } from "../../lib/f
 import { ensureSystemFonts } from "../../lib/systemFonts";
 import type { FontTarget, ThemeMode } from "../../types/font";
 import { UI_IDS } from "../../ui/ids";
-import AppIcon from "../ui/AppIcon.vue";
-import FontPicker from "./FontPicker.vue";
-import ScaleSlider from "./ScaleSlider.vue";
-import SettingsPreview from "./SettingsPreview.vue";
-import TypeGroupList from "./TypeGroupList.vue";
-import TypeFontSetting from "./TypeFontSetting.vue";
-import TypeGroupPick from "./TypeGroupPick.vue";
-import TypeParamPanel from "./TypeParamPanel.vue";
-import { useUiStore } from "../../stores/ui";
-import { usePrefsStore } from "../../stores/prefs";
-import { useViewStore } from "../../stores/view";
 
 const ui = useUiStore();
 const prefs = usePrefsStore();

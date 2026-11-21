@@ -2,10 +2,6 @@
 import { useLookupPanel } from "../../composables/useLookupPanel";
 import { missions } from "../../data/missions";
 import { t } from "../../i18n";
-import AppIcon from "../ui/AppIcon.vue";
-import CheckpointBranches from "./CheckpointBranches.vue";
-import NodeResultList from "./NodeResultList.vue";
-import { usePanelsStore } from "../../stores/panels";
 
 const panels = usePanelsStore();
 

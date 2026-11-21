@@ -1,7 +1,5 @@
 import { useBreakpoints } from "@vueuse/core";
 import { popovers } from "../lib/popover";
-import { pinia } from "../stores";
-import { useViewStore } from "../stores/view";
 
 export type LayoutName = "wide" | "mid" | "narrow" | "compact" | "mobile";
 

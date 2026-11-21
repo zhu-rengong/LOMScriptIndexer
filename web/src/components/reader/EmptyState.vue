@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import AppIcon from "../ui/AppIcon.vue";
 
 defineProps<{ noSelection: boolean; isScriptFileEmpty?: boolean }>();
 </script>

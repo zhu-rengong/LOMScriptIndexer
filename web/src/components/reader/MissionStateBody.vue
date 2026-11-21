@@ -2,15 +2,12 @@
 import { graph } from "../../data/graph";
 import { names } from "../../data/names";
 import { t } from "../../i18n";
-import { usePanelsStore } from "../../stores/panels";
-import { useScriptStore } from "../../stores/script";
 import type {
   MissionDialog,
   MissionFlagChange,
   MissionState,
   MissionTime,
 } from "../../types/missions";
-import CondExpr from "./CondExpr.vue";
 
 const props = defineProps<{
   state: MissionState;

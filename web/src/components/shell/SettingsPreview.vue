@@ -2,7 +2,6 @@
 import { t } from "../../i18n";
 import { slotById, slotsOfGroup } from "../../lib/fontTypes";
 import type { FontTarget } from "../../types/font";
-import TypeSpecimen from "./TypeSpecimen.vue";
 
 const props = defineProps<{ target: FontTarget }>();
 

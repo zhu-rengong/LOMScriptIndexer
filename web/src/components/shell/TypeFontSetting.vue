@@ -2,9 +2,7 @@
 import { t } from "../../i18n";
 import { popovers } from "../../lib/popover";
 import type { FontTarget } from "../../types/font";
-import AppIcon from "../ui/AppIcon.vue";
 import { useFontSetting } from "../../composables/useFontSetting";
-import { useViewStore } from "../../stores/view";
 
 const props = defineProps<{ target: FontTarget; label?: string }>();
 

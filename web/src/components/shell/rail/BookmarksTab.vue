@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { t } from "../../../i18n";
 import type { BookmarkRow } from "../../../lib/rail";
-import AppIcon from "../../ui/AppIcon.vue";
 
 const props = defineProps<{
   rows: BookmarkRow[];

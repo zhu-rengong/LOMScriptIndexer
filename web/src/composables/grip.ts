@@ -1,9 +1,5 @@
-import type { Ref } from "vue";
 import { useDragValue } from "./useDragValue";
 import { clamp } from "../lib/math";
-import { pinia } from "../stores";
-import { usePrefsStore } from "../stores/prefs";
-import { useViewStore } from "../stores/view";
 
 const prefs = usePrefsStore(pinia);
 const view = useViewStore(pinia);

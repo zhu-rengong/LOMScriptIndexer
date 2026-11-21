@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { timeText } from "../../i18n";
-import AppIcon from "../ui/AppIcon.vue";
 
 defineProps<{ rounds: number }>();
 </script>

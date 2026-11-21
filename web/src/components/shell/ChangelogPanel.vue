@@ -2,7 +2,6 @@
 import { t } from "../../i18n";
 import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
-import AppIcon from "../ui/AppIcon.vue";
 
 const ENTRIES = [
   { date: "2026-11-18", key: "changelogEntry6" },

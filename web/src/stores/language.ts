@@ -1,10 +1,8 @@
-import { defineStore } from "pinia";
 import { dataset } from "../data/dataset";
 import { textStore } from "../data/text";
 import { syncLocale } from "../i18n";
 import { applyFilter, resetFilterContext } from "../lib/filter";
 import { lang as langState } from "../lib/lang";
-import { pinia } from "./index";
 import { usePanelsStore } from "./panels";
 import { useScriptStore } from "./script";
 import { useSearchStore } from "./search";

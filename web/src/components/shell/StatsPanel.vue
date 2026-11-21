@@ -2,7 +2,6 @@
 import { useStatsPanel } from "../../composables/useStatsPanel";
 import { t } from "../../i18n";
 import { formatCount } from "../../lib/numbers";
-import AppIcon from "../ui/AppIcon.vue";
 
 const {
   open,

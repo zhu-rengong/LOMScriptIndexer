@@ -1,10 +1,7 @@
 import { strToU8, zip } from "fflate";
-import { ref } from "vue";
 import { checkpoints } from "../../data/checkpoints";
 import { textStore } from "../../data/text";
 import { t } from "../../i18n";
-import { pinia } from "../../stores";
-import { useUiStore } from "../../stores/ui";
 import { buildExportFiles, exportFileName, exportLanguage } from "./format";
 
 const running = ref(false);

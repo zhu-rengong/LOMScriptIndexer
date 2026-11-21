@@ -1,6 +1,3 @@
-import { defineStore } from "pinia";
-import type { Ref } from "vue";
-import { pinia } from "./index";
 import { useScriptStore } from "./script";
 
 export type FoldState = "none" | "collapsed" | "mixed" | "expanded";

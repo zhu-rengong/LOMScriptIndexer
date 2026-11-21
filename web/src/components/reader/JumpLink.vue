@@ -6,11 +6,7 @@ import { positionNeverReachable, positionTargetId } from "../../lib/conditions";
 import { signedNumber } from "../../lib/numbers";
 import type { JumpView } from "../../types/beats";
 import type { CheckpointModel, PositionCandidate } from "../../types/condition";
-import AppIcon from "../ui/AppIcon.vue";
-import CondExpr from "./CondExpr.vue";
 import { useFoldable } from "../../composables/useFoldable";
-import { usePanelsStore } from "../../stores/panels";
-import { useScriptStore } from "../../stores/script";
 
 const store = useScriptStore();
 const panels = usePanelsStore();

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { RailRow } from "../../../lib/rail";
 import { t } from "../../../i18n";
-import AppIcon from "../../ui/AppIcon.vue";
 
 const props = defineProps<{
   items: { row: RailRow; top: number; index: number }[];

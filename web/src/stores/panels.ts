@@ -1,4 +1,3 @@
-import { defineStore } from "pinia";
 import { byId } from "../lib/browser";
 import { UI_IDS } from "../ui/ids";
 

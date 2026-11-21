@@ -2,8 +2,6 @@
 import { languages, t } from "../../i18n";
 import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
-import { useScriptStore } from "../../stores/script";
-import { useViewStore } from "../../stores/view";
 
 const store = useScriptStore();
 const view = useViewStore();

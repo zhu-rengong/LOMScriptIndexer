@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { chapterTitle, t } from "../../i18n";
 import { nearBottom } from "../../lib/browser";
-import type { SearchHit } from "../../stores/search";
 
 const SCROLL_THRESHOLD = 96;
 

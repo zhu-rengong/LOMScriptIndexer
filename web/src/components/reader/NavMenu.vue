@@ -7,7 +7,6 @@ import { popovers } from "../../lib/popover";
 import { stripMarkup } from "../../lib/richText";
 import type { GraphEdge } from "../../types/graph";
 import { UI_IDS } from "../../ui/ids";
-import { useScriptStore } from "../../stores/script";
 
 const store = useScriptStore();
 

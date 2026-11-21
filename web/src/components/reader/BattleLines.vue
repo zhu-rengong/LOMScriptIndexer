@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 import type { BattleLine } from "../../types/beats";
-import AppIcon from "../ui/AppIcon.vue";
-import JumpLink from "./JumpLink.vue";
-import SayLine from "./SayLine.vue";
-import { usePanelsStore } from "../../stores/panels";
 import { battleText } from "../../lib/battleText";
 
 const panels = usePanelsStore();

@@ -3,10 +3,6 @@ import { createGripController } from "../../composables/grip";
 import { t } from "../../i18n";
 import { byId } from "../../lib/browser";
 import { UI_IDS } from "../../ui/ids";
-import ReaderBody from "./ReaderBody.vue";
-import ReaderHeader from "./ReaderHeader.vue";
-import { useScriptStore } from "../../stores/script";
-import { usePrefsStore } from "../../stores/prefs";
 
 const store = useScriptStore();
 const prefs = usePrefsStore();

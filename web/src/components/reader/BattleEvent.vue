@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 import type { BattleEvent, BattlePart } from "../../types/beats";
-import BattleLines from "./BattleLines.vue";
-import { usePanelsStore } from "../../stores/panels";
 import { battleText } from "../../lib/battleText";
 
 const panels = usePanelsStore();

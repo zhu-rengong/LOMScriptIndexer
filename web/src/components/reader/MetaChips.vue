@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import type { MetaChip, MetaSeal } from "../../types/beats";
-import AppIcon from "../ui/AppIcon.vue";
-import { usePanelsStore } from "../../stores/panels";
 
 const panels = usePanelsStore();
 

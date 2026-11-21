@@ -3,13 +3,6 @@ import { textStore } from "../../data/text";
 import { buildReaderBlocks } from "../../lib/blocks";
 import { normalizeSearchText } from "../../lib/browser";
 import { clamp } from "../../lib/math";
-import type { FocusTarget } from "../../stores/panels";
-import BlockList from "./BlockList.vue";
-import EmptyState from "./EmptyState.vue";
-import ReaderSkeleton from "./ReaderSkeleton.vue";
-import { useScriptStore } from "../../stores/script";
-import { useViewStore } from "../../stores/view";
-import { usePanelsStore } from "../../stores/panels";
 
 const store = useScriptStore();
 const view = useViewStore();

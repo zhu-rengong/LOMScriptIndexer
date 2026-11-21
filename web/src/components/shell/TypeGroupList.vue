@@ -4,8 +4,6 @@ import { FOLLOW_BASE, FOLLOW_GROUP, fontLabelKey } from "../../lib/fontFamilies"
 import { GROUPS, groupById, slotById, slotsOfGroup } from "../../lib/fontTypes";
 import { fontDisplayName } from "../../lib/systemFonts";
 import type { FontScope, FontTarget } from "../../types/font";
-import { usePrefsStore } from "../../stores/prefs";
-import { useViewStore } from "../../stores/view";
 
 type TreeRow = {
   key: string;

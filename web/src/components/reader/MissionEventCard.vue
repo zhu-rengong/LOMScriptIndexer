@@ -2,11 +2,8 @@
 import { missions } from "../../data/missions";
 import { t } from "../../i18n";
 import { missionEventTarget } from "../../lib/conditions";
-import type { FocusTarget } from "../../stores/panels";
-import { usePanelsStore } from "../../stores/panels";
 import type { MissionEventType, MissionEventView } from "../../types/beats";
 import type { MissionState } from "../../types/missions";
-import MissionStateBody from "./MissionStateBody.vue";
 
 const panels = usePanelsStore();
 
