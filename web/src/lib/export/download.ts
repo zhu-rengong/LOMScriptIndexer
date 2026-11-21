@@ -9,8 +9,6 @@ import { buildExportFiles, exportFileName, exportLanguage } from "./format";
 
 const running = ref(false);
 
-export const exportRunning = running;
-
 const zipTextFiles = async (files: { name: string; content: string }[]): Promise<Blob> => {
   const data: Record<string, Uint8Array> = {};
   for (const file of files) data[file.name] = strToU8(file.content);

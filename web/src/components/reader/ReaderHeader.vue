@@ -141,7 +141,7 @@ const toggleBookmark = () => {
               <AppIcon :name="revealOn ? 'eye' : 'eye-off'" />
             </button>
           </span>
-          <div class="menu-wrap reader-nav" id="navWrap">
+          <div id="navWrap" class="menu-wrap reader-nav">
             <span class="tip-host" :title="t('navBtnTitle')">
               <button
                 id="navBtn"

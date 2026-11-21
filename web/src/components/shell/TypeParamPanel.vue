@@ -195,8 +195,8 @@ const onCaps = (value: CapsMode | null) => {
       <div class="seg seg-wide settings-weight" role="group">
         <button
           v-for="option in capsOptions"
-          :key="String(option.value)"
           v-show="isSlot || option.value !== null"
+          :key="String(option.value)"
           class="seg-btn tab"
           type="button"
           :class="{ 'is-on': capsValue === option.value }"

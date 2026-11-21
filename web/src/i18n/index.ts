@@ -55,22 +55,20 @@ export const t = (
 export const tDynamic = (key: string, vars?: Record<string, unknown>): string =>
   t(key as TranslationKey, vars);
 
+export const messageOf = (lang: string, key: TranslationKey): string =>
+  LANGS.indexOf(lang) >= 0 ? String(composer.t(key, {}, { locale: lang })) : "";
+
 export const all = (key: TranslationKey | (string & Record<never, never>)): string[] => {
   const out: string[] = [];
   for (const id of LANGS) {
-    const raw = (messages[id as keyof typeof messages] as Record<string, string>)[key];
-    if (typeof raw !== "string") continue;
-    for (const part of raw.split(",")) {
+    const text = messageOf(id, key as TranslationKey);
+    if (!text || text === key) continue;
+    for (const part of text.split(",")) {
       const value = part.trim();
       if (value && out.indexOf(value) < 0) out.push(value);
     }
   }
   return out;
-};
-
-export const messageOf = (lang: string, key: TranslationKey): string => {
-  const table = messages[lang as keyof typeof messages] as Record<string, string> | undefined;
-  return table?.[key] ?? "";
 };
 
 export const languages = (): { id: string; native: string; label: string; html: string }[] =>

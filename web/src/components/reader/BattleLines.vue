@@ -65,7 +65,7 @@ const openChip = (line: BattleLine, event: Event) => {
   <template v-for="(item, index) in items" :key="index">
     <SayLine
       v-if="item.kind === 'say'"
-      inBattle
+      :in-battle="true"
       :mode="item.line.mode"
       :speaker="item.line.speaker"
       :text="item.line.text"

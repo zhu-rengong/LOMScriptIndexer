@@ -2,10 +2,12 @@
 import { t } from "../../i18n";
 import { byId } from "../../lib/browser";
 import { popovers } from "../../lib/popover";
-import { exportRunning, exportScripts } from "../../lib/export/download";
+import { pinia } from "../../stores";
+import { useUiStore } from "../../stores/ui";
 import { UI_IDS } from "../../ui/ids";
 
 const open = computed(() => popovers.isOpen("moreMenu"));
+const exporting = ref(false);
 
 const openStats = () => {
   popovers.close("moreMenu");
@@ -23,9 +25,19 @@ const openChangelog = () => {
   popovers.open("changelog", { trigger: byId(UI_IDS.changelogBtn) });
 };
 
-const runExport = () => {
+const runExport = async (): Promise<void> => {
   popovers.close("moreMenu");
-  void exportScripts();
+  if (exporting.value) return;
+  exporting.value = true;
+  try {
+    const module = await import("../../lib/export/download");
+    await module.exportScripts();
+  } catch (error) {
+    console.error("[ScriptIndexer] script export module failed to load", error);
+    useUiStore(pinia).toast(t("exportFailed"));
+  } finally {
+    exporting.value = false;
+  }
 };
 
 onMounted(() => {
@@ -49,7 +61,7 @@ onMounted(() => {
     <button
       class="menu-item row"
       type="button"
-      :disabled="exportRunning"
+      :disabled="exporting"
       :title="t('exportScriptsTitle')"
       @click="runExport"
     >

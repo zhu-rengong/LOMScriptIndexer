@@ -3,6 +3,7 @@ import type { ServerResponse } from "node:http";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Connect, Plugin } from "vite";
+import VueI18nPlugin from "@intlify/unplugin-vue-i18n/vite";
 import vue from "@vitejs/plugin-vue";
 import sirv from "sirv";
 import AutoImport from "unplugin-auto-import/vite";
@@ -154,6 +155,13 @@ export default defineConfig({
   base: "./",
   plugins: [
     vue(),
+    VueI18nPlugin({
+      include: [
+        resolve(root, "src/locales/en.json"),
+        resolve(root, "src/locales/zh-cn.json"),
+        resolve(root, "src/locales/zh-tw.json"),
+      ],
+    }),
     storageKeys(),
     AutoImport({
       imports: ["vue", "pinia"],
