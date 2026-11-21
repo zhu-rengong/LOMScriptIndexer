@@ -1,0 +1,7 @@
+node_modules
+pnpm-lock.yaml
+schema.json
+src/auto-imports.d.ts
+src/components.d.ts
+src/types/contract.ts
+src/types/generated.ts

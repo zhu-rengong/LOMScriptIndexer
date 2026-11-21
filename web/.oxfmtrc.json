@@ -1,9 +1,0 @@
-{
-  "printWidth": 100,
-  "useTabs": false,
-  "indentWidth": 2,
-  "lineEnding": "lf",
-  "quoteStyle": "double",
-  "semicolons": true,
-  "trailingComma": "all"
-}
