@@ -1124,6 +1124,18 @@
     display: block;
   }
 
+  .lookup-branches {
+    display: grid;
+  }
+
+  .lookup-branches > .lc-row {
+    padding: 6px 0;
+  }
+
+  .lookup-branches > .lc-row + .lc-row {
+    border-top: 1px solid var(--line-1);
+  }
+
   .lc-item {
     padding: var(--sp-1) 0;
   }

@@ -12,16 +12,7 @@ const kind = computed(() => props.checkpoint.kind || props.method);
 
 const branches = computed(() => props.checkpoint.branches || []);
 
-const branchReturnsResult = computed(() => kind.value === "switch" || kind.value === "dice");
-
-const branchRows = computed(() =>
-  branches.value.map((branch) => ({
-    expr: branch.expr || null,
-    resultText: branchReturnsResult.value
-      ? t("lookupCondResult", { n: branch.result })
-      : t("lookupCondTrue"),
-  })),
-);
+const branchRows = computed(() => branches.value.map((branch) => branch.expr || null));
 
 const fallback = computed(() => {
   const checkpoint = props.checkpoint;
@@ -31,10 +22,7 @@ const fallback = computed(() => {
     .filter(Boolean);
   const hint = [t("cxFallbackHint", { n: branches.value.length })];
   if (excluded.length) hint.push(excluded.join(t("listJoin")));
-  return {
-    resultText: t("lookupCondResult", { n: checkpoint.fallback }),
-    tooltipText: hint.join("\n"),
-  };
+  return { tooltipText: hint.join("\n") };
 });
 
 const countItems = computed(() =>
@@ -80,30 +68,24 @@ const openAddition = (item: DiceAddition, event: Event) => {
     <p class="lookup-cond-title">{{ t("lookupCondTitle") }}</p>
     <div class="lookup-cond-body">
       <template v-if="kind === 'switch' || kind === 'condition'">
-        <CondRow
-          v-for="(row, index) in branchRows"
-          :key="`branch-${index}`"
-          :result="row.resultText"
-        >
-          <CondExpr v-if="row.expr" :expr="row.expr" :method="method" />
-          <template v-else>{{ t("lookupCondEmpty") }}</template>
-        </CondRow>
-        <CondRow v-if="kind === 'switch' && fallback" :result="fallback.resultText">
-          <span
-            class="cx-fallback"
-            :title="fallback.tooltipText"
-            :aria-label="fallback.tooltipText"
-          >
-            {{ t("lookupCondFallback") }}
-          </span>
-        </CondRow>
+        <div class="lookup-branches">
+          <CondRow v-for="(expr, index) in branchRows" :key="`branch-${index}`">
+            <CondExpr v-if="expr" :expr="expr" :method="method" />
+            <template v-else>{{ t("lookupCondEmpty") }}</template>
+          </CondRow>
+          <CondRow v-if="kind === 'switch' && fallback">
+            <span
+              class="cx-fallback"
+              :title="fallback.tooltipText"
+              :aria-label="fallback.tooltipText"
+            >
+              {{ t("lookupCondFallback") }}
+            </span>
+          </CondRow>
+        </div>
         <template v-if="countItems.length">
           <p class="lookup-cond-sub">{{ t("lookupCondCount") }}</p>
-          <CondRow
-            v-for="(item, index) in countItems"
-            :key="`count-${index}`"
-            :result="t('lookupCondResult', { n: item.result })"
-          >
+          <CondRow v-for="(item, index) in countItems" :key="`count-${index}`">
             {{ t("lookupCondCountRow", { n: item.value ?? "", op: item.op }) }}
           </CondRow>
         </template>
@@ -136,19 +118,21 @@ const openAddition = (item: DiceAddition, event: Event) => {
             <span v-if="item.hide" class="lc-add-tag">{{ t("diceAddHide") }}</span>
           </p>
         </template>
-        <CondRow v-for="(row, index) in branchRows" :key="`die-${index}`" :result="row.resultText">
-          <CondExpr v-if="row.expr" :expr="row.expr" :method="method" />
-          <template v-else>{{ t("lookupCondEmpty") }}</template>
-        </CondRow>
-        <CondRow v-if="fallback" :result="fallback.resultText">
-          <span
-            class="cx-fallback"
-            :title="fallback.tooltipText"
-            :aria-label="fallback.tooltipText"
-          >
-            {{ t("lookupCondFallback") }}
-          </span>
-        </CondRow>
+        <div class="lookup-branches">
+          <CondRow v-for="(expr, index) in branchRows" :key="`die-${index}`">
+            <CondExpr v-if="expr" :expr="expr" :method="method" />
+            <template v-else>{{ t("lookupCondEmpty") }}</template>
+          </CondRow>
+          <CondRow v-if="fallback">
+            <span
+              class="cx-fallback"
+              :title="fallback.tooltipText"
+              :aria-label="fallback.tooltipText"
+            >
+              {{ t("lookupCondFallback") }}
+            </span>
+          </CondRow>
+        </div>
       </template>
 
       <template v-else-if="kind === 'position'">

@@ -378,8 +378,6 @@
   "lookupGroupReadsEmptyRel": "没有剧本在检查点条件里比较此好感度",
   "lookupCondTitle": "判定条件",
   "lookupCondLoading": "加载判定条件…",
-  "lookupCondResult": "返回 {n}",
-  "lookupCondTrue": "成立",
   "lookupCondFallback": "其余情况",
   "lookupCondCount": "按调用次数",
   "lookupCondCountRow": "第 {n} 次 {op}",

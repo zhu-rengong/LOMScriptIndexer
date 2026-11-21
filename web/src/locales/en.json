@@ -378,8 +378,6 @@
   "lookupGroupReadsEmptyRel": "No script compares this affinity in a checkpoint condition",
   "lookupCondTitle": "Check conditions",
   "lookupCondLoading": "Loading conditions…",
-  "lookupCondResult": "Returns {n}",
-  "lookupCondTrue": "Matches",
   "lookupCondFallback": "Otherwise",
   "lookupCondCount": "By call count",
   "lookupCondCountRow": "Call {n} {op}",
