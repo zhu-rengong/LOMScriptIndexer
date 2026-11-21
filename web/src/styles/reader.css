@@ -22,6 +22,15 @@
     contain-intrinsic-size: auto 88px;
   }
 
+  .reader-body > .say.has-portrait {
+    content-visibility: visible;
+  }
+
+  .reader-body > .say.has-portrait .say-body {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 88px;
+  }
+
   .empty-state {
     display: flex;
     flex-direction: column;
