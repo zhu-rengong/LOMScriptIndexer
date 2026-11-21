@@ -217,6 +217,7 @@
   "statsOpen": "Open this script",
   "changelogTitle": "Changelog",
   "changelogLatest": "Latest",
+  "changelogEntry7": "- Battle and duel cards now render their titles, goals, status, forces, triggers and actions in the interface language, so the Simplified Chinese and English readers no longer mix in Traditional Chinese labels.\n- The More menu gains version info: the py and web versions plus the git commit the site was built from, with the short hash linking to GitHub.\n- Condition inference and flag inference are merged into a single Inference toggle (F) using the logical entailment icon; the C shortcut is gone.\n- Lookup conditions no longer show return values, and each branch is separated by a divider.\n- The group font default in reading settings is back to Follow base instead of showing base; saved reading preferences are reset once.\n- Fixed the expression bubble in the top-right corner of speaker portraits being clipped.\n- Mission state labels use a slash instead of the old arrow separator, exported text uses ASCII separators, and the empty state and inference marks use inline icons.\n- Off-screen rows skip rendering and locale messages are precompiled, so first load and scrolling cost less.",
   "versionTitle": "Version info",
   "versionPy": "py",
   "versionWeb": "web",
