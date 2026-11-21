@@ -1,14 +1,9 @@
-import { dataset } from "../data/dataset";
+import { useNavigatorLanguage, usePreferredLanguages } from "@vueuse/core";
+import { readDataset } from "../data/access";
 import { graph } from "../data/graph";
 import { lang as langState } from "../lib/lang";
 import { keys, storedRef } from "../lib/storage";
 import type { GraphNode } from "../types/graph";
-
-const graphMeta = dataset.meta;
-const initialLang = langState.initial;
-const hasLang = langState.has;
-const pinLang = langState.pin;
-const applyDocumentLang = langState.applyDocument;
 
 export type FilterState = {
   source: string;
@@ -31,6 +26,23 @@ const bookmarksRef = () =>
   });
 
 export const useScriptStore = defineStore("script", () => {
+  const preferredLanguages = usePreferredLanguages();
+  const navigatorLanguage = useNavigatorLanguage();
+  const pinnedLang = storedRef<string>(keys.lang, "", {
+    decode: (raw, base) => (langState.has(raw) ? raw : base),
+    encode: (value) => value,
+  });
+
+  const detectedLang = (): string => {
+    const tags = preferredLanguages.value.length
+      ? preferredLanguages.value
+      : [navigatorLanguage.language.value || ""];
+    return langState.detect(tags);
+  };
+
+  const initialLang = (): string =>
+    langState.has(pinnedLang.value) ? pinnedLang.value : detectedLang();
+
   const positions = new Map<string, number>();
   const lang = ref(initialLang());
   const selectedId = ref("");
@@ -91,15 +103,16 @@ export const useScriptStore = defineStore("script", () => {
   let restored = false;
 
   const textLang = (): string => {
-    if (graphMeta.langs.indexOf(lang.value) >= 0) return lang.value;
-    if (graphMeta.langs.indexOf(graphMeta.defaultLang) >= 0) return graphMeta.defaultLang;
-    return graphMeta.langs[0] || graphMeta.defaultLang || "";
+    const meta = readDataset().meta;
+    if (meta.langs.indexOf(lang.value) >= 0) return lang.value;
+    if (meta.langs.indexOf(meta.defaultLang) >= 0) return meta.defaultLang;
+    return meta.langs[0] || meta.defaultLang || "";
   };
 
   const setLang = (id: string): boolean => {
-    if (!hasLang(id)) return false;
+    if (!langState.has(id)) return false;
     const changed = id !== lang.value;
-    pinLang(id);
+    pinnedLang.value = id;
     lang.value = id;
     return changed;
   };
@@ -108,7 +121,7 @@ export const useScriptStore = defineStore("script", () => {
     if (restored) return;
     restored = true;
     lang.value = initialLang();
-    applyDocumentLang(lang.value);
+    langState.applyDocument(lang.value);
     filterRevision.value++;
   };
 

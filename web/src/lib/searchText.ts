@@ -1,5 +1,5 @@
 import { convert } from "../data/convert";
-import { dataset } from "../data/dataset";
+import { readDataset } from "../data/access";
 import { textStore } from "../data/text";
 import { normalizeSearchText } from "./browser";
 import * as beatRows from "./beatRows";
@@ -9,12 +9,12 @@ const script = () => useScriptStore(pinia);
 
 export type SearchLine = { text: string; target: FocusTarget | null };
 
-const indexedMetaKinds = new Set([
-  ...(dataset.vocab.itemKinds || []),
-  "settitle",
-  "mission",
-  "missionTrigger",
-]);
+const EXTRA_META_KINDS = ["settitle", "mission", "missionTrigger"];
+
+let indexedKinds: Set<string> | null = null;
+
+const metaKinds = (): Set<string> =>
+  (indexedKinds ??= new Set([...(readDataset().vocab.itemKinds || []), ...EXTRA_META_KINDS]));
 
 let lang = "";
 let converted = false;
@@ -41,7 +41,7 @@ const metaLinesOf = (rows: unknown): SearchLine[] => {
   beatRows.walkRows(rows, (row) => {
     if (!beatRows.isBeat(row, "meta")) return;
     const meta = beatRows.parseMeta(row);
-    if (!indexedMetaKinds.has(meta.kind)) return;
+    if (!metaKinds().has(meta.kind)) return;
     const mission = meta.kind === "mission" || meta.kind === "missionTrigger";
     const event = mission ? missionEventView(meta.kind, meta.key, meta.value, meta.extra) : null;
     if (mission && !event) return;

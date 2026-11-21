@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 import { speakerName } from "../../lib/blocks";
-import { ensurePortraitManifest, pickMood, pickPortrait, portraitUrl } from "../../lib/portraits";
+import { pickMood, pickPortrait, portraitUrl } from "../../lib/portraits";
 
 const props = defineProps<{ character: string; expression: string }>();
 
@@ -53,7 +53,7 @@ const moodStyle = computed<Record<string, string | number>>(() => ({
 }));
 
 onMounted(() => {
-  void ensurePortraitManifest();
+  void usePortraitsStore(pinia).ensure();
 });
 
 watch(

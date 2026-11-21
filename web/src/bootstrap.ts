@@ -6,9 +6,6 @@ import { textStore } from "./data/text";
 import { syncLocale } from "./i18n";
 import { applyFilter } from "./lib/filter";
 import { router, scriptIdOf, showScript } from "./router";
-import { usePrefsStore } from "./stores/prefs";
-import { useScriptStore } from "./stores/script";
-import { useSearchStore } from "./stores/search";
 
 export const start = (): void => {
   const app = createAppShell(App);

@@ -1,6 +1,6 @@
 import type { CheckpointDocument } from "../types/generated";
 import type { CheckpointModel } from "../types/condition";
-import { dataset } from "./dataset";
+import { readDataset } from "./access";
 import { fetchJson } from "./load";
 
 const models: Record<string, CheckpointModel> = {};
@@ -22,7 +22,7 @@ const loadShard = (index: number): Promise<boolean> => {
   if (index < 0) return Promise.resolve(false);
   const pending = pendingLoads.get(index);
   if (pending) return pending;
-  const job = fetchJson<CheckpointDocument>(dataset.assetUrl("checkpoints", { index }))
+  const job = fetchJson<CheckpointDocument>(readDataset().assetUrl("checkpoints", { index }))
     .then((document) => {
       for (const [key, model] of Object.entries(document.items ?? {})) {
         models[key] = normalize(model as CheckpointModel);
@@ -38,14 +38,14 @@ const loadShard = (index: number): Promise<boolean> => {
 };
 
 const ensure = (key: string): Promise<boolean> => {
-  const index = dataset.checkpointShardByKey[key];
+  const index = readDataset().checkpointShardByKey[key];
   if (typeof index !== "number" || index < 0) return Promise.resolve(false);
   return loadShard(index);
 };
 
 const loadAll = async (): Promise<boolean> => {
   const indices = new Set<number>();
-  for (const value of Object.values(dataset.checkpointShardByKey)) {
+  for (const value of Object.values(readDataset().checkpointShardByKey)) {
     if (typeof value === "number" && value >= 0) indices.add(value);
   }
   const run = (): Promise<boolean> =>

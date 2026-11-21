@@ -1,4 +1,3 @@
-import { loadDataset } from "./data/dataset";
 import type { TranslationKey } from "./i18n";
 import { syncLocale, t } from "./i18n";
 import { languageMeta } from "./i18n/meta";
@@ -48,7 +47,7 @@ const showFatal = (error: unknown) => {
 const boot = async () => {
   watchLongTasks();
   try {
-    await measure("dataset", loadDataset);
+    await measure("dataset", () => useDataStore(pinia).load());
     await measure("bootstrap", async () => {
       const { start } = await import("./bootstrap");
       start();

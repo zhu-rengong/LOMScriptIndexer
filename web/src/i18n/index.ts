@@ -3,7 +3,7 @@ import type { Composer } from "vue-i18n";
 import en from "../locales/en.json";
 import zhCn from "../locales/zh-cn.json";
 import zhTw from "../locales/zh-tw.json";
-import { dataset } from "../data/dataset";
+import { readDataset } from "../data/access";
 import { slotById } from "../lib/fontTypes";
 import { languageMeta } from "./meta";
 
@@ -130,7 +130,7 @@ export const sceneLabel = (name: string): string => {
 export const sceneText = (name: string): string => sceneLabel(name) || name;
 
 const dateOf = (rounds: number): { year: number; month: number; period: number } => {
-  const calendar = dataset.calendar || {};
+  const calendar = readDataset().calendar || {};
   const perYear = calendar.roundsPerYear || 36;
   const perMonth = calendar.roundsPerMonth || 3;
   const index = Math.max(0, Math.floor(rounds) - 1);

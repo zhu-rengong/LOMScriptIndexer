@@ -1,5 +1,5 @@
 import type { MissionPack, MissionRecord, MissionState, MissionTimeRule } from "../types/missions";
-import { dataset } from "./dataset";
+import { readDataset } from "./access";
 
 export type MissionLookup = { mission: string; state: MissionState };
 
@@ -11,9 +11,6 @@ const EMPTY_TIME: MissionTimeRule = {
   max: null,
   period: 0,
 };
-
-const pack = dataset.missions as unknown as MissionPack;
-const records: Record<string, MissionRecord> = pack.items || {};
 
 const normalizeState = (state: MissionState): MissionState => ({
   ...state,
@@ -31,14 +28,30 @@ const normalizeState = (state: MissionState): MissionState => ({
   modifyFlagsFalse: state.modifyFlagsFalse || [],
 });
 
-const stateIndex = new Map<string, MissionLookup>();
+let recordsCache: Record<string, MissionRecord> | null = null;
+let stateCache: Map<string, MissionLookup> | null = null;
 
-for (const mission of Object.keys(records)) {
-  const states = records[mission].states || {};
-  for (const stateKey of Object.keys(states)) {
-    stateIndex.set(stateKey, { mission, state: normalizeState(states[stateKey]) });
+const records = (): Record<string, MissionRecord> => {
+  if (!recordsCache) {
+    const pack = readDataset().missions as unknown as MissionPack;
+    recordsCache = pack.items || {};
   }
-}
+  return recordsCache;
+};
+
+const stateIndex = (): Map<string, MissionLookup> => {
+  if (!stateCache) {
+    const table = new Map<string, MissionLookup>();
+    for (const mission of Object.keys(records())) {
+      const states = records()[mission].states || {};
+      for (const stateKey of Object.keys(states)) {
+        table.set(stateKey, { mission, state: normalizeState(states[stateKey]) });
+      }
+    }
+    stateCache = table;
+  }
+  return stateCache;
+};
 
 const normalizeId = (value: string): string => {
   const id = (value || "").trim();
@@ -46,7 +59,7 @@ const normalizeId = (value: string): string => {
 };
 
 const missionOfState = (stateKey: string): MissionLookup | null =>
-  stateKey ? stateIndex.get(stateKey) || null : null;
+  stateKey ? stateIndex().get(stateKey) || null : null;
 
 const missionIdOf = (stateKey: string, extra: string): string => {
   const hit = missionOfState(stateKey);
@@ -54,15 +67,15 @@ const missionIdOf = (stateKey: string, extra: string): string => {
 };
 
 const recordOf = (missionId: string): MissionRecord | null =>
-  missionId ? records[missionId] || null : null;
+  missionId ? records()[missionId] || null : null;
 
 const isMain = (missionId: string): boolean => {
   const record = recordOf(missionId);
   return record ? record.main : missionId === "main";
 };
 
-const missionIds = (): string[] => Object.keys(records);
+const missionIds = (): string[] => Object.keys(records());
 
-const stateKeys = (): string[] => Array.from(stateIndex.keys());
+const stateKeys = (): string[] => Array.from(stateIndex().keys());
 
 export const missions = { isMain, missionIdOf, missionOfState, recordOf, missionIds, stateKeys };

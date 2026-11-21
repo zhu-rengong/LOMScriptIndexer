@@ -1,4 +1,4 @@
-import { dataset } from "./dataset";
+import { readDataset } from "./access";
 
 export type FlagFactTable = {
   values: string[];
@@ -10,7 +10,7 @@ let cached: Record<string, FlagFactTable> | null = null;
 const tables = (): Record<string, FlagFactTable> => {
   if (cached) return cached;
   const out: Record<string, FlagFactTable> = {};
-  for (const [flag, table] of Object.entries(dataset.flagFacts.flags ?? {})) {
+  for (const [flag, table] of Object.entries(readDataset().flagFacts.flags ?? {})) {
     out[flag] = { values: table.values ?? [], negated: table.negated ?? [] };
   }
   cached = out;

@@ -1,4 +1,3 @@
-import { DATA_SCHEMA } from "../types/contract";
 import type {
   CalendarInfo,
   DataIndex,
@@ -22,17 +21,16 @@ import type {
   Shard,
   Vocab,
 } from "../types/graph";
-import { GraphSchema, MissionSchema, assetUrl, fetchJson, fetchValidated, loadIndex } from "./load";
-
-const DEFAULT_CHAPTER_COLOR = "#8A8578";
-
-export const EMPTY_CHAPTER: Chapter = {
-  id: "",
-  kind: "other",
-  number: null,
-  color: DEFAULT_CHAPTER_COLOR,
-  scriptCount: 0,
-};
+import { DATA_SCHEMA } from "../types/contract";
+import { DEFAULT_CHAPTER_COLOR } from "../data/chapters";
+import {
+  GraphSchema,
+  MissionSchema,
+  assetUrl,
+  fetchJson,
+  fetchValidated,
+  loadIndex,
+} from "../data/load";
 
 const EMPTY_FACETS: Facets = {
   speakers: [],
@@ -128,44 +126,55 @@ const buildMeta = (graph: GraphPayload): GraphMeta => {
   };
 };
 
-export let dataset = undefined as unknown as Dataset;
+export const useDataStore = defineStore("data", () => {
+  const dataset = shallowRef<Dataset | null>(null);
 
-export const loadDataset = async (): Promise<Dataset> => {
-  const index: DataIndex = await loadIndex();
-  if (index.schema !== DATA_SCHEMA) {
-    throw new Error(
-      `unsupported data schema ${index.schema}; expected ${DATA_SCHEMA},` +
-        " rebuild the data and hard refresh to clear cached data",
-    );
-  }
-  const [graph, varReads, missions, flagFacts] = await Promise.all([
-    fetchValidated<GraphPayload>(assetUrl(index, "graph"), GraphSchema, "graph"),
-    fetchJson<VarReadsPayload>(assetUrl(index, "varReads")),
-    fetchValidated<MissionDocument>(assetUrl(index, "missions"), MissionSchema, "missions"),
-    fetchJson<FlagFactsPayload>(assetUrl(index, "flagFacts")),
-  ]);
-  const meta = buildMeta(graph);
-  dataset = {
-    index,
-    schema: index.schema,
-    meta,
-    vocab: meta.vocab,
-    calendar: meta.calendar,
-    nodes: list(graph.nodes).map((node) => normalizeNode(node)),
-    edges: list(graph.edges).map((edge) => normalizeEdge(edge as GraphEdge)),
-    chapters: list(graph.chapters).map((chapter) => normalizeChapter(chapter as Chapter)),
-    varReads: {
-      flag: varReads.flag ?? {},
-      stat: varReads.stat ?? {},
-      rel: varReads.rel ?? {},
-    },
-    missions,
-    flagFacts,
-    langs: meta.langs,
-    systemEntries: meta.systemEntries,
-    shardByNode: meta.shardByNode,
-    checkpointShardByKey: meta.checkpointShardByKey,
-    assetUrl: (name, vars) => assetUrl(index, name, vars),
+  const load = async (): Promise<Dataset> => {
+    const index: DataIndex = await loadIndex();
+    if (index.schema !== DATA_SCHEMA) {
+      throw new Error(
+        `unsupported data schema ${index.schema}; expected ${DATA_SCHEMA},` +
+          " rebuild the data and hard refresh to clear cached data",
+      );
+    }
+    const [graph, varReads, missions, flagFacts] = await Promise.all([
+      fetchValidated<GraphPayload>(assetUrl(index, "graph"), GraphSchema, "graph"),
+      fetchJson<VarReadsPayload>(assetUrl(index, "varReads")),
+      fetchValidated<MissionDocument>(assetUrl(index, "missions"), MissionSchema, "missions"),
+      fetchJson<FlagFactsPayload>(assetUrl(index, "flagFacts")),
+    ]);
+    const meta = buildMeta(graph);
+    const next: Dataset = {
+      index,
+      schema: index.schema,
+      meta,
+      vocab: meta.vocab,
+      calendar: meta.calendar,
+      nodes: list(graph.nodes).map((node) => normalizeNode(node)),
+      edges: list(graph.edges).map((edge) => normalizeEdge(edge as GraphEdge)),
+      chapters: list(graph.chapters).map((chapter) => normalizeChapter(chapter as Chapter)),
+      varReads: {
+        flag: varReads.flag ?? {},
+        stat: varReads.stat ?? {},
+        rel: varReads.rel ?? {},
+      },
+      missions,
+      flagFacts,
+      langs: meta.langs,
+      systemEntries: meta.systemEntries,
+      shardByNode: meta.shardByNode,
+      checkpointShardByKey: meta.checkpointShardByKey,
+      assetUrl: (name, vars) => assetUrl(index, name, vars),
+    };
+    dataset.value = next;
+    return next;
   };
-  return dataset;
-};
+
+  const current = (): Dataset => {
+    const value = dataset.value;
+    if (!value) throw new Error("dataset is not loaded");
+    return value;
+  };
+
+  return { dataset, load, current };
+});

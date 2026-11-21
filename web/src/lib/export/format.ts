@@ -1,5 +1,5 @@
 import { checkpoints } from "../../data/checkpoints";
-import { dataset } from "../../data/dataset";
+import { readDataset } from "../../data/access";
 import { graph } from "../../data/graph";
 import { textStore } from "../../data/text";
 import { chapterTitle, sceneLabel, sceneText, t, timeText } from "../../i18n";
@@ -389,7 +389,7 @@ const readmeText = (
   skipped: number,
   checkpointOk: boolean,
 ): string => {
-  const game = dataset.meta.game;
+  const game = readDataset().meta.game;
   const lines = [
     t("appTitle"),
     `language: ${lang}`,

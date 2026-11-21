@@ -3,7 +3,7 @@ import type { WordCountPayload } from "../types/generated";
 const script = () => useScriptStore(pinia);
 import type { WordCount, WordCountPack, WordPack, WordRow } from "../types/text";
 import { EN_INDEX, ZH_INDEX } from "../types/text";
-import { dataset } from "./dataset";
+import { readDataset } from "./access";
 import { fetchJson } from "./load";
 
 const FALLBACK_KINDS = ["dialog", "narration", "think", "option", "lore"];
@@ -16,7 +16,7 @@ const kinds = (): string[] => (cache?.kinds && cache.kinds.length ? cache.kinds 
 const loadWordCount = (): Promise<WordCountPack | null> => {
   if (cache) return Promise.resolve(cache);
   if (pending) return pending;
-  pending = fetchJson<WordCountPayload>(dataset.assetUrl("wordcount"))
+  pending = fetchJson<WordCountPayload>(readDataset().assetUrl("wordcount"))
     .then((payload) => {
       cache = payload as unknown as WordCountPack;
       return cache;

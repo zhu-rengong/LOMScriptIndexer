@@ -1,28 +1,29 @@
 import type { TextShardPayload, TextHeadPayload } from "../types/generated";
 import type { BeatRow } from "../types/beats";
+import type { Dataset } from "../types/graph";
 import type { ShardState, TextPack, TextProgress } from "../types/text";
 import { t } from "../i18n";
 import { measure } from "../lib/perf";
+import { readDataset } from "./access";
 import { convert } from "./convert";
-import { dataset } from "./dataset";
 import { TextHeadSchema, fetchJson, fetchValidated } from "./load";
 
 let uiHandle: ReturnType<typeof useUiStore> | null = null;
 
 const ui = (): ReturnType<typeof useUiStore> => (uiHandle ??= useUiStore(pinia));
 
+const textLoad = (): ReturnType<typeof useTextLoadStore> => useTextLoadStore(pinia);
+
 const SHARD_TIMEOUT = 30000;
 
-const graphMeta = dataset.meta;
-const sourceLang = graphMeta.sourceLang || graphMeta.langs[0] || "";
-const shardKeys = graphMeta.shards.map((shard) => shard.key);
+const meta = (): Dataset["meta"] => readDataset().meta;
 
-const shardProgress = reactive({
-  headState: "idle" as ShardState,
-  shards: {} as Record<string, ShardState>,
-  headError: "",
-  shardError: "",
-});
+const sourceLang = (): string => {
+  const info = meta();
+  return info.sourceLang || info.langs[0] || "";
+};
+
+const shardKeys = (): string[] => meta().shards.map((shard) => shard.key);
 
 let pack: TextPack | null = null;
 let headPromise: Promise<boolean> | null = null;
@@ -69,18 +70,19 @@ const scriptIds = (): string[] => {
 
 const scriptCount = (): number => scriptIds().length;
 
-const hasConverted = (lang: string): boolean => lang !== sourceLang && convert.hasConverter(lang);
+const hasConverted = (lang: string): boolean => lang !== sourceLang() && convert.hasConverter(lang);
 
 const ensureConvert = (lang: string): Promise<boolean> => {
-  if (lang === sourceLang) return Promise.resolve(true);
+  if (lang === sourceLang()) return Promise.resolve(true);
   if (convert.hasConverter(lang)) return Promise.resolve(true);
   return measure("t2cn", () => convert.ensureConverter(lang));
 };
 
 const loadHead = (): Promise<boolean> => {
-  shardProgress.headState = "loading";
+  const state = textLoad();
+  state.setHead("loading");
   headPromise = fetchValidated<TextHeadPayload>(
-    dataset.assetUrl("textHead", { lang: sourceLang }),
+    readDataset().assetUrl("textHead", { lang: sourceLang() }),
     TextHeadSchema,
     "text head",
   )
@@ -97,29 +99,29 @@ const loadHead = (): Promise<boolean> => {
         edgeLabels: head.edgeLabels ?? {},
         scripts: {},
       };
-      shardProgress.headState = "ready";
-      shardProgress.headError = "";
+      state.setHead("ready");
       return true;
     })
     .catch((error: unknown) => {
-      shardProgress.headState = "failed";
-      shardProgress.headError = error instanceof Error ? error.message : String(error);
-      ui().toast(t("langFailed", { lang: sourceLang }));
+      const message = error instanceof Error ? error.message : String(error);
+      state.setHead("failed", message);
+      ui().toast(t("langFailed", { lang: sourceLang() }));
       return false;
     });
   return headPromise;
 };
 
 const ensureHead = (lang: string): Promise<boolean> => {
+  const state = textLoad();
   const current =
-    shardProgress.headState === "ready"
+    state.headState === "ready"
       ? Promise.resolve(true)
-      : shardProgress.headState === "loading" && headPromise
+      : state.headState === "loading" && headPromise
         ? headPromise
         : loadHead();
   return Promise.all([current, ensureConvert(lang)]).then(([headOk, convertedOk]) => {
     if (!headOk) return false;
-    if (!convertedOk && lang !== sourceLang) {
+    if (!convertedOk && lang !== sourceLang()) {
       ui().toast(t("langFailed", { lang }));
       return false;
     }
@@ -129,24 +131,27 @@ const ensureHead = (lang: string): Promise<boolean> => {
 
 const ensureShard = (lang: string, key: string): Promise<boolean> => {
   if (!key) return Promise.resolve(true);
-  if (shardProgress.shards[key] === "ready") return Promise.resolve(true);
+  const state = textLoad();
+  if (state.shardOf(key) === "ready") return Promise.resolve(true);
   const pending = pendingShards.get(key);
   if (pending) return pending;
-  shardProgress.shards[key] = "loading";
-  const job = fetchJson<TextShardPayload>(dataset.assetUrl("textShard", { lang: sourceLang, key }))
+  state.setShard(key, "loading");
+  const job = fetchJson<TextShardPayload>(
+    readDataset().assetUrl("textShard", { lang: sourceLang(), key }),
+  )
     .then((shard) => {
       if (pack) {
         for (const [id, rows] of Object.entries(shard.scripts ?? {})) {
           pack.scripts[id] = rows as BeatRow[];
         }
       }
-      shardProgress.shards[key] = "ready";
+      state.setShard(key, "ready");
       pendingShards.delete(key);
       return true;
     })
     .catch((error: unknown) => {
-      shardProgress.shards[key] = "failed";
-      shardProgress.shardError = error instanceof Error ? error.message : String(error);
+      const message = error instanceof Error ? error.message : String(error);
+      state.setShard(key, "failed", message);
       pendingShards.delete(key);
       return false;
     });
@@ -163,7 +168,7 @@ const ensureScript = (lang: string, id: string): Promise<boolean> =>
   ensureHead(lang)
     .then(() => {
       if (hasScript(id)) return true;
-      const key = graphMeta.shardByNode[id];
+      const key = meta().shardByNode[id];
       if (!key) return false;
       return ensureShard(lang, key).then(() => hasScript(id));
     })
@@ -251,31 +256,14 @@ const textPackOf = (lang: string): TextPack | null => {
   return converted;
 };
 
-const progress = (): TextProgress => {
-  const total = shardKeys.length;
-  let loaded = 0;
-  let failed = 0;
-  for (const key of shardKeys) {
-    const state = shardProgress.shards[key];
-    if (state === "ready") loaded++;
-    else if (state === "failed") failed++;
-  }
-  return {
-    headState: shardProgress.headState,
-    loaded,
-    total,
-    done: shardProgress.headState === "ready" && (total === 0 || loaded + failed >= total),
-    headError: shardProgress.headError || "",
-    shardError: shardProgress.shardError || "",
-  };
-};
+const progress = (): TextProgress => textLoad().progress(shardKeys());
 
 const settleShard = (lang: string, key: string): Promise<boolean> =>
   new Promise((resolve) => {
     const timer = setTimeout(() => {
-      if (shardProgress.shards[key] === "loading") {
-        shardProgress.shards[key] = "failed";
-        shardProgress.shardError = `timeout: ${key}`;
+      const state = textLoad();
+      if (state.shardOf(key) === "loading") {
+        state.setShard(key, "failed", `timeout: ${key}`);
         pendingShards.delete(key);
       }
       resolve(false);
@@ -298,25 +286,26 @@ const ensureAll = async (
 ): Promise<boolean> => {
   const headOk = await ensureHead(lang);
   if (!headOk) return false;
+  const keys = shardKeys();
   const failed: string[] = [];
-  for (let index = 0; index < shardKeys.length; index++) {
-    const ok = await settleShard(lang, shardKeys[index]);
-    if (!ok) failed.push(shardKeys[index]);
-    if (onProgress) onProgress(index + 1, shardKeys.length);
+  for (let index = 0; index < keys.length; index++) {
+    const ok = await settleShard(lang, keys[index]);
+    if (!ok) failed.push(keys[index]);
+    if (onProgress) onProgress(index + 1, keys.length);
   }
   for (const key of failed) await settleShard(lang, key);
-  return shardKeys.every((key) => shardProgress.shards[key] === "ready");
+  return keys.every((key) => textLoad().shardOf(key) === "ready");
 };
 
 const shardState = (id: string): ShardState => {
-  const key = graphMeta.shardByNode[id];
+  const key = meta().shardByNode[id];
   if (!key) return "missing";
-  return shardProgress.shards[key] || "idle";
+  return textLoad().shardOf(key);
 };
 
 const retry = (lang: string, id: string): Promise<boolean> => {
-  const key = graphMeta.shardByNode[id];
-  if (key && shardProgress.shards[key] === "failed") delete shardProgress.shards[key];
+  const key = meta().shardByNode[id];
+  if (key && textLoad().shardOf(key) === "failed") textLoad().clearShard(key);
   return ensureScript(lang, id);
 };
 

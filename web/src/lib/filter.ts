@@ -1,4 +1,4 @@
-import { dataset } from "../data/dataset";
+import { readDataset } from "../data/access";
 import { flagFacts, isBinaryValues } from "../data/flagFacts";
 import { graph } from "../data/graph";
 import { textStore } from "../data/text";
@@ -34,7 +34,7 @@ const textOf = (key: string): string => {
 
 const flagNames = (): Record<string, string> => {
   const names: Record<string, string> = {};
-  const known = new Set<string>(Object.keys(dataset.flagFacts.flags || {}));
+  const known = new Set<string>(Object.keys(readDataset().flagFacts.flags || {}));
   for (const node of graph.nodes) for (const key of node.facets.flags) known.add(key);
   for (const flag of known) {
     const fact = isBinaryValues(flagFacts[flag]?.values || []) ? textOf(`fact.${flag}.1`) : "";

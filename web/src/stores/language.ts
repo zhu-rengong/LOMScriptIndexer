@@ -1,4 +1,4 @@
-import { dataset } from "../data/dataset";
+import { readDataset } from "../data/access";
 import { textStore } from "../data/text";
 import { syncLocale } from "../i18n";
 import { applyFilter, resetFilterContext } from "../lib/filter";
@@ -16,7 +16,7 @@ export const useLanguageStore = defineStore("language", () => {
     const panels = usePanelsStore(pinia);
     const search = useSearchStore(pinia);
     const current = ++token;
-    const content = dataset.meta.langs.indexOf(id) >= 0 ? id : script.textLang();
+    const content = readDataset().meta.langs.indexOf(id) >= 0 ? id : script.textLang();
     const ok = await textStore.ensureHead(content);
     if (current !== token || !ok) return;
     if (!script.setLang(id)) return;

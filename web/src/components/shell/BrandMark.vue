@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { dataset } from "../../data/dataset";
+import { readDataset } from "../../data/access";
 import { t } from "../../i18n";
 
 const versionText = computed(() => {
-  const version = dataset.meta.game?.version;
+  const version = readDataset().meta.game?.version;
   return version ? t("gameVersion", { ver: version }) : "";
 });
 </script>
