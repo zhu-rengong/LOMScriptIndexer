@@ -1,5 +1,6 @@
 import { languageMeta } from "../i18n/meta";
 import type { OpenccConfig } from "../i18n/types";
+import { measure } from "../lib/perf";
 import type { BeatRow } from "../types/beats";
 
 type Converter = (text: string) => string;
@@ -20,7 +21,7 @@ const configOf = (lang: string): OpenccConfig | null => {
 
 const loadRuntime = (): Promise<OpenccRuntime> => {
   if (runtime) return runtime;
-  runtime = import("opencc-js/t2cn")
+  runtime = measure("t2cn", () => import("opencc-js/t2cn"))
     .then((module) => ({
       Converter: module.Converter,
       CustomConverter: module.CustomConverter,
