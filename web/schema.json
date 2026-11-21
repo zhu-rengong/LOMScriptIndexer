@@ -1,0 +1,2855 @@
+{
+  "$ref": "#/$defs/Contract",
+  "$defs": {
+    "Contract": {
+      "title": "Contract",
+      "type": "object",
+      "properties": {
+        "graph": {
+          "$ref": "#/$defs/GraphPayload"
+        },
+        "text_head": {
+          "$ref": "#/$defs/TextHeadPayload"
+        },
+        "text_shard": {
+          "$ref": "#/$defs/TextShardPayload"
+        },
+        "word_count": {
+          "$ref": "#/$defs/WordCountPayload"
+        },
+        "missions": {
+          "$ref": "#/$defs/MissionDocument"
+        },
+        "checkpoints": {
+          "$ref": "#/$defs/CheckpointDocument"
+        },
+        "lore": {
+          "$ref": "#/$defs/LoreDocument"
+        },
+        "stats": {
+          "$ref": "#/$defs/StatsDocument"
+        },
+        "entries": {
+          "$ref": "#/$defs/EntriesDocument"
+        },
+        "battles": {
+          "$ref": "#/$defs/BattleDocument"
+        },
+        "var_reads": {
+          "$ref": "#/$defs/VarReadsPayload"
+        },
+        "flag_facts": {
+          "$ref": "#/$defs/FlagFactsPayload"
+        },
+        "index": {
+          "$ref": "#/$defs/DataIndex"
+        },
+        "beat": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SayRow"
+            },
+            {
+              "$ref": "#/$defs/ChoiceRow"
+            },
+            {
+              "$ref": "#/$defs/BranchRow"
+            },
+            {
+              "$ref": "#/$defs/JumpRow"
+            },
+            {
+              "$ref": "#/$defs/MetaRow"
+            },
+            {
+              "$ref": "#/$defs/LoreRow"
+            },
+            {
+              "$ref": "#/$defs/SceneRow"
+            },
+            {
+              "$ref": "#/$defs/BattleRow"
+            },
+            {
+              "$ref": "#/$defs/EndingRow"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "t",
+            "mapping": {
+              "say": "#/$defs/SayRow",
+              "choice": "#/$defs/ChoiceRow",
+              "branch": "#/$defs/BranchRow",
+              "jump": "#/$defs/JumpRow",
+              "meta": "#/$defs/MetaRow",
+              "lore": "#/$defs/LoreRow",
+              "scene": "#/$defs/SceneRow",
+              "battle": "#/$defs/BattleRow",
+              "ending": "#/$defs/EndingRow"
+            }
+          }
+        }
+      },
+      "required": [
+        "graph",
+        "text_head",
+        "text_shard",
+        "word_count",
+        "missions",
+        "checkpoints",
+        "lore",
+        "stats",
+        "entries",
+        "battles",
+        "var_reads",
+        "flag_facts",
+        "index",
+        "beat"
+      ]
+    },
+    "GraphPayload": {
+      "title": "GraphPayload",
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "default": ""
+        },
+        "meta": {
+          "$ref": "#/$defs/GraphMeta"
+        },
+        "chapters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChapterRow"
+          },
+          "default": []
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/NodeRow"
+          },
+          "default": []
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EdgeRow"
+          },
+          "default": []
+        }
+      },
+      "required": []
+    },
+    "GraphMeta": {
+      "title": "GraphMeta",
+      "type": "object",
+      "properties": {
+        "generated": {
+          "type": "string",
+          "default": ""
+        },
+        "game": {
+          "$ref": "#/$defs/GameInfo"
+        },
+        "langs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "defaultLang": {
+          "type": "string",
+          "default": ""
+        },
+        "sourceLang": {
+          "type": "string",
+          "default": ""
+        },
+        "vocab": {
+          "$ref": "#/$defs/VocabPayload"
+        },
+        "calendar": {
+          "$ref": "#/$defs/CalendarInfo"
+        },
+        "counts": {
+          "$ref": "#/$defs/CountsInfo"
+        },
+        "shards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ShardInfo"
+          },
+          "default": []
+        },
+        "shardByNode": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "checkpointShardByKey": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "default": {}
+        },
+        "systemEntries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SystemEntryRow"
+          },
+          "default": []
+        }
+      },
+      "required": []
+    },
+    "GameInfo": {
+      "title": "GameInfo",
+      "type": "object",
+      "properties": {
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "build": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "updated": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": []
+    },
+    "VocabPayload": {
+      "title": "VocabPayload",
+      "type": "object",
+      "properties": {
+        "beatTags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "sayModes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "edgeKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "edgeGroupByKind": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "facetKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "checkKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "valueKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "compareSymbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "groupKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "metaKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "itemKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "chapterKinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "required": []
+    },
+    "CalendarInfo": {
+      "title": "CalendarInfo",
+      "type": "object",
+      "properties": {
+        "roundsPerYear": {
+          "type": "integer",
+          "default": 0
+        },
+        "roundsPerMonth": {
+          "type": "integer",
+          "default": 0
+        }
+      },
+      "required": []
+    },
+    "CountsInfo": {
+      "title": "CountsInfo",
+      "type": "object",
+      "properties": {
+        "scripts": {
+          "type": "integer",
+          "default": 0
+        },
+        "edges": {
+          "type": "integer",
+          "default": 0
+        },
+        "chapters": {
+          "type": "integer",
+          "default": 0
+        },
+        "unresolvedJumps": {
+          "type": "integer",
+          "default": 0
+        }
+      },
+      "required": []
+    },
+    "ShardInfo": {
+      "title": "ShardInfo",
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "default": ""
+        },
+        "nodeCount": {
+          "type": "integer",
+          "default": 0
+        },
+        "bytes": {
+          "type": "integer",
+          "default": 0
+        },
+        "chapterIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "required": []
+    },
+    "SystemEntryRow": {
+      "title": "SystemEntryRow",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "default": ""
+        },
+        "label": {
+          "type": "string",
+          "default": ""
+        },
+        "origin": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": []
+    },
+    "ChapterRow": {
+      "title": "ChapterRow",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "default": ""
+        },
+        "kind": {
+          "type": "string",
+          "default": ""
+        },
+        "color": {
+          "type": "string",
+          "default": ""
+        },
+        "scriptCount": {
+          "type": "integer",
+          "default": 0
+        },
+        "number": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": []
+    },
+    "NodeRow": {
+      "title": "NodeRow",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "default": ""
+        },
+        "chapterIndex": {
+          "type": "integer",
+          "default": 0
+        },
+        "outDegree": {
+          "type": "integer",
+          "default": 0
+        },
+        "inDegree": {
+          "type": "integer",
+          "default": 0
+        },
+        "sayCount": {
+          "type": "integer",
+          "default": 0
+        },
+        "flags": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NodeFlags"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "facets": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Facets"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "missionStates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "missionEnds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "time": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": []
+    },
+    "NodeFlags": {
+      "title": "NodeFlags",
+      "type": "object",
+      "properties": {
+        "isEmpty": {
+          "type": "boolean",
+          "default": false
+        },
+        "isSimplifiedOnly": {
+          "type": "boolean",
+          "default": false
+        },
+        "hasNoOutgoing": {
+          "type": "boolean",
+          "default": false
+        },
+        "hasNoIncoming": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": []
+    },
+    "Facets": {
+      "title": "Facets",
+      "type": "object",
+      "properties": {
+        "speakers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "stats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "relations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "endings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "missions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "optionCount": {
+          "type": "integer",
+          "default": 0
+        },
+        "lockCount": {
+          "type": "integer",
+          "default": 0
+        },
+        "diceCheckCount": {
+          "type": "integer",
+          "default": 0
+        }
+      },
+      "required": []
+    },
+    "EdgeRow": {
+      "title": "EdgeRow",
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "default": 0
+        },
+        "source": {
+          "type": "string",
+          "default": ""
+        },
+        "target": {
+          "type": "string",
+          "default": ""
+        },
+        "kind": {
+          "type": "string",
+          "default": ""
+        },
+        "label": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": []
+    },
+    "TextHeadPayload": {
+      "title": "TextHeadPayload",
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "default": ""
+        },
+        "lang": {
+          "type": "string",
+          "default": ""
+        },
+        "characters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "titles": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "names": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "default": {}
+        },
+        "edgeLabels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        },
+        "missingKeyCount": {
+          "type": "integer",
+          "default": 0
+        },
+        "missingKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "shardKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "required": []
+    },
+    "TextShardPayload": {
+      "title": "TextShardPayload",
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "default": ""
+        },
+        "lang": {
+          "type": "string",
+          "default": ""
+        },
+        "key": {
+          "type": "string",
+          "default": ""
+        },
+        "scripts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SayRow"
+                },
+                {
+                  "$ref": "#/$defs/ChoiceRow"
+                },
+                {
+                  "$ref": "#/$defs/BranchRow"
+                },
+                {
+                  "$ref": "#/$defs/JumpRow"
+                },
+                {
+                  "$ref": "#/$defs/MetaRow"
+                },
+                {
+                  "$ref": "#/$defs/LoreRow"
+                },
+                {
+                  "$ref": "#/$defs/SceneRow"
+                },
+                {
+                  "$ref": "#/$defs/BattleRow"
+                },
+                {
+                  "$ref": "#/$defs/EndingRow"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "t",
+                "mapping": {
+                  "say": "#/$defs/SayRow",
+                  "choice": "#/$defs/ChoiceRow",
+                  "branch": "#/$defs/BranchRow",
+                  "jump": "#/$defs/JumpRow",
+                  "meta": "#/$defs/MetaRow",
+                  "lore": "#/$defs/LoreRow",
+                  "scene": "#/$defs/SceneRow",
+                  "battle": "#/$defs/BattleRow",
+                  "ending": "#/$defs/EndingRow"
+                }
+              }
+            }
+          },
+          "default": {}
+        }
+      },
+      "required": []
+    },
+    "SayRow": {
+      "title": "SayRow",
+      "type": "object",
+      "properties": {
+        "t": {
+          "enum": [
+            "say"
+          ]
+        },
+        "speaker": {
+          "type": "string",
+          "default": ""
+        },
+        "text": {
+          "type": "string",
+          "default": ""
+        },
+        "mode": {
+          "type": "string",
+          "default": ""
+        },
+        "expression": {
+          "type": "string",
+          "default": ""
+        },
+        "offstage": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "t"
+      ]
+    },
+    "ChoiceRow": {
+      "title": "ChoiceRow",
+      "type": "object",
+      "properties": {
+        "t": {
+          "enum": [
+            "choice"
+          ]
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ChoiceOption"
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "t"
+      ]
+    },
+    "ChoiceOption": {
+      "title": "ChoiceOption",
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "default": ""
+        },
+        "requirement": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Requirement"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SayRow"
+              },
+              {
+                "$ref": "#/$defs/ChoiceRow"
+              },
+              {
+                "$ref": "#/$defs/BranchRow"
+              },
+              {
+                "$ref": "#/$defs/JumpRow"
+              },
+              {
+                "$ref": "#/$defs/MetaRow"
+              },
+              {
+                "$ref": "#/$defs/LoreRow"
+              },
+              {
+                "$ref": "#/$defs/SceneRow"
+              },
+              {
+                "$ref": "#/$defs/BattleRow"
+              },
+              {
+                "$ref": "#/$defs/EndingRow"
+              }
+            ],
+            "discriminator": {
+              "propertyName": "t",
+              "mapping": {
+                "say": "#/$defs/SayRow",
+                "choice": "#/$defs/ChoiceRow",
+                "branch": "#/$defs/BranchRow",
+                "jump": "#/$defs/JumpRow",
+                "meta": "#/$defs/MetaRow",
+                "lore": "#/$defs/LoreRow",
+                "scene": "#/$defs/SceneRow",
+                "battle": "#/$defs/BattleRow",
+                "ending": "#/$defs/EndingRow"
+              }
+            }
+          },
+          "default": []
+        },
+        "lock": {
+          "type": "string",
+          "default": ""
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OptionDetail"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ConstCondition"
+                },
+                {
+                  "$ref": "#/$defs/RandomCondition"
+                },
+                {
+                  "$ref": "#/$defs/DiceCondition"
+                },
+                {
+                  "$ref": "#/$defs/VarCondition"
+                },
+                {
+                  "$ref": "#/$defs/CompareCondition"
+                },
+                {
+                  "$ref": "#/$defs/LogicCondition"
+                },
+                {
+                  "$ref": "#/$defs/GroupCondition"
+                },
+                {
+                  "$ref": "#/$defs/CheckCondition"
+                },
+                {
+                  "$ref": "#/$defs/RawCondition"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "tag",
+                "mapping": {
+                  "const": "#/$defs/ConstCondition",
+                  "random": "#/$defs/RandomCondition",
+                  "dice": "#/$defs/DiceCondition",
+                  "var": "#/$defs/VarCondition",
+                  "compare": "#/$defs/CompareCondition",
+                  "logic": "#/$defs/LogicCondition",
+                  "group": "#/$defs/GroupCondition",
+                  "check": "#/$defs/CheckCondition",
+                  "raw": "#/$defs/RawCondition"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": []
+    },
+    "Requirement": {
+      "title": "Requirement",
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "default": ""
+        },
+        "operand": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": []
+    },
+    "BranchRow": {
+      "title": "BranchRow",
+      "type": "object",
+      "properties": {
+        "t": {
+          "enum": [
+            "branch"
+          ]
+        },
+        "check": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CheckRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ConstCondition"
+                },
+                {
+                  "$ref": "#/$defs/RandomCondition"
+                },
+                {
+                  "$ref": "#/$defs/DiceCondition"
+                },
+                {
+                  "$ref": "#/$defs/VarCondition"
+                },
+                {
+                  "$ref": "#/$defs/CompareCondition"
+                },
+                {
+                  "$ref": "#/$defs/LogicCondition"
+                },
+                {
+                  "$ref": "#/$defs/GroupCondition"
+                },
+                {
+                  "$ref": "#/$defs/CheckCondition"
+                },
+                {
+                  "$ref": "#/$defs/RawCondition"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "tag",
+                "mapping": {
+                  "const": "#/$defs/ConstCondition",
+                  "random": "#/$defs/RandomCondition",
+                  "dice": "#/$defs/DiceCondition",
+                  "var": "#/$defs/VarCondition",
+                  "compare": "#/$defs/CompareCondition",
+                  "logic": "#/$defs/LogicCondition",
+                  "group": "#/$defs/GroupCondition",
+                  "check": "#/$defs/CheckCondition",
+                  "raw": "#/$defs/RawCondition"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "source": {
+          "type": "string",
+          "default": ""
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SayRow"
+              },
+              {
+                "$ref": "#/$defs/ChoiceRow"
+              },
+              {
+                "$ref": "#/$defs/BranchRow"
+              },
+              {
+                "$ref": "#/$defs/JumpRow"
+              },
+              {
+                "$ref": "#/$defs/MetaRow"
+              },
+              {
+                "$ref": "#/$defs/LoreRow"
+              },
+              {
+                "$ref": "#/$defs/SceneRow"
+              },
+              {
+                "$ref": "#/$defs/BattleRow"
+              },
+              {
+                "$ref": "#/$defs/EndingRow"
+              }
+            ],
+            "discriminator": {
+              "propertyName": "t",
+              "mapping": {
+                "say": "#/$defs/SayRow",
+                "choice": "#/$defs/ChoiceRow",
+                "branch": "#/$defs/BranchRow",
+                "jump": "#/$defs/JumpRow",
+                "meta": "#/$defs/MetaRow",
+                "lore": "#/$defs/LoreRow",
+                "scene": "#/$defs/SceneRow",
+                "battle": "#/$defs/BattleRow",
+                "ending": "#/$defs/EndingRow"
+              }
+            }
+          },
+          "default": []
+        },
+        "group": {
+          "type": "integer",
+          "default": 0
+        }
+      },
+      "required": [
+        "t"
+      ]
+    },
+    "CheckRef": {
+      "title": "CheckRef",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "default": ""
+        },
+        "key": {
+          "type": "string",
+          "default": ""
+        },
+        "expectedResult": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": []
+    },
+    "ConstCondition": {
+      "title": "ConstCondition",
+      "type": "object",
+      "properties": {
+        "tag": {
+          "enum": [
+            "const"
+          ]
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "tag"
+      ]
+    },
+    "RandomCondition": {
+      "title": "RandomCondition",
+      "type": "object",
+      "properties": {
+        "tag": {
+          "enum": [
+            "random"
+          ]
+        },
+        "min": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "max": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "tag"
+      ]
+    },
+    "DiceCondition": {
+      "title": "DiceCondition",
+      "type": "object",
+      "properties": {
+        "tag": {
+          "enum": [
+            "dice"
+          ]
+        },
+        "negative": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "tag"
+      ]
+    },
+    "VarCondition": {
+      "title": "VarCondition",
+      "type": "object",
+      "properties": {
+        "tag": {
+          "enum": [
+            "var"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "default": ""
+        },
+        "name": {
+          "type": "string",
+          "default": ""
+        },
+        "key": {
+          "type": "string",
+          "default": ""
+        },
+        "id": {
+          "type": "string",
+          "default": ""
+        },
+        "negative": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "tag"
+      ]
+    },
+    "CompareCondition": {
+      "title": "CompareCondition",
+      "type": "object",
+      "properties": {
+        "tag": {
+          "enum": [
+            "compare"
+          ]
+        },
+        "op": {
+          "type": "string",
+          "default": ""
+        },
+        "left": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ConstCondition"
+                },
+                {
+                  "$ref": "#/$defs/RandomCondition"
+                },
+                {
+                  "$ref": "#/$defs/DiceCondition"
+                },
+                {
+                  "$ref": "#/$defs/VarCondition"
+                },
+                {
+                  "$ref": "#/$defs/CompareCondition"
+                },
+                {
+                  "$ref": "#/$defs/LogicCondition"
+                },
+                {
+                  "$ref": "#/$defs/GroupCondition"
+                },
+                {
+                  "$ref": "#/$defs/CheckCondition"
+                },
+                {
+                  "$ref": "#/$defs/RawCondition"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "tag",
+                "mapping": {
+                  "const": "#/$defs/ConstCondition",
+                  "random": "#/$defs/RandomCondition",
+                  "dice": "#/$defs/DiceCondition",
+                  "var": "#/$defs/VarCondition",
+                  "compare": "#/$defs/CompareCondition",
+                  "logic": "#/$defs/LogicCondition",
+                  "group": "#/$defs/GroupCondition",
+                  "check": "#/$defs/CheckCondition",
+                  "raw": "#/$defs/RawCondition"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "right": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ConstCondition"
+                },
+                {
+                  "$ref": "#/$defs/RandomCondition"
+                },
+                {
+                  "$ref": "#/$defs/DiceCondition"
+                },
+                {
+                  "$ref": "#/$defs/VarCondition"
+                },
+                {
+                  "$ref": "#/$defs/CompareCondition"
+                },
+                {
+                  "$ref": "#/$defs/LogicCondition"
+                },
+                {
+                  "$ref": "#/$defs/GroupCondition"
+                },
+                {
+                  "$ref": "#/$defs/CheckCondition"
+                },
+                {
+                  "$ref": "#/$defs/RawCondition"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "tag",
+                "mapping": {
+                  "const": "#/$defs/ConstCondition",
+                  "random": "#/$defs/RandomCondition",
+                  "dice": "#/$defs/DiceCondition",
+                  "var": "#/$defs/VarCondition",
+                  "compare": "#/$defs/CompareCondition",
+                  "logic": "#/$defs/LogicCondition",
+                  "group": "#/$defs/GroupCondition",
+                  "check": "#/$defs/CheckCondition",
+                  "raw": "#/$defs/RawCondition"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "tag"
+      ]
+    },
+    "LogicCondition": {
+      "title": "LogicCondition",
+      "type": "object",
+      "properties": {
+        "tag": {
+          "enum": [
+            "logic"
+          ]
+        },
+        "op": {
+          "type": "string",
+          "default": ""
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ConstCondition"
+              },
+              {
+                "$ref": "#/$defs/RandomCondition"
+              },
+              {
+                "$ref": "#/$defs/DiceCondition"
+              },
+              {
+                "$ref": "#/$defs/VarCondition"
+              },
+              {
+                "$ref": "#/$defs/CompareCondition"
+              },
+              {
+                "$ref": "#/$defs/LogicCondition"
+              },
+              {
+                "$ref": "#/$defs/GroupCondition"
+              },
+              {
+                "$ref": "#/$defs/CheckCondition"
+              },
+              {
+                "$ref": "#/$defs/RawCondition"
+              }
+            ],
+            "discriminator": {
+              "propertyName": "tag",
+              "mapping": {
+                "const": "#/$defs/ConstCondition",
+                "random": "#/$defs/RandomCondition",
+                "dice": "#/$defs/DiceCondition",
+                "var": "#/$defs/VarCondition",
+                "compare": "#/$defs/CompareCondition",
+                "logic": "#/$defs/LogicCondition",
+                "group": "#/$defs/GroupCondition",
+                "check": "#/$defs/CheckCondition",
+                "raw": "#/$defs/RawCondition"
+              }
+            }
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "tag"
+      ]
+    },
+    "GroupCondition": {
+      "title": "GroupCondition",
+      "type": "object",
+      "properties": {
+        "tag": {
+          "enum": [
+            "group"
+          ]
+        },
+        "op": {
+          "type": "string",
+          "default": "sum"
+        },
+        "name": {
+          "type": "string",
+          "default": ""
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ConstCondition"
+              },
+              {
+                "$ref": "#/$defs/RandomCondition"
+              },
+              {
+                "$ref": "#/$defs/DiceCondition"
+              },
+              {
+                "$ref": "#/$defs/VarCondition"
+              },
+              {
+                "$ref": "#/$defs/CompareCondition"
+              },
+              {
+                "$ref": "#/$defs/LogicCondition"
+              },
+              {
+                "$ref": "#/$defs/GroupCondition"
+              },
+              {
+                "$ref": "#/$defs/CheckCondition"
+              },
+              {
+                "$ref": "#/$defs/RawCondition"
+              }
+            ],
+            "discriminator": {
+              "propertyName": "tag",
+              "mapping": {
+                "const": "#/$defs/ConstCondition",
+                "random": "#/$defs/RandomCondition",
+                "dice": "#/$defs/DiceCondition",
+                "var": "#/$defs/VarCondition",
+                "compare": "#/$defs/CompareCondition",
+                "logic": "#/$defs/LogicCondition",
+                "group": "#/$defs/GroupCondition",
+                "check": "#/$defs/CheckCondition",
+                "raw": "#/$defs/RawCondition"
+              }
+            }
+          },
+          "default": []
+        },
+        "negative": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "tag"
+      ]
+    },
+    "CheckCondition": {
+      "title": "CheckCondition",
+      "type": "object",
+      "properties": {
+        "tag": {
+          "enum": [
+            "check"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "default": ""
+        },
+        "key": {
+          "type": "string",
+          "default": ""
+        },
+        "negative": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": [
+        "tag"
+      ]
+    },
+    "RawCondition": {
+      "title": "RawCondition",
+      "type": "object",
+      "properties": {
+        "tag": {
+          "enum": [
+            "raw"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": [
+        "tag"
+      ]
+    },
+    "JumpRow": {
+      "title": "JumpRow",
+      "type": "object",
+      "properties": {
+        "t": {
+          "enum": [
+            "jump"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "default": ""
+        },
+        "dynamic": {
+          "type": "string",
+          "default": ""
+        },
+        "dynamicKind": {
+          "type": "string",
+          "default": ""
+        },
+        "dynamicKey": {
+          "type": "string",
+          "default": ""
+        },
+        "position": {
+          "type": "string",
+          "default": ""
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "required": [
+        "t"
+      ]
+    },
+    "MetaRow": {
+      "title": "MetaRow",
+      "type": "object",
+      "properties": {
+        "t": {
+          "enum": [
+            "meta"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "default": ""
+        },
+        "key": {
+          "type": "string",
+          "default": ""
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "hidden": {
+          "type": "boolean",
+          "default": false
+        },
+        "extra": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": [
+        "t"
+      ]
+    },
+    "LoreRow": {
+      "title": "LoreRow",
+      "type": "object",
+      "properties": {
+        "t": {
+          "enum": [
+            "lore"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": [
+        "t"
+      ]
+    },
+    "SceneRow": {
+      "title": "SceneRow",
+      "type": "object",
+      "properties": {
+        "t": {
+          "enum": [
+            "scene"
+          ]
+        },
+        "scene": {
+          "type": "string",
+          "default": ""
+        },
+        "sceneKey": {
+          "type": "string",
+          "default": ""
+        },
+        "nextScene": {
+          "type": "string",
+          "default": ""
+        },
+        "afterScript": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": [
+        "t"
+      ]
+    },
+    "BattleRow": {
+      "title": "BattleRow",
+      "type": "object",
+      "properties": {
+        "t": {
+          "enum": [
+            "battle"
+          ]
+        },
+        "scene": {
+          "type": "string",
+          "default": ""
+        },
+        "sceneKey": {
+          "type": "string",
+          "default": ""
+        },
+        "nextScene": {
+          "type": "string",
+          "default": ""
+        },
+        "card": {
+          "type": "object",
+          "default": {}
+        },
+        "afterScript": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": [
+        "t"
+      ]
+    },
+    "EndingRow": {
+      "title": "EndingRow",
+      "type": "object",
+      "properties": {
+        "t": {
+          "enum": [
+            "ending"
+          ]
+        },
+        "key": {
+          "type": "string",
+          "default": ""
+        },
+        "title": {
+          "type": "string",
+          "default": ""
+        },
+        "desc": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": [
+        "t"
+      ]
+    },
+    "OptionDetail": {
+      "title": "OptionDetail",
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "default": ""
+        },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RequirementItem"
+          },
+          "default": []
+        }
+      },
+      "required": []
+    },
+    "RequirementItem": {
+      "title": "RequirementItem",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "default": ""
+        },
+        "op": {
+          "type": "string",
+          "default": ""
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": []
+    },
+    "WordCountPayload": {
+      "title": "WordCountPayload",
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "default": ""
+        },
+        "kinds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "langs": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/WordCountLang"
+          },
+          "default": {}
+        }
+      },
+      "required": []
+    },
+    "WordCountLang": {
+      "title": "WordCountLang",
+      "type": "object",
+      "properties": {
+        "chapters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          "default": {}
+        },
+        "scripts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          "default": {}
+        }
+      },
+      "required": []
+    },
+    "MissionDocument": {
+      "title": "MissionDocument",
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "default": ""
+        },
+        "items": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/MissionRecord"
+          },
+          "default": {}
+        }
+      },
+      "required": []
+    },
+    "MissionRecord": {
+      "title": "MissionRecord",
+      "type": "object",
+      "properties": {
+        "desc": {
+          "type": "string",
+          "default": ""
+        },
+        "main": {
+          "type": "boolean",
+          "default": false
+        },
+        "init": {
+          "type": "string",
+          "default": ""
+        },
+        "states": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/MissionState"
+          },
+          "default": {}
+        }
+      },
+      "required": []
+    },
+    "MissionState": {
+      "title": "MissionState",
+      "type": "object",
+      "properties": {
+        "desc": {
+          "type": "string",
+          "default": ""
+        },
+        "active": {
+          "type": "boolean",
+          "default": true
+        },
+        "position": {
+          "type": "integer",
+          "default": 0
+        },
+        "positionCode": {
+          "type": "string",
+          "default": ""
+        },
+        "beforeMain": {
+          "type": "boolean",
+          "default": false
+        },
+        "start": {
+          "type": "string",
+          "default": ""
+        },
+        "next": {
+          "type": "string",
+          "default": ""
+        },
+        "time": {
+          "$ref": "#/$defs/MissionTimeRule"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConditionItem"
+          },
+          "default": []
+        },
+        "startDialogs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MissionDialog"
+          },
+          "default": []
+        },
+        "alertDialogs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MissionDialog"
+          },
+          "default": []
+        },
+        "modifyFlagsTrue": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FlagChange"
+          },
+          "default": []
+        },
+        "modifyFlagsFalse": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FlagChange"
+          },
+          "default": []
+        }
+      },
+      "required": []
+    },
+    "MissionTimeRule": {
+      "title": "MissionTimeRule",
+      "type": "object",
+      "properties": {
+        "check": {
+          "type": "boolean",
+          "default": false
+        },
+        "type": {
+          "type": "integer",
+          "default": 0
+        },
+        "specific": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MissionTime"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "min": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MissionTime"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "max": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MissionTime"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "period": {
+          "type": "integer",
+          "default": 0
+        }
+      },
+      "required": []
+    },
+    "MissionTime": {
+      "title": "MissionTime",
+      "type": "object",
+      "properties": {
+        "year": {
+          "type": "integer",
+          "default": 0
+        },
+        "month": {
+          "type": "integer",
+          "default": 0
+        },
+        "stage": {
+          "type": "integer",
+          "default": 0
+        },
+        "day": {
+          "type": "integer",
+          "default": 0
+        }
+      },
+      "required": []
+    },
+    "ConditionItem": {
+      "title": "ConditionItem",
+      "type": "object",
+      "properties": {
+        "note": {
+          "type": "string",
+          "default": ""
+        },
+        "expr": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ConstCondition"
+                },
+                {
+                  "$ref": "#/$defs/RandomCondition"
+                },
+                {
+                  "$ref": "#/$defs/DiceCondition"
+                },
+                {
+                  "$ref": "#/$defs/VarCondition"
+                },
+                {
+                  "$ref": "#/$defs/CompareCondition"
+                },
+                {
+                  "$ref": "#/$defs/LogicCondition"
+                },
+                {
+                  "$ref": "#/$defs/GroupCondition"
+                },
+                {
+                  "$ref": "#/$defs/CheckCondition"
+                },
+                {
+                  "$ref": "#/$defs/RawCondition"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "tag",
+                "mapping": {
+                  "const": "#/$defs/ConstCondition",
+                  "random": "#/$defs/RandomCondition",
+                  "dice": "#/$defs/DiceCondition",
+                  "var": "#/$defs/VarCondition",
+                  "compare": "#/$defs/CompareCondition",
+                  "logic": "#/$defs/LogicCondition",
+                  "group": "#/$defs/GroupCondition",
+                  "check": "#/$defs/CheckCondition",
+                  "raw": "#/$defs/RawCondition"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": []
+    },
+    "MissionDialog": {
+      "title": "MissionDialog",
+      "type": "object",
+      "properties": {
+        "portrait": {
+          "type": "string",
+          "default": ""
+        },
+        "key": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": []
+    },
+    "FlagChange": {
+      "title": "FlagChange",
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "default": ""
+        },
+        "value": {
+          "type": "integer",
+          "default": 0
+        },
+        "note": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": []
+    },
+    "CheckpointDocument": {
+      "title": "CheckpointDocument",
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "default": ""
+        },
+        "items": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/CheckpointCondition"
+          },
+          "default": {}
+        },
+        "gaps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "default": []
+        }
+      },
+      "required": []
+    },
+    "CheckpointCondition": {
+      "title": "CheckpointCondition",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "default": ""
+        },
+        "note": {
+          "type": "string",
+          "default": ""
+        },
+        "useCount": {
+          "type": "boolean",
+          "default": false
+        },
+        "fallback": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "default": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "prefix": {
+          "type": "string",
+          "default": ""
+        },
+        "branches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Branch"
+          },
+          "default": []
+        },
+        "countItems": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CountItem"
+          },
+          "default": []
+        },
+        "additions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DiceAddition"
+          },
+          "default": []
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PositionCandidate"
+          },
+          "default": []
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CheckpointCondition"
+          },
+          "default": []
+        }
+      },
+      "required": []
+    },
+    "Branch": {
+      "title": "Branch",
+      "type": "object",
+      "properties": {
+        "result": {
+          "type": "integer",
+          "default": 0
+        },
+        "expr": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ConstCondition"
+                },
+                {
+                  "$ref": "#/$defs/RandomCondition"
+                },
+                {
+                  "$ref": "#/$defs/DiceCondition"
+                },
+                {
+                  "$ref": "#/$defs/VarCondition"
+                },
+                {
+                  "$ref": "#/$defs/CompareCondition"
+                },
+                {
+                  "$ref": "#/$defs/LogicCondition"
+                },
+                {
+                  "$ref": "#/$defs/GroupCondition"
+                },
+                {
+                  "$ref": "#/$defs/CheckCondition"
+                },
+                {
+                  "$ref": "#/$defs/RawCondition"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "tag",
+                "mapping": {
+                  "const": "#/$defs/ConstCondition",
+                  "random": "#/$defs/RandomCondition",
+                  "dice": "#/$defs/DiceCondition",
+                  "var": "#/$defs/VarCondition",
+                  "compare": "#/$defs/CompareCondition",
+                  "logic": "#/$defs/LogicCondition",
+                  "group": "#/$defs/GroupCondition",
+                  "check": "#/$defs/CheckCondition",
+                  "raw": "#/$defs/RawCondition"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": []
+    },
+    "CountItem": {
+      "title": "CountItem",
+      "type": "object",
+      "properties": {
+        "op": {
+          "type": "string",
+          "default": ""
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "result": {
+          "type": "integer",
+          "default": 0
+        }
+      },
+      "required": []
+    },
+    "DiceAddition": {
+      "title": "DiceAddition",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "default": ""
+        },
+        "name": {
+          "type": "string",
+          "default": ""
+        },
+        "key": {
+          "type": "string",
+          "default": ""
+        },
+        "id": {
+          "type": "string",
+          "default": ""
+        },
+        "rate": {
+          "type": "number",
+          "default": 1.0
+        },
+        "negative": {
+          "type": "boolean",
+          "default": false
+        },
+        "hide": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "required": []
+    },
+    "PositionCandidate": {
+      "title": "PositionCandidate",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "default": ""
+        },
+        "rate": {
+          "type": "integer",
+          "default": 0
+        },
+        "active": {
+          "type": "boolean",
+          "default": true
+        },
+        "activeCondition": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ConstCondition"
+                },
+                {
+                  "$ref": "#/$defs/RandomCondition"
+                },
+                {
+                  "$ref": "#/$defs/DiceCondition"
+                },
+                {
+                  "$ref": "#/$defs/VarCondition"
+                },
+                {
+                  "$ref": "#/$defs/CompareCondition"
+                },
+                {
+                  "$ref": "#/$defs/LogicCondition"
+                },
+                {
+                  "$ref": "#/$defs/GroupCondition"
+                },
+                {
+                  "$ref": "#/$defs/CheckCondition"
+                },
+                {
+                  "$ref": "#/$defs/RawCondition"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "tag",
+                "mapping": {
+                  "const": "#/$defs/ConstCondition",
+                  "random": "#/$defs/RandomCondition",
+                  "dice": "#/$defs/DiceCondition",
+                  "var": "#/$defs/VarCondition",
+                  "compare": "#/$defs/CompareCondition",
+                  "logic": "#/$defs/LogicCondition",
+                  "group": "#/$defs/GroupCondition",
+                  "check": "#/$defs/CheckCondition",
+                  "raw": "#/$defs/RawCondition"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "activeEmpty": {
+          "type": "boolean",
+          "default": false
+        },
+        "adjustments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PositionAdjustment"
+          },
+          "default": []
+        }
+      },
+      "required": []
+    },
+    "PositionAdjustment": {
+      "title": "PositionAdjustment",
+      "type": "object",
+      "properties": {
+        "rate": {
+          "type": "integer",
+          "default": 0
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ConstCondition"
+                },
+                {
+                  "$ref": "#/$defs/RandomCondition"
+                },
+                {
+                  "$ref": "#/$defs/DiceCondition"
+                },
+                {
+                  "$ref": "#/$defs/VarCondition"
+                },
+                {
+                  "$ref": "#/$defs/CompareCondition"
+                },
+                {
+                  "$ref": "#/$defs/LogicCondition"
+                },
+                {
+                  "$ref": "#/$defs/GroupCondition"
+                },
+                {
+                  "$ref": "#/$defs/CheckCondition"
+                },
+                {
+                  "$ref": "#/$defs/RawCondition"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "tag",
+                "mapping": {
+                  "const": "#/$defs/ConstCondition",
+                  "random": "#/$defs/RandomCondition",
+                  "dice": "#/$defs/DiceCondition",
+                  "var": "#/$defs/VarCondition",
+                  "compare": "#/$defs/CompareCondition",
+                  "logic": "#/$defs/LogicCondition",
+                  "group": "#/$defs/GroupCondition",
+                  "check": "#/$defs/CheckCondition",
+                  "raw": "#/$defs/RawCondition"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": []
+    },
+    "LoreDocument": {
+      "title": "LoreDocument",
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "default": ""
+        },
+        "items": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {}
+        }
+      },
+      "required": []
+    },
+    "StatsDocument": {
+      "title": "StatsDocument",
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "default": ""
+        },
+        "items": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/StatRecord"
+          },
+          "default": {}
+        }
+      },
+      "required": []
+    },
+    "StatRecord": {
+      "title": "StatRecord",
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "integer",
+          "default": 0
+        },
+        "note": {
+          "type": "string",
+          "default": ""
+        }
+      },
+      "required": []
+    },
+    "EntriesDocument": {
+      "title": "EntriesDocument",
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "default": ""
+        },
+        "fingerprint": {
+          "type": "string",
+          "default": ""
+        },
+        "generated": {
+          "type": "string",
+          "default": ""
+        },
+        "positionTargets": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "default": {}
+        },
+        "unresolved": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "stats": {
+          "$ref": "#/$defs/EntryStats"
+        }
+      },
+      "required": []
+    },
+    "EntryStats": {
+      "title": "EntryStats",
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean",
+          "default": false
+        },
+        "reason": {
+          "type": "string",
+          "default": ""
+        },
+        "classes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "default": {}
+        },
+        "positions": {
+          "type": "integer",
+          "default": 0
+        },
+        "positionTargets": {
+          "type": "integer",
+          "default": 0
+        },
+        "positionsUnresolved": {
+          "type": "integer",
+          "default": 0
+        },
+        "warnings": {
+          "type": "integer",
+          "default": 0
+        },
+        "elapsed": {
+          "type": "number",
+          "default": 0.0
+        }
+      },
+      "required": []
+    },
+    "BattleDocument": {
+      "title": "BattleDocument",
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "default": ""
+        },
+        "items": {
+          "type": "object",
+          "default": {}
+        }
+      },
+      "required": []
+    },
+    "VarReadsPayload": {
+      "title": "VarReadsPayload",
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "default": ""
+        },
+        "flag": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "default": {}
+        },
+        "stat": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "default": {}
+        },
+        "rel": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "default": {}
+        }
+      },
+      "required": []
+    },
+    "FlagFactsPayload": {
+      "title": "FlagFactsPayload",
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "default": ""
+        },
+        "flags": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/FlagFacts"
+          },
+          "default": {}
+        }
+      },
+      "required": []
+    },
+    "FlagFacts": {
+      "title": "FlagFacts",
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "negated": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "required": []
+    },
+    "DataIndex": {
+      "title": "DataIndex",
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "default": ""
+        },
+        "generated": {
+          "type": "string",
+          "default": ""
+        },
+        "langs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "defaultLang": {
+          "type": "string",
+          "default": ""
+        },
+        "sourceLang": {
+          "type": "string",
+          "default": ""
+        },
+        "artifacts": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/ArtifactEntry"
+          },
+          "default": {}
+        }
+      },
+      "required": []
+    },
+    "ArtifactEntry": {
+      "title": "ArtifactEntry",
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "default": ""
+        },
+        "schema": {
+          "type": "string",
+          "default": ""
+        },
+        "count": {
+          "type": "integer",
+          "default": 0
+        },
+        "shards": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      },
+      "required": []
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ScriptIndexerData"
+}

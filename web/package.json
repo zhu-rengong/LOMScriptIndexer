@@ -8,7 +8,7 @@
     "framing": "vite --open /framing/",
     "types": "node scripts/types.mjs",
     "prebuild": "node scripts/types.mjs",
-    "build": "node scripts/prune.mjs && vue-tsc --build && vite build",
+    "build": "node scripts/prune.mjs && vite build && vue-tsc --build",
     "typecheck": "vue-tsc --build",
     "lint": "eslint src vite.config.ts",
     "format": "prettier --write .",

@@ -92,6 +92,10 @@ try {
     Invoke-Uv run scriptindexer-build --langs $BuildLangs
     if ($LASTEXITCODE -ne 0) { throw "scriptindexer-build failed (exit code $LASTEXITCODE)" }
 
+    Write-Host "`n== generate web contract ==" -ForegroundColor Cyan
+    Invoke-Uv run scriptindexer-schema
+    if ($LASTEXITCODE -ne 0) { throw "scriptindexer-schema failed (exit code $LASTEXITCODE)" }
+
     Write-Host "`n== build web bundle ==" -ForegroundColor Cyan
     $web = Join-Path $root "web"
     $modules = Join-Path $web "node_modules"
