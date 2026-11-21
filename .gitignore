@@ -34,6 +34,9 @@ __pycache__/
 .venv/
 venv/
 
+# local refactor audit reports, not published
+reports/
+
 # local CodeBuddy plan archive, rule files stay tracked
 .codebuddy/plans/
 
