@@ -328,7 +328,8 @@
   @media (max-width: 767px) {
     .help-panel,
     .stats-panel,
-    .changelog-panel {
+    .changelog-panel,
+    .version-panel {
       top: auto;
       bottom: 0;
       left: 0;
@@ -345,6 +346,10 @@
 
     .changelog-panel {
       max-height: 78vh;
+    }
+
+    .version-panel {
+      max-height: 60vh;
     }
 
     .help-list {

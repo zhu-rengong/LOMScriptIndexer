@@ -1277,7 +1277,8 @@
 
   .help-panel,
   .stats-panel,
-  .changelog-panel {
+  .changelog-panel,
+  .version-panel {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -1297,6 +1298,10 @@
 
   .changelog-panel {
     width: min(560px, calc(100vw - 40px));
+  }
+
+  .version-panel {
+    width: min(420px, calc(100vw - 40px));
   }
 
   .stats-panel {
@@ -1404,6 +1409,35 @@
   .changelog-text {
     color: var(--ink);
     white-space: pre-line;
+  }
+
+  .version-list {
+    display: grid;
+    gap: var(--sp-2);
+    padding: var(--sp-4) var(--sp-5) var(--sp-5);
+  }
+
+  .version-row {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: var(--sp-3);
+    align-items: baseline;
+  }
+
+  .version-row dt {
+    color: var(--ink-2);
+  }
+
+  .version-row dd {
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  .version-row a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
 
   .stats-panel-head {

@@ -23,6 +23,11 @@ const openChangelog = () => {
   popovers.open("changelog", { trigger: byId(UI_IDS.changelogBtn) });
 };
 
+const openVersion = () => {
+  popovers.close("moreMenu");
+  popovers.open("version", { trigger: byId(UI_IDS.moreBtn) });
+};
+
 const runExport = async (): Promise<void> => {
   popovers.close("moreMenu");
   if (exporting.value) return;
@@ -54,6 +59,9 @@ onMounted(() => {
     <button class="menu-item row" type="button" @click="openHelp">{{ t("helpTitle") }}</button>
     <button class="menu-item row" type="button" @click="openChangelog">
       {{ t("changelogTitle") }}
+    </button>
+    <button class="menu-item row" type="button" @click="openVersion">
+      {{ t("versionTitle") }}
     </button>
     <div class="menu-sep"></div>
     <button

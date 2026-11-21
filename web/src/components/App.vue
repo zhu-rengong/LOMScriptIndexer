@@ -61,4 +61,5 @@ onMounted(() => {
   <HelpPanel />
   <StatsPanel />
   <ChangelogPanel />
+  <VersionPanel />
 </template>

@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs";
 import type { ServerResponse } from "node:http";
 import { join, resolve } from "node:path";
@@ -13,9 +14,58 @@ import { parseSettings } from "./src/framing/frames.ts";
 import { STORAGE_KEYS } from "./src/lib/storageKeys.ts";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
-const docs = resolve(root, "..", "docs");
-const previews = resolve(root, "..", "data", "cache", "portrait-previews");
-const settingsFile = resolve(root, "..", "data", "portrait-framing.json");
+const repoRoot = resolve(root, "..");
+const docs = resolve(repoRoot, "docs");
+const previews = resolve(repoRoot, "data", "cache", "portrait-previews");
+const settingsFile = resolve(repoRoot, "data", "portrait-framing.json");
+
+const readJsonVersion = (file: string): string => {
+  try {
+    const parsed = JSON.parse(readFileSync(file, "utf8")) as { version?: unknown };
+    return typeof parsed.version === "string" ? parsed.version : "";
+  } catch {
+    return "";
+  }
+};
+
+const readTomlVersion = (file: string): string => {
+  try {
+    const match = /^version\s*=\s*"([^"]+)"/m.exec(readFileSync(file, "utf8"));
+    return match ? match[1] : "";
+  } catch {
+    return "";
+  }
+};
+
+const git = (args: string[]): string => {
+  try {
+    return execFileSync("git", args, {
+      cwd: repoRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    return "";
+  }
+};
+
+const httpsRemote = (remote: string): string => {
+  const value = remote.trim().replace(/\.git$/, "");
+  if (!value) return "";
+  const scp = /^git@([^:]+):(.+)$/.exec(value);
+  if (scp) return `https://${scp[1]}/${scp[2]}`;
+  const ssh = /^ssh:\/\/(?:[^@/]+@)?([^/]+)\/(.+)$/.exec(value);
+  if (ssh) return `https://${ssh[1]}/${ssh[2]}`;
+  if (/^https?:\/\//.test(value)) return value.replace(/^(\w+:\/\/)[^@/]+@/, "$1");
+  return "";
+};
+
+const webVersion = readJsonVersion(resolve(root, "package.json"));
+const pyVersion = readTomlVersion(resolve(repoRoot, "pyproject.toml"));
+const commitSha = git(["rev-parse", "HEAD"]);
+const commit = commitSha.slice(0, 7);
+const repoUrl = httpsRemote(git(["config", "--get", "remote.origin.url"]));
+const commitUrl = commitSha && repoUrl ? `${repoUrl}/commit/${commitSha}` : "";
 
 const FRAME_LIMIT = 2 * 1024 * 1024;
 
@@ -153,6 +203,12 @@ const storageKeys = (): Plugin => ({
 
 export default defineConfig({
   base: "./",
+  define: {
+    "import.meta.env.VITE_APP_VERSION": JSON.stringify(webVersion),
+    "import.meta.env.VITE_PY_VERSION": JSON.stringify(pyVersion),
+    "import.meta.env.VITE_GIT_COMMIT": JSON.stringify(commit),
+    "import.meta.env.VITE_GIT_COMMIT_URL": JSON.stringify(commitUrl),
+  },
   plugins: [
     vue(),
     VueI18nPlugin({
