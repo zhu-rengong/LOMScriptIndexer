@@ -21,7 +21,6 @@ export const useViewStore = defineStore("view", () => {
   const pickerTarget = ref<FontTarget>({ scope: "slot", id: "dialog" });
   const railOpen = ref(false);
   const inferEnabled = flagStored(keys.infer);
-  const condInferEnabled = flagStored(keys.condInfer);
   const revealOn = ref(false);
   const visibleKinds = ref<ReaderVisibility>({
     dialog: true,
@@ -90,10 +89,6 @@ export const useViewStore = defineStore("view", () => {
     inferEnabled.value = !inferEnabled.value;
   };
 
-  const toggleCondInfer = (): void => {
-    condInferEnabled.value = !condInferEnabled.value;
-  };
-
   const toggleKind = (kind: ReaderVisibleKind): void => {
     visibleKinds.value = { ...visibleKinds.value, [kind]: !visibleKinds.value[kind] };
   };
@@ -112,7 +107,6 @@ export const useViewStore = defineStore("view", () => {
     pickerTarget,
     railOpen,
     inferEnabled,
-    condInferEnabled,
     revealOn,
     visibleKinds,
     filtering,
@@ -127,7 +121,6 @@ export const useViewStore = defineStore("view", () => {
     closeRail,
     toggleRail,
     toggleInfer,
-    toggleCondInfer,
     toggleKind,
     toggleReveal,
     switchLang,

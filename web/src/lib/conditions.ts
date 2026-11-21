@@ -16,11 +16,7 @@ let viewHandle: ReturnType<typeof useViewStore> | null = null;
 
 const view = (): ReturnType<typeof useViewStore> => (viewHandle ??= useViewStore(pinia));
 
-const flagInferOn = (): boolean => view().inferEnabled;
-
-const condInferOn = (): boolean => view().condInferEnabled;
-
-const inferOn = (): boolean => flagInferOn() || condInferOn();
+const inferOn = (): boolean => view().inferEnabled;
 
 export type ConditionPart =
   | { text: string }
@@ -233,7 +229,7 @@ const condTextWith = (node: ConditionNode | null, infer: boolean): string => {
     case "group": {
       const child = singleChild(node);
       if (child) return condTextWith(child, infer);
-      const sumFact = infer && condInferOn() ? sumFactOf(node) : null;
+      const sumFact = infer ? sumFactOf(node) : null;
       if (sumFact) return t(sumFact.label);
       const items = node.items || [];
       const op = node.op || "";
@@ -246,7 +242,7 @@ const condTextWith = (node: ConditionNode | null, infer: boolean): string => {
       );
     }
     case "compare": {
-      if (infer && flagInferOn()) {
+      if (infer) {
         const fact = flagFactOf(node);
         if (fact) return flagFactDisplayText(fact);
       }
@@ -369,7 +365,7 @@ const nodePart = (node: ConditionNode, infer = inferOn()): ConditionPart => {
     case "check":
       return chipPart(node);
     case "group": {
-      if (infer && condInferOn()) {
+      if (infer) {
         const fact = sumFactOf(node);
         if (fact) return sumFactPart(fact, node);
       }
@@ -434,7 +430,7 @@ const operandPart = (
 const inlineNodePart = (input: ConditionNode | null, infer = inferOn()): ConditionPart => {
   if (!input) return span("cx-empty", [textPart(t("lookupCondEmpty"))]);
   if (input.tag === "compare") {
-    if (infer && flagInferOn()) {
+    if (infer) {
       const fact = flagFactOf(input);
       if (fact) return factPart(fact, input);
     }

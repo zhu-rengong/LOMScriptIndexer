@@ -9,7 +9,6 @@ const HELP_GROUPS: { title: string; rows: [string, string][] }[] = [
     title: "helpGroupRead",
     rows: [
       ["B", "hkBookmark"],
-      ["C", "hkCondInfer"],
       ["F", "hkInfer"],
       ["H", "hkReveal"],
       ["V", "hkFold"],

@@ -8,7 +8,6 @@ export type ShortcutHandlers = {
   help: () => void;
   search: () => void;
   infer: () => void;
-  condInfer: () => void;
   reveal: () => void;
   fold: () => void;
 };
@@ -53,7 +52,6 @@ export const useShortcuts = (handlers: ShortcutHandlers): void => {
   bind((event) => event.key === "ArrowLeft", handlers.back);
   bind((event) => event.key === "ArrowRight", handlers.forward);
   bind((event) => letter(event) === "b", handlers.bookmark);
-  bind((event) => letter(event) === "c", handlers.condInfer);
   bind((event) => letter(event) === "f", handlers.infer);
   bind((event) => letter(event) === "h", handlers.reveal, { dedupe: true });
   bind((event) => letter(event) === "v", handlers.fold, { dedupe: true });

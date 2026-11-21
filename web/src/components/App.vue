@@ -31,7 +31,6 @@ useShortcuts({
     input?.focus();
   },
   infer: view.toggleInfer,
-  condInfer: view.toggleCondInfer,
   reveal: view.toggleReveal,
   fold: () => fold.toggle(),
 });
