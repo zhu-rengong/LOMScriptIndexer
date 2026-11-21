@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import workbuddyIcon from "../../assets/workbuddy.png";
 import { langShort, t } from "../../i18n";
 import { popovers } from "../../lib/popover";
 import type { OverlayKey } from "../../ui/ids";
@@ -112,7 +111,7 @@ const toggle = (key: OverlayKey) => {
       aria-label="WorkBuddy"
       :title="t('workbuddyBtnTitle')"
     >
-      <img class="workbuddy-ico" :src="workbuddyIcon" alt="" width="16" height="16" />
+      <AppIcon name="workbuddy" class="workbuddy-ico" />
     </a>
 
     <button
