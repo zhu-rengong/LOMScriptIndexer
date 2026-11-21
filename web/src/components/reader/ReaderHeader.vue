@@ -120,7 +120,7 @@ const toggleBookmark = () => {
               @click="view.toggleInfer"
             >
               <span class="infer-toggle-mark" aria-hidden="true">
-                <AppIcon name="approx" />
+                <AppIcon name="entails" />
               </span>
             </button>
           </span>

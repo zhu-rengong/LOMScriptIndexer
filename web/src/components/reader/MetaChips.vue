@@ -42,7 +42,7 @@ const open = (chip: MetaChip, event: Event) => {
             aria-hidden="true"
           >
             <AppIcon
-              :name="chip.seal === 'infer' ? 'approx' : chip.seal === 'true' ? 'check' : 'close'"
+              :name="chip.seal === 'infer' ? 'entails' : chip.seal === 'true' ? 'check' : 'close'"
             />
           </span>
           {{ chip.text }}
@@ -62,7 +62,7 @@ const open = (chip: MetaChip, event: Event) => {
             aria-hidden="true"
           >
             <AppIcon
-              :name="chip.seal === 'infer' ? 'approx' : chip.seal === 'true' ? 'check' : 'close'"
+              :name="chip.seal === 'infer' ? 'entails' : chip.seal === 'true' ? 'check' : 'close'"
             />
           </span>
           {{ chip.text }}
