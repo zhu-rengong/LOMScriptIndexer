@@ -3,8 +3,8 @@
 本文件是本仓库唯一的规则真源；`.codebuddy/rules/scriptindexer.mdc` 只指回这里。本机专属的绝对路径不写进入库文件，统一手填到被 git 忽略的 `AGENTS.local.md`（模板见 `AGENTS.local.example.md`）；该文件缺失时先向用户询问路径，不凭记忆猜测。
 
 1. **现代 Python**：Python 3.14+ 写法，uv + `pyproject.toml` 管理依赖与入口，不写 `from __future__ import annotations`。
-2. **现代前端**：Vue 3.6 SFC + TypeScript + Vite 8，pnpm 管理；源码 `web/`，产物 `docs/`。
-3. **架构与质量**：状态归 Pinia，API 与组件自动导入，质量以 `pnpm lint` / `pnpm format` / `pnpm build` 通过为准。
+2. **现代前端**：Vue 3.5 SFC + TypeScript + Vite 8，pnpm 管理；源码 `web/`，产物 `docs/`。
+3. **架构与质量**：状态归 Pinia，API 与组件自动导入，质量以 `pnpm lint`（ESLint）/ `pnpm format:check`（Prettier）/ `pnpm build` 通过为准。
 4. **零注释**：不写任何注释与 docstring，改动触及的旧注释一并删除。
 5. **不测试**：不建测试文件、不跑测试、不启动阅读器验证，改完即止。
 6. **不留兼容**：不写 legacy 分支、旧键/旧数据迁移与向前兼容代码。
