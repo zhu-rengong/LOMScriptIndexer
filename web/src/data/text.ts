@@ -2,6 +2,7 @@ import type { TextShardPayload, TextHeadPayload } from "../types/generated";
 import type { BeatRow } from "../types/beats";
 import type { ShardState, TextPack, TextProgress } from "../types/text";
 import { t } from "../i18n";
+import { measure } from "../lib/perf";
 import { pinia } from "../stores";
 import { useUiStore } from "../stores/ui";
 import { convert } from "./convert";
@@ -75,7 +76,7 @@ const hasConverted = (lang: string): boolean => lang !== sourceLang && convert.h
 const ensureConvert = (lang: string): Promise<boolean> => {
   if (lang === sourceLang) return Promise.resolve(true);
   if (convert.hasConverter(lang)) return Promise.resolve(true);
-  return convert.ensureConverter(lang);
+  return measure("t2cn", () => convert.ensureConverter(lang));
 };
 
 const loadHead = (): Promise<boolean> => {
