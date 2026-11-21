@@ -1,15 +1,14 @@
 import * as v from "valibot";
+import { FOLLOW_BASE, FOLLOW_GROUP } from "./fontFamilies";
 import { GROUPS, TYPE_SLOTS } from "./fontTypes";
 import type { CapsMode, PrefEntry, PrefState, ThemeMode } from "../types/font";
 
-export const PREFS_VERSION = 12;
+export const PREFS_VERSION = 13;
 
 const CAPS: CapsMode[] = ["none", "upper", "small"];
 const THEMES: ThemeMode[] = ["light", "dark", "system"];
 const WEIGHTS = [300, 400, 500, 600, 700, 800];
 const DEFAULT_BASE_FONT = "serif";
-const FOLLOW_BASE = "base";
-const FOLLOW_GROUP = "group";
 
 const MEASURE_MIN = 520;
 const MEASURE_MAX = 1400;
