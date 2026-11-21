@@ -18,7 +18,7 @@ from ..game.unity_objects import count_by_reason
 from ..jsonio import read_payload
 from ..languages import DERIVED_LANGS, TEXT_SOURCE_LANG
 from ..manifest import load_manifest
-from ..output import format_bytes, prune, write
+from ..output import format_bytes, prune, stale, write
 from ..paths import LOCALE_DIR, LUA_DIR, MANIFEST_PATH, REPORT_PATH
 from ..schema import (
     ArtifactEntry,
@@ -620,7 +620,10 @@ def _stage_output(context: BuildContext) -> None:
     context.parts.append((name, size))
     kept = artifact_paths([TEXT_SOURCE_LANG], shard_keys, CHECKPOINT_SHARDS)
     kept.update(name for name, _size in context.parts)
-    removed = prune(kept)
+    doomed = stale(kept)
+    if doomed:
+        reporter.info(f"stale artifacts: {', '.join(doomed)}")
+    removed = prune(doomed)
     if removed:
         reporter.info(f"removed {removed} stale artifacts")
     _write_report(context, graph, wordcount)

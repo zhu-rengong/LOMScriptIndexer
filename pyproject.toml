@@ -4,15 +4,15 @@ version = "3.0.0"
 description = "Extract, analyze and browse Legend of Mortal script assets"
 requires-python = ">=3.14"
 dependencies = [
-  "cyclopts>=5.4",
+  "cyclopts>=5.5.2",
   "msgspec>=0.22",
-  "pillow>=12.0",
-  "unitypy>=1.25.2",
-  "typetreegeneratorapi>=0.0.10",
-  "tree-sitter>=0.26.0",
+  "pillow>=13.0",
+  "unitypy>=1.25.4",
+  "typetreegeneratorapi==0.0.10",
+  "tree-sitter>=0.26.1",
   "tree-sitter-lua>=0.5.0",
-  "vdf>=3.4",
-  "regex>=2025.11.3",
+  "vdf==3.4",
+  "regex>=2026.11.19",
 ]
 
 [project.scripts]
@@ -24,8 +24,8 @@ scriptindexer-schema = "scriptindexer.cli.schema:cli"
 
 [dependency-groups]
 dev = [
-  "pyright>=1.1.400",
-  "ruff>=0.14",
+  "pyright>=1.1.414",
+  "ruff>=0.17.6",
 ]
 
 [build-system]

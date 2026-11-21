@@ -54,7 +54,7 @@ class Source(Document):
 
     @property
     def cache(self) -> Path:
-        return CACHE_DIR / f"{self.name}.msgpack.gz"
+        return CACHE_DIR / f"{self.name}.msgpack.zst"
 
     def load(self) -> Any | None:
         try:

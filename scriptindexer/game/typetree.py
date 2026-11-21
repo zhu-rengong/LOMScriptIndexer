@@ -5,10 +5,13 @@ from .layout import GameLayout
 
 try:
     import TypeTreeGeneratorAPI
-except ImportError:
+except ImportError as exc:
     TypeTreeGeneratorAPI = None
-
-GENERATOR_MISSING = "TypeTreeGeneratorAPI is not installed or its .NET runtime is unavailable"
+    GENERATOR_MISSING = f"TypeTreeGeneratorAPI is not installed ({exc})"
+else:
+    GENERATOR_MISSING = (
+        "TypeTreeGeneratorAPI cannot build a type tree generator; check the .NET runtime"
+    )
 
 
 def available() -> bool:

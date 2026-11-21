@@ -1,14 +1,17 @@
-import gzip
 import hashlib
 import os
 import time
-import zlib
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import msgspec
+
+try:
+    from compression import zstd
+except ImportError as exc:
+    raise RuntimeError("compression.zstd is unavailable; Python 3.14 or newer is required") from exc
 
 from . import interpreter
 from .console import Reporter
@@ -49,8 +52,8 @@ class CacheStore:
         except OSError:
             return None
         try:
-            payload = gzip.decompress(raw)
-        except (OSError, EOFError, zlib.error) as exc:
+            payload = zstd.decompress(raw)
+        except (zstd.ZstdError, ValueError) as exc:
             raise CacheCorrupted(f"{self.path.name} is not a readable cache") from exc
         try:
             envelope = msgspec.msgpack.decode(payload, type=CacheEnvelope)
@@ -71,7 +74,7 @@ class CacheStore:
             fingerprint=self.stamp.fingerprint,
             data=msgspec.msgpack.encode(payload),
         )
-        compressed = gzip.compress(msgspec.msgpack.encode(envelope), compresslevel=6, mtime=0)
+        compressed = zstd.compress(msgspec.msgpack.encode(envelope), level=6)
         return write_bytes(self.path, compressed)
 
 
