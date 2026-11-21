@@ -178,8 +178,7 @@ watch(visibleItems, () => {
 watch(activeIndex, async () => {
   await nextTick();
   const row = listRef.value?.querySelectorAll(".picker-item")[activeIndex.value] as
-    | HTMLElement
-    | undefined;
+    HTMLElement | undefined;
   if (row && row.scrollIntoView) row.scrollIntoView({ block: "nearest" });
 });
 

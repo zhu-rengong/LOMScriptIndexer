@@ -84,7 +84,8 @@ watch(
       <span class="did">{{ row.hit.id }}</span>
       <span class="dmeta">{{ row.hit.chapter ? chapterTitle(row.hit.chapter) : "" }}</span>
       <span v-if="row.hit.snippet" class="dtext">
-        {{ row.parts.head }}<mark>{{ row.parts.mark }}</mark>{{ row.parts.tail }}
+        {{ row.parts.head }}<mark>{{ row.parts.mark }}</mark
+        >{{ row.parts.tail }}
       </span>
     </div>
   </div>

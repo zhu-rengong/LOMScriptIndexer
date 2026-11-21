@@ -179,8 +179,7 @@ export class QueryIndex {
 }
 
 export type CompileResult =
-  | { ok: true; ast: QueryNode | null; set: Set<number> | null }
-  | { ok: false; error: QueryError };
+  { ok: true; ast: QueryNode | null; set: Set<number> | null } | { ok: false; error: QueryError };
 
 export const compile = (source: string, index: QueryIndex): CompileResult => {
   const parsed: ParseResult = parse(source);
