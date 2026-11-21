@@ -90,7 +90,7 @@ const chipBlockLines = (chips: { text: string }[], indent: string, prefix = ""):
   const texts = chips.map((chip) => inlineText(chip.text)).filter(Boolean);
   if (!texts.length) return [];
   const head = prefix ? `[${prefix}] ` : "";
-  return [`${indent}- ${head}${texts.join(" ｜ ")}`];
+  return [`${indent}- ${head}${texts.join(" | ")}`];
 };
 
 const optionCondition = (option: OptionView): ConditionNode | null => {
@@ -146,11 +146,11 @@ const battleEventLines = (lines: BattleLine[], indent: string): string[] => {
     if (line.kind === "say") {
       out.push(...sayLines(line.mode, line.speaker, battleText(line.text), indent));
     } else if (line.kind === "jump") {
-      if (line.target) out.push(`${indent}→ ${line.target}`);
+      if (line.target) out.push(`${indent}-> ${line.target}`);
     } else if (line.kind === "scene") {
       if (line.sceneName) out.push(`${indent}[${t("sceneSwitch")}] ${line.sceneName}`);
     } else if (line.kind === "after") {
-      if (line.target) out.push(`${indent}${t("battleAfterStory")}: → ${line.target}`);
+      if (line.target) out.push(`${indent}${t("battleAfterStory")}: -> ${line.target}`);
     } else if (line.text) {
       out.push(`${indent}- ${inlineText(battleText(line.text))}`);
     }
@@ -189,7 +189,7 @@ const battleLines = (battle: BattleView, indent: string): string[] => {
     out.push(...battleEventLines(event.lines, `${indent}    `));
   }
   if (battle.afterScript) {
-    out.push(`${indent}  ${t("battleAfterStory")}: → ${battle.afterScript}`);
+    out.push(`${indent}  ${t("battleAfterStory")}: -> ${battle.afterScript}`);
   } else if (battle.nextScene) {
     out.push(`${indent}  ${t("battleAfter")}: ${sceneText(battle.nextScene)}`);
   }
@@ -216,14 +216,14 @@ const positionLines = (ids: string[], model: CheckpointModel | null, indent: str
   }
   for (const id of ids) {
     const candidate = byId.get(id.toUpperCase()) || null;
-    const parts = [`→ ${id}`];
+    const parts = [`-> ${id}`];
     if (candidate) {
       const rate = candidate.rate ?? 0;
       const share = total > 0 ? Math.round((Math.max(0, rate) / total) * 100) : 0;
       parts.push(t("jumpWeightShare", { n: rate, p: share }));
       if (positionNeverReachable(candidate)) parts.push(t("jumpPositionNever"));
     }
-    out.push(`${indent}${parts.join(" ｜ ")}`);
+    out.push(`${indent}${parts.join(" | ")}`);
     if (!candidate) continue;
     if (candidate.active) {
       if (candidate.activeCondition) {
@@ -273,7 +273,7 @@ const jumpLines = (block: Extract<ReaderBlock, { kind: "jump" }>, indent: string
         ? t("jumpTempCandidates", { slot: jump.dynamicKey, count: targets.length })
         : t("jumpTravelCandidates", { count: targets.length });
     out.push(`${indent}${text}`);
-    for (const id of targets) out.push(`${indent}  → ${id}`);
+    for (const id of targets) out.push(`${indent}  -> ${id}`);
     return out;
   }
   if (dynamicKind === "travel" && !targets.length) {
@@ -283,9 +283,9 @@ const jumpLines = (block: Extract<ReaderBlock, { kind: "jump" }>, indent: string
   const target = jump.target || (targets.length === 1 ? targets[0] : "");
   if (target) {
     const missing = graph.nodeById.has(target) ? "" : t("parenWrap", { text: t("jumpMissing") });
-    out.push(`${indent}→ ${target}${missing}`);
+    out.push(`${indent}-> ${target}${missing}`);
   } else {
-    out.push(`${indent}→ ${jump.dynamicSource || t("jumpDynamic")}`);
+    out.push(`${indent}-> ${jump.dynamicSource || t("jumpDynamic")}`);
   }
   return out;
 };
@@ -297,9 +297,9 @@ const sceneLines = (block: Extract<ReaderBlock, { kind: "scene" }>, indent: stri
   const title = [head, view.sceneKey].filter(Boolean).join(" / ");
   const out = [`${indent}${title || t("sceneSwitch")}`];
   if (view.afterScript) {
-    out.push(`${indent}  ${t("battleAfterStory")}: → ${view.afterScript}`);
+    out.push(`${indent}  ${t("battleAfterStory")}: -> ${view.afterScript}`);
   } else if (view.nextScene) {
-    out.push(`${indent}  → ${sceneText(view.nextScene)}`);
+    out.push(`${indent}  -> ${sceneText(view.nextScene)}`);
   }
   return out;
 };

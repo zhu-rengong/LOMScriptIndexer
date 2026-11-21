@@ -245,7 +245,6 @@
   body[data-layout="mobile"] .empty-state .brush {
     width: 64px;
     height: 64px;
-    --brush-scale: 1.9;
   }
 
   body[data-layout="mobile"] .filter-panel {

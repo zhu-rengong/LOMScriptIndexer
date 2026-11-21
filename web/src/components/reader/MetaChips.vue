@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { t } from "../../i18n";
 import type { MetaChip, MetaSeal } from "../../types/beats";
 import AppIcon from "../ui/AppIcon.vue";
 import { usePanelsStore } from "../../stores/panels";
@@ -44,8 +43,9 @@ const open = (chip: MetaChip, event: Event) => {
             :class="sealClass(chip.seal)"
             aria-hidden="true"
           >
-            <span v-if="chip.seal === 'infer'">{{ t("inferMark") }}</span>
-            <AppIcon v-else :name="chip.seal === 'true' ? 'check' : 'close'" />
+            <AppIcon
+              :name="chip.seal === 'infer' ? 'approx' : chip.seal === 'true' ? 'check' : 'close'"
+            />
           </span>
           {{ chip.text }}
         </button>
@@ -63,8 +63,9 @@ const open = (chip: MetaChip, event: Event) => {
             :class="sealClass(chip.seal)"
             aria-hidden="true"
           >
-            <span v-if="chip.seal === 'infer'">{{ t("inferMark") }}</span>
-            <AppIcon v-else :name="chip.seal === 'true' ? 'check' : 'close'" />
+            <AppIcon
+              :name="chip.seal === 'infer' ? 'approx' : chip.seal === 'true' ? 'check' : 'close'"
+            />
           </span>
           {{ chip.text }}
         </span>

@@ -188,10 +188,7 @@
     font-variant-numeric: var(--rd-fn-display, normal);
   }
 
-  .seal,
-  .infer-toggle-mark,
-  .infer-seal > span,
-  .empty-state .brush {
+  .seal {
     font-family: var(--rd-ff-seal, var(--font-base));
     font-size: calc(var(--rd-fs-seal, 16px) * var(--ts-seal, 1));
     font-weight: var(--rd-fw-seal, 600);
@@ -201,11 +198,6 @@
     text-transform: var(--rd-tt-seal, none);
     font-variant-caps: var(--rd-fc-seal, normal);
     font-variant-numeric: var(--rd-fn-seal, normal);
-  }
-
-  .empty-state .brush {
-    font-size: calc(var(--rd-fs-display, 16px) * var(--brush-scale, 2.5));
-    line-height: 1;
   }
 
   :where(.btn, .btn-link, .tab, .seg-btn, .input, .search-input, .row),

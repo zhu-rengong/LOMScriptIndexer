@@ -24,7 +24,7 @@ export const missionStateLabel = (stateKey: string): string => {
   if (!hit) return name || stateKey;
   const mission = missionLabel(hit.mission);
   if (!name) return mission;
-  return `${mission}${t("missionJoin")}${name}`;
+  return `${mission} / ${name}`;
 };
 
 export const missionLabelTable = (): Record<string, string> => {

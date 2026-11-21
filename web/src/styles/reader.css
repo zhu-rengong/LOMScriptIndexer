@@ -45,6 +45,12 @@
     color: var(--accent);
   }
 
+  .empty-state .brush svg {
+    width: 52%;
+    height: 52%;
+    stroke-width: 1.2;
+  }
+
   .empty-state h3 {
     color: var(--ink);
   }

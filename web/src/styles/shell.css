@@ -843,11 +843,15 @@
     height: 20px;
     border-radius: 1px;
     user-select: none;
-    --ts-seal: 0.875;
-    --tlh-seal: 1;
     transition:
       color var(--t-fast) var(--ease),
       background-color var(--t-fast) var(--ease);
+  }
+
+  .reader-actions .infer-toggle-mark svg {
+    width: 14px;
+    height: 14px;
+    stroke-width: 1.8;
   }
 
   .reader-actions .btn[aria-pressed="true"] .infer-toggle-mark {

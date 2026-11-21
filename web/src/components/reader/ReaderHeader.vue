@@ -110,7 +110,9 @@ const toggleBookmark = () => {
               :aria-label="t('condInferBtnTitle')"
               @click="view.toggleCondInfer"
             >
-              <span class="infer-toggle-mark" aria-hidden="true">析</span>
+              <span class="infer-toggle-mark" aria-hidden="true">
+                <AppIcon name="wand" />
+              </span>
             </button>
           </span>
           <span class="tip-host" :title="t('inferBtnTitle')">
@@ -124,7 +126,9 @@ const toggleBookmark = () => {
               :aria-label="t('inferBtnTitle')"
               @click="view.toggleInfer"
             >
-              <span class="infer-toggle-mark" aria-hidden="true">{{ t("inferMark") }}</span>
+              <span class="infer-toggle-mark" aria-hidden="true">
+                <AppIcon name="approx" />
+              </span>
             </button>
           </span>
           <span class="tip-host" :title="t('revealBtnTitle')">
