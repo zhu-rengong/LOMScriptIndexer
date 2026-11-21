@@ -12,20 +12,51 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Push-Location $root
 $env:PYTHONIOENCODING = "utf-8"
 
-$uvPath = $null
+$uvCommand = @()
 
-function Resolve-UvPath {
+function Resolve-UvCommand {
+    $ErrorActionPreference = "SilentlyContinue"
     $onPath = Get-Command uv -ErrorAction SilentlyContinue
-    if ($onPath -and $onPath.Source) { return $onPath.Source }
-    $basePrefix = & python -c "import sys; print(sys.base_prefix)"
-    if ($LASTEXITCODE -ne 0 -or -not $basePrefix) { return $null }
-    $candidate = Join-Path $basePrefix.Trim() "Scripts\uv.exe"
-    if (Test-Path $candidate) { return $candidate }
-    return $null
+    if ($onPath -and $onPath.Source) { return @($onPath.Source) }
+
+    $interpreters = @()
+    $current = Get-Command python -ErrorAction SilentlyContinue
+    if ($current -and $current.Source) {
+        $interpreters += $current.Source
+        & $current.Source -m uv --version *> $null
+        if ($LASTEXITCODE -eq 0) { return @($current.Source, "-m", "uv") }
+        $basePrefix = & $current.Source -c "import sys; print(sys.base_prefix)"
+        if ($LASTEXITCODE -eq 0 -and $basePrefix) {
+            $interpreters += (Join-Path $basePrefix.Trim() "python.exe")
+        }
+    }
+    if (Get-Command py -ErrorAction SilentlyContinue) {
+        foreach ($line in (py -0p 2>$null)) {
+            if ($line -match '([A-Za-z]:[\\/].*?python\.exe)') { $interpreters += $matches[1] }
+        }
+    }
+    $interpreters = @($interpreters | Where-Object { $_ } | Select-Object -Unique)
+    foreach ($exe in $interpreters) {
+        $candidate = Join-Path (Split-Path -Parent $exe) "Scripts\uv.exe"
+        if (Test-Path $candidate) { return @($candidate) }
+    }
+    foreach ($exe in $interpreters) {
+        & $exe -m uv --version *> $null
+        if ($LASTEXITCODE -eq 0) { return @($exe, "-m", "uv") }
+    }
+    $dirs = @(
+        (Join-Path $env:USERPROFILE ".local\bin"),
+        (Join-Path $env:LOCALAPPDATA "Programs\uv")
+    )
+    foreach ($dir in $dirs) {
+        $candidate = Join-Path $dir "uv.exe"
+        if (Test-Path $candidate) { return @($candidate) }
+    }
+    return @()
 }
 
 function Invoke-Uv {
-    & $uvPath @args
+    & $uvCommand[0] @($uvCommand | Select-Object -Skip 1) @args
 }
 
 try {
@@ -33,9 +64,9 @@ try {
     if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
         throw "python not found on PATH; install Python 3.14+ and add it to PATH"
     }
-    $uvPath = Resolve-UvPath
-    if (-not $uvPath) {
-        throw "uv not found; install it with: python -m pip install uv"
+    $uvCommand = @(Resolve-UvCommand)
+    if (-not $uvCommand.Count) {
+        throw "uv not found; install it with: py -m pip install uv (or see https://docs.astral.sh/uv/getting-started/installation/)"
     }
     if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
         throw "pnpm not found on PATH; run: corepack enable pnpm"
@@ -43,7 +74,8 @@ try {
     if (-not $GameDir) {
         throw "game directory not set; pass -GameDir or set the MORTAL_GAME_DIR environment variable"
     }
-    Write-Host ("uv    {0}" -f (((Invoke-Uv --version) | Select-Object -First 1) -replace "^uv\s+", ""))
+    $uvVersion = ((Invoke-Uv --version) | Select-Object -First 1) -replace "^uv\s+", ""
+    Write-Host ("uv    {0} ({1})" -f $uvVersion, ($uvCommand -join " "))
     Write-Host ("game  {0}" -f $GameDir)
 
     Write-Host "`n== sync python environment ==" -ForegroundColor Cyan
