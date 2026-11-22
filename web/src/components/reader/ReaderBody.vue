@@ -102,6 +102,8 @@ const restoreScroll = () => {
 const scrollHit = (target: HTMLElement) => {
   const element = body.value;
   if (!element) return;
+  restoreSeq++;
+  restoring = false;
   element.style.scrollBehavior = "auto";
   target.scrollIntoView({ block: "center", inline: "nearest" });
   lastScrollTop = element.scrollTop;
