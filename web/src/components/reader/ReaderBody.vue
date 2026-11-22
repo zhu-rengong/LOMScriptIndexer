@@ -88,11 +88,8 @@ const restoreScroll = () => {
 const scrollHit = (target: HTMLElement) => {
   const element = body.value;
   if (!element) return;
-  const bodyRect = element.getBoundingClientRect();
-  const rect = target.getBoundingClientRect();
-  const offset = rect.top - bodyRect.top - Math.max(0, (element.clientHeight - rect.height) / 2);
   element.style.scrollBehavior = "auto";
-  element.scrollTop = Math.max(0, element.scrollTop + offset);
+  target.scrollIntoView({ block: "center", inline: "nearest" });
   requestAnimationFrame(() => {
     element.style.scrollBehavior = "";
   });
