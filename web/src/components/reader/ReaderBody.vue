@@ -23,7 +23,6 @@ const HIT_SELECTOR = [
 ].join(", ");
 
 const SCROLL_DELTA = 6;
-const RESTORE_FRAMES = 16;
 
 const body = ref<HTMLElement | null>(null);
 const reloadTick = ref(0);
@@ -31,8 +30,6 @@ const readingId = ref("");
 const needsScrollRestore = ref(false);
 const scrollMemory = new Map<string, number>();
 let lastScrollTop = 0;
-let restoreSeq = 0;
-let restoring = false;
 
 const node = computed(() => store.selected());
 
@@ -67,43 +64,34 @@ const isFailed = computed(
 
 const hasBeats = computed(() => !!blocks.value && blocks.value.length > 0);
 
+const applyScrollTop = (top: number) => {
+  const element = body.value;
+  if (!element) return;
+  element.style.scrollBehavior = "auto";
+  element.scrollTop = top;
+  lastScrollTop = element.scrollTop;
+  requestAnimationFrame(() => {
+    element.style.scrollBehavior = "";
+  });
+};
+
 const restoreScroll = () => {
   const element = body.value;
   const current = node.value;
   if (!element || !current) return;
   const remembered = scrollMemory.get(current.id);
-  const fraction = store.positionOf(current.id);
-  const seq = ++restoreSeq;
-  restoring = true;
-  element.style.scrollBehavior = "auto";
-  let frames = 0;
-  let lastHeight = -1;
-  let steady = 0;
-  const step = () => {
-    if (seq !== restoreSeq) return;
-    const max = Math.max(0, element.scrollHeight - element.clientHeight);
-    const top = remembered !== undefined ? Math.min(remembered, max) : Math.round(fraction * max);
-    element.scrollTop = top;
-    lastScrollTop = element.scrollTop;
-    const height = element.scrollHeight;
-    steady = height === lastHeight ? steady + 1 : 0;
-    lastHeight = height;
-    frames += 1;
-    if (frames < RESTORE_FRAMES && steady < 2) {
-      requestAnimationFrame(step);
-      return;
-    }
-    restoring = false;
-    element.style.scrollBehavior = "";
-  };
-  step();
+  if (remembered !== undefined) {
+    applyScrollTop(remembered);
+    return;
+  }
+  const position = store.positionOf(current.id);
+  const max = element.scrollHeight - element.clientHeight;
+  applyScrollTop(position > 0 && max > 0 ? position * max : 0);
 };
 
 const scrollHit = (target: HTMLElement) => {
   const element = body.value;
   if (!element) return;
-  restoreSeq++;
-  restoring = false;
   element.style.scrollBehavior = "auto";
   target.scrollIntoView({ block: "center", inline: "nearest" });
   lastScrollTop = element.scrollTop;
@@ -157,8 +145,6 @@ watch(
   () => [store.selectedId, store.lang] as const,
   async ([id]) => {
     const element = body.value;
-    restoreSeq++;
-    restoring = false;
     if (element && readingId.value && readingId.value !== id) {
       scrollMemory.set(readingId.value, element.scrollTop);
       store.rememberPosition(readingId.value, scrollFraction());
@@ -176,7 +162,7 @@ watch(
 );
 
 watch(blocks, async () => {
-  if (!node.value || !blocks.value) return;
+  if (!node.value) return;
   await nextTick();
   if (needsScrollRestore.value) {
     needsScrollRestore.value = false;
@@ -197,7 +183,7 @@ const onScroll = () => {
   const element = body.value;
   const current = node.value;
   if (!element) return;
-  if (current && !restoring) store.rememberPosition(current.id, scrollFraction());
+  if (current) store.rememberPosition(current.id, scrollFraction());
   if (!view.sheetMode) return;
   const top = element.scrollTop;
   const delta = top - lastScrollTop;
