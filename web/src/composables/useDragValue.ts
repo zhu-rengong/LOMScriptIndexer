@@ -6,6 +6,7 @@ type DragState = {
   startY: number;
   startValue: number;
   bounds: { width: number; height: number } | null;
+  capture: Element;
 };
 
 type DragOptions = {
@@ -22,23 +23,27 @@ export const useDragValue = (options: DragOptions) => {
   const start = (event: PointerEvent, startValue = 0): void => {
     if (event.button !== 0) return;
     const element = target.value;
-    if (!element) return;
+    const capture = event.currentTarget instanceof Element ? event.currentTarget : element;
+    if (!element || !capture) return;
     state.value = {
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
       startValue,
       bounds: options.measure(element),
+      capture,
     };
     dragging.value = true;
-    element.setPointerCapture(event.pointerId);
+    capture.setPointerCapture(event.pointerId);
     document.body.classList.add("is-gripping");
   };
 
   const stop = (): void => {
     const current = state.value;
     if (!current) return;
-    target.value?.releasePointerCapture?.(current.pointerId);
+    if (current.capture.hasPointerCapture(current.pointerId)) {
+      current.capture.releasePointerCapture(current.pointerId);
+    }
     state.value = null;
     dragging.value = false;
     document.body.classList.remove("is-gripping");

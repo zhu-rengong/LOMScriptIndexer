@@ -1090,6 +1090,7 @@
 
     #chapterRail {
       position: static;
+      z-index: auto;
       width: auto;
       box-shadow: none;
       transform: none;
