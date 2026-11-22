@@ -20,13 +20,6 @@ export const FIELD_LABEL_KEYS: Record<string, string> = {
   chapter: "fieldChapter",
 };
 
-export const EXAMPLES: { key: string; expr: string }[] = [
-  { key: "exEnding", expr: "ending:*" },
-  { key: "exSpeaker", expr: "speaker:master" },
-  { key: "exChapter", expr: "chapter:ch1" },
-  { key: "exCombo", expr: "speaker:master AND (flag:H00001 OR ending:*)" },
-];
-
 const textOf = (key: string): string => {
   const text = t(key);
   return text === key ? "" : text;

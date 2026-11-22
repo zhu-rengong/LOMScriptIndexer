@@ -3,7 +3,7 @@ import { useDebounceFn } from "@vueuse/core";
 import { graph } from "../../data/graph";
 import { chapterTitle, t } from "../../i18n";
 import { byId, nearBottom } from "../../lib/browser";
-import { applyFilter, EXAMPLES, FIELD_LABEL_KEYS, RESULT_LIMIT } from "../../lib/filter";
+import { applyFilter, FIELD_LABEL_KEYS, RESULT_LIMIT } from "../../lib/filter";
 import { popovers } from "../../lib/popover";
 import { query } from "../../lib/query";
 import type { QuerySuggestion } from "../../types/query";
@@ -153,11 +153,6 @@ const toggle = () => {
 };
 
 const closePanel = () => popovers.close(POPOVER_KEY);
-
-const applyExample = (expr: string) => {
-  exprValue.value = expr;
-  applyFilter(expr);
-};
 
 const onChipInsert = (value: string) => {
   insertAtCursor(value);
@@ -309,22 +304,6 @@ const isPopoverOpen = computed(() => popovers.isOpen(POPOVER_KEY));
           </button>
         </div>
       </div>
-      <div class="filter-section">
-        <p class="filter-label">{{ t("filterExamples") }}</p>
-        <div id="filterExampleChips" class="filter-chips">
-          <button
-            v-for="example in EXAMPLES"
-            :key="example.key"
-            class="filter-chip btn btn-mono"
-            type="button"
-            :data-expr="example.expr"
-            @click="applyExample(example.expr)"
-          >
-            {{ t(example.key) }}
-          </button>
-        </div>
-      </div>
-
       <div
         id="filterResults"
         class="filter-results"
