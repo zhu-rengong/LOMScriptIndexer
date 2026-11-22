@@ -194,20 +194,8 @@
     border-left: 0;
   }
 
-  .tools .btn-icon {
-    width: 40px;
-    height: 40px;
-  }
-
   .search-close {
     flex: none;
-  }
-
-  #statsBtn,
-  #helpBtn,
-  #changelogBtn,
-  .tool-external {
-    display: none;
   }
 
   .workbuddy-ico {
@@ -266,8 +254,6 @@
 
   .rail-close {
     flex: none;
-    width: var(--ctl-sm);
-    height: var(--ctl-sm);
   }
 
   .rail-tabs {
@@ -849,11 +835,6 @@
     width: auto;
   }
 
-  .reader-actions .btn-icon {
-    width: var(--ctl-sm);
-    height: 40px;
-  }
-
   .reader-actions > .reader-action-secondary {
     display: none;
   }
@@ -967,24 +948,6 @@
       border-left: 1px solid var(--line-1);
     }
 
-    .tools .btn-icon {
-      width: var(--ctl-sm);
-      height: var(--ctl-sm);
-    }
-
-    #statsBtn,
-    #helpBtn,
-    #changelogBtn,
-    .tool-external {
-      display: inline-flex;
-    }
-
-    #searchToggle,
-    #searchClose,
-    #readerMoreBtn {
-      display: none;
-    }
-
     #reader {
       justify-self: center;
       width: min(var(--reader-measure), 100%);
@@ -1016,10 +979,6 @@
 
     .reader-actions > .reader-action-secondary {
       display: inline-flex;
-    }
-
-    .reader-actions .btn-icon {
-      height: var(--ctl-sm);
     }
 
     body.chrome-hidden .masthead,

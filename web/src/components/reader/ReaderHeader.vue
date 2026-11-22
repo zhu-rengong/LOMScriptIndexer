@@ -141,7 +141,7 @@ const toggleBookmark = () => {
               <AppIcon name="star" />
             </button>
           </span>
-          <ReaderMoreMenu />
+          <ReaderMoreMenu v-if="view.sheetMode" />
         </div>
       </div>
     </div>

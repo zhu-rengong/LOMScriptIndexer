@@ -36,6 +36,7 @@ const toggleSearch = () => {
 <template>
   <div class="tools">
     <button
+      v-if="view.sheetMode"
       :id="UI_IDS.searchToggle"
       class="btn btn-icon search-toggle"
       :class="{ 'is-on': view.searchOpen }"
@@ -70,6 +71,7 @@ const toggleSearch = () => {
     </div>
 
     <button
+      v-if="!view.sheetMode"
       id="statsBtn"
       class="btn btn-icon"
       :class="{ 'is-on': statsOpen }"
@@ -85,6 +87,7 @@ const toggleSearch = () => {
     </button>
 
     <button
+      v-if="!view.sheetMode"
       id="helpBtn"
       class="btn btn-icon"
       :class="{ 'is-on': helpOpen }"
@@ -100,6 +103,7 @@ const toggleSearch = () => {
     </button>
 
     <button
+      v-if="!view.sheetMode"
       id="changelogBtn"
       class="btn btn-icon"
       :class="{ 'is-on': changelogOpen }"
@@ -115,6 +119,7 @@ const toggleSearch = () => {
     </button>
 
     <a
+      v-if="!view.sheetMode"
       id="githubBtn"
       class="btn btn-icon tool-external"
       href="https://github.com/zhu-rengong/LOMScriptIndexer"
@@ -127,6 +132,7 @@ const toggleSearch = () => {
     </a>
 
     <a
+      v-if="!view.sheetMode"
       id="workbuddyBtn"
       class="btn btn-icon tool-external"
       href="https://wbapp-xx74txuyeotgchq6dlrweb.app.workbuddy.host/?sharecode=BZQLRCGPP5"

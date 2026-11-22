@@ -80,6 +80,7 @@ onClickOutside(wrap, (event) => {
     <FilterPopover />
 
     <button
+      v-if="view.sheetMode"
       :id="UI_IDS.searchClose"
       class="btn btn-icon search-close"
       type="button"
