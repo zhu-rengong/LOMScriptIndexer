@@ -127,6 +127,19 @@ export const useLookupPanel = () => {
     popovers.place(panel, panels.lookupState.trigger, { align: "start", width: 380, fit: true });
   };
 
+  let resizeFrame = 0;
+  let observedHeight = 0;
+  let observer: ResizeObserver | null = null;
+
+  const schedulePlace = () => {
+    if (resizeFrame) return;
+    resizeFrame = requestAnimationFrame(() => {
+      resizeFrame = 0;
+      if (!panels.lookupState.open || panels.lookupState.pinned) return;
+      positionLookup();
+    });
+  };
+
   const loadCheckpoint = async () => {
     checkpoint.value = null;
     if (kind.value !== "check" || !key.value) return;
@@ -166,6 +179,21 @@ export const useLookupPanel = () => {
       placement: { align: "start", width: 380, fit: true },
       onHide: () => panels.hideLookup(),
     });
+    const panel = byId(UI_IDS.lookupPanel);
+    if (!panel) return;
+    observer = new ResizeObserver((entries) => {
+      const height = entries[0]?.contentRect.height ?? 0;
+      const grew = height > observedHeight + 1;
+      observedHeight = height;
+      if (grew) schedulePlace();
+    });
+    observer.observe(panel);
+  });
+
+  onUnmounted(() => {
+    if (observer) observer.disconnect();
+    observer = null;
+    if (resizeFrame) cancelAnimationFrame(resizeFrame);
   });
 
   return {
