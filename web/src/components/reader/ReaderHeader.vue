@@ -60,7 +60,7 @@ const toggleBookmark = () => {
               <AppIcon name="back" />
             </button>
           </span>
-          <span class="tip-host reader-action-secondary" :title="t('forwardTitle')">
+          <span class="tip-host" :title="t('forwardTitle')">
             <button
               id="forwardBtn"
               class="btn btn-icon"
@@ -73,9 +73,9 @@ const toggleBookmark = () => {
               <AppIcon name="forward" />
             </button>
           </span>
-          <DisplayFilterMenu class="reader-action-secondary" />
-          <FoldToggle class="reader-action-secondary" />
-          <span class="tip-host reader-action-secondary" :title="t('inferBtnTitle')">
+          <DisplayFilterMenu />
+          <FoldToggle />
+          <span class="tip-host" :title="t('inferBtnTitle')">
             <button
               id="inferBtn"
               class="btn btn-icon"
@@ -91,7 +91,7 @@ const toggleBookmark = () => {
               </span>
             </button>
           </span>
-          <span class="tip-host reader-action-secondary" :title="t('revealBtnTitle')">
+          <span class="tip-host" :title="t('revealBtnTitle')">
             <button
               id="revealBtn"
               class="btn btn-icon"
@@ -141,7 +141,6 @@ const toggleBookmark = () => {
               <AppIcon name="star" />
             </button>
           </span>
-          <ReaderMoreMenu v-if="view.sheetMode" />
         </div>
       </div>
     </div>

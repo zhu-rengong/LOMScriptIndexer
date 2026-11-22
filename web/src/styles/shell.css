@@ -778,7 +778,7 @@
     left: 0;
     z-index: 2;
     height: var(--reader-head-h);
-    padding: var(--sp-2) var(--sp-4);
+    padding: 6px var(--sp-4);
     overflow: hidden;
     border-bottom: 1px solid var(--line-1);
     background: var(--surface);
@@ -796,15 +796,16 @@
 
   .reader-title-row {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: var(--sp-3);
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 6px;
     height: 100%;
   }
 
   #nodeTitle,
   .node-title {
-    flex: 1;
+    flex: none;
     min-width: 0;
     color: var(--ink);
     white-space: nowrap;
@@ -818,9 +819,9 @@
     flex: none;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: space-between;
     gap: 0;
-    width: auto;
+    width: 100%;
     margin-top: 0;
   }
 
@@ -833,10 +834,6 @@
   .reader-actions .tip-host {
     display: flex;
     width: auto;
-  }
-
-  .reader-actions > .reader-action-secondary {
-    display: none;
   }
 
   .reader-actions #bookmarkBtn[aria-pressed="true"] svg {
@@ -965,20 +962,21 @@
     }
 
     .reader-title-row {
+      flex-direction: row;
+      align-items: center;
       gap: var(--sp-4);
     }
 
     #nodeTitle,
     .node-title {
+      flex: 1;
       --ts-script-title: 0.88;
     }
 
     .reader-actions {
+      width: auto;
+      justify-content: flex-start;
       gap: 2px;
-    }
-
-    .reader-actions > .reader-action-secondary {
-      display: inline-flex;
     }
 
     body.chrome-hidden .masthead,
