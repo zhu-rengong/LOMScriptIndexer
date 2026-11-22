@@ -17,6 +17,8 @@ const open = computed(() => popovers.isOpen("changelog"));
 
 const close = () => popovers.close("changelog");
 
+const view = useViewStore();
+
 onMounted(() => {
   popovers.register("changelog", {
     id: UI_IDS.changelogPanel,
@@ -28,6 +30,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <div class="scrim" :hidden="!open || !view.sheetMode" @click="close"></div>
   <div
     id="changelogPanel"
     class="changelog-panel surface"

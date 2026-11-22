@@ -169,6 +169,7 @@ export const useExprAutocomplete = (
       id: options.domId,
       group: "menu",
       keep: [options.popoverKey],
+      float: true,
       onHide: () => {
         state.value = emptyState();
       },

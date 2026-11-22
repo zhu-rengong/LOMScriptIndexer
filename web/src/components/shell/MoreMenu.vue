@@ -7,6 +7,8 @@ import { UI_IDS } from "../../ui/ids";
 const open = computed(() => popovers.isOpen("moreMenu"));
 const exporting = ref(false);
 
+const view = useViewStore();
+
 const openStats = () => {
   popovers.close("moreMenu");
   popovers.open("stats", { trigger: byId(UI_IDS.statsBtn) });
@@ -63,6 +65,27 @@ onMounted(() => {
     <button class="menu-item row" type="button" @click="openVersion">
       {{ t("versionTitle") }}
     </button>
+    <template v-if="view.sheetMode">
+      <div class="menu-sep"></div>
+      <a
+        class="menu-item row"
+        href="https://github.com/zhu-rengong/LOMScriptIndexer"
+        target="_blank"
+        rel="noopener noreferrer"
+        :title="t('githubBtnTitle')"
+      >
+        GitHub
+      </a>
+      <a
+        class="menu-item row"
+        href="https://wbapp-xx74txuyeotgchq6dlrweb.app.workbuddy.host/?sharecode=BZQLRCGPP5"
+        target="_blank"
+        rel="noopener noreferrer"
+        :title="t('workbuddyBtnTitle')"
+      >
+        WorkBuddy
+      </a>
+    </template>
     <div class="menu-sep"></div>
     <button
       class="menu-item row"

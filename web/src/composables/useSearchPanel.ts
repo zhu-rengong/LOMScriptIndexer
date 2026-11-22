@@ -257,6 +257,7 @@ export const useSearchPanel = () => {
       id: UI_IDS.searchResults,
       triggerId: UI_IDS.search,
       group: "menu",
+      float: true,
       placement: { align: "start", gap: 8, matchWidth: true, fit: true },
       onHide: () => {
         openState.value = false;

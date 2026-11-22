@@ -28,6 +28,8 @@ const open = computed(() => popovers.isOpen("help"));
 
 const close = () => popovers.close("help");
 
+const view = useViewStore();
+
 onMounted(() => {
   popovers.register("help", {
     id: UI_IDS.helpPanel,
@@ -39,6 +41,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <div class="scrim" :hidden="!open || !view.sheetMode" @click="close"></div>
   <div
     id="helpPanel"
     class="help-panel surface"

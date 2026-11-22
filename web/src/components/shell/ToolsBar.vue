@@ -88,7 +88,7 @@ const toggle = (key: OverlayKey) => {
 
     <a
       id="githubBtn"
-      class="btn btn-icon"
+      class="btn btn-icon tool-external"
       href="https://github.com/zhu-rengong/LOMScriptIndexer"
       target="_blank"
       rel="noopener noreferrer"
@@ -100,7 +100,7 @@ const toggle = (key: OverlayKey) => {
 
     <a
       id="workbuddyBtn"
-      class="btn btn-icon"
+      class="btn btn-icon tool-external"
       href="https://wbapp-xx74txuyeotgchq6dlrweb.app.workbuddy.host/?sharecode=BZQLRCGPP5"
       target="_blank"
       rel="noopener noreferrer"

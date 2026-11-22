@@ -60,8 +60,8 @@
 
     --r-sm: 2px;
 
-    --ctl-sm: 30px;
-    --ctl-lg: 42px;
+    --ctl-sm: 36px;
+    --ctl-lg: 46px;
 
     --rd-gap-1: 4px;
     --rd-gap-2: 8px;
@@ -69,7 +69,7 @@
     --rd-gap-4: 28px;
     --rd-inset: 18px;
 
-    --masthead-h: 76px;
+    --masthead-h: 56px;
     --masthead-tools: 312px;
     --rail-w: 340px;
     --reader-measure: 860px;
@@ -139,5 +139,31 @@
     --shadow-control: 0 1px 3px rgba(0, 0, 0, 0.5);
 
     --scrim: rgba(0, 0, 0, 0.62);
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --masthead-h: 64px;
+    }
+  }
+
+  @media (min-width: 768px) and (pointer: fine) {
+    :root {
+      --ctl-sm: 30px;
+      --ctl-lg: 42px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    :root {
+      --rail-w: 288px;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    :root {
+      --masthead-h: 76px;
+      --rail-w: 340px;
+    }
   }
 }

@@ -141,7 +141,7 @@ const revealSelected = async (id: string) => {
   if (!node) return;
   view.setOutlineChapter(node.chapterIndex);
   if (view.railTab !== "outline") return;
-  if (view.isOverlayRail() && !view.railOpen) return;
+  if (view.overlayRail && !view.railOpen) return;
   await nextTick();
   const index = rows.value.findIndex((row) => row.kind === "node" && row.id === id);
   if (index < 0) return;
@@ -155,7 +155,7 @@ const clearQuery = () => {
 
 const pick = (id: string) => {
   if (!store.select(id, { history: true })) return;
-  if (view.isOverlayRail()) view.closeRail();
+  if (view.overlayRail) view.closeRail();
 };
 
 const removeBookmark = (id: string) => {

@@ -185,6 +185,7 @@ onMounted(() => {
     id: "fontPicker",
     group: "menu",
     keep: ["settings"],
+    float: true,
     placement: { align: "start", gap: 6, width: 300, fit: true },
     onOpen: () => {
       void ensureSystemFonts();

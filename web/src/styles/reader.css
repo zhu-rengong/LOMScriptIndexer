@@ -13,7 +13,7 @@
     min-height: 0;
     min-width: 0;
     overflow-y: auto;
-    padding: var(--sp-7) var(--sp-8) var(--sp-8);
+    padding: var(--sp-5) var(--sp-4) calc(56px + env(safe-area-inset-bottom));
     scroll-behavior: smooth;
   }
 
@@ -45,8 +45,8 @@
   .empty-state .brush {
     display: grid;
     place-items: center;
-    width: 84px;
-    height: 84px;
+    width: 64px;
+    height: 64px;
     margin-bottom: var(--sp-3);
     border: 1px solid var(--accent);
     border-radius: var(--r-sm);
@@ -62,6 +62,7 @@
 
   .empty-state h3 {
     color: var(--ink);
+    --ts-title: 0.79;
   }
 
   .empty-state p {
@@ -83,7 +84,7 @@
   .say.has-portrait {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
+    gap: 8px;
   }
 
   .say-body {
@@ -143,16 +144,17 @@
     border-radius: var(--r-sm);
   }
 
-  @media (max-width: 600px) {
+  @media (min-width: 600px) {
     .say.has-portrait {
-      gap: 8px;
+      gap: 10px;
     }
   }
 
   .say .who {
     display: block;
     width: fit-content;
-    margin-bottom: 5px;
+    margin-bottom: 1px;
+    padding: 4px 0;
     color: var(--accent-strong);
     cursor: pointer;
     transition:
@@ -173,7 +175,7 @@
   }
 
   .say.narration {
-    width: 85%;
+    width: 100%;
     max-width: none;
     margin: 0 auto var(--rd-gap-3);
   }
@@ -450,6 +452,7 @@
     display: flex;
     align-items: center;
     gap: var(--sp-2);
+    min-height: 40px;
     padding: 6px 0;
     color: var(--ink-2);
     user-select: none;
@@ -555,7 +558,7 @@
     width: 22px;
     height: 22px;
     padding: 0;
-    opacity: 0;
+    opacity: 0.7;
     transition:
       opacity var(--t-fast) var(--ease),
       color var(--t-fast) var(--ease),
@@ -1374,5 +1377,51 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  @media (min-width: 768px) {
+    .reader-body {
+      padding: var(--sp-6) 40px 72px;
+    }
+
+    .empty-state .brush {
+      width: 84px;
+      height: 84px;
+    }
+
+    .empty-state h3 {
+      --ts-title: 1;
+    }
+
+    .say.narration {
+      width: 85%;
+    }
+  }
+
+  @media (min-width: 768px) and (pointer: fine) {
+    .say .who {
+      margin-bottom: 5px;
+      padding: 0;
+    }
+
+    .branch-head {
+      min-height: 0;
+    }
+
+    .cond-lookup {
+      opacity: 0;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .reader-body {
+      padding: var(--sp-6) var(--sp-6) var(--sp-7);
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .reader-body {
+      padding: var(--sp-7) var(--sp-8) var(--sp-8);
+    }
   }
 }

@@ -329,13 +329,20 @@
   }
 
   .menu {
-    position: absolute;
-    top: calc(100% + 6px);
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
     right: 0;
-    min-width: 200px;
-    max-width: calc(100vw - 24px);
-    padding: var(--sp-1);
-    animation: pop-in var(--t-base) var(--ease);
+    min-width: 0;
+    max-width: none;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: var(--sp-1) var(--sp-1) calc(var(--sp-1) + env(safe-area-inset-bottom));
+    border-radius: var(--r-sm) var(--r-sm) 0 0;
+    border-bottom: 0;
+    z-index: var(--z-drawer);
+    animation: sheet-in var(--t-slow) var(--ease);
   }
 
   .menu-item {
@@ -343,7 +350,7 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--sp-2);
-    min-height: 32px;
+    min-height: 40px;
     padding: 0 var(--sp-2);
     border-radius: var(--r-sm);
   }
@@ -384,7 +391,7 @@
   }
 
   .menu-list {
-    max-height: 300px;
+    max-height: none;
     overflow-y: auto;
     padding-bottom: var(--sp-1);
   }
@@ -408,6 +415,7 @@
     display: flex;
     align-items: center;
     gap: var(--sp-2);
+    min-height: 40px;
     padding: 0 var(--sp-2);
   }
 
@@ -538,5 +546,37 @@
   .menu-item:focus-visible,
   .drop-item:focus-visible {
     outline-offset: -2px;
+  }
+
+  @media (min-width: 768px) {
+    .menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      bottom: auto;
+      left: auto;
+      right: 0;
+      min-width: 200px;
+      max-width: calc(100vw - 24px);
+      max-height: none;
+      overflow-y: visible;
+      padding: var(--sp-1);
+      border-radius: var(--r-sm);
+      border-bottom: 1px solid var(--line-1);
+      animation: pop-in var(--t-base) var(--ease);
+    }
+
+    .menu-list {
+      max-height: 300px;
+    }
+  }
+
+  @media (min-width: 768px) and (pointer: fine) {
+    .menu-item {
+      min-height: 32px;
+    }
+
+    .nav-item {
+      min-height: 0;
+    }
   }
 }

@@ -15,9 +15,8 @@ export const createGripController = (
   const availableWidth = (): number => {
     const stage = stageRef.value;
     if (!stage) return 0;
-    const overlayRail = view.layout === "compact" || view.layout === "mobile";
     const railWidth =
-      !overlayRail && railRef.value ? railRef.value.getBoundingClientRect().width : 0;
+      !view.overlayRail && railRef.value ? railRef.value.getBoundingClientRect().width : 0;
     return Math.max(0, stage.clientWidth - railWidth);
   };
 

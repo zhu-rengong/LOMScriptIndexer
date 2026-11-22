@@ -1,6 +1,6 @@
 import { computePosition, flip, offset, shift, size } from "@floating-ui/dom";
 import type { Middleware, Placement as FloatingPlacement, VirtualElement } from "@floating-ui/dom";
-import { onClickOutside, useEventListener } from "@vueuse/core";
+import { onClickOutside, useEventListener, useMediaQuery } from "@vueuse/core";
 import { useFocusTrap } from "@vueuse/integrations/useFocusTrap";
 import type { OverlayKey } from "../ui/ids";
 import { byId } from "./browser";
@@ -9,6 +9,8 @@ const MARGIN = 12;
 const GAP = 8;
 const TRAP_GROUPS: Record<string, boolean> = { sheet: true, modal: true };
 const AUTO_CLOSE_GROUPS: Record<string, boolean> = { menu: true, pop: true };
+
+const sheetMode = useMediaQuery("(max-width: 767px)");
 
 export type Placement = {
   align?: "start" | "center" | "end";
@@ -27,6 +29,7 @@ export type PopoverDef = {
   keep?: OverlayKey[];
   autofocus?: string;
   placement?: Placement;
+  float?: boolean;
   onOpen?: () => void;
   onHide?: () => void;
 };
@@ -214,6 +217,17 @@ export class PopoverHost {
 
   place(panel: HTMLElement | null, trigger: HTMLElement | null, options?: Placement): void {
     if (!panel) return;
+    const def = this.defOfPanel(panel);
+    if (sheetMode.value && !def?.float) {
+      panel.style.position = "";
+      panel.style.left = "";
+      panel.style.top = "";
+      panel.style.width = "";
+      panel.style.maxHeight = "";
+      panel.style.margin = "";
+      panel.classList.remove("is-overlay");
+      return;
+    }
     const opts = options || {};
     const margin = opts.margin == null ? MARGIN : opts.margin;
     const gap = opts.gap == null ? GAP : opts.gap;
@@ -234,6 +248,13 @@ export class PopoverHost {
       panel.style.left = `${Math.round(result.x)}px`;
       panel.style.top = `${Math.round(result.y)}px`;
     });
+  }
+
+  private defOfPanel(panel: HTMLElement): PopoverDef | undefined {
+    for (const def of this.defs.values()) {
+      if (def.id === panel.id) return def;
+    }
+    return undefined;
   }
 
   private anchorOf(def: PopoverDef, explicit?: HTMLElement | null): HTMLElement | null {

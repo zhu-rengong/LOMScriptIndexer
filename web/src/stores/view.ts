@@ -1,3 +1,4 @@
+import { useMediaQuery } from "@vueuse/core";
 import { byId } from "../lib/browser";
 import { popovers } from "../lib/popover";
 import { keys, storedRef } from "../lib/storage";
@@ -14,7 +15,8 @@ const flagStored = (key: string) =>
   });
 
 export const useViewStore = defineStore("view", () => {
-  const layout = ref("wide");
+  const sheetMode = useMediaQuery("(max-width: 767px)");
+  const overlayRail = useMediaQuery("(max-width: 1023px)");
   const railTab = ref("outline");
   const outlineChapter = ref<number | undefined>(undefined);
   const fontTarget = ref<FontTarget>({ scope: "slot", id: "dialog" });
@@ -36,13 +38,6 @@ export const useViewStore = defineStore("view", () => {
       !visibleKinds.value.narration ||
       !visibleKinds.value.lore,
   );
-
-  const isOverlayRail = (): boolean => layout.value === "compact" || layout.value === "mobile";
-
-  const setLayout = (next: string): void => {
-    if (!next || next === layout.value) return;
-    layout.value = next;
-  };
 
   const setRailTab = (tab: string): void => {
     if (tab === railTab.value) return;
@@ -70,7 +65,7 @@ export const useViewStore = defineStore("view", () => {
   };
 
   const openRail = (): void => {
-    if (!isOverlayRail()) return;
+    if (!overlayRail.value) return;
     railOpen.value = true;
     popovers.open(CHAPTER_RAIL, { trigger: byId(UI_IDS.railToggle) });
   };
@@ -100,7 +95,8 @@ export const useViewStore = defineStore("view", () => {
   const switchLang = (id: string): Promise<void> => useLanguageStore(pinia).switchTo(id);
 
   return {
-    layout,
+    sheetMode,
+    overlayRail,
     railTab,
     outlineChapter,
     fontTarget,
@@ -110,8 +106,6 @@ export const useViewStore = defineStore("view", () => {
     revealOn,
     visibleKinds,
     filtering,
-    isOverlayRail,
-    setLayout,
     setRailTab,
     setOutlineChapter,
     setFontTarget,

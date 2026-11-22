@@ -20,7 +20,6 @@ const LOOKUP_TITLE_KEYS: Record<string, string> = {
 
 export const useLookupPanel = () => {
   const store = useScriptStore();
-  const view = useViewStore();
   const panels = usePanelsStore();
 
   const checkpoint = ref<CheckpointModel | null>(null);
@@ -125,12 +124,6 @@ export const useLookupPanel = () => {
   const positionLookup = () => {
     const panel = byId(UI_IDS.lookupPanel);
     if (!panel || !panels.lookupState.trigger) return;
-    if (view.layout === "mobile") {
-      panel.style.left = "";
-      panel.style.top = "";
-      panel.style.position = "";
-      return;
-    }
     popovers.place(panel, panels.lookupState.trigger, { align: "start", width: 380, fit: true });
   };
 

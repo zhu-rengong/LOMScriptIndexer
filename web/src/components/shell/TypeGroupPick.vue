@@ -60,6 +60,7 @@ onMounted(() => {
     triggerId: UI_IDS.typeGroupTrigger,
     group: "menu",
     keep: ["settings"],
+    float: true,
     placement: { align: "start", gap: 6, matchWidth: true },
   });
 });
