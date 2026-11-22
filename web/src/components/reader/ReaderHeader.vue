@@ -43,7 +43,12 @@ const toggleBookmark = () => {
   <header class="reader-head">
     <div class="reader-title">
       <div class="reader-title-row">
-        <h2 id="nodeTitle" class="node-title" :title="selectedScript ? selectedScript.id : ''">
+        <h2
+          v-if="!view.sheetMode"
+          id="nodeTitle"
+          class="node-title"
+          :title="selectedScript ? selectedScript.id : ''"
+        >
           {{ selectedScript ? selectedScript.id : t("readerEmptyTitle") }}
         </h2>
         <div class="reader-actions">

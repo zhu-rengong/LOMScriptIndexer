@@ -805,7 +805,7 @@
 
   #nodeTitle,
   .node-title {
-    flex: none;
+    flex: 1;
     min-width: 0;
     color: var(--ink);
     white-space: nowrap;
@@ -969,7 +969,6 @@
 
     #nodeTitle,
     .node-title {
-      flex: 1;
       --ts-script-title: 0.88;
     }
 

@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 
+const store = useScriptStore();
 const view = useViewStore();
+
+const scriptTitle = computed(() => store.selected()?.id || "");
 </script>
 
 <template>
@@ -20,6 +23,10 @@ const view = useViewStore();
     >
       <AppIcon name="panel" />
     </button>
+
+    <h1 v-if="view.sheetMode" class="node-title" :title="scriptTitle">
+      {{ scriptTitle || t("readerEmptyTitle") }}
+    </h1>
 
     <BrandMark v-if="!view.sheetMode" />
 
