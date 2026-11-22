@@ -24,11 +24,13 @@ const HIT_SELECTOR = [
 
 const SCROLL_DELTA = 6;
 
+type ScrollAnchor = { index: number; offset: number };
+
 const body = ref<HTMLElement | null>(null);
 const reloadTick = ref(0);
 const readingId = ref("");
 const needsScrollRestore = ref(false);
-const scrollMemory = new Map<string, number>();
+const scrollMemory = new Map<string, ScrollAnchor>();
 let lastScrollTop = 0;
 
 const node = computed(() => store.selected());
@@ -75,18 +77,40 @@ const applyScrollTop = (top: number) => {
   });
 };
 
+const anchorOf = (element: HTMLElement): ScrollAnchor => {
+  const base = element.getBoundingClientRect().top;
+  const children = element.children;
+  let index = Math.max(0, children.length - 1);
+  let offset = 0;
+  for (let i = 0; i < children.length; i++) {
+    const rect = (children[i] as HTMLElement).getBoundingClientRect();
+    if (rect.bottom <= base) continue;
+    index = i;
+    offset = Math.round(base - rect.top);
+    break;
+  }
+  return { index, offset };
+};
+
 const restoreScroll = () => {
   const element = body.value;
   const current = node.value;
   if (!element || !current) return;
-  const remembered = scrollMemory.get(current.id);
-  if (remembered !== undefined) {
-    applyScrollTop(remembered);
+  const anchor = scrollMemory.get(current.id);
+  const target = anchor ? element.children[anchor.index] : undefined;
+  if (anchor && target instanceof HTMLElement) {
+    element.style.scrollBehavior = "auto";
+    target.scrollIntoView({ block: "start", inline: "nearest" });
+    if (anchor.offset) element.scrollTop += anchor.offset;
+    lastScrollTop = element.scrollTop;
+    requestAnimationFrame(() => {
+      element.style.scrollBehavior = "";
+    });
     return;
   }
   const position = store.positionOf(current.id);
   const max = element.scrollHeight - element.clientHeight;
-  applyScrollTop(position > 0 && max > 0 ? position * max : 0);
+  applyScrollTop(position > 0 && max > 0 ? Math.round(position * max) : 0);
 };
 
 const scrollHit = (target: HTMLElement) => {
@@ -146,7 +170,7 @@ watch(
   async ([id]) => {
     const element = body.value;
     if (element && readingId.value && readingId.value !== id) {
-      scrollMemory.set(readingId.value, element.scrollTop);
+      scrollMemory.set(readingId.value, anchorOf(element));
       store.rememberPosition(readingId.value, scrollFraction());
     }
     readingId.value = id;
