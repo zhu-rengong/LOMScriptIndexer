@@ -69,7 +69,8 @@
     --rd-gap-4: 28px;
     --rd-inset: 18px;
 
-    --masthead-h: 56px;
+    --masthead-h: calc(57px + env(safe-area-inset-top));
+    --reader-head-h: 57px;
     --masthead-tools: 312px;
     --rail-w: 340px;
     --reader-measure: 860px;

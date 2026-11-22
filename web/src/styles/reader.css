@@ -3,6 +3,10 @@
     --frame-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%206%206'%3E%3Crect%20x='1'%20y='1'%20width='4'%20height='4'%20fill='none'%20stroke='%23000'%20stroke-width='2'/%3E%3C/svg%3E");
   }
 
+  #reader:not(.is-open) {
+    --reader-head-h: 0px;
+  }
+
   #reader:not(.is-open) .reader-head,
   #reader:not(.is-open) .reader-grip {
     display: none;
@@ -13,7 +17,10 @@
     min-height: 0;
     min-width: 0;
     overflow-y: auto;
-    padding: var(--sp-5) var(--sp-4) calc(56px + env(safe-area-inset-bottom));
+    padding: calc(
+        (var(--masthead-h) + var(--reader-head-h) + var(--sp-4)) * var(--reader-zoom-inv, 1)
+      )
+      var(--sp-4) calc(56px + env(safe-area-inset-bottom));
     scroll-behavior: smooth;
     zoom: var(--reader-zoom, 1);
   }

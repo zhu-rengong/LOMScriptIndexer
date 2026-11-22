@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { langShort, t } from "../../i18n";
+import { byId } from "../../lib/browser";
 import { popovers } from "../../lib/popover";
+import { UI_IDS } from "../../ui/ids";
 import type { OverlayKey } from "../../ui/ids";
 
 const store = useScriptStore();
+const view = useViewStore();
 
 const langOpen = computed(() => popovers.isOpen("langMenu"));
 const moreOpen = computed(() => popovers.isOpen("moreMenu"));
@@ -18,10 +21,35 @@ const toggle = (key: OverlayKey) => {
   if (popovers.isOpen(key)) popovers.close(key);
   else popovers.open(key);
 };
+
+const toggleSearch = () => {
+  if (view.searchOpen) {
+    popovers.close("searchResults");
+    view.collapseSearch();
+    return;
+  }
+  view.openSearch();
+  void nextTick(() => byId(UI_IDS.search)?.focus());
+};
 </script>
 
 <template>
   <div class="tools">
+    <button
+      :id="UI_IDS.searchToggle"
+      class="btn btn-icon search-toggle"
+      :class="{ 'is-on': view.searchOpen }"
+      type="button"
+      aria-haspopup="dialog"
+      :aria-expanded="view.searchOpen"
+      :aria-controls="UI_IDS.search"
+      :title="t('searchTitle')"
+      :aria-label="t('searchTitle')"
+      @click="toggleSearch"
+    >
+      <AppIcon name="search" />
+    </button>
+
     <div class="menu-wrap">
       <button
         id="langBtn"

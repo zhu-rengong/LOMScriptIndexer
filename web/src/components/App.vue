@@ -27,8 +27,8 @@ useShortcuts({
   },
   help: () => popovers.toggle("help", byId(UI_IDS.helpBtn)),
   search: () => {
-    const input = byId(UI_IDS.search) as HTMLInputElement | null;
-    input?.focus();
+    view.openSearch();
+    void nextTick(() => (byId(UI_IDS.search) as HTMLInputElement | null)?.focus());
   },
   infer: view.toggleInfer,
   reveal: view.toggleReveal,

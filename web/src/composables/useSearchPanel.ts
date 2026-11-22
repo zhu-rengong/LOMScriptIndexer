@@ -11,6 +11,7 @@ export const useSearchPanel = () => {
   const panels = usePanelsStore();
   const ui = useUiStore();
   const search = useSearchStore();
+  const view = useViewStore();
 
   const query = ref("");
   const hits = ref<SearchHit[]>([]);
@@ -196,6 +197,7 @@ export const useSearchPanel = () => {
     const hit = hits.value[Math.min(index, hits.value.length - 1)] ?? hits.value[0];
     if (!hit) return false;
     hide();
+    view.collapseSearch();
     panels.focusText(hit.id, hit.anchor, hit.target);
     store.select(hit.id, { history: true });
     return true;
@@ -203,6 +205,7 @@ export const useSearchPanel = () => {
 
   const pick = (hit: SearchHit): void => {
     hide();
+    view.collapseSearch();
     panels.focusText(hit.id, hit.anchor, hit.target);
     store.select(hit.id, { history: true });
   };
@@ -210,6 +213,7 @@ export const useSearchPanel = () => {
   const onKeydown = (event: KeyboardEvent): void => {
     if (event.key === "Escape") {
       hide();
+      view.collapseSearch();
       (document.getElementById(UI_IDS.search) as HTMLInputElement | null)?.blur();
       return;
     }
@@ -280,5 +284,6 @@ export const useSearchPanel = () => {
     pick,
     appendMore,
     clearFilter,
+    hide,
   };
 };

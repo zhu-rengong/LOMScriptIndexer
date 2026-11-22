@@ -1,16 +1,22 @@
 @layer shell {
   .masthead {
-    position: relative;
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
     z-index: var(--z-float);
-    flex: none;
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     gap: var(--sp-2);
-    min-height: 56px;
+    height: var(--masthead-h);
     padding: calc(var(--sp-2) + env(safe-area-inset-top)) var(--sp-3) var(--sp-2);
     background: var(--surface);
     border-bottom: 1px solid var(--line-1);
+    transition: transform var(--t-slow) var(--ease);
+  }
+
+  body.chrome-hidden .masthead {
+    transform: translateY(-100%);
   }
 
   .brand {
@@ -67,15 +73,23 @@
   }
 
   .searchwrap {
-    position: relative;
-    order: 3;
-    flex: 1 1 100%;
-    max-width: none;
-    margin: 0;
-    display: flex;
+    position: fixed;
+    top: var(--masthead-h);
+    right: 0;
+    left: 0;
+    z-index: var(--z-pop);
+    display: none;
     align-items: center;
     gap: var(--sp-2);
     min-width: 0;
+    padding: var(--sp-2) var(--sp-3);
+    background: var(--surface);
+    border-bottom: 1px solid var(--line-1);
+    box-shadow: var(--shadow-float);
+  }
+
+  body.search-open .searchwrap {
+    display: flex;
   }
 
   .search-field {
@@ -186,6 +200,10 @@
   .tools .btn-icon {
     width: 40px;
     height: 40px;
+  }
+
+  .search-close {
+    flex: none;
   }
 
   #statsBtn,
@@ -781,14 +799,26 @@
   }
 
   .reader-head {
-    flex: none;
-    padding: var(--sp-4) var(--sp-4) var(--sp-3);
+    position: absolute;
+    top: var(--masthead-h);
+    right: 0;
+    left: 0;
+    z-index: 2;
+    height: var(--reader-head-h);
+    padding: var(--sp-2) var(--sp-4);
+    overflow: hidden;
     border-bottom: 1px solid var(--line-1);
-    background: transparent;
+    background: var(--surface);
+    transition: transform var(--t-slow) var(--ease);
+  }
+
+  body.chrome-hidden .reader-head {
+    transform: translateY(calc(-100% - var(--masthead-h)));
   }
 
   .reader-title {
     display: block;
+    height: 100%;
   }
 
   .crumb {
@@ -797,7 +827,7 @@
     flex-wrap: nowrap;
     align-items: center;
     gap: var(--sp-2);
-    max-width: 100%;
+    max-width: 40%;
     min-width: 0;
     margin-bottom: 0;
     color: var(--ink-2);
@@ -822,17 +852,18 @@
 
   .reader-title-row {
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--sp-2);
+    flex-direction: row;
+    align-items: center;
+    gap: var(--sp-3);
+    height: 100%;
   }
 
   .reader-headline {
     display: flex;
     align-items: center;
     gap: var(--sp-3);
-    flex: none;
-    width: 100%;
+    flex: 1;
+    width: auto;
     min-width: 0;
   }
 
@@ -852,26 +883,30 @@
     flex: none;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 0;
-    width: 100%;
+    width: auto;
     margin-top: 0;
   }
 
   .reader-actions > * {
-    flex: 1 1 0;
+    flex: none;
     min-width: 0;
-    max-width: 44px;
+    max-width: none;
   }
 
   .reader-actions .tip-host {
     display: flex;
-    width: 100%;
+    width: auto;
   }
 
   .reader-actions .btn-icon {
-    width: 100%;
+    width: var(--ctl-sm);
     height: 40px;
+  }
+
+  .reader-actions > .reader-action-secondary {
+    display: none;
   }
 
   .reader-actions #bookmarkBtn[aria-pressed="true"] svg {
@@ -945,11 +980,11 @@
 
   @media (min-width: 768px) {
     .masthead {
-      flex-wrap: nowrap;
+      position: static;
       gap: var(--sp-3);
       height: var(--masthead-h);
-      min-height: 0;
       padding: 0 var(--sp-4);
+      transition: none;
     }
 
     .brand {
@@ -969,10 +1004,16 @@
     }
 
     .searchwrap {
+      position: static;
+      display: flex;
       order: 0;
       flex: 1 1 380px;
       max-width: 720px;
       margin: 0 auto;
+      padding: 0;
+      background: transparent;
+      border-bottom: 0;
+      box-shadow: none;
     }
 
     .tools {
@@ -995,6 +1036,12 @@
       display: inline-flex;
     }
 
+    #searchToggle,
+    #searchClose,
+    #readerMoreBtn {
+      display: none;
+    }
+
     #reader {
       justify-self: center;
       width: min(var(--reader-measure), 100%);
@@ -1003,18 +1050,16 @@
     }
 
     .reader-head {
+      position: static;
+      height: auto;
+      overflow: visible;
       padding: var(--sp-5) 40px var(--sp-4);
+      background: transparent;
+      transition: none;
     }
 
     .reader-title-row {
-      flex-direction: row;
-      align-items: center;
       gap: var(--sp-4);
-    }
-
-    .reader-headline {
-      flex: 1;
-      width: auto;
     }
 
     .crumb {
@@ -1027,24 +1072,20 @@
     }
 
     .reader-actions {
-      width: auto;
-      justify-content: flex-start;
       gap: 2px;
     }
 
-    .reader-actions > * {
-      flex: none;
-      max-width: none;
-    }
-
-    .reader-actions .tip-host {
+    .reader-actions > .reader-action-secondary {
       display: inline-flex;
-      width: auto;
     }
 
     .reader-actions .btn-icon {
-      width: var(--ctl-sm);
       height: var(--ctl-sm);
+    }
+
+    body.chrome-hidden .masthead,
+    body.chrome-hidden .reader-head {
+      transform: none;
     }
   }
 

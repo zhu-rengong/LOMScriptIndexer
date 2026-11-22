@@ -239,6 +239,7 @@ export const usePrefsStore = defineStore("prefs", () => {
     root.style.setProperty("--reader-measure", `${measure.value}px`);
     root.style.setProperty("--rd-portrait-w", `${portraitSize.value}px`);
     root.style.setProperty("--reader-zoom", (readerZoom.value / 100).toFixed(3));
+    root.style.setProperty("--reader-zoom-inv", (100 / readerZoom.value).toFixed(4));
     for (const slot of TYPE_SLOTS) {
       const style = slotStyle(slot.id);
       if (!style) continue;

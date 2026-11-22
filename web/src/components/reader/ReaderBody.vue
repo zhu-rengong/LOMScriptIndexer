@@ -22,11 +22,14 @@ const HIT_SELECTOR = [
   ".time-mark",
 ].join(", ");
 
+const SCROLL_DELTA = 6;
+
 const body = ref<HTMLElement | null>(null);
 const reloadTick = ref(0);
 const readingId = ref("");
 const needsScrollRestore = ref(false);
 const scrollMemory = new Map<string, number>();
+let lastScrollTop = 0;
 
 const node = computed(() => store.selected());
 
@@ -66,6 +69,7 @@ const applyScrollTop = (top: number) => {
   if (!element) return;
   element.style.scrollBehavior = "auto";
   element.scrollTop = top;
+  lastScrollTop = element.scrollTop;
   requestAnimationFrame(() => {
     element.style.scrollBehavior = "";
   });
@@ -90,6 +94,7 @@ const scrollHit = (target: HTMLElement) => {
   if (!element) return;
   element.style.scrollBehavior = "auto";
   target.scrollIntoView({ block: "center", inline: "nearest" });
+  lastScrollTop = element.scrollTop;
   requestAnimationFrame(() => {
     element.style.scrollBehavior = "";
   });
@@ -146,6 +151,8 @@ watch(
     }
     readingId.value = id;
     needsScrollRestore.value = true;
+    lastScrollTop = 0;
+    view.showChrome();
     const current = store.selected();
     if (!current) return;
     await textStore.ensureScript(store.textLang(), current.id);
@@ -173,8 +180,23 @@ watch(
 );
 
 const onScroll = () => {
+  const element = body.value;
   const current = node.value;
+  if (!element) return;
   if (current) store.rememberPosition(current.id, scrollFraction());
+  if (!view.sheetMode) return;
+  const top = element.scrollTop;
+  const delta = top - lastScrollTop;
+  lastScrollTop = top;
+  if (top <= 8) {
+    view.showChrome();
+    return;
+  }
+  if (delta > SCROLL_DELTA && top > element.clientHeight * 0.5) {
+    view.hideChrome();
+    return;
+  }
+  if (delta < -SCROLL_DELTA) view.showChrome();
 };
 
 const retry = () => {

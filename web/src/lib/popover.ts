@@ -136,6 +136,10 @@ export class PopoverHost {
     return !!this.openState[key];
   }
 
+  anyOpen(): boolean {
+    return this.stack.length > 0;
+  }
+
   toggle(key: OverlayKey, trigger?: HTMLElement | null): boolean {
     return this.isOpen(key) ? this.close(key) : this.open(key, { trigger });
   }

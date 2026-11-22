@@ -22,6 +22,8 @@ export const useViewStore = defineStore("view", () => {
   const fontTarget = ref<FontTarget>({ scope: "slot", id: "dialog" });
   const pickerTarget = ref<FontTarget>({ scope: "slot", id: "dialog" });
   const railOpen = ref(false);
+  const searchOpen = ref(false);
+  const chromeHidden = ref(false);
   const inferEnabled = flagStored(keys.infer);
   const revealOn = ref(false);
   const visibleKinds = ref<ReaderVisibility>({
@@ -58,7 +60,36 @@ export const useViewStore = defineStore("view", () => {
 
   watchEffect(() => {
     document.body.classList.toggle("rail-open", railOpen.value);
+    document.body.classList.toggle("search-open", searchOpen.value);
+    document.body.classList.toggle("chrome-hidden", chromeHidden.value);
   });
+
+  watch(sheetMode, (sheet) => {
+    if (sheet) return;
+    searchOpen.value = false;
+    chromeHidden.value = false;
+  });
+
+  const showChrome = (): void => {
+    if (!chromeHidden.value) return;
+    chromeHidden.value = false;
+  };
+
+  const hideChrome = (): void => {
+    if (chromeHidden.value) return;
+    if (!sheetMode.value || searchOpen.value || railOpen.value) return;
+    if (popovers.anyOpen()) return;
+    chromeHidden.value = true;
+  };
+
+  const openSearch = (): void => {
+    searchOpen.value = true;
+    showChrome();
+  };
+
+  const collapseSearch = (): void => {
+    searchOpen.value = false;
+  };
 
   const hideRail = (): void => {
     railOpen.value = false;
@@ -66,7 +97,9 @@ export const useViewStore = defineStore("view", () => {
 
   const openRail = (): void => {
     if (!overlayRail.value) return;
+    searchOpen.value = false;
     railOpen.value = true;
+    showChrome();
     popovers.open(CHAPTER_RAIL, { trigger: byId(UI_IDS.railToggle) });
   };
 
@@ -102,6 +135,8 @@ export const useViewStore = defineStore("view", () => {
     fontTarget,
     pickerTarget,
     railOpen,
+    searchOpen,
+    chromeHidden,
     inferEnabled,
     revealOn,
     visibleKinds,
@@ -110,6 +145,10 @@ export const useViewStore = defineStore("view", () => {
     setOutlineChapter,
     setFontTarget,
     setPickerTarget,
+    showChrome,
+    hideChrome,
+    openSearch,
+    collapseSearch,
     hideRail,
     openRail,
     closeRail,
