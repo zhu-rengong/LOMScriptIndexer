@@ -235,6 +235,8 @@ export class PopoverHost {
     const opts = options || {};
     const margin = opts.margin == null ? MARGIN : opts.margin;
     const gap = opts.gap == null ? GAP : opts.gap;
+    panel.style.width = "";
+    panel.style.maxHeight = "";
     const middleware: Middleware[] = [
       offset(gap),
       flip({ padding: margin }),
@@ -249,8 +251,16 @@ export class PopoverHost {
       placement: floatingSide(opts),
       middleware,
     }).then((result) => {
-      panel.style.left = `${Math.round(result.x)}px`;
-      panel.style.top = `${Math.round(result.y)}px`;
+      const viewWidth = document.documentElement.clientWidth || window.innerWidth;
+      const viewHeight = document.documentElement.clientHeight || window.innerHeight;
+      const limitHeight = viewHeight - margin * 2;
+      if (panel.offsetHeight > limitHeight) panel.style.maxHeight = `${limitHeight}px`;
+      const maxX = Math.max(margin, viewWidth - panel.offsetWidth - margin);
+      const maxY = Math.max(margin, viewHeight - panel.offsetHeight - margin);
+      const x = Math.min(Math.max(result.x, margin), maxX);
+      const y = Math.min(Math.max(result.y, margin), maxY);
+      panel.style.left = `${Math.round(x)}px`;
+      panel.style.top = `${Math.round(y)}px`;
     });
   }
 
