@@ -354,7 +354,6 @@
   .mission-heading,
   .lc-sub-label,
   .scene-label,
-  .crumb,
   .stat-card .stat-label,
   .stats-head-row {
     font-family: var(--rd-ff-label, var(--font-base));
@@ -376,8 +375,7 @@
   .lc-result,
   .pi-meta,
   .menu-note,
-  .hint-line,
-  .crumb .crumb-time {
+  .hint-line {
     font-family: var(--rd-ff-caption, var(--font-base));
     font-size: calc(var(--rd-fs-caption, 16px) * var(--ts-caption, 1));
     font-weight: var(--rd-fw-caption, 400);

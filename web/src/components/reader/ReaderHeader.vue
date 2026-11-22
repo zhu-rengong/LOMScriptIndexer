@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { graph } from "../../data/graph";
-import { chapterTitle, t, timeText } from "../../i18n";
+import { t } from "../../i18n";
 import { byId } from "../../lib/browser";
 import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
@@ -26,10 +25,6 @@ const inferOn = computed(() => view.inferEnabled);
 
 const revealOn = computed(() => view.revealOn);
 
-const chapterTitleText = computed(() =>
-  selectedScript.value ? chapterTitle(graph.chapterOf(selectedScript.value)) : "",
-);
-
 const toggleNav = (event: MouseEvent) => {
   event.stopPropagation();
   if (popovers.isOpen("navMenu")) popovers.close("navMenu");
@@ -48,19 +43,9 @@ const toggleBookmark = () => {
   <header class="reader-head">
     <div class="reader-title">
       <div class="reader-title-row">
-        <div class="reader-headline">
-          <p id="nodeChapter" class="crumb" :hidden="!selectedScript">
-            <template v-if="selectedScript">
-              {{ chapterTitleText
-              }}<span v-if="typeof selectedScript.time === 'number'" class="crumb-time">{{
-                `${t("sepPair")}${timeText(selectedScript.time)}`
-              }}</span>
-            </template>
-          </p>
-          <h2 id="nodeTitle" class="node-title" :title="selectedScript ? selectedScript.id : ''">
-            {{ selectedScript ? selectedScript.id : t("readerEmptyTitle") }}
-          </h2>
-        </div>
+        <h2 id="nodeTitle" class="node-title" :title="selectedScript ? selectedScript.id : ''">
+          {{ selectedScript ? selectedScript.id : t("readerEmptyTitle") }}
+        </h2>
         <div class="reader-actions">
           <span class="tip-host" :title="t('backTitle')">
             <button

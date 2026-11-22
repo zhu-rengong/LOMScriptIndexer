@@ -10,7 +10,6 @@ const versionText = computed(() => {
 
 <template>
   <div class="brand">
-    <span class="seal" aria-hidden="true">活</span>
     <div class="brand-text">
       <h1>{{ t("appTitle") }}</h1>
       <p id="buildLine" class="brand-build">{{ versionText }}</p>

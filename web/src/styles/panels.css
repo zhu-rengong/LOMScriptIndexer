@@ -711,10 +711,6 @@
     text-overflow: clip;
   }
 
-  .preview-specimen .crumb {
-    max-width: 100%;
-  }
-
   .preview-specimen .drop-item {
     display: flex;
     flex-wrap: wrap;

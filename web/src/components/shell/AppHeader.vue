@@ -7,6 +7,7 @@ const view = useViewStore();
 <template>
   <header class="masthead">
     <button
+      v-if="view.overlayRail"
       id="railToggle"
       class="btn btn-icon rail-toggle"
       :class="{ 'is-on': view.railOpen }"
@@ -20,7 +21,7 @@ const view = useViewStore();
       <AppIcon name="panel" />
     </button>
 
-    <BrandMark />
+    <BrandMark v-if="!view.sheetMode" />
 
     <SearchBox />
 

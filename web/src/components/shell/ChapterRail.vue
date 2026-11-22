@@ -182,6 +182,7 @@ watch(
     <header class="rail-head">
       <h2 class="rail-title">{{ t("railTitle") }}</h2>
       <button
+        v-if="view.overlayRail"
         id="railClose"
         class="btn btn-icon rail-close"
         type="button"

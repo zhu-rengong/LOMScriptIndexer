@@ -22,9 +22,6 @@
   .brand {
     display: flex;
     align-items: center;
-    gap: var(--sp-3);
-    flex: 1 1 auto;
-    order: 1;
     min-width: 0;
   }
 
@@ -192,7 +189,7 @@
     gap: 0;
     flex: none;
     order: 2;
-    margin-left: 0;
+    margin-left: auto;
     padding-left: 0;
     border-left: 0;
   }
@@ -217,15 +214,6 @@
     width: 16px;
     height: 16px;
     stroke: none;
-  }
-
-  .rail-toggle,
-  .rail-close {
-    display: grid;
-  }
-
-  .rail-toggle {
-    order: 0;
   }
 
   #main {
@@ -278,7 +266,6 @@
 
   .rail-close {
     flex: none;
-    place-items: center;
     width: var(--ctl-sm);
     height: var(--ctl-sm);
   }
@@ -821,50 +808,12 @@
     height: 100%;
   }
 
-  .crumb {
-    display: flex;
-    flex: 0 1 auto;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: var(--sp-2);
-    max-width: 40%;
-    min-width: 0;
-    margin-bottom: 0;
-    color: var(--ink-2);
-    white-space: nowrap;
-    overflow: hidden;
-    --tls-label: 0.02em;
-  }
-
-  .crumb::before {
-    content: "";
-    width: 5px;
-    height: 5px;
-    flex: none;
-    background: var(--accent);
-  }
-
-  .crumb .crumb-time {
-    display: none;
-    color: var(--ink-2);
-    --tls-caption: 0.04em;
-  }
-
   .reader-title-row {
     display: flex;
     flex-direction: row;
     align-items: center;
     gap: var(--sp-3);
     height: 100%;
-  }
-
-  .reader-headline {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3);
-    flex: 1;
-    width: auto;
-    min-width: 0;
   }
 
   #nodeTitle,
@@ -987,11 +936,6 @@
       transition: none;
     }
 
-    .brand {
-      flex: 0 1 auto;
-      order: 0;
-    }
-
     .seal {
       width: 38px;
       height: 38px;
@@ -1019,7 +963,6 @@
     .tools {
       gap: 2px;
       order: 0;
-      margin-left: auto;
       padding-left: var(--sp-4);
       border-left: 1px solid var(--line-1);
     }
@@ -1060,10 +1003,6 @@
 
     .reader-title-row {
       gap: var(--sp-4);
-    }
-
-    .crumb {
-      max-width: 46%;
     }
 
     #nodeTitle,
@@ -1120,11 +1059,6 @@
       display: block;
     }
 
-    .rail-toggle,
-    .rail-close {
-      display: none;
-    }
-
     #main {
       grid-template-columns: var(--rail-w) minmax(0, 1fr);
     }
@@ -1152,10 +1086,6 @@
 
     .reader-head {
       padding: var(--sp-5) var(--sp-6) var(--sp-4);
-    }
-
-    .crumb .crumb-time {
-      display: inline;
     }
 
     #nodeTitle,
