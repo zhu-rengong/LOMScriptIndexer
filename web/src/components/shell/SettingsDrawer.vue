@@ -45,6 +45,10 @@ const onPortraitSize = (value: number) => {
   prefs.set({ portraitSize: value });
 };
 
+const onReaderZoom = (value: number) => {
+  prefs.set({ readerZoom: value });
+};
+
 const reset = () => {
   prefs.reset();
   ui.toast(t("toastReset"));
@@ -128,6 +132,16 @@ onMounted(() => {
           </div>
         </div>
         <p class="settings-caption">{{ t("readerDisplay") }}</p>
+        <ScaleSlider
+          :id="UI_IDS.readerZoom"
+          :label="t('readerZoom')"
+          :value="prefs.readerZoom"
+          :text="`${prefs.readerZoom}%`"
+          :min="prefs.limits.zoom.min"
+          :max="prefs.limits.zoom.max"
+          :step="prefs.limits.zoom.step"
+          @update="onReaderZoom"
+        />
         <label class="settings-switch" :for="UI_IDS.showPortraits">
           <input
             :id="UI_IDS.showPortraits"

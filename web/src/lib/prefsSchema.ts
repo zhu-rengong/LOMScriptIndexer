@@ -24,6 +24,9 @@ const PORTRAIT_SIZE_MIN = 60;
 const PORTRAIT_SIZE_MAX = 100;
 const PORTRAIT_SIZE_STEP = 4;
 const PORTRAIT_SIZE_DEFAULT = 80;
+const ZOOM_MIN = 50;
+const ZOOM_MAX = 150;
+const ZOOM_STEP = 5;
 
 const clampValue = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, value));
@@ -62,6 +65,12 @@ const portraitSize = v.pipe(
       PORTRAIT_SIZE_STEP,
   ),
 );
+const readerZoom = v.pipe(
+  v.number(),
+  v.transform((value) =>
+    value === 0 ? 0 : Math.round(clampValue(value, ZOOM_MIN, ZOOM_MAX) / ZOOM_STEP) * ZOOM_STEP,
+  ),
+);
 
 const entry = v.object({
   font: v.string(),
@@ -94,6 +103,7 @@ export const PrefsSchema = v.object({
   measure,
   showPortraits: v.fallback(v.boolean(), true),
   portraitSize,
+  readerZoom: v.fallback(readerZoom, 0),
 });
 
 export type StoredPrefs = PrefState & { version: number };
@@ -132,6 +142,7 @@ export const defaultPrefs = (): StoredPrefs => ({
   measure: MEASURE_DEFAULT,
   showPortraits: true,
   portraitSize: PORTRAIT_SIZE_DEFAULT,
+  readerZoom: 0,
 });
 
 export const decodePrefs = (raw: unknown): StoredPrefs => {
@@ -148,6 +159,7 @@ export const decodePrefs = (raw: unknown): StoredPrefs => {
     measure: source.measure,
     showPortraits: source.showPortraits,
     portraitSize: source.portraitSize,
+    readerZoom: source.readerZoom,
   };
 };
 
@@ -162,6 +174,7 @@ export const PREFS_LIMITS = {
     step: PORTRAIT_SIZE_STEP,
     fallback: PORTRAIT_SIZE_DEFAULT,
   },
+  zoom: { min: ZOOM_MIN, max: ZOOM_MAX, step: ZOOM_STEP },
 };
 
 export const PREFS_DEFAULTS = {

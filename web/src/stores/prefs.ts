@@ -114,6 +114,7 @@ const patchEntry = (current: PrefEntry, next: Partial<PrefEntry>, slotScope: boo
 
 export const usePrefsStore = defineStore("prefs", () => {
   const state = storedRef<StoredPrefs>(keys.prefs, defaultPrefs(), { decode: decodePrefs });
+  const view = useViewStore(pinia);
 
   const baseFont = computed({
     get: () => state.value.baseFont,
@@ -155,6 +156,16 @@ export const usePrefsStore = defineStore("prefs", () => {
           state.value.portraitSize,
         ),
         LIMITS.portraitSize.step,
+      );
+    },
+  });
+  const readerZoom = computed({
+    get: () =>
+      state.value.readerZoom === 0 ? (view.sheetMode ? 75 : 100) : state.value.readerZoom,
+    set: (value: number) => {
+      state.value.readerZoom = roundTo(
+        clampNumber(value, LIMITS.zoom.min, LIMITS.zoom.max, 100),
+        LIMITS.zoom.step,
       );
     },
   });
@@ -227,6 +238,7 @@ export const usePrefsStore = defineStore("prefs", () => {
     root.style.setProperty("--font-base", baseStack.value);
     root.style.setProperty("--reader-measure", `${measure.value}px`);
     root.style.setProperty("--rd-portrait-w", `${portraitSize.value}px`);
+    root.style.setProperty("--reader-zoom", (readerZoom.value / 100).toFixed(3));
     for (const slot of TYPE_SLOTS) {
       const style = slotStyle(slot.id);
       if (!style) continue;
@@ -243,7 +255,11 @@ export const usePrefsStore = defineStore("prefs", () => {
     }
   };
 
-  watch(state, applyToDocument, { deep: true, flush: "post", immediate: true });
+  watch([state, () => view.sheetMode], applyToDocument, {
+    deep: true,
+    flush: "post",
+    immediate: true,
+  });
 
   const preferredDark = usePreferredDark();
 
@@ -263,6 +279,7 @@ export const usePrefsStore = defineStore("prefs", () => {
     measure: state.value.measure,
     showPortraits: state.value.showPortraits,
     portraitSize: state.value.portraitSize,
+    readerZoom: state.value.readerZoom,
   });
 
   const set = (patch: PrefPatch): PrefState => {
@@ -271,6 +288,7 @@ export const usePrefsStore = defineStore("prefs", () => {
       if (typeof patch.baseFont === "string") baseFont.value = patch.baseFont;
       if (typeof patch.showPortraits === "boolean") showPortraits.value = patch.showPortraits;
       if (patch.portraitSize !== undefined) portraitSize.value = patch.portraitSize;
+      if (patch.readerZoom !== undefined) readerZoom.value = patch.readerZoom;
       if (patch.measure !== undefined) measure.value = patch.measure;
       if (patch.groups && typeof patch.groups === "object") {
         for (const groupId of Object.keys(patch.groups)) {
@@ -314,6 +332,7 @@ export const usePrefsStore = defineStore("prefs", () => {
     measure,
     showPortraits,
     portraitSize,
+    readerZoom,
     resolveEntry,
     get,
     set,

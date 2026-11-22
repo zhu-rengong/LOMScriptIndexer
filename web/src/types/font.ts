@@ -25,6 +25,7 @@ export type PrefState = {
   measure: number;
   showPortraits: boolean;
   portraitSize: number;
+  readerZoom: number;
 };
 
 export type PrefPatch = {
@@ -35,6 +36,7 @@ export type PrefPatch = {
   slots?: Record<string, Partial<PrefEntry>>;
   showPortraits?: boolean;
   portraitSize?: number;
+  readerZoom?: number;
 };
 
 export type ResolvedTypeStyle = {

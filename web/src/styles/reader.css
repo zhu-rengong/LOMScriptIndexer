@@ -15,6 +15,7 @@
     overflow-y: auto;
     padding: var(--sp-5) var(--sp-4) calc(56px + env(safe-area-inset-bottom));
     scroll-behavior: smooth;
+    zoom: var(--reader-zoom, 1);
   }
 
   .reader-body > * {

@@ -34,6 +34,7 @@ export const UI_IDS = {
   fontPicker: "fontPicker",
   showPortraits: "showPortraits",
   portraitSize: "portraitSize",
+  readerZoom: "readerZoom",
   lookupPanel: "lookupPanel",
 } as const;
 
