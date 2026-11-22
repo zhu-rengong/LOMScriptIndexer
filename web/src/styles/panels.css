@@ -24,11 +24,18 @@
     animation: sheet-in var(--t-slow) var(--ease);
   }
 
-  .filter-btn[aria-expanded="true"],
-  .filter-btn[aria-expanded="true"]:enabled:hover {
+  .filter-btn[aria-expanded="true"] {
     border-color: var(--accent);
     background: var(--surface-focus);
     color: var(--accent-strong);
+  }
+
+  @media (hover: hover) {
+    .filter-btn[aria-expanded="true"]:enabled:hover {
+      border-color: var(--accent);
+      background: var(--surface-focus);
+      color: var(--accent-strong);
+    }
   }
 
   .filter-head {
@@ -64,8 +71,10 @@
     transition: border-color var(--t-fast) var(--ease);
   }
 
-  .filter-input-wrap:hover {
-    border-bottom-color: var(--line-2);
+  @media (hover: hover) {
+    .filter-input-wrap:hover {
+      border-bottom-color: var(--line-2);
+    }
   }
 
   .filter-input-wrap:focus-within {
@@ -86,10 +95,16 @@
     color: var(--ink);
   }
 
-  .filter-expr:hover,
   .filter-expr:focus {
     border: 0;
     background: transparent;
+  }
+
+  @media (hover: hover) {
+    .filter-expr:hover {
+      border: 0;
+      background: transparent;
+    }
   }
 
   .filter-suggest {
@@ -114,10 +129,12 @@
     background: transparent;
   }
 
-  .suggest-item:hover {
-    border: 0;
-    background: var(--surface-hover);
-    color: var(--ink-hover);
+  @media (hover: hover) {
+    .suggest-item:hover {
+      border: 0;
+      background: var(--surface-hover);
+      color: var(--ink-hover);
+    }
   }
 
   .suggest-item:active,
@@ -230,10 +247,12 @@
     background: transparent;
   }
 
-  .result-item:hover {
-    border: 0;
-    background: var(--surface-hover);
-    color: var(--ink-hover);
+  @media (hover: hover) {
+    .result-item:hover {
+      border: 0;
+      background: var(--surface-hover);
+      color: var(--ink-hover);
+    }
   }
 
   .result-item:active,
@@ -243,10 +262,16 @@
     color: var(--ink-hold);
   }
 
-  .result-item.is-active,
-  .result-item.is-active:hover {
+  .result-item.is-active {
     background: var(--accent-soft);
     color: var(--accent-strong);
+  }
+
+  @media (hover: hover) {
+    .result-item.is-active:hover {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
   }
 
   .result-item.is-active .ri-id,
@@ -413,10 +438,12 @@
     color: var(--ink);
   }
 
-  .drawer .settings-select:enabled:hover {
-    border-color: var(--line-2);
-    background: var(--surface-hover);
-    color: var(--ink-hover);
+  @media (hover: hover) {
+    .drawer .settings-select:enabled:hover {
+      border-color: var(--line-2);
+      background: var(--surface-hover);
+      color: var(--ink-hover);
+    }
   }
 
   .drawer .settings-select:active,
@@ -426,11 +453,18 @@
     color: var(--ink);
   }
 
-  .drawer .settings-select[aria-expanded="true"],
-  .drawer .settings-select[aria-expanded="true"]:enabled:hover {
+  .drawer .settings-select[aria-expanded="true"] {
     border-color: var(--accent);
     background: var(--surface-focus);
     color: var(--ink);
+  }
+
+  @media (hover: hover) {
+    .drawer .settings-select[aria-expanded="true"]:enabled:hover {
+      border-color: var(--accent);
+      background: var(--surface-focus);
+      color: var(--ink);
+    }
   }
 
   .drawer .settings-select .caret {
@@ -479,8 +513,10 @@
     transition: background var(--t-fast) var(--ease);
   }
 
-  .range:hover::-webkit-slider-thumb {
-    background: var(--accent-strong);
+  @media (hover: hover) {
+    .range:hover::-webkit-slider-thumb {
+      background: var(--accent-strong);
+    }
   }
 
   .range::-moz-range-track {
@@ -544,9 +580,11 @@
       opacity var(--t-base) var(--ease);
   }
 
-  .type-tree-row:hover {
-    background: var(--surface-hover);
-    color: var(--ink-hover);
+  @media (hover: hover) {
+    .type-tree-row:hover {
+      background: var(--surface-hover);
+      color: var(--ink-hover);
+    }
   }
 
   .type-tree-row:active {
@@ -554,10 +592,16 @@
     color: var(--ink-hold);
   }
 
-  .type-tree-row.is-on,
-  .type-tree-row.is-on:hover {
+  .type-tree-row.is-on {
     background: var(--accent-soft);
     color: var(--accent-strong);
+  }
+
+  @media (hover: hover) {
+    .type-tree-row.is-on:hover {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
   }
 
   .type-tree-row.is-on::before {
@@ -632,11 +676,13 @@
     box-shadow: none;
   }
 
-  .settings-weight .tab:hover {
-    border: 0;
-    background: var(--surface-hover);
-    color: var(--ink-hover);
-    box-shadow: none;
+  @media (hover: hover) {
+    .settings-weight .tab:hover {
+      border: 0;
+      background: var(--surface-hover);
+      color: var(--ink-hover);
+      box-shadow: none;
+    }
   }
 
   .settings-weight .tab:active,
@@ -648,12 +694,20 @@
   }
 
   .settings-weight .tab.is-on,
-  .settings-weight .tab[aria-pressed="true"],
-  .settings-weight .tab.is-on:hover {
+  .settings-weight .tab[aria-pressed="true"] {
     border: 0;
     background: var(--accent-soft);
     color: var(--accent-strong);
     box-shadow: none;
+  }
+
+  @media (hover: hover) {
+    .settings-weight .tab.is-on:hover {
+      border: 0;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      box-shadow: none;
+    }
   }
 
   .preview {
@@ -799,10 +853,16 @@
     color: var(--ink);
   }
 
-  .picker-search .input:hover,
   .picker-search .input:focus {
     border: 0;
     background: transparent;
+  }
+
+  @media (hover: hover) {
+    .picker-search .input:hover {
+      border: 0;
+      background: transparent;
+    }
   }
 
   .picker-manual {
@@ -834,10 +894,12 @@
     text-align: left;
   }
 
-  .picker-item:hover {
-    border: 0;
-    background: var(--surface-hover);
-    color: var(--ink-hover);
+  @media (hover: hover) {
+    .picker-item:hover {
+      border: 0;
+      background: var(--surface-hover);
+      color: var(--ink-hover);
+    }
   }
 
   .picker-item:active {
@@ -1001,8 +1063,10 @@
     cursor: pointer;
   }
 
-  .mission-link:hover {
-    text-decoration: underline;
+  @media (hover: hover) {
+    .mission-link:hover {
+      text-decoration: underline;
+    }
   }
 
   .mission-muted {
@@ -1526,9 +1590,11 @@
       box-shadow var(--t-fast) var(--ease);
   }
 
-  .stats-kind:hover {
-    color: var(--ink-hover);
-    box-shadow: inset 0 -2px 0 0 var(--line-2);
+  @media (hover: hover) {
+    .stats-kind:hover {
+      color: var(--ink-hover);
+      box-shadow: inset 0 -2px 0 0 var(--line-2);
+    }
   }
 
   .stats-kind.is-on,
@@ -1598,13 +1664,14 @@
       background-color var(--t-fast) var(--ease);
   }
 
-  .stats-chapter:hover {
-    background: var(--surface-hover);
-    color: var(--ink);
+  @media (hover: hover) {
+    .stats-chapter:hover {
+      background: var(--surface-hover);
+      color: var(--ink);
+    }
   }
 
-  .stats-chapter.is-open,
-  .stats-chapter.is-open:hover {
+  .stats-chapter.is-open {
     border-radius: var(--r-sm) var(--r-sm) 0 0;
     background: var(--surface-inset);
     background-clip: padding-box;
@@ -1614,6 +1681,20 @@
       inset 1px 0 0 var(--line-1),
       inset -1px 0 0 var(--line-1),
       inset 0 -1px 0 var(--line-1);
+  }
+
+  @media (hover: hover) {
+    .stats-chapter.is-open:hover {
+      border-radius: var(--r-sm) var(--r-sm) 0 0;
+      background: var(--surface-inset);
+      background-clip: padding-box;
+      color: var(--ink);
+      box-shadow:
+        inset 0 1px 0 var(--line-1),
+        inset 1px 0 0 var(--line-1),
+        inset -1px 0 0 var(--line-1),
+        inset 0 -1px 0 var(--line-1);
+    }
   }
 
   .stats-chapter.is-open.is-solo {
@@ -1658,9 +1739,11 @@
       background-color var(--t-fast) var(--ease);
   }
 
-  .stats-script:hover {
-    background: var(--surface-hover);
-    color: var(--ink-hover);
+  @media (hover: hover) {
+    .stats-script:hover {
+      background: var(--surface-hover);
+      color: var(--ink-hover);
+    }
   }
 
   .stats-script.is-card-end {

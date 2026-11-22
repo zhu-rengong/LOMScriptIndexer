@@ -162,9 +162,11 @@
     background-clip: content-box;
   }
 
-  *::-webkit-scrollbar-thumb:hover {
-    background: var(--line-3);
-    background-clip: content-box;
+  @media (hover: hover) {
+    *::-webkit-scrollbar-thumb:hover {
+      background: var(--line-3);
+      background-clip: content-box;
+    }
   }
 
   *::-webkit-scrollbar-button {

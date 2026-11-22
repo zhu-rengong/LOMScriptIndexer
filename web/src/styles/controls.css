@@ -17,10 +17,12 @@
       border-color var(--t-fast) var(--ease);
   }
 
-  .btn:enabled:hover {
-    border-color: var(--line-2);
-    background: var(--surface-hover);
-    color: var(--ink-hover);
+  @media (hover: hover) {
+    .btn:enabled:hover {
+      border-color: var(--line-2);
+      background: var(--surface-hover);
+      color: var(--ink-hover);
+    }
   }
 
   .btn:enabled:active {
@@ -44,10 +46,12 @@
     opacity: 0.38;
   }
 
-  a.btn:hover {
-    border-color: var(--line-2);
-    background: var(--surface-hover);
-    color: var(--ink-hover);
+  @media (hover: hover) {
+    a.btn:hover {
+      border-color: var(--line-2);
+      background: var(--surface-hover);
+      color: var(--ink-hover);
+    }
   }
 
   a.btn:active {
@@ -80,9 +84,11 @@
       border-color var(--t-fast) var(--ease);
   }
 
-  .btn-link:hover {
-    color: var(--accent-strong);
-    border-bottom-color: currentColor;
+  @media (hover: hover) {
+    .btn-link:hover {
+      color: var(--accent-strong);
+      border-bottom-color: currentColor;
+    }
   }
 
   .btn-link:active {
@@ -156,8 +162,10 @@
       background-color var(--t-fast) var(--ease);
   }
 
-  .input:hover {
-    border-color: var(--line-2);
+  @media (hover: hover) {
+    .input:hover {
+      border-color: var(--line-2);
+    }
   }
 
   .input:focus-visible {
@@ -199,10 +207,12 @@
       border-color var(--t-fast) var(--ease);
   }
 
-  .tab:hover {
-    border-color: var(--line-2);
-    background: var(--surface-hover);
-    color: var(--ink-hover);
+  @media (hover: hover) {
+    .tab:hover {
+      border-color: var(--line-2);
+      background: var(--surface-hover);
+      color: var(--ink-hover);
+    }
   }
 
   .tab:active {
@@ -262,10 +272,12 @@
       border-color var(--t-fast) var(--ease);
   }
 
-  .row:hover {
-    border-color: var(--line-2);
-    background: var(--surface-hover);
-    color: var(--ink-hover);
+  @media (hover: hover) {
+    .row:hover {
+      border-color: var(--line-2);
+      background: var(--surface-hover);
+      color: var(--ink-hover);
+    }
   }
 
   .row:active {
@@ -311,8 +323,10 @@
     color: var(--ink);
   }
 
-  .lore:hover {
-    border-color: var(--line-2);
+  @media (hover: hover) {
+    .lore:hover {
+      border-color: var(--line-2);
+    }
   }
 
   .lore {

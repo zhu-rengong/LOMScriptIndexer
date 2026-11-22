@@ -124,8 +124,10 @@
       background-color var(--t-fast) var(--ease);
   }
 
-  .search-input:hover {
-    border-color: var(--line-2);
+  @media (hover: hover) {
+    .search-input:hover {
+      border-color: var(--line-2);
+    }
   }
 
   .search-input:focus-visible {
@@ -288,11 +290,13 @@
       box-shadow var(--t-fast) var(--ease);
   }
 
-  .rail-tabs .rail-tab:hover {
-    border: 0;
-    background: transparent;
-    color: var(--ink-hover);
-    box-shadow: inset 0 -2px 0 0 var(--line-2);
+  @media (hover: hover) {
+    .rail-tabs .rail-tab:hover {
+      border: 0;
+      background: transparent;
+      color: var(--ink-hover);
+      box-shadow: inset 0 -2px 0 0 var(--line-2);
+    }
   }
 
   .rail-tabs .rail-tab.is-on,
@@ -356,10 +360,16 @@
     color: var(--ink);
   }
 
-  .rail-search .search-input:hover,
   .rail-search .search-input:focus {
     border: 0;
     background: transparent;
+  }
+
+  @media (hover: hover) {
+    .rail-search .search-input:hover {
+      border: 0;
+      background: transparent;
+    }
   }
 
   .rail-search-clear {
@@ -381,9 +391,11 @@
       background-color var(--t-fast) var(--ease);
   }
 
-  .rail-search-clear:hover {
-    background: var(--surface-inset);
-    color: var(--ink);
+  @media (hover: hover) {
+    .rail-search-clear:hover {
+      background: var(--surface-inset);
+      color: var(--ink);
+    }
   }
 
   .rail-search-clear svg {
@@ -427,9 +439,11 @@
       background-color var(--t-fast) var(--ease);
   }
 
-  .cat-chap:hover:not(:disabled) {
-    background: var(--surface-hover);
-    color: var(--ink);
+  @media (hover: hover) {
+    .cat-chap:hover:not(:disabled) {
+      background: var(--surface-hover);
+      color: var(--ink);
+    }
   }
 
   .cat-chap:active:not(:disabled) {
@@ -438,7 +452,6 @@
   }
 
   .cat-chap.is-open,
-  .cat-chap.is-open:hover:not(:disabled),
   .cat-chap.is-open:active:not(:disabled) {
     border-radius: var(--r-sm) var(--r-sm) 0 0;
     background: var(--surface-inset);
@@ -449,6 +462,20 @@
       inset 1px 0 0 var(--line-1),
       inset -1px 0 0 var(--line-1),
       inset 0 -1px 0 var(--line-1);
+  }
+
+  @media (hover: hover) {
+    .cat-chap.is-open:hover:not(:disabled) {
+      border-radius: var(--r-sm) var(--r-sm) 0 0;
+      background: var(--surface-inset);
+      background-clip: padding-box;
+      color: var(--ink);
+      box-shadow:
+        inset 0 1px 0 var(--line-1),
+        inset 1px 0 0 var(--line-1),
+        inset -1px 0 0 var(--line-1),
+        inset 0 -1px 0 var(--line-1);
+    }
   }
 
   .cat-chap.is-open.is-solo {
@@ -506,9 +533,11 @@
       background-color var(--t-fast) var(--ease);
   }
 
-  .cat-row:hover:not(:disabled) {
-    background: var(--surface-hover);
-    color: var(--ink-hover);
+  @media (hover: hover) {
+    .cat-row:hover:not(:disabled) {
+      background: var(--surface-hover);
+      color: var(--ink-hover);
+    }
   }
 
   .cat-row:active:not(:disabled) {
@@ -533,10 +562,16 @@
   }
 
   .cat-row.is-on,
-  .cat-row.is-on:hover:not(:disabled),
   .cat-row.is-on:active:not(:disabled) {
     background: var(--accent-soft);
     color: var(--accent-strong);
+  }
+
+  @media (hover: hover) {
+    .cat-row.is-on:hover:not(:disabled) {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
   }
 
   .cat-row.is-on::before {
@@ -578,9 +613,11 @@
       inset -1px 0 0 var(--line-1);
   }
 
-  .cat-row.rail-vrow:hover:not(:disabled) {
-    background: var(--surface-hover);
-    color: var(--ink-hover);
+  @media (hover: hover) {
+    .cat-row.rail-vrow:hover:not(:disabled) {
+      background: var(--surface-hover);
+      color: var(--ink-hover);
+    }
   }
 
   .cat-row.rail-vrow:active:not(:disabled) {
@@ -589,10 +626,16 @@
   }
 
   .cat-row.rail-vrow.is-on,
-  .cat-row.rail-vrow.is-on:hover:not(:disabled),
   .cat-row.rail-vrow.is-on:active:not(:disabled) {
     background: var(--accent-soft);
     color: var(--accent-strong);
+  }
+
+  @media (hover: hover) {
+    .cat-row.rail-vrow.is-on:hover:not(:disabled) {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
   }
 
   .cat-row.rail-vrow.is-card-end {
@@ -609,14 +652,22 @@
     transition: background-color var(--t-fast) var(--ease);
   }
 
-  .cat-book:hover {
-    background: var(--surface-hover);
+  @media (hover: hover) {
+    .cat-book:hover {
+      background: var(--surface-hover);
+    }
   }
 
-  .cat-book.is-on,
-  .cat-book.is-on:hover {
+  .cat-book.is-on {
     background: var(--accent-soft);
     color: var(--accent-strong);
+  }
+
+  @media (hover: hover) {
+    .cat-book.is-on:hover {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
   }
 
   .cat-book-main {
@@ -682,14 +733,21 @@
     height: 13px;
   }
 
-  .cat-del:hover {
-    background: var(--surface-inset);
-    color: var(--danger);
+  @media (hover: hover) {
+    .cat-del:hover {
+      background: var(--surface-inset);
+      color: var(--danger);
+    }
   }
 
-  .cat-book:hover .cat-del,
   .cat-del:focus-visible {
     opacity: 1;
+  }
+
+  @media (hover: hover) {
+    .cat-book:hover .cat-del {
+      opacity: 1;
+    }
   }
 
   .cat-clear {
@@ -707,9 +765,11 @@
       border-color var(--t-fast) var(--ease);
   }
 
-  .cat-clear:hover {
-    border-bottom-color: currentColor;
-    color: var(--accent-strong);
+  @media (hover: hover) {
+    .cat-clear:hover {
+      border-bottom-color: currentColor;
+      color: var(--accent-strong);
+    }
   }
 
   .cat-special .cat-name {
@@ -746,8 +806,10 @@
     opacity: 0.6;
   }
 
-  .cat-special:disabled:hover {
-    background: transparent;
+  @media (hover: hover) {
+    .cat-special:disabled:hover {
+      background: transparent;
+    }
   }
 
   .cat-empty {
@@ -895,10 +957,15 @@
     transition: background var(--t-fast) var(--ease);
   }
 
-  .reader-grip:hover::before,
   .reader-grip:focus-visible::before,
   body.is-gripping .reader-grip::before {
     background: var(--accent);
+  }
+
+  @media (hover: hover) {
+    .reader-grip:hover::before {
+      background: var(--accent);
+    }
   }
 
   .reader-grip:focus-visible {
