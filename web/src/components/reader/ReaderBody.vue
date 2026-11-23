@@ -77,8 +77,14 @@ const applyScrollTop = (top: number) => {
   });
 };
 
+const layoutScale = (element: HTMLElement): number => {
+  const width = element.offsetWidth;
+  return width > 0 ? element.getBoundingClientRect().width / width : 1;
+};
+
 const anchorOf = (element: HTMLElement): ScrollAnchor => {
   const base = element.getBoundingClientRect().top;
+  const scale = layoutScale(element);
   const children = element.children;
   let index = Math.max(0, children.length - 1);
   let offset = 0;
@@ -86,7 +92,7 @@ const anchorOf = (element: HTMLElement): ScrollAnchor => {
     const rect = (children[i] as HTMLElement).getBoundingClientRect();
     if (rect.bottom <= base) continue;
     index = i;
-    offset = Math.round(base - rect.top);
+    offset = Math.round((base - rect.top) / scale);
     break;
   }
   return { index, offset };
@@ -187,6 +193,7 @@ watch(
 
 watch(blocks, async () => {
   if (!node.value) return;
+  if (blocks.value === null) return;
   await nextTick();
   if (needsScrollRestore.value) {
     needsScrollRestore.value = false;
