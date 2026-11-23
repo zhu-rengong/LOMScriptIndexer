@@ -1933,8 +1933,10 @@
     }
 
     .is-placed[data-positioned="false"] {
+      visibility: hidden;
       opacity: 0;
       pointer-events: none;
+      animation: none;
     }
 
     .scrim-sheet,
