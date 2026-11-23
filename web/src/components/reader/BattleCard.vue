@@ -1,19 +1,17 @@
 <script setup lang="ts">
 import { sceneText, t } from "../../i18n";
 import type { BattleView } from "../../types/beats";
-import { useFoldMemory } from "../../composables/useFoldable";
+import { useFoldable } from "../../composables/useFoldable";
 
 const props = defineProps<{ battle: BattleView; foldKey: string }>();
-
-const open = ref(false);
-
-useFoldMemory(props.foldKey, open);
 
 const isCampaign = computed(() => props.battle.kind === "battle");
 
 const isStaticDuel = computed(() => !isCampaign.value && props.battle.events.length === 0);
 
 const isExpandable = computed(() => !isCampaign.value && !isStaticDuel.value);
+
+const open = useFoldable(props.foldKey, () => isExpandable.value);
 
 const rootClass = computed(() => {
   if (isCampaign.value) return "battle battle-campaign";

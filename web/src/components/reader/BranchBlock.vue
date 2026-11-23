@@ -12,14 +12,13 @@ const panels = usePanelsStore();
 
 const props = defineProps<{ branch: BranchView; foldKey: string }>();
 
-const open = ref(false);
 const condition = ref<ConditionNode | null>(null);
 const fallbackBranchCount = ref(0);
 const excludedConditions = ref<ConditionNode[]>([]);
 
 const isEmpty = computed(() => !props.branch.blocks || props.branch.blocks.length === 0);
 
-useFoldable(props.foldKey, open, () => !isEmpty.value);
+const open = useFoldable(props.foldKey, () => !isEmpty.value);
 
 const label = computed(() => branchLabel(props.branch));
 

@@ -1,39 +1,36 @@
-import { useScriptStore } from "./script";
-
 export type FoldState = "none" | "collapsed" | "mixed" | "expanded";
 
 export const useFoldStore = defineStore("fold", () => {
-  const items = new Map<string, Ref<boolean>>();
-  const states = new Map<string, boolean>();
-  const revision = ref(0);
+  const script = useScriptStore(pinia);
+  const states = reactive(new Map<string, boolean>());
+  const registered = reactive(new Set<string>());
 
-  const scoped = (key: string): string => `${useScriptStore(pinia).selectedId}:${key}`;
+  const scoped = (key: string): string => `${script.selectedId}:${key}`;
 
-  const register = (id: string, open: Ref<boolean>): void => {
-    items.set(id, open);
-    revision.value++;
-  };
+  const isOpen = (key: string): boolean => (key ? (states.get(scoped(key)) ?? false) : false);
 
-  const unregister = (id: string): void => {
-    if (!items.delete(id)) return;
-    revision.value++;
-  };
-
-  const recall = (key: string): boolean | undefined => states.get(scoped(key));
-
-  const remember = (key: string, open: boolean): void => {
+  const setOpen = (key: string, open: boolean): void => {
+    if (!key) return;
     states.set(scoped(key), open);
   };
 
-  const total = computed(() => {
-    void revision.value;
-    return items.size;
-  });
+  const register = (key: string): void => {
+    if (!key) return;
+    const id = scoped(key);
+    registered.add(id);
+    if (!states.has(id)) states.set(id, false);
+  };
+
+  const unregister = (key: string): void => {
+    if (!key) return;
+    registered.delete(scoped(key));
+  };
+
+  const total = computed(() => registered.size);
 
   const openCount = computed(() => {
-    void revision.value;
     let count = 0;
-    for (const open of items.values()) if (open.value) count += 1;
+    for (const key of registered) if (states.get(key)) count += 1;
     return count;
   });
 
@@ -47,11 +44,11 @@ export const useFoldStore = defineStore("fold", () => {
   });
 
   const openAll = (): void => {
-    for (const open of items.values()) open.value = true;
+    for (const key of registered) states.set(key, true);
   };
 
   const closeAll = (): void => {
-    for (const open of items.values()) open.value = false;
+    for (const key of registered) states.set(key, false);
   };
 
   const toggle = (): void => {
@@ -72,10 +69,10 @@ export const useFoldStore = defineStore("fold", () => {
     total,
     openCount,
     state,
+    isOpen,
+    setOpen,
     register,
     unregister,
-    recall,
-    remember,
     openAll,
     closeAll,
     toggle,

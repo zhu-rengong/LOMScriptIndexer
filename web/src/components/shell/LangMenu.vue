@@ -4,7 +4,7 @@ import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
 
 const store = useScriptStore();
-const view = useViewStore();
+const language = useLanguageStore();
 
 const items = computed(() => languages());
 
@@ -12,7 +12,7 @@ const open = computed(() => popovers.isOpen(UI_IDS.langMenu));
 
 const pick = (id: string) => {
   popovers.close(UI_IDS.langMenu);
-  void view.switchLang(id);
+  void language.switchTo(id);
 };
 
 onMounted(() => {

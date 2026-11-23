@@ -5,9 +5,6 @@ import { overlayRail, sheetMode } from "../lib/viewport";
 import type { ReaderVisibleKind, ReaderVisibility } from "../types/beats";
 import type { FontTarget } from "../types/font";
 import { UI_IDS } from "../ui/ids";
-import { useLanguageStore } from "./language";
-
-const CHAPTER_RAIL = "chapterRail";
 
 const flagStored = (key: string) =>
   storedRef<boolean>(key, true, {
@@ -37,7 +34,7 @@ export const useViewStore = defineStore("view", () => {
       !visibleKinds.value.lore,
   );
 
-  const railOpen = computed(() => popovers.isOpen(CHAPTER_RAIL));
+  const railOpen = computed(() => popovers.isOpen(UI_IDS.chapterRail));
 
   const searchOpen = computed(
     () =>
@@ -62,12 +59,6 @@ export const useViewStore = defineStore("view", () => {
   const setPickerTarget = (target: FontTarget): void => {
     pickerTarget.value = target;
   };
-
-  watchEffect(() => {
-    document.body.classList.toggle("rail-open", railOpen.value);
-    document.body.classList.toggle("search-open", searchOpen.value);
-    document.body.classList.toggle("chrome-hidden", chromeHidden.value);
-  });
 
   watch(sheetMode, (sheet) => {
     if (sheet) return;
@@ -117,12 +108,12 @@ export const useViewStore = defineStore("view", () => {
 
   const openRail = (): void => {
     if (!overlayRail.value) return;
-    popovers.open(CHAPTER_RAIL, { trigger: byId(UI_IDS.railToggle) });
+    popovers.open(UI_IDS.chapterRail, { trigger: byId(UI_IDS.railToggle) });
     showChrome();
   };
 
   const closeRail = (): void => {
-    if (popovers.isOpen(CHAPTER_RAIL)) popovers.close(CHAPTER_RAIL);
+    if (popovers.isOpen(UI_IDS.chapterRail)) popovers.close(UI_IDS.chapterRail);
   };
 
   const toggleRail = (): void => {
@@ -141,8 +132,6 @@ export const useViewStore = defineStore("view", () => {
   const toggleReveal = (): void => {
     revealOn.value = !revealOn.value;
   };
-
-  const switchLang = (id: string): Promise<void> => useLanguageStore(pinia).switchTo(id);
 
   return {
     sheetMode,
@@ -172,6 +161,5 @@ export const useViewStore = defineStore("view", () => {
     toggleInfer,
     toggleKind,
     toggleReveal,
-    switchLang,
   };
 });

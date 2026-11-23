@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useMediaQuery, useMutationObserver } from "@vueuse/core";
+import { useMediaQuery } from "@vueuse/core";
 import { useVirtualizer } from "@tanstack/vue-virtual";
 import { graph } from "../../data/graph";
 import { specialScripts } from "../../data/special";
@@ -65,14 +65,9 @@ const measureElement = (element: Element | null): void => {
 };
 
 const coarse = useMediaQuery("(pointer: coarse)");
+const prefs = usePrefsStore();
 
-watch(coarse, () => virtualizer.value.measure());
-
-useMutationObserver(
-  () => document.documentElement,
-  () => virtualizer.value.measure(),
-  { attributes: true, attributeFilter: ["style"] },
-);
+watch([coarse, () => prefs.snapshot], () => virtualizer.value.measure(), { flush: "post" });
 
 watch(rows, () => {
   void nextTick(() => virtualizer.value.measure());

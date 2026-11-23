@@ -82,11 +82,9 @@ const weightText = (candidate: PositionCandidate): string =>
 const hasConditions = (candidate: PositionCandidate): boolean =>
   candidate.active || (candidate.adjustments || []).length > 0;
 
-const open = ref(false);
-
 const foldKey = props.foldKey || (props.jump.position ? `pos:${props.jump.position}` : "");
 
-useFoldable(foldKey, open, () => collapsible.value);
+const open = useFoldable(foldKey, () => collapsible.value);
 
 const target = computed(
   () => props.jump.target || (slotCandidates.value.length === 1 ? slotCandidates.value[0] : ""),

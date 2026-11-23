@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useBodyClasses } from "../composables/useBodyClasses";
 import { useShortcuts } from "../composables/useShortcuts";
 import { t } from "../i18n";
 import { byId } from "../lib/dom";
@@ -10,6 +11,8 @@ const store = useScriptStore();
 const view = useViewStore();
 const ui = useUiStore();
 const fold = useFoldStore();
+
+useBodyClasses();
 
 useShortcuts({
   back: () => router.back(),

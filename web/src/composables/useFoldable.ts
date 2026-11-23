@@ -1,30 +1,20 @@
-export const useFoldMemory = (key: string, open: Ref<boolean>): void => {
-  if (!key) return;
-  const fold = useFoldStore();
-  const stored = fold.recall(key);
-  if (stored !== undefined) open.value = stored;
-  watch(open, (value) => fold.remember(key, value), { flush: "sync" });
-};
-
 export const useFoldable = (
   key: string,
-  open: Ref<boolean>,
   enabled: () => boolean = () => true,
-): string => {
-  useFoldMemory(key, open);
+): WritableComputedRef<boolean> => {
   const fold = useFoldStore();
-  const id = useId();
-
+  const open = computed({
+    get: () => fold.isOpen(key),
+    set: (value: boolean) => fold.setOpen(key, value),
+  });
   watch(
     enabled,
     (active) => {
-      if (active) fold.register(id, open);
-      else fold.unregister(id);
+      if (active) fold.register(key);
+      else fold.unregister(key);
     },
     { immediate: true, flush: "sync" },
   );
-
-  onUnmounted(() => fold.unregister(id));
-
-  return id;
+  onUnmounted(() => fold.unregister(key));
+  return open;
 };
