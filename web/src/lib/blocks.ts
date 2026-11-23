@@ -202,12 +202,21 @@ export const buildReaderBlocks = (input: unknown): ReaderBlock[] => {
   return buffer.blocks;
 };
 
+const firstSayCache = new Map<string, string>();
+
 export const firstSayTextOf = (node: GraphNode | null): string => {
   if (!node) return "";
-  const rows = textStore.beatRows(script().textLang(), node.id);
+  const lang = script().textLang();
+  const key = `${lang}\u0000${script().lang}\u0000${node.id}`;
+  const cached = firstSayCache.get(key);
+  if (cached !== undefined) return cached;
+  const rows = textStore.beatRows(lang, node.id);
   if (!rows) return "";
   const first = beatRows.firstSay(rows);
   if (!first) return "";
-  if (!first.speaker) return first.text;
-  return t("lineSpeaker", { name: speakerName(first.speaker), text: first.text });
+  const text = first.speaker
+    ? t("lineSpeaker", { name: speakerName(first.speaker), text: first.text })
+    : first.text;
+  firstSayCache.set(key, text);
+  return text;
 };

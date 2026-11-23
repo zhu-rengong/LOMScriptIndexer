@@ -100,10 +100,8 @@ export const useLookupPanel = () => {
     first: firstSayTextOf(node),
   });
 
-  const flagWriters = computed(() => (flagNodeGroups.value?.writers ?? []).map(rowOf));
-  const flagCheckers = computed(() => (flagNodeGroups.value?.checkers ?? []).map(rowOf));
-  const mainRows = computed(() => matchedNodes.value.map(rowOf));
-  const readerRows = computed(() => checkpointReaders.value.map(rowOf));
+  const flagWriters = computed(() => flagNodeGroups.value?.writers ?? []);
+  const flagCheckers = computed(() => flagNodeGroups.value?.checkers ?? []);
 
   const close = (): void => {
     popovers.close("lookup");
@@ -163,10 +161,11 @@ export const useLookupPanel = () => {
     title,
     subText,
     readsEmptyText,
+    rowOf,
+    mainNodes: matchedNodes,
+    readerNodes: checkpointReaders,
     flagWriters,
     flagCheckers,
-    mainRows,
-    readerRows,
     close,
     pick,
     pickById,

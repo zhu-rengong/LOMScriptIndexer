@@ -1,0 +1,47 @@
+@layer chrome {
+  .brand {
+    display: none;
+  }
+
+  .masthead-title {
+    display: block;
+  }
+
+  .reader-node-title {
+    display: none;
+  }
+
+  .tool-wide {
+    display: none;
+  }
+
+  @media (min-width: 768px) {
+    .brand {
+      display: flex;
+    }
+
+    .masthead-title,
+    .tool-narrow {
+      display: none;
+    }
+
+    .tool-wide {
+      display: inline-flex;
+    }
+
+    .reader-node-title {
+      display: block;
+    }
+
+    .search-close {
+      display: none;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .rail-close-overlay,
+    .rail-toggle-overlay {
+      display: none;
+    }
+  }
+}

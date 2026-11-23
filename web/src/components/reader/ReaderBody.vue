@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useScroll } from "@vueuse/core";
+import { useDebounceFn, useScroll } from "@vueuse/core";
 import { textStore } from "../../data/text";
 import { buildReaderBlocks } from "../../lib/blocks";
 import { normalizeSearchText } from "../../lib/browser";
@@ -76,6 +76,51 @@ const anchorOf = (element: HTMLElement): ReadingAnchor => {
   return { index, offset };
 };
 
+const rememberReading = (): void => {
+  const element = body.value;
+  const current = node.value;
+  if (!element || !current) return;
+  store.rememberAnchor(current.id, anchorOf(element));
+};
+
+const alignTo = (element: HTMLElement, target: HTMLElement, position: number): void => {
+  for (let pass = 0; pass < 6; pass++) {
+    const scale = scaleOf(element);
+    const gap = (target.getBoundingClientRect().top - element.getBoundingClientRect().top) / scale;
+    const delta = gap - position;
+    if (Math.abs(delta) < 1) return;
+    const before = element.scrollTop;
+    element.scrollTop = before + delta;
+    if (element.scrollTop === before) return;
+  }
+};
+
+let settleToken = 0;
+let settling = false;
+
+const scrollToTarget = (target: HTMLElement | null, position: number): void => {
+  const element = body.value;
+  if (!element) return;
+  const token = ++settleToken;
+  settling = true;
+  if (target) alignTo(element, target, position);
+  else element.scrollTop = 0;
+  scrollBase = element.scrollTop;
+  requestAnimationFrame(() => {
+    void nextTick(() => {
+      if (token !== settleToken) return;
+      const current = body.value;
+      if (current) {
+        if (target) alignTo(current, target, position);
+        else current.scrollTop = 0;
+        scrollBase = current.scrollTop;
+      }
+      settling = false;
+      rememberReading();
+    });
+  });
+};
+
 const restoreScroll = (): void => {
   const element = body.value;
   const current = node.value;
@@ -83,17 +128,20 @@ const restoreScroll = (): void => {
   const anchor = store.readingAnchor(current.id);
   const target = anchor ? element.children[anchor.index] : undefined;
   if (anchor && target instanceof HTMLElement) {
-    target.scrollIntoView({ block: "start", inline: "nearest", behavior: "instant" });
-    if (anchor.offset) element.scrollBy({ top: anchor.offset, behavior: "instant" });
-  } else {
-    element.scrollTo({ top: 0, behavior: "instant" });
+    const height = Math.round(target.getBoundingClientRect().height / scaleOf(element));
+    const offset = anchor.offset >= 0 && anchor.offset <= height ? anchor.offset : 0;
+    scrollToTarget(target, -offset);
+    return;
   }
-  scrollBase = element.scrollTop;
+  scrollToTarget(null, 0);
 };
 
 const scrollHit = (target: HTMLElement) => {
-  target.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
-  if (body.value) scrollBase = body.value.scrollTop;
+  const element = body.value;
+  if (!element) return;
+  const box = element.getBoundingClientRect();
+  const height = target.getBoundingClientRect().height;
+  scrollToTarget(target, Math.max(0, (box.height - height) / 2 / scaleOf(element)));
 };
 
 const revealHit = (target: HTMLElement) => {
@@ -166,6 +214,8 @@ watch(blocks, async () => {
   await applyHit();
 });
 
+const rememberSettled = useDebounceFn(rememberReading, 120);
+
 watch(
   () => panels.pendingHit,
   async () => {
@@ -199,6 +249,7 @@ const { y } = useScroll(body);
 watch(y, (value) => {
   const delta = value - scrollBase;
   scrollBase = value;
+  if (!settling && !pendingRestore) rememberSettled();
   if (!view.sheetMode || pendingRestore) return;
   const element = body.value;
   if (!element) return;

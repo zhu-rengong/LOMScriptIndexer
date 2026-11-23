@@ -1134,6 +1134,8 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 3px var(--sp-2);
+    content-visibility: auto;
+    contain-intrinsic-size: auto 48px;
   }
 
   .lookup-item .li-top {
@@ -1909,6 +1911,12 @@
     max-width: calc(100vw - 24px);
     max-height: min(var(--pop-max-h, 100vh), var(--pop-cap, 100vh));
     margin: 0;
+  }
+
+  @media (max-width: 767px) {
+    .help-keys {
+      display: none;
+    }
   }
 
   @media (min-width: 768px) {

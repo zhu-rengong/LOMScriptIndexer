@@ -1,4 +1,4 @@
-@layer tokens, base, shell, controls, reader, panels, motion, type;
+@layer tokens, base, shell, controls, reader, panels, motion, type, chrome;
 
 @import "./tokens.css";
 @import "./base.css";
@@ -8,3 +8,4 @@
 @import "./panels.css";
 @import "./motion.css";
 @import "./type.css";
+@import "./chrome.css";

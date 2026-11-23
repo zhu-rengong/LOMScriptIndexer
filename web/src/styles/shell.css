@@ -20,21 +20,8 @@
   }
 
   .brand {
-    display: none;
     align-items: center;
     min-width: 0;
-  }
-
-  .masthead-title {
-    display: block;
-  }
-
-  .reader-node-title {
-    display: none;
-  }
-
-  .tool-wide {
-    display: none;
   }
 
   .seal {
@@ -993,27 +980,6 @@
       transition: none;
     }
 
-    .brand {
-      display: flex;
-    }
-
-    .masthead-title,
-    .tool-narrow {
-      display: none;
-    }
-
-    .tool-wide {
-      display: inline-flex;
-    }
-
-    .reader-node-title {
-      display: block;
-    }
-
-    .search-close {
-      display: none;
-    }
-
     .seal {
       width: 38px;
       height: 38px;
@@ -1105,11 +1071,6 @@
   @media (min-width: 1024px) {
     .masthead {
       gap: var(--sp-4);
-    }
-
-    .rail-close-overlay,
-    .rail-toggle-overlay {
-      display: none;
     }
 
     .brand-text h1 {

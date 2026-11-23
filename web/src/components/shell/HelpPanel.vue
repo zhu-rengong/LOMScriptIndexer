@@ -68,7 +68,7 @@ onMounted(() => {
       </button>
     </header>
     <div id="helpBody" class="help-body">
-      <section v-for="group in HELP_GROUPS" :key="group.title" class="help-group">
+      <section v-for="group in HELP_GROUPS" :key="group.title" class="help-group help-keys">
         <h3 class="help-group-title">{{ t(group.title) }}</h3>
         <dl class="help-list">
           <template v-for="row in group.rows" :key="row[0]">
