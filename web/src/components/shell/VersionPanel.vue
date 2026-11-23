@@ -1,10 +1,17 @@
 <script setup lang="ts">
+import { readDataset } from "../../data/access";
 import { t } from "../../i18n";
 import { popovers } from "../../lib/popover";
 import { versionInfo } from "../../lib/version";
 import { UI_IDS } from "../../ui/ids";
 
 const open = computed(() => popovers.isOpen("version"));
+
+const gameVersion = computed(() => {
+  const game = readDataset().meta.game;
+  if (!game?.version) return "";
+  return game.build ? `${game.version} (${t("gameBuild", { build: game.build })})` : game.version;
+});
 
 const close = () => popovers.close("version");
 
@@ -41,6 +48,10 @@ onMounted(() => {
       </button>
     </header>
     <dl class="version-list">
+      <div class="version-row">
+        <dt>{{ t("versionGame") }}</dt>
+        <dd>{{ gameVersion || t("versionUnknown") }}</dd>
+      </div>
       <div class="version-row">
         <dt>{{ t("versionPy") }}</dt>
         <dd>{{ versionInfo.py || t("versionUnknown") }}</dd>
