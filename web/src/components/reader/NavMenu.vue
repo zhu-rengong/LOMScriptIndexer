@@ -10,7 +10,7 @@ import { UI_IDS } from "../../ui/ids";
 
 const store = useScriptStore();
 
-const open = computed(() => popovers.isOpen("navMenu"));
+const open = computed(() => popovers.isOpen(UI_IDS.navMenu));
 
 const node = computed(() => store.selected());
 
@@ -53,8 +53,8 @@ const pick = (id: string) => {
 };
 
 onMounted(() => {
-  popovers.register("navMenu", {
-    id: "navMenu",
+  popovers.register(UI_IDS.navMenu, {
+    id: UI_IDS.navMenu,
     triggerId: UI_IDS.navBtn,
     group: "menu",
     placement: { align: "end", width: 340 },
@@ -63,7 +63,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div id="navMenu" class="menu menu-wide surface popover" role="menu" :hidden="!open">
+  <div :id="UI_IDS.navMenu" class="menu menu-wide surface popover" role="menu" :hidden="!open">
     <div class="menu-list popover-list">
       <div class="menu-head">{{ t("navOut", { n: outgoing.length }) }}</div>
       <template v-if="outgoing.length">

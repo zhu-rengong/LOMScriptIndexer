@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import { toNeedle } from "../../lib/browser";
+import { scrollAt, stepIndex } from "../../lib/listNav";
 import { popovers } from "../../lib/popover";
+import { toNeedle } from "../../lib/strings";
 import { ensureSystemFonts, systemFonts, systemFontStatus } from "../../lib/systemFonts";
+import { UI_IDS } from "../../ui/ids";
 import type { FontTarget } from "../../types/font";
 import { useFontSetting } from "../../composables/useFontSetting";
 
@@ -30,7 +32,7 @@ const manualOpen = ref(false);
 const manualValue = ref("");
 const moved = ref(false);
 
-const open = computed(() => popovers.isOpen("fontPicker"));
+const open = computed(() => popovers.isOpen(UI_IDS.fontPicker));
 
 const pickerItems = computed<PickerItem[]>(() => {
   const list: PickerItem[] = [];
@@ -90,7 +92,7 @@ const applyManual = () => {
   const value = manualValue.value.trim();
   if (!value) return;
   apply(value);
-  popovers.close("fontPicker");
+  popovers.close(UI_IDS.fontPicker);
   ui.toast(t("fontPicked", { name: value }));
 };
 
@@ -100,7 +102,7 @@ const pick = (item: PickerItem) => {
     return;
   }
   apply(item.value);
-  popovers.close("fontPicker");
+  popovers.close(UI_IDS.fontPicker);
   ui.toast(t("fontPicked", { name: item.label }));
 };
 
@@ -130,8 +132,7 @@ const fontHint = computed(() => {
 const move = (step: number) => {
   if (!visibleItems.value.length) return;
   moved.value = true;
-  activeIndex.value =
-    (activeIndex.value + step + visibleItems.value.length) % visibleItems.value.length;
+  activeIndex.value = stepIndex(activeIndex.value, step, visibleItems.value.length, true);
 };
 
 const onKeydown = (event: KeyboardEvent) => {
@@ -175,14 +176,12 @@ watch(visibleItems, () => {
 
 watch(activeIndex, async () => {
   await nextTick();
-  const row = listRef.value?.querySelectorAll(".picker-item")[activeIndex.value] as
-    HTMLElement | undefined;
-  if (row && row.scrollIntoView) row.scrollIntoView({ block: "nearest" });
+  scrollAt(listRef.value, ".picker-item", activeIndex.value);
 });
 
 onMounted(() => {
-  popovers.register("fontPicker", {
-    id: "fontPicker",
+  popovers.register(UI_IDS.fontPicker, {
+    id: UI_IDS.fontPicker,
     group: "menu",
     keep: ["settings"],
     placement: { align: "start", gap: 6, width: 300 },
@@ -195,7 +194,7 @@ onMounted(() => {
 
 <template>
   <div
-    id="fontPicker"
+    :id="UI_IDS.fontPicker"
     class="picker popover surface is-anchored"
     role="listbox"
     :aria-label="t('typeFont')"

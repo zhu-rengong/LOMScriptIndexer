@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { createGripController } from "../../composables/grip";
 import { t } from "../../i18n";
-import { byId } from "../../lib/browser";
+import { byId } from "../../lib/dom";
 import { UI_IDS } from "../../ui/ids";
 
 const store = useScriptStore();

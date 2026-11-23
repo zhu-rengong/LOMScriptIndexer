@@ -49,13 +49,13 @@ const toggleSearch = () => {
 
     <div class="menu-wrap">
       <button
-        id="langBtn"
+        :id="UI_IDS.langBtn"
         class="btn lang-btn"
         :class="{ 'is-on': langOpen }"
         type="button"
         aria-haspopup="true"
         :aria-expanded="langOpen"
-        aria-controls="langMenu"
+        :aria-controls="UI_IDS.langMenu"
         :title="t('langBtnTitle')"
         :aria-label="t('langBtnTitle')"
         @click.stop="toggle('langMenu')"
@@ -67,13 +67,13 @@ const toggleSearch = () => {
     </div>
 
     <button
-      id="statsBtn"
+      :id="UI_IDS.statsBtn"
       class="btn btn-icon tool-wide"
       :class="{ 'is-on': statsOpen }"
       type="button"
       aria-haspopup="dialog"
       :aria-expanded="statsOpen"
-      aria-controls="statsPanel"
+      :aria-controls="UI_IDS.statsPanel"
       :title="t('statsBtnTitle')"
       :aria-label="t('statsBtnTitle')"
       @click="toggle('stats')"
@@ -82,13 +82,13 @@ const toggleSearch = () => {
     </button>
 
     <button
-      id="helpBtn"
+      :id="UI_IDS.helpBtn"
       class="btn btn-icon tool-wide"
       :class="{ 'is-on': helpOpen }"
       type="button"
       aria-haspopup="dialog"
       :aria-expanded="helpOpen"
-      aria-controls="helpPanel"
+      :aria-controls="UI_IDS.helpPanel"
       :title="t('helpBtnTitle')"
       :aria-label="t('helpBtnTitle')"
       @click="toggle('help')"
@@ -97,13 +97,13 @@ const toggleSearch = () => {
     </button>
 
     <button
-      id="changelogBtn"
+      :id="UI_IDS.changelogBtn"
       class="btn btn-icon tool-wide"
       :class="{ 'is-on': changelogOpen }"
       type="button"
       aria-haspopup="dialog"
       :aria-expanded="changelogOpen"
-      aria-controls="changelogPanel"
+      :aria-controls="UI_IDS.changelogPanel"
       :title="t('changelogBtnTitle')"
       :aria-label="t('changelogBtnTitle')"
       @click="toggle('changelog')"
@@ -136,13 +136,13 @@ const toggleSearch = () => {
     </a>
 
     <button
-      id="settingsBtn"
+      :id="UI_IDS.settingsBtn"
       class="btn btn-icon"
       :class="{ 'is-on': settingsOpen }"
       type="button"
       aria-haspopup="dialog"
       :aria-expanded="settingsOpen"
-      aria-controls="settingsDrawer"
+      :aria-controls="UI_IDS.settingsDrawer"
       :title="t('settingsBtnTitle')"
       :aria-label="t('settingsBtnTitle')"
       @click="toggle('settings')"
@@ -152,13 +152,13 @@ const toggleSearch = () => {
 
     <div class="menu-wrap more-wrap">
       <button
-        id="moreBtn"
+        :id="UI_IDS.moreBtn"
         class="btn btn-icon"
         :class="{ 'is-on': moreOpen }"
         type="button"
         aria-haspopup="true"
         :aria-expanded="moreOpen"
-        aria-controls="moreMenu"
+        :aria-controls="UI_IDS.moreMenu"
         :title="t('moreTitle')"
         :aria-label="t('moreTitle')"
         @click.stop="toggle('moreMenu')"

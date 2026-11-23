@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { useInfiniteScroll } from "@vueuse/core";
 import { chapterTitle, t } from "../../i18n";
-import { nearBottom } from "../../lib/browser";
+import { scrollAt } from "../../lib/listNav";
 
 const SCROLL_THRESHOLD = 96;
 
@@ -36,18 +37,16 @@ const splitSnippet = (hit: SearchHit) => {
 
 const rows = computed(() => visibleHits.value.map((hit) => ({ hit, parts: splitSnippet(hit) })));
 
-const onScroll = () => {
-  const node = panel.value;
-  if (!node || !nearBottom(node, SCROLL_THRESHOLD)) return;
-  emit("more");
-};
+useInfiniteScroll(panel, () => emit("more"), {
+  distance: SCROLL_THRESHOLD,
+  canLoadMore: () => props.renderedCount < props.hits.length,
+});
 
 watch(
   () => props.activeIndex,
   async (index) => {
     await nextTick();
-    const node = panel.value?.querySelectorAll<HTMLElement>(".drop-item")[index];
-    node?.scrollIntoView({ block: "nearest" });
+    scrollAt(panel.value, ".drop-item", index);
   },
 );
 </script>
@@ -59,7 +58,6 @@ watch(
     class="dropdown surface popover"
     role="listbox"
     :hidden="isHidden"
-    @scroll="onScroll"
   >
     <div class="drop-scope">
       <span class="drop-scope-text">

@@ -2,6 +2,7 @@
 import { useStatsPanel } from "../../composables/useStatsPanel";
 import { t } from "../../i18n";
 import { formatCount } from "../../lib/numbers";
+import { UI_IDS } from "../../ui/ids";
 
 const {
   open,
@@ -21,7 +22,7 @@ const {
 <template>
   <div class="scrim scrim-sheet" :hidden="!open" @click="close"></div>
   <div
-    id="statsPanel"
+    :id="UI_IDS.statsPanel"
     class="stats-panel surface"
     role="dialog"
     aria-modal="true"
@@ -31,7 +32,7 @@ const {
     <header class="panel-head stats-panel-head">
       <h2 id="statsHeading" class="panel-title">{{ t("statsTitle") }}</h2>
       <button
-        id="statsClose"
+        :id="UI_IDS.statsClose"
         class="btn btn-icon"
         type="button"
         :title="t('closeTitle')"

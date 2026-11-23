@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { t, typeLabel } from "../../i18n";
+import { useRovingList } from "../../composables/useRovingList";
+import { t, tOr, typeLabel } from "../../i18n";
 import { FOLLOW_BASE, FOLLOW_GROUP, fontLabelKey } from "../../lib/fontFamilies";
 import { GROUPS, groupById, slotById, slotsOfGroup } from "../../lib/fontTypes";
 import { fontDisplayName } from "../../lib/systemFonts";
@@ -32,8 +33,7 @@ const fontText = (scope: FontScope, id: string): string => {
   const value = scope === "group" ? prefs.groups[id]?.font : prefs.slots[id]?.font;
   if (!value || value === FOLLOW_BASE || value === FOLLOW_GROUP) return t("pref.followShort");
   const key = fontLabelKey(value);
-  const text = t(key);
-  return text === key ? fontDisplayName(key) : text;
+  return tOr(key, fontDisplayName(key));
 };
 
 const rows = computed<TreeRow[]>(() => {
@@ -66,21 +66,10 @@ const pick = (row: TreeRow) => {
   view.setFontTarget({ scope: row.scope, id: row.id });
 };
 
-const onKeydown = (event: KeyboardEvent) => {
-  if (["ArrowDown", "ArrowUp", "Home", "End"].indexOf(event.key) < 0) return;
-  const host = treeEl.value;
-  if (!host) return;
-  const items = Array.from(host.querySelectorAll<HTMLButtonElement>(".type-tree-row"));
-  const index = items.indexOf(document.activeElement as HTMLButtonElement);
-  if (index < 0) return;
-  event.preventDefault();
-  let next = index;
-  if (event.key === "ArrowDown") next = Math.min(items.length - 1, index + 1);
-  if (event.key === "ArrowUp") next = Math.max(0, index - 1);
-  if (event.key === "Home") next = 0;
-  if (event.key === "End") next = items.length - 1;
-  items[next]?.focus();
-};
+const { onKeydown } = useRovingList({
+  container: treeEl,
+  selector: ".type-tree-row",
+});
 </script>
 
 <template>

@@ -1,7 +1,7 @@
 import { graph } from "../data/graph";
 import { specialScriptName, specialScripts } from "../data/special";
 import { chapterTitle } from "../i18n";
-import { toNeedle } from "./browser";
+import { toNeedle } from "./strings";
 
 export type RailRow =
   | {

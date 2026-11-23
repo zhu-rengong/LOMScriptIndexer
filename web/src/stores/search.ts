@@ -2,7 +2,7 @@ import { convert } from "../data/convert";
 import { graph } from "../data/graph";
 import { textStore } from "../data/text";
 import type { Chapter } from "../types/graph";
-import { normalizeSearchText } from "../lib/browser";
+import { normalizeSearchText } from "../lib/strings";
 import { createSearchEngine, searchCandidates, type SearchDoc } from "../lib/searchEngine";
 import { resetSearchText, searchLinesOfId, type SearchLine } from "../lib/searchText";
 import type { FocusTarget } from "./panels";

@@ -2,7 +2,7 @@
 import { useDebounceFn } from "@vueuse/core";
 import { textStore } from "../../data/text";
 import { buildReaderBlocks } from "../../lib/blocks";
-import { normalizeSearchText } from "../../lib/browser";
+import { normalizeSearchText } from "../../lib/strings";
 import type { ReadingAnchor } from "../../stores/script";
 
 const store = useScriptStore();

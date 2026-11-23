@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import { byId } from "../../lib/browser";
+import { byId } from "../../lib/dom";
 import { popovers } from "../../lib/popover";
 import { BASE_TARGET, GROUPS, firstSlot, groupById, slotById } from "../../lib/fontTypes";
 import { ensureSystemFonts } from "../../lib/systemFonts";
@@ -169,7 +169,7 @@ onMounted(() => {
           class="btn select settings-select type-group-pick"
           type="button"
           aria-haspopup="listbox"
-          aria-controls="typeGroupPick"
+          :aria-controls="UI_IDS.typeGroupPick"
           :aria-expanded="groupPickOpen"
           @click="toggleGroupPick"
         >

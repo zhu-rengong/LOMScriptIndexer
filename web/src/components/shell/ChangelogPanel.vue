@@ -32,7 +32,7 @@ onMounted(() => {
 <template>
   <div class="scrim scrim-sheet" :hidden="!open" @click="close"></div>
   <div
-    id="changelogPanel"
+    :id="UI_IDS.changelogPanel"
     class="changelog-panel surface"
     role="dialog"
     aria-modal="true"
@@ -42,7 +42,7 @@ onMounted(() => {
     <header class="panel-head">
       <h2 id="changelogHeading" class="panel-title">{{ t("changelogTitle") }}</h2>
       <button
-        id="changelogClose"
+        :id="UI_IDS.changelogClose"
         class="btn btn-icon"
         type="button"
         :title="t('closeTitle')"

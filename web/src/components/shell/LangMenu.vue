@@ -8,16 +8,16 @@ const view = useViewStore();
 
 const items = computed(() => languages());
 
-const open = computed(() => popovers.isOpen("langMenu"));
+const open = computed(() => popovers.isOpen(UI_IDS.langMenu));
 
 const pick = (id: string) => {
-  popovers.close("langMenu");
+  popovers.close(UI_IDS.langMenu);
   void view.switchLang(id);
 };
 
 onMounted(() => {
-  popovers.register("langMenu", {
-    id: "langMenu",
+  popovers.register(UI_IDS.langMenu, {
+    id: UI_IDS.langMenu,
     triggerId: UI_IDS.langBtn,
     group: "menu",
     placement: { align: "end", width: 240 },
@@ -27,7 +27,7 @@ onMounted(() => {
 
 <template>
   <div
-    id="langMenu"
+    :id="UI_IDS.langMenu"
     class="menu surface popover"
     role="menu"
     :aria-label="t('moreLang')"

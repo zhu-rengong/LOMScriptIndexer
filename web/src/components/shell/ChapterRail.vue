@@ -4,7 +4,7 @@ import { useVirtualizer } from "@tanstack/vue-virtual";
 import { graph } from "../../data/graph";
 import { specialScripts } from "../../data/special";
 import { t } from "../../i18n";
-import { toNeedle } from "../../lib/browser";
+import { toNeedle } from "../../lib/strings";
 import { bookmarkRows, outlineRows, specialRows, type RailRow } from "../../lib/rail";
 
 type RailTab = "outline" | "bookmarks" | "special";

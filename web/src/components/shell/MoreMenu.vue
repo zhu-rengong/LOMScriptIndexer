@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import { byId } from "../../lib/browser";
+import { byId } from "../../lib/dom";
 import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
 
-const open = computed(() => popovers.isOpen("moreMenu"));
+const open = computed(() => popovers.isOpen(UI_IDS.moreMenu));
 const exporting = ref(false);
 
 const openStats = () => {
@@ -24,7 +24,7 @@ const openVersion = () => {
 };
 
 const runExport = async (): Promise<void> => {
-  popovers.close("moreMenu");
+  popovers.close(UI_IDS.moreMenu);
   if (exporting.value) return;
   exporting.value = true;
   try {
@@ -39,8 +39,8 @@ const runExport = async (): Promise<void> => {
 };
 
 onMounted(() => {
-  popovers.register("moreMenu", {
-    id: "moreMenu",
+  popovers.register(UI_IDS.moreMenu, {
+    id: UI_IDS.moreMenu,
     triggerId: UI_IDS.moreBtn,
     group: "menu",
     placement: { align: "end", width: 268 },
@@ -49,7 +49,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div id="moreMenu" class="menu surface popover" role="menu" :hidden="!open">
+  <div :id="UI_IDS.moreMenu" class="menu surface popover" role="menu" :hidden="!open">
     <button class="menu-item row" type="button" @click="openStats">{{ t("statsBtn") }}</button>
     <button class="menu-item row" type="button" @click="openHelp">{{ t("helpTitle") }}</button>
     <button class="menu-item row" type="button" @click="openChangelog">

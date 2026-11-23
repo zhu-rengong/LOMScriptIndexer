@@ -14,8 +14,3 @@ export const normalizeSearchText = (value: unknown): string =>
     .replace(ZERO_WIDTH, "")
     .replace(HAN_GAP, "")
     .trim();
-
-export const nearBottom = (node: HTMLElement, threshold: number): boolean =>
-  node.scrollHeight - node.scrollTop - node.clientHeight < threshold;
-
-export const byId = (id: string): HTMLElement | null => document.getElementById(id);

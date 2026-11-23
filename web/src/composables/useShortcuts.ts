@@ -1,4 +1,5 @@
 import { onKeyStroke } from "@vueuse/core";
+import { isTypingTarget } from "../lib/dom";
 
 export type ShortcutHandlers = {
   back: () => void;
@@ -17,12 +18,7 @@ type BindOptions = {
   dedupe?: boolean;
 };
 
-const typingInField = (): boolean => {
-  const active = document.activeElement as HTMLElement | null;
-  if (!active) return false;
-  const tag = (active.tagName || "").toLowerCase();
-  return tag === "input" || tag === "textarea" || active.isContentEditable;
-};
+const typingInField = (): boolean => isTypingTarget(document.activeElement);
 
 const idle = (event: KeyboardEvent): boolean =>
   !event.defaultPrevented && !event.ctrlKey && !event.metaKey && !event.altKey && !typingInField();

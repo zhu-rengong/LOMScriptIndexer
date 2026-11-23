@@ -1,13 +1,20 @@
 <script setup lang="ts">
+import { useRovingList } from "../../composables/useRovingList";
 import { t } from "../../i18n";
-import { byId } from "../../lib/browser";
 import { GROUPS, groupById, slotsOfGroup } from "../../lib/fontTypes";
 import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
 
 const props = defineProps<{ groupId: string }>();
 
-const PANEL = "typeGroupPick";
+const PANEL = UI_IDS.typeGroupPick;
+
+const panelEl = ref<HTMLElement | null>(null);
+
+const { onKeydown, focusInitial } = useRovingList({
+  container: panelEl,
+  selector: ".picker-item",
+});
 
 const view = useViewStore();
 
@@ -28,30 +35,9 @@ const pick = (id: string) => {
   popovers.close(PANEL);
 };
 
-const onKeydown = (event: KeyboardEvent) => {
-  if (["ArrowDown", "ArrowUp", "Home", "End"].indexOf(event.key) < 0) return;
-  const host = byId(PANEL);
-  if (!host) return;
-  const list = Array.from(host.querySelectorAll<HTMLButtonElement>(".picker-item"));
-  const index = list.indexOf(document.activeElement as HTMLButtonElement);
-  if (index < 0) return;
-  event.preventDefault();
-  let next = index;
-  if (event.key === "ArrowDown") next = Math.min(list.length - 1, index + 1);
-  if (event.key === "ArrowUp") next = Math.max(0, index - 1);
-  if (event.key === "Home") next = 0;
-  if (event.key === "End") next = list.length - 1;
-  list[next]?.focus();
-};
-
-watch(open, async (value) => {
+watch(open, (value) => {
   if (!value) return;
-  await nextTick();
-  const host = byId(PANEL);
-  const node =
-    host?.querySelector<HTMLButtonElement>('.picker-item[aria-selected="true"]') ||
-    host?.querySelector<HTMLButtonElement>(".picker-item");
-  node?.focus();
+  void focusInitial('.picker-item[aria-selected="true"]');
 });
 
 onMounted(() => {
@@ -68,6 +54,7 @@ onMounted(() => {
 <template>
   <div
     :id="PANEL"
+    ref="panelEl"
     class="picker popover surface is-anchored"
     role="listbox"
     tabindex="-1"

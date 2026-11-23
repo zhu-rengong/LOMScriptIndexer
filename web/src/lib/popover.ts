@@ -3,7 +3,7 @@ import { useFocusTrap } from "@vueuse/integrations/useFocusTrap";
 import type { LocationQueryRaw, RouteLocationPathRaw } from "vue-router";
 import { router } from "../router";
 import type { OverlayKey } from "../ui/ids";
-import { byId } from "./browser";
+import { byId } from "./dom";
 import { panelOf, stripPanel, withPanel } from "./overlayRoute";
 import type { OverlayPayload } from "./overlayRoute";
 import { placePanel, trackPlacement } from "./placement";

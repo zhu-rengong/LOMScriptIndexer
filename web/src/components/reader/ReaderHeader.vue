@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
-import { byId } from "../../lib/browser";
+import { byId } from "../../lib/dom";
 import { canBack, canForward, navBack, navForward } from "../../lib/navHistory";
 import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";

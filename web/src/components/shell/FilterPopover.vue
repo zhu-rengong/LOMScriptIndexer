@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { useDebounceFn } from "@vueuse/core";
+import { useDebounceFn, useInfiniteScroll } from "@vueuse/core";
 import { graph } from "../../data/graph";
 import { chapterTitle, t } from "../../i18n";
-import { byId, nearBottom } from "../../lib/browser";
+import { byId } from "../../lib/dom";
 import { applyFilter, FIELD_LABEL_KEYS, RESULT_LIMIT } from "../../lib/filter";
+import { scrollAt } from "../../lib/listNav";
 import { popovers } from "../../lib/popover";
 import { query } from "../../lib/query";
 import type { QuerySuggestion } from "../../types/query";
@@ -109,6 +110,25 @@ const activeOptionId = computed(() => {
   return `${SUGGEST_KEY}-${index}`;
 });
 
+useInfiniteScroll(
+  suggestPanel,
+  () => {
+    suggestLimit.value = Math.min(
+      suggestState.value.items.length,
+      suggestLimit.value + SUGGEST_LIMIT,
+    );
+  },
+  { distance: 40, canLoadMore: () => suggestLimit.value < suggestState.value.items.length },
+);
+
+useInfiniteScroll(
+  resultsPanel,
+  () => {
+    visibleLimit.value = Math.min(hitNodeIndexes.value.length, visibleLimit.value + RESULT_LIMIT);
+  },
+  { distance: 40, canLoadMore: () => visibleLimit.value < hitNodeIndexes.value.length },
+);
+
 watch(suggestState, () => {
   suggestLimit.value = SUGGEST_LIMIT;
   void nextTick(() => {
@@ -123,18 +143,9 @@ watch(
       suggestLimit.value = Math.min(suggestState.value.items.length, index + SUGGEST_LIMIT);
     }
     await nextTick();
-    const rows = suggestPanel.value?.querySelectorAll<HTMLElement>(".suggest-item");
-    const row = rows?.[index];
-    if (row) row.scrollIntoView({ block: "nearest" });
+    scrollAt(suggestPanel.value, ".suggest-item", index);
   },
 );
-
-const onSuggestScroll = (event: Event) => {
-  const node = event.currentTarget as HTMLElement;
-  if (!nearBottom(node, 40)) return;
-  const total = suggestState.value.items.length;
-  suggestLimit.value = Math.min(total, suggestLimit.value + SUGGEST_LIMIT);
-};
 
 const openPopover = () => {
   exprValue.value = store.filterSource;
@@ -157,12 +168,6 @@ const closePanel = () => popovers.close(POPOVER_KEY);
 const onChipInsert = (value: string) => {
   insertAtCursor(value);
   applyDebounced();
-};
-
-const onResultsScroll = () => {
-  const node = resultsPanel.value;
-  if (!node || !nearBottom(node, 40)) return;
-  visibleLimit.value = Math.min(hitNodeIndexes.value.length, visibleLimit.value + RESULT_LIMIT);
 };
 
 const pickNode = (id: string) => {
@@ -195,7 +200,7 @@ const isPopoverOpen = computed(() => popovers.isOpen(POPOVER_KEY));
 <template>
   <div class="menu-wrap">
     <button
-      id="filterBtn"
+      :id="UI_IDS.filterBtn"
       class="btn filter-btn"
       type="button"
       aria-haspopup="dialog"
@@ -259,7 +264,6 @@ const isPopoverOpen = computed(() => popovers.isOpen(POPOVER_KEY));
             class="filter-suggest surface popover is-anchored"
             role="listbox"
             :hidden="!isSuggestOpen"
-            @scroll.passive="onSuggestScroll"
           >
             <template v-if="suggestRows.length">
               <button
@@ -316,12 +320,7 @@ const isPopoverOpen = computed(() => popovers.isOpen(POPOVER_KEY));
         <div v-if="!hitNodeIndexes.length" class="filter-results-empty">
           {{ t("filterResultsEmpty") }}
         </div>
-        <div
-          v-else
-          ref="resultsPanel"
-          class="filter-results-list"
-          @scroll.passive="onResultsScroll"
-        >
+        <div v-else ref="resultsPanel" class="filter-results-list">
           <button
             v-for="row in resultRows"
             :key="row.id"

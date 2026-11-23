@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useShortcuts } from "../composables/useShortcuts";
 import { t } from "../i18n";
-import { byId } from "../lib/browser";
+import { byId } from "../lib/dom";
 import { navBack, navForward } from "../lib/navHistory";
 import { popovers } from "../lib/popover";
 import { UI_IDS } from "../ui/ids";
@@ -20,10 +20,7 @@ useShortcuts({
     const on = store.toggleBookmark(node.id);
     ui.toast(t(on ? "bookmarkAdded" : "bookmarkRemoved"));
   },
-  jump: () => {
-    const button = byId(UI_IDS.navBtn) as HTMLButtonElement | null;
-    if (button && !button.disabled) button.click();
-  },
+  jump: () => popovers.toggle("navMenu"),
   help: () => popovers.toggle("help", byId(UI_IDS.helpBtn)),
   search: view.openSearch,
   infer: view.toggleInfer,

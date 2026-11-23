@@ -1,7 +1,8 @@
 import { useDebounceFn } from "@vueuse/core";
 import { textStore } from "../data/text";
 import { t } from "../i18n";
-import { byId } from "../lib/browser";
+import { byId } from "../lib/dom";
+import { clampIndex, stepIndex } from "../lib/listNav";
 import { popovers } from "../lib/popover";
 import { UI_IDS } from "../ui/ids";
 
@@ -189,7 +190,7 @@ export const useSearchPanel = () => {
   const onInput = useDebounceFn(submit, 160);
 
   const pickAt = (index: number): boolean => {
-    const hit = hits.value[Math.min(index, hits.value.length - 1)] ?? hits.value[0];
+    const hit = hits.value[clampIndex(index, hits.value.length)];
     if (!hit) return false;
     panels.focusText(hit.id, hit.anchor, hit.target);
     store.select(hit.id);
@@ -207,7 +208,7 @@ export const useSearchPanel = () => {
       if (!count) return;
       event.preventDefault();
       const step = event.key === "ArrowDown" ? 1 : -1;
-      activeIndex.value = (activeIndex.value + step + count) % count;
+      activeIndex.value = stepIndex(activeIndex.value, step, count, true);
       return;
     }
     if (event.key === "Enter") {

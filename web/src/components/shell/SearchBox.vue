@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 import { useSearchPanel } from "../../composables/useSearchPanel";
-import { byId } from "../../lib/browser";
 import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
 
@@ -24,9 +23,11 @@ const {
 
 const view = useViewStore();
 
+const input = ref<HTMLInputElement | null>(null);
+
 const closeSearch = () => {
   view.collapseSearch();
-  (byId(UI_IDS.search) as HTMLInputElement | null)?.blur();
+  input.value?.blur();
 };
 
 onMounted(() => {
@@ -44,6 +45,7 @@ onMounted(() => {
       <AppIcon name="search" class="search-icon" />
       <input
         :id="UI_IDS.search"
+        ref="input"
         v-model="query"
         class="search-input"
         type="search"

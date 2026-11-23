@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { useInfiniteScroll } from "@vueuse/core";
 import { useLookupPanel } from "../../composables/useLookupPanel";
 import { missions } from "../../data/missions";
 import { t } from "../../i18n";
-import { nearBottom } from "../../lib/browser";
 import type { GraphNode } from "../../types/graph";
 
 const PAGE = 60;
@@ -49,11 +49,13 @@ const hasMore = computed(() => {
   return limit.value < mainNodes.value.length || limit.value < readerNodes.value.length;
 });
 
-const onScroll = () => {
-  const node = list.value;
-  if (!node || !hasMore.value || !nearBottom(node, 96)) return;
-  limit.value += PAGE;
-};
+useInfiniteScroll(
+  list,
+  () => {
+    limit.value += PAGE;
+  },
+  { distance: 96, canLoadMore: () => hasMore.value },
+);
 
 watch(
   () => [open.value, kind.value, key.value, method.value].join("\u0000"),
@@ -85,7 +87,7 @@ watch(
       </button>
     </header>
     <p v-if="subText" id="lookupSub" class="lookup-sub">{{ subText }}</p>
-    <div id="lookupList" ref="list" class="lookup-list popover-list" @scroll.passive="onScroll">
+    <div id="lookupList" ref="list" class="lookup-list popover-list">
       <template v-if="kind === 'mission'">
         <p v-if="!mainRows.length" class="lookup-empty popover-empty">
           {{ t("lookupEmpty") }}

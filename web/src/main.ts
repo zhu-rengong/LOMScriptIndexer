@@ -1,5 +1,4 @@
-import type { TranslationKey } from "./i18n";
-import { syncLocale, t } from "./i18n";
+import { syncLocale, tOr } from "./i18n";
 import { languageMeta } from "./i18n/meta";
 
 const langOf = (): string => {
@@ -12,11 +11,6 @@ const langOf = (): string => {
   return "zh-tw";
 };
 
-const label = (key: TranslationKey, fallback: string): string => {
-  const value = t(key);
-  return value && value !== key ? value : fallback;
-};
-
 const showFatal = (error: unknown) => {
   syncLocale(langOf());
   const body = document.body;
@@ -27,7 +21,7 @@ const showFatal = (error: unknown) => {
     "max-width:640px;margin:12vh auto;padding:32px;font-family:var(--font-base,system-ui,sans-serif);line-height:1.7;color:var(--ink,currentColor)";
   const title = document.createElement("h1");
   title.style.cssText = "font-size:22px;margin:0 0 12px";
-  title.textContent = label("errorTitle", "Failed to load");
+  title.textContent = tOr("errorTitle", "Failed to load");
   const text = document.createElement("p");
   text.style.cssText = "margin:0 0 20px;color:var(--ink-2,currentColor);word-break:break-word";
   text.textContent = message;
@@ -35,7 +29,7 @@ const showFatal = (error: unknown) => {
   button.type = "button";
   button.style.cssText =
     "padding:8px 18px;border:1px solid currentColor;border-radius:2px;background:transparent;color:inherit;cursor:pointer";
-  button.textContent = label("errorReload", "Reload");
+  button.textContent = tOr("errorReload", "Reload");
   button.addEventListener("click", () => location.reload());
   panel.appendChild(title);
   panel.appendChild(text);

@@ -52,6 +52,11 @@ export const t = (
   return key;
 };
 
+export const tOr = (
+  key: TranslationKey | (string & Record<never, never>),
+  fallback: string,
+): string => t(key, { defaultValue: fallback });
+
 export const messageOf = (lang: string, key: TranslationKey): string =>
   LANGS.indexOf(lang) >= 0 ? String(composer.t(key, {}, { locale: lang })) : "";
 

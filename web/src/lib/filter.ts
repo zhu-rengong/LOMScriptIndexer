@@ -2,7 +2,7 @@ import { readDataset } from "../data/access";
 import { flagFacts, isBinaryValues } from "../data/flagFacts";
 import { graph } from "../data/graph";
 import { textStore } from "../data/text";
-import { t } from "../i18n";
+import { t, tOr } from "../i18n";
 import type { QueryContext, QueryError } from "../types/query";
 import { missionLabelTable } from "./missionLabel";
 import { createIndex, query, type QueryIndex } from "./query";
@@ -20,10 +20,7 @@ export const FIELD_LABEL_KEYS: Record<string, string> = {
   chapter: "fieldChapter",
 };
 
-const textOf = (key: string): string => {
-  const text = t(key);
-  return text === key ? "" : text;
-};
+const textOf = (key: string): string => tOr(key, "");
 
 const flagNames = (): Record<string, string> => {
   const names: Record<string, string> = {};

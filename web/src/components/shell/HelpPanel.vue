@@ -48,7 +48,7 @@ onMounted(() => {
 <template>
   <div class="scrim scrim-sheet" :hidden="!open" @click="close"></div>
   <div
-    id="helpPanel"
+    :id="UI_IDS.helpPanel"
     class="help-panel surface"
     role="dialog"
     aria-modal="true"
@@ -58,7 +58,7 @@ onMounted(() => {
     <header class="panel-head">
       <h2 id="helpHeading" class="panel-title">{{ t("helpTitle") }}</h2>
       <button
-        id="helpClose"
+        :id="UI_IDS.helpClose"
         class="btn btn-icon"
         type="button"
         :title="t('closeTitle')"

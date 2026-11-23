@@ -1,4 +1,4 @@
-import { byId } from "../lib/browser";
+import { byId } from "../lib/dom";
 import { popovers } from "../lib/popover";
 import { keys, storedRef } from "../lib/storage";
 import { overlayRail, sheetMode } from "../lib/viewport";

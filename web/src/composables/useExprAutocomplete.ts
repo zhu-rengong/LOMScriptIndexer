@@ -1,5 +1,6 @@
 import { useTimeoutFn } from "@vueuse/core";
 import { queryIndex } from "../lib/filter";
+import { stepIndex } from "../lib/listNav";
 import { popovers } from "../lib/popover";
 import type { OverlayKey } from "../ui/ids";
 import { query } from "../lib/query";
@@ -107,7 +108,7 @@ export const useExprAutocomplete = (
   const stepActive = (step: number): void => {
     const count = state.value.items.length;
     if (!count) return;
-    state.value.activeIndex = (state.value.activeIndex + step + count) % count;
+    state.value.activeIndex = stepIndex(state.value.activeIndex, step, count, true);
   };
 
   const onInput = (): void => {

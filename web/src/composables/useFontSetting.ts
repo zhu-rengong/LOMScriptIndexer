@@ -1,4 +1,4 @@
-import { t } from "../i18n";
+import { t, tOr } from "../i18n";
 import { FOLLOW_BASE, FOLLOW_GROUP, fontPreset } from "../lib/fontFamilies";
 import { fontDisplayName, systemFamilyNames } from "../lib/systemFonts";
 import type { FontTarget } from "../types/font";
@@ -24,8 +24,7 @@ export const useFontSetting = (target: () => FontTarget) => {
 
   const label = computed(() => {
     const key = prefs.fontLabelKeyOf(target());
-    const text = t(key);
-    return text === key ? fontDisplayName(key) : text;
+    return tOr(key, fontDisplayName(key));
   });
 
   const followValue = computed(() => (target().scope === "group" ? FOLLOW_BASE : FOLLOW_GROUP));
