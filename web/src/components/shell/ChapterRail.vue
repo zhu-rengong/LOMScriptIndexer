@@ -154,7 +154,7 @@ const clearQuery = () => {
 };
 
 const pick = (id: string) => {
-  if (!store.select(id, { history: true })) return;
+  if (!store.select(id)) return;
   if (view.overlayRail) view.closeRail();
 };
 

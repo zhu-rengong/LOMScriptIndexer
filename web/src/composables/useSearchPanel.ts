@@ -199,7 +199,7 @@ export const useSearchPanel = () => {
     hide();
     view.collapseSearch();
     panels.focusText(hit.id, hit.anchor, hit.target);
-    store.select(hit.id, { history: true });
+    store.select(hit.id);
     return true;
   };
 
@@ -207,7 +207,7 @@ export const useSearchPanel = () => {
     hide();
     view.collapseSearch();
     panels.focusText(hit.id, hit.anchor, hit.target);
-    store.select(hit.id, { history: true });
+    store.select(hit.id);
   };
 
   const onKeydown = (event: KeyboardEvent): void => {

@@ -46,8 +46,6 @@ export const useScriptStore = defineStore("script", () => {
   const positions = new Map<string, number>();
   const lang = ref(initialLang());
   const selectedId = ref("");
-  const history = ref<string[]>([]);
-  const historyIndex = ref(-1);
   const filterSource = ref("");
   const filterSet = shallowRef<Set<number> | null>(null);
   const filterError = ref("");
@@ -60,36 +58,11 @@ export const useScriptStore = defineStore("script", () => {
   const selected = (): GraphNode | null =>
     selectedId.value ? graph.nodeById.get(selectedId.value) || null : null;
 
-  const select = (id: string, options?: { history?: boolean }): boolean => {
+  const select = (id: string): boolean => {
     const node = graph.nodeById.get(id);
     if (!node) return false;
-    const opts = options || {};
     selectedId.value = id;
-    if (opts.history !== false) {
-      const next = history.value.slice(0, historyIndex.value + 1);
-      if (next[next.length - 1] !== id) next.push(id);
-      history.value = next;
-      historyIndex.value = next.length - 1;
-    }
     return true;
-  };
-
-  const back = (): GraphNode | null => {
-    if (historyIndex.value <= 0) return null;
-    const id = history.value[historyIndex.value - 1];
-    if (!graph.nodeById.has(id)) return null;
-    historyIndex.value -= 1;
-    selectedId.value = id;
-    return graph.nodeById.get(id) || null;
-  };
-
-  const forward = (): GraphNode | null => {
-    if (historyIndex.value >= history.value.length - 1) return null;
-    const id = history.value[historyIndex.value + 1];
-    if (!graph.nodeById.has(id)) return null;
-    historyIndex.value += 1;
-    selectedId.value = id;
-    return graph.nodeById.get(id) || null;
   };
 
   const setFilterState = (state: FilterState): void => {
@@ -152,8 +125,6 @@ export const useScriptStore = defineStore("script", () => {
   return {
     lang,
     selectedId,
-    history,
-    historyIndex,
     filterSource,
     filterSet,
     filterError,
@@ -162,8 +133,6 @@ export const useScriptStore = defineStore("script", () => {
     bookmarkVersion,
     selected,
     select,
-    back,
-    forward,
     setFilterState,
     restoreLang,
     textLang,

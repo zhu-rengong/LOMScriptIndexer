@@ -5,6 +5,7 @@ import { graph } from "./data/graph";
 import { textStore } from "./data/text";
 import { syncLocale } from "./i18n";
 import { applyFilter } from "./lib/filter";
+import { installNavHistory } from "./lib/navHistory";
 import { router, scriptIdOf, showScript } from "./router";
 
 export const start = (): void => {
@@ -18,6 +19,7 @@ export const start = (): void => {
   syncLocale(script.lang);
 
   app.mount("#app");
+  installNavHistory();
 
   watch(
     () => script.lang,
@@ -34,7 +36,7 @@ export const start = (): void => {
     (raw) => {
       const id = scriptIdOf(raw);
       if (!id || !graph.nodeById.has(id)) return;
-      if (script.selectedId !== id) script.select(id, { history: false });
+      if (script.selectedId !== id) script.select(id);
     },
     { immediate: true },
   );

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 import { byId } from "../../lib/browser";
+import { canBack, canForward, navBack, navForward } from "../../lib/navHistory";
 import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
 
@@ -9,10 +10,6 @@ const view = useViewStore();
 const ui = useUiStore();
 
 const selectedScript = computed(() => store.selected());
-
-const canBack = computed(() => store.historyIndex > 0);
-
-const canForward = computed(() => store.historyIndex < store.history.length - 1);
 
 const isBookmarked = computed(() => {
   void store.bookmarkVersion;
@@ -60,7 +57,7 @@ const toggleBookmark = () => {
               :title="t('backTitle')"
               :aria-label="t('backTitle')"
               :disabled="!canBack"
-              @click="store.back()"
+              @click="navBack"
             >
               <AppIcon name="back" />
             </button>
@@ -73,7 +70,7 @@ const toggleBookmark = () => {
               :title="t('forwardTitle')"
               :aria-label="t('forwardTitle')"
               :disabled="!canForward"
-              @click="store.forward()"
+              @click="navForward"
             >
               <AppIcon name="forward" />
             </button>

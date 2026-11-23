@@ -20,5 +20,5 @@ export const scriptIdOf = (value: unknown): string => {
 
 export const showScript = (id: string): void => {
   if (!id || router.currentRoute.value.params.id === id) return;
-  void router.replace({ name: "script", params: { id } });
+  void router.push({ name: "script", params: { id } });
 };

@@ -113,7 +113,7 @@ export const useLookupPanel = () => {
     const name = displayName.value;
     close();
     panels.focusText(node.id, name, target);
-    store.select(node.id, { history: true });
+    store.select(node.id);
   };
 
   const pickById = (id: string) => {

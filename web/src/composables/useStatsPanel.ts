@@ -54,7 +54,7 @@ export const useStatsPanel = () => {
 
   const openScript = (id: string) => {
     popovers.close("stats");
-    store.select(id, { history: true });
+    store.select(id);
   };
 
   const load = () => {

@@ -134,7 +134,7 @@ const toggle = () => {
 
 const go = (id: string) => {
   if (!id) return;
-  store.select(id, { history: true });
+  store.select(id);
 };
 
 const openLookup = (event: Event) => {

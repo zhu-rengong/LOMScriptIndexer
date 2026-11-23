@@ -3,6 +3,7 @@ import { useLayout } from "../composables/useLayout";
 import { useShortcuts } from "../composables/useShortcuts";
 import { t } from "../i18n";
 import { byId } from "../lib/browser";
+import { navBack, navForward } from "../lib/navHistory";
 import { popovers } from "../lib/popover";
 import { UI_IDS } from "../ui/ids";
 
@@ -13,8 +14,8 @@ const fold = useFoldStore();
 
 useLayout();
 useShortcuts({
-  back: () => store.back(),
-  forward: () => store.forward(),
+  back: navBack,
+  forward: navForward,
   bookmark: () => {
     const node = store.selected();
     if (!node) return;

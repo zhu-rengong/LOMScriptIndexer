@@ -167,7 +167,7 @@ const onResultsScroll = () => {
 
 const pickNode = (id: string) => {
   popovers.close(POPOVER_KEY);
-  store.select(id, { history: true });
+  store.select(id);
 };
 
 watch(

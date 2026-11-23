@@ -50,7 +50,7 @@ const edgeGroupLabel = (edge: GraphEdge) => {
 
 const pick = (id: string) => {
   popovers.close("navMenu");
-  store.select(id, { history: true });
+  store.select(id);
 };
 
 onMounted(() => {
