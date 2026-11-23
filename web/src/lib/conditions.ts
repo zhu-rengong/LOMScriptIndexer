@@ -6,6 +6,7 @@ import { names } from "../data/names";
 import { sumFacts } from "../data/sumFacts";
 import type { SumFact } from "../data/sumFacts";
 import { t } from "../i18n";
+import { asRecord } from "./beatRows";
 import { timeNameOf } from "./conditions/numbers";
 import type { CheckRef, MetaSeal, MissionEventView } from "../types/beats";
 import type { CheckpointModel, ConditionNode, PositionCandidate } from "../types/condition";
@@ -728,21 +729,15 @@ export const requirementText = (requirement: Record<string, unknown> | null): st
 export const detailRequirementsText = (detail: Record<string, unknown> | null): string => {
   const requirements = detail && Array.isArray(detail.requirements) ? detail.requirements : [];
   return requirements
-    .filter(
-      (item: unknown) =>
-        item &&
-        typeof item === "object" &&
-        typeof (item as Record<string, unknown>).kind === "string" &&
-        (item as Record<string, unknown>).kind,
-    )
-    .map((item: unknown) => {
-      const row = item as Record<string, unknown>;
-      return t("option.need", {
+    .map(asRecord)
+    .filter((row): row is Record<string, unknown> => !!row && typeof row.kind === "string")
+    .map((row) =>
+      t("option.need", {
         label: t(`need.${String(row.kind)}`, { defaultValue: String(row.kind) }),
         op: row.op === undefined ? "" : row.op,
         value: row.value === undefined ? "" : row.value,
-      });
-    })
+      }),
+    )
     .join(` ${t("cxAnd")} `);
 };
 

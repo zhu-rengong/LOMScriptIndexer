@@ -56,16 +56,24 @@ export const useStatsPanel = () => {
     store.select(id);
   };
 
+  let loadToken = 0;
+
   const load = () => {
+    const token = ++loadToken;
     loading.value = true;
     void wordCount.load().then(() => {
+      if (token !== loadToken) return;
       loading.value = false;
       reloadTick.value++;
     });
   };
 
   watch(open, (value) => {
-    if (!value) return;
+    if (!value) {
+      loadToken++;
+      loading.value = false;
+      return;
+    }
     openChapter.value = "";
     load();
   });

@@ -30,7 +30,8 @@ const intersect = (a: Set<number> | null, b: Set<number> | null): Set<number> | 
 };
 
 const valuesOf = (row: unknown, field: QueryField): string[] => {
-  const raw = row ? (row as Record<string, unknown>)[facetKey(field)] : undefined;
+  if (!row || typeof row !== "object") return [];
+  const raw = Reflect.get(row, facetKey(field));
   if (!raw) return [];
   return Array.isArray(raw) ? raw.map(String) : String(raw).split(",");
 };

@@ -73,7 +73,7 @@ watch(
     <div class="drop-empty popover-empty" :hidden="!status.message">{{ status.message }}</div>
     <div
       v-for="(row, position) in rows"
-      :key="`${row.hit.id}:${position}`"
+      :key="`${row.hit.id}:${row.hit.lineIndex}:${row.hit.matchStart}`"
       class="drop-item row row-tall"
       :class="{ 'is-active': position === activeIndex }"
       :data-id="row.hit.id"

@@ -66,9 +66,8 @@ const convertDeepValue = (lang: string, value: unknown): unknown => {
   if (typeof value === "string") return convertText(lang, value);
   if (Array.isArray(value)) return value.map((item) => convertDeepValue(lang, item));
   if (!value || typeof value !== "object") return value;
-  const source = value as Record<string, unknown>;
   const out: Record<string, unknown> = {};
-  for (const key of Object.keys(source)) out[key] = convertDeepValue(lang, source[key]);
+  for (const [key, item] of Object.entries(value)) out[key] = convertDeepValue(lang, item);
   return out;
 };
 

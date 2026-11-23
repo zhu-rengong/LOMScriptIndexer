@@ -71,7 +71,7 @@ const check = <T>(schema: v.GenericSchema, label: string, value: unknown): T => 
     const path = issue.path?.map((item) => String(item.key)).join(".") || "root";
     throw new Error(`${label} payload is invalid at ${path}: ${issue.message}`);
   }
-  return value as T;
+  return result.output as T;
 };
 
 export const fetchValidated = <T>(

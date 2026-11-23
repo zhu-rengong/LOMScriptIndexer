@@ -119,21 +119,28 @@ export const useLookupPanel = () => {
     if (node) pick(node);
   };
 
+  let loadToken = 0;
+
   const loadCheckpoint = async (): Promise<void> => {
+    const token = ++loadToken;
     checkpoint.value = null;
-    if (kind.value !== "check" || !key.value) return;
+    if (kind.value !== "check" || !key.value) {
+      loading.value = false;
+      return;
+    }
     const requested = key.value;
     loading.value = true;
     await checkpoints.ensure(requested);
-    if (kind.value !== "check" || key.value !== requested) return;
+    if (token !== loadToken) return;
     loading.value = false;
     checkpoint.value = checkpoints.getByKey(requested, method.value);
   };
 
   watch(
-    () => [open.value, kind.value, key.value, method.value].join("\u0000"),
+    [open, kind, key, method],
     () => {
       if (!open.value) {
+        loadToken++;
         checkpoint.value = null;
         loading.value = false;
         return;

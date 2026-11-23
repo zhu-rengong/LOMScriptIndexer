@@ -1,25 +1,25 @@
 import type {
-  CalendarInfo,
+  ChapterRow,
   DataIndex,
+  EdgeRow,
   Facets as WireFacets,
   FlagFactsPayload,
   GraphPayload,
   MissionDocument,
   NodeFlags as WireNodeFlags,
   NodeRow,
+  ShardInfo,
   VarReadsPayload,
 } from "../types/generated";
 import type {
   Chapter,
   Dataset,
   Facets,
-  GameInfo,
   GraphEdge,
   GraphMeta,
   GraphNode,
   ScriptFlags,
   Shard,
-  Vocab,
 } from "../types/graph";
 import { DATA_SCHEMA } from "../types/contract";
 import { DEFAULT_CHAPTER_COLOR } from "../data/chapters";
@@ -80,7 +80,7 @@ const normalizeNode = (node: NodeRow): GraphNode => ({
   time: typeof node.time === "number" ? node.time : null,
 });
 
-const normalizeEdge = (edge: GraphEdge): GraphEdge => ({
+const normalizeEdge = (edge: EdgeRow): GraphEdge => ({
   index: edge.index ?? 0,
   source: edge.source ?? "",
   target: edge.target ?? "",
@@ -88,7 +88,7 @@ const normalizeEdge = (edge: GraphEdge): GraphEdge => ({
   label: edge.label ?? "",
 });
 
-const normalizeChapter = (chapter: Chapter): Chapter => ({
+const normalizeChapter = (chapter: ChapterRow): Chapter => ({
   id: chapter.id ?? "",
   kind: chapter.kind ?? "other",
   number: typeof chapter.number === "number" ? chapter.number : null,
@@ -96,7 +96,7 @@ const normalizeChapter = (chapter: Chapter): Chapter => ({
   scriptCount: chapter.scriptCount ?? 0,
 });
 
-const normalizeShard = (shard: Shard): Shard => ({
+const normalizeShard = (shard: ShardInfo): Shard => ({
   key: shard.key ?? "",
   nodeCount: shard.nodeCount ?? 0,
   bytes: shard.bytes ?? 0,
@@ -105,17 +105,20 @@ const normalizeShard = (shard: Shard): Shard => ({
 
 const buildMeta = (graph: GraphPayload): GraphMeta => {
   const meta = graph.meta ?? {};
-  const shards = list(meta.shards).map((shard) => normalizeShard(shard as Shard));
+  const counts: Record<string, number> = {};
+  for (const [key, value] of Object.entries(meta.counts ?? {})) {
+    if (typeof value === "number") counts[key] = value;
+  }
   return {
     generated: meta.generated ?? "",
-    game: (meta.game ?? {}) as GameInfo,
+    game: meta.game ?? {},
     langs: list(meta.langs),
     defaultLang: meta.defaultLang ?? "",
     sourceLang: meta.sourceLang ?? list(meta.langs)[0] ?? "",
-    vocab: (meta.vocab ?? {}) as Vocab,
-    calendar: (meta.calendar ?? {}) as CalendarInfo,
-    counts: (meta.counts ?? {}) as unknown as Record<string, number>,
-    shards,
+    vocab: meta.vocab ?? {},
+    calendar: meta.calendar ?? {},
+    counts,
+    shards: list(meta.shards).map(normalizeShard),
     systemEntries: list(meta.systemEntries).map((entry) => ({
       id: entry.id ?? "",
       label: entry.label ?? "",
@@ -151,8 +154,8 @@ export const useDataStore = defineStore("data", () => {
       vocab: meta.vocab,
       calendar: meta.calendar,
       nodes: list(graph.nodes).map((node) => normalizeNode(node)),
-      edges: list(graph.edges).map((edge) => normalizeEdge(edge as GraphEdge)),
-      chapters: list(graph.chapters).map((chapter) => normalizeChapter(chapter as Chapter)),
+      edges: list(graph.edges).map(normalizeEdge),
+      chapters: list(graph.chapters).map(normalizeChapter),
       varReads: {
         flag: varReads.flag ?? {},
         stat: varReads.stat ?? {},

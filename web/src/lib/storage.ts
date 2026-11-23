@@ -17,6 +17,14 @@ const parse = (raw: string): unknown => {
   }
 };
 
+let warned = false;
+
+const warn = (error: unknown): void => {
+  if (warned) return;
+  warned = true;
+  console.warn("[ScriptIndexer] storage access failed", error);
+};
+
 export const storedRef = <T extends string | number | boolean | object | null>(
   key: string,
   defaults: T,
@@ -26,7 +34,8 @@ export const storedRef = <T extends string | number | boolean | object | null>(
     read: (raw) => {
       try {
         return options.decode(parse(raw), defaults);
-      } catch {
+      } catch (error) {
+        warn(error);
         return defaults;
       }
     },
@@ -37,6 +46,6 @@ export const storedRef = <T extends string | number | boolean | object | null>(
     mergeDefaults: false,
     listenToStorageChanges: true,
     serializer,
-    onError: () => {},
+    onError: warn,
   });
 };

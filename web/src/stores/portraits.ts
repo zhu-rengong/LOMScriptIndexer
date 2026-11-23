@@ -10,6 +10,9 @@ const isFileName = (value: unknown): value is string =>
   !value.includes("\\") &&
   !value.includes("..");
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  !!value && typeof value === "object" && !Array.isArray(value);
+
 const asIndex = (value: unknown, limit: number): number | null => {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0) return null;
   return value < limit ? value : null;
@@ -17,8 +20,8 @@ const asIndex = (value: unknown, limit: number): number | null => {
 
 const readMoodMap = (value: unknown): Record<string, string> => {
   const map: Record<string, string> = {};
-  if (!value || typeof value !== "object" || Array.isArray(value)) return map;
-  for (const [key, mood] of Object.entries(value as Record<string, unknown>)) {
+  if (!isRecord(value)) return map;
+  for (const [key, mood] of Object.entries(value)) {
     if (typeof mood === "string" && mood) map[key] = mood;
   }
   return map;
@@ -26,8 +29,8 @@ const readMoodMap = (value: unknown): Record<string, string> => {
 
 const readCells = (value: unknown, pageCount: number): Record<string, PortraitCell> => {
   const cells: Record<string, PortraitCell> = {};
-  if (!value || typeof value !== "object" || Array.isArray(value)) return cells;
-  for (const [key, cell] of Object.entries(value as Record<string, unknown>)) {
+  if (!isRecord(value)) return cells;
+  for (const [key, cell] of Object.entries(value)) {
     if (!Array.isArray(cell) || cell.length !== 2) continue;
     const page = asIndex(cell[0], pageCount);
     const index = asIndex(cell[1], Number.MAX_SAFE_INTEGER);
@@ -38,24 +41,23 @@ const readCells = (value: unknown, pageCount: number): Record<string, PortraitCe
 };
 
 const normalize = (data: unknown): PortraitManifest | null => {
-  if (!data || typeof data !== "object") return null;
-  const record = data as Record<string, unknown>;
-  if (record.version !== VERSION) return null;
-  const pages = record.pages;
-  if (!Array.isArray(pages) || !pages.length || !pages.every(isFileName)) return null;
-  const columns = asIndex(record.columns, Number.MAX_SAFE_INTEGER);
+  if (!isRecord(data)) return null;
+  if (data.version !== VERSION) return null;
+  const rawPages = data.pages;
+  if (!Array.isArray(rawPages) || !rawPages.length) return null;
+  const pages = rawPages.filter(isFileName);
+  if (pages.length !== rawPages.length) return null;
+  const columns = asIndex(data.columns, Number.MAX_SAFE_INTEGER);
   if (!columns) return null;
-  const size = Array.isArray(record.size) ? record.size : [];
+  const size = Array.isArray(data.size) ? data.size : [];
   const width = Number(size[0]) || 0;
   const height = Number(size[1]) || 0;
   if (!width || !height) return null;
-  const rawCharacters = record.characters;
-  if (!rawCharacters || typeof rawCharacters !== "object" || Array.isArray(rawCharacters)) {
-    return null;
-  }
+  const rawCharacters = data.characters;
+  if (!isRecord(rawCharacters)) return null;
   const characters: Record<string, Record<string, PortraitCell>> = {};
   for (const [character, value] of Object.entries(rawCharacters)) {
-    if (!value || typeof value !== "object" || Array.isArray(value)) continue;
+    if (!isRecord(value)) continue;
     const expressions = readCells(value, pages.length);
     if (Object.keys(expressions).length) characters[character] = expressions;
   }
@@ -63,10 +65,10 @@ const normalize = (data: unknown): PortraitManifest | null => {
     version: VERSION,
     size: [width, height],
     columns,
-    pages: pages as string[],
+    pages,
     characters,
-    moods: readCells(record.moods, pages.length),
-    moodMap: readMoodMap(record.moodMap),
+    moods: readCells(data.moods, pages.length),
+    moodMap: readMoodMap(data.moodMap),
   };
 };
 

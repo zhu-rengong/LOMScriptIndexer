@@ -1,4 +1,5 @@
 import { popovers } from "../lib/popover";
+import { toNeedle } from "../lib/strings";
 import type { FocusTarget } from "../types/focus";
 
 export type PendingHit = { id: string; query: string; target: FocusTarget | null };
@@ -17,18 +18,16 @@ export const usePanelsStore = defineStore("panels", () => {
   };
 
   const focusText = (id: string, query: string, target?: FocusTarget | null): void => {
-    const needle = String(query ?? "")
-      .trim()
-      .toLowerCase();
+    const needle = toNeedle(query);
     pendingHit.value =
       id && (needle || target) ? { id, query: needle, target: target || null } : null;
   };
 
   const takePendingHit = (id: string): PendingHit | null => {
     const hit = pendingHit.value;
-    if (!hit) return null;
+    if (!hit || hit.id !== id) return null;
     pendingHit.value = null;
-    return hit.id === id ? hit : null;
+    return hit;
   };
 
   return {

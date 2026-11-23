@@ -4,6 +4,7 @@ import { useLookupPanel } from "../../composables/useLookupPanel";
 import { missions } from "../../data/missions";
 import { t } from "../../i18n";
 import type { GraphNode } from "../../types/graph";
+import { UI_IDS } from "../../ui/ids";
 
 const PAGE = 60;
 
@@ -68,7 +69,7 @@ watch(
 
 <template>
   <div
-    id="lookupPanel"
+    :id="UI_IDS.lookupPanel"
     class="lookup surface popover"
     role="dialog"
     :aria-label="t('lookupSpeaker')"

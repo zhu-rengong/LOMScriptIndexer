@@ -208,12 +208,38 @@ export const decodePrefs = (raw: unknown): StoredPrefs => {
   if (!parsed.success) return defaultPrefs();
   const base = defaultPrefs();
   const source = parsed.output;
+  const groups: Record<string, PrefEntry> = { ...base.groups };
+  for (const [id, entry] of Object.entries(source.groups)) {
+    groups[id] = {
+      font: entry.font,
+      scale: entry.scale,
+      leading: entry.leading,
+      tracking: entry.tracking,
+      weight: entry.weight ?? 400,
+      italic: entry.italic ?? false,
+      caps: entry.caps ?? "none",
+      numeric: entry.numeric ?? false,
+    };
+  }
+  const slots: Record<string, PrefEntry> = { ...base.slots };
+  for (const [id, entry] of Object.entries(source.slots)) {
+    slots[id] = {
+      font: entry.font,
+      scale: entry.scale,
+      leading: entry.leading,
+      tracking: entry.tracking,
+      weight: entry.weight ?? null,
+      italic: entry.italic ?? null,
+      caps: entry.caps ?? null,
+      numeric: entry.numeric ?? null,
+    };
+  }
   return {
     version: PREFS_VERSION,
     theme: source.theme,
     baseFont: source.baseFont,
-    groups: { ...base.groups, ...(source.groups as Record<string, PrefEntry>) },
-    slots: { ...base.slots, ...(source.slots as Record<string, PrefEntry>) },
+    groups,
+    slots,
     measure: source.measure,
     showPortraits: source.showPortraits,
     portraitSize: source.portraitSize,

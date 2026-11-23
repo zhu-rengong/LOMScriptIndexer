@@ -4,7 +4,7 @@ import { textStore } from "../../data/text";
 import { t } from "../../i18n";
 import { buildExportFiles, exportFileName, exportLanguage } from "./format";
 
-const exportState = (): ReturnType<typeof useExportStore> => useExportStore(pinia);
+let running = false;
 
 const zipTextFiles = async (files: { name: string; content: string }[]): Promise<Blob> => {
   const data: Record<string, Uint8Array> = {};
@@ -26,13 +26,12 @@ const saveBlob = (filename: string, blob: Blob): void => {
   document.body.appendChild(link);
   link.click();
   link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
 };
 
 export const exportScripts = async (): Promise<void> => {
-  const state = exportState();
-  if (state.running) return;
-  state.running = true;
+  if (running) return;
+  running = true;
   const lang = exportLanguage();
   const ui = useUiStore(pinia);
   try {
@@ -55,6 +54,6 @@ export const exportScripts = async (): Promise<void> => {
     ui.toast(t("exportFailed"));
   } finally {
     ui.setIoStatus("");
-    state.running = false;
+    running = false;
   }
 };

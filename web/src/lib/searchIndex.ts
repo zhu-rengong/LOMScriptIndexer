@@ -15,6 +15,7 @@ export type SearchHit = {
   target: FocusTarget | null;
   matchStart: number;
   matchLength: number;
+  lineIndex: number;
 };
 
 export type SearchResult = {
@@ -36,7 +37,8 @@ const SLICE = 48;
 
 const hitsOf = (entry: IndexEntry, needle: string): SearchHit[] => {
   const hits: SearchHit[] = [];
-  for (const line of entry.lines) {
+  for (let lineIndex = 0; lineIndex < entry.lines.length; lineIndex++) {
+    const line = entry.lines[lineIndex];
     const position = line.text.indexOf(needle);
     if (position < 0) continue;
     const start = Math.max(0, position - 16);
@@ -48,6 +50,7 @@ const hitsOf = (entry: IndexEntry, needle: string): SearchHit[] => {
       target: line.target,
       matchStart: position - start,
       matchLength: needle.length,
+      lineIndex,
     });
   }
   return hits;

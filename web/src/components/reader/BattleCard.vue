@@ -30,8 +30,8 @@ const toggle = () => {
 
 const onHeadClick = (event: MouseEvent) => {
   if (!isExpandable.value) return;
-  const target = event.target as HTMLElement | null;
-  if (target && target.closest && target.closest("button")) return;
+  const target = event.target;
+  if (target instanceof HTMLElement && target.closest("button")) return;
   toggle();
 };
 
