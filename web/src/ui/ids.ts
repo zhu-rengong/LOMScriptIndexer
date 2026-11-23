@@ -40,27 +40,21 @@ export const UI_IDS = {
   lookupPanel: "lookupPanel",
 } as const;
 
-const OVERLAY_KEYS = [
-  "chapterRail",
-  "navMenu",
-  "search",
-  "searchResults",
-  "displayFilter",
-  "filterPopover",
-  "filterSuggestions",
-  "langMenu",
-  "moreMenu",
-  "stats",
-  "help",
-  "changelog",
-  "version",
-  "settings",
-  "typeGroupPick",
-  "fontPicker",
-  "lookup",
-] as const;
-
-export type OverlayKey = (typeof OVERLAY_KEYS)[number];
-
-export const isOverlayKey = (value: string): value is OverlayKey =>
-  OVERLAY_KEYS.some((key) => key === value);
+export type OverlayKey =
+  | "chapterRail"
+  | "navMenu"
+  | "search"
+  | "searchResults"
+  | "displayFilter"
+  | "filterPopover"
+  | "filterSuggestions"
+  | "langMenu"
+  | "moreMenu"
+  | "stats"
+  | "help"
+  | "changelog"
+  | "version"
+  | "settings"
+  | "typeGroupPick"
+  | "fontPicker"
+  | "lookup";

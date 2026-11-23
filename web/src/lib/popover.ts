@@ -1,16 +1,18 @@
 import { useEventListener } from "@vueuse/core";
 import { useFocusTrap } from "@vueuse/integrations/useFocusTrap";
-import type { LocationQueryRaw, RouteLocationPathRaw } from "vue-router";
 import { router } from "../router";
 import type { OverlayKey } from "../ui/ids";
 import { byId } from "./dom";
-import { panelOf, withPanel } from "./overlayRoute";
-import type { OverlayPayload } from "./overlayRoute";
-import { overlayHistory } from "./popoverHistory";
 import { trackPlacement } from "./placement";
 import type { Placement } from "./placement";
 
 type LayerGroup = "menu" | "pop" | "sheet" | "modal";
+
+export type OverlayPayload = {
+  kind?: string;
+  key?: string;
+  method?: string;
+};
 
 export type PopoverDef = {
   id: string;
@@ -30,17 +32,21 @@ export type OpenOptions = {
 
 const TRAP_GROUPS = new Set<string>(["sheet", "modal"]);
 const AUTO_CLOSE_GROUPS = new Set<string>(["menu", "pop"]);
+const EMPTY_PAYLOAD: OverlayPayload = {};
 
 export class PopoverHost {
   private readonly defs = shallowRef(new Map<OverlayKey, PopoverDef>());
   private readonly triggers = new Map<OverlayKey, HTMLElement>();
   private readonly stops = new Map<OverlayKey, () => void>();
+  private readonly stack = ref<OverlayKey[]>([]);
+  private readonly payloads = shallowRef<Partial<Record<OverlayKey, OverlayPayload>>>({});
   private applied: OverlayKey[] = [];
   private focusKey: OverlayKey | null = null;
 
-  private readonly chain = computed<OverlayKey[]>(() =>
-    this.chainOf(panelOf(router.currentRoute.value.query)),
-  );
+  private readonly chain = computed<OverlayKey[]>(() => {
+    const top = this.stack.value[0];
+    return top ? this.chainOf(top) : [];
+  });
 
   private readonly trapPanel = computed<HTMLElement | null>(() => {
     const top = this.chain.value[0];
@@ -58,10 +64,17 @@ export class PopoverHost {
   });
 
   install(): void {
-    overlayHistory.install();
     useEventListener(document, "keydown", this.onKeydown, { capture: true });
     useEventListener(document, "click", this.onClick);
     watch(this.chain, this.sync, { flush: "post", immediate: true });
+    watch(
+      () => router.currentRoute.value.fullPath,
+      () => {
+        if (!this.stack.value.length) return;
+        this.focusKey = null;
+        this.stack.value = [];
+      },
+    );
     watch(
       this.trapPanel,
       (panel) => {
@@ -80,7 +93,8 @@ export class PopoverHost {
   }
 
   unregister(key: OverlayKey): void {
-    if (panelOf(router.currentRoute.value.query) === key) this.close(key);
+    this.stack.value = this.stack.value.filter((item) => item !== key);
+    this.clearPayload(key);
     this.triggers.delete(key);
     const defs = new Map(this.defs.value);
     defs.delete(key);
@@ -100,6 +114,10 @@ export class PopoverHost {
     return def ? this.triggerFor(key, def) : null;
   }
 
+  payload(key: OverlayKey): OverlayPayload {
+    return this.payloads.value[key] ?? EMPTY_PAYLOAD;
+  }
+
   toggle(key: OverlayKey, trigger?: HTMLElement | null): boolean {
     return this.isOpen(key) ? this.close(key) : this.open(key, { trigger });
   }
@@ -109,31 +127,23 @@ export class PopoverHost {
     if (!def) return false;
     const opts = options || {};
     const trigger = opts.trigger || null;
-    const current = panelOf(router.currentRoute.value.query);
-    const location = this.locationOf(withPanel(router.currentRoute.value.query, key, opts.payload));
+    const wasTop = this.chain.value[0] === key;
 
-    if (current === key) {
-      if (trigger && !byId(def.id)?.contains(trigger)) {
-        const changed = this.triggers.get(key) !== trigger;
-        this.triggers.set(key, trigger);
-        if (changed) this.retrack(key, trigger);
-      }
-      if (router.resolve(location).fullPath !== router.currentRoute.value.fullPath) {
-        overlayHistory.navigate(location, "replace");
-      }
-      return true;
+    if (trigger && !byId(def.id)?.contains(trigger)) {
+      const changed = this.triggers.get(key) !== trigger;
+      this.triggers.set(key, trigger);
+      if (changed && wasTop) this.retrack(key, trigger);
     }
 
-    if (trigger) this.triggers.set(key, trigger);
-    const mode = current && this.chainOf(key).indexOf(current) < 0 ? "replace" : "push";
-    overlayHistory.navigate(location, mode);
+    this.setPayload(key, opts.payload);
+    this.stack.value = this.chainOf(key);
     return true;
   }
 
   close(key: OverlayKey): boolean {
-    const index = this.chain.value.indexOf(key);
+    const index = this.stack.value.indexOf(key);
     if (index < 0) return false;
-    overlayHistory.dismiss(index + 1);
+    this.stack.value = this.stack.value.slice(index + 1);
     return true;
   }
 
@@ -207,6 +217,7 @@ export class PopoverHost {
     panel?.classList.remove("is-placed");
     if (panel) delete panel.dataset.positioned;
     if (def && typeof def.onHide === "function") def.onHide();
+    this.clearPayload(key);
     if (this.focusKey !== key) return;
     this.focusKey = null;
     if (!def) return;
@@ -222,8 +233,18 @@ export class PopoverHost {
     if (stop) stop();
   }
 
-  private locationOf(query: LocationQueryRaw): RouteLocationPathRaw {
-    return { path: router.currentRoute.value.path, query };
+  private setPayload(key: OverlayKey, payload?: OverlayPayload): void {
+    const next = { ...this.payloads.value };
+    if (payload) next[key] = { ...payload };
+    else delete next[key];
+    this.payloads.value = next;
+  }
+
+  private clearPayload(key: OverlayKey): void {
+    if (!(key in this.payloads.value)) return;
+    const next = { ...this.payloads.value };
+    delete next[key];
+    this.payloads.value = next;
   }
 
   private chainOf(top: OverlayKey | null): OverlayKey[] {

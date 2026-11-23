@@ -4,9 +4,7 @@ import { missions } from "../data/missions";
 import { names } from "../data/names";
 import { chapterTitle, t } from "../i18n";
 import { firstSayTextOf, speakerName } from "../lib/blocks";
-import { payloadOf } from "../lib/overlayRoute";
 import { popovers } from "../lib/popover";
-import { router } from "../router";
 import type { CheckpointModel } from "../types/condition";
 import type { GraphNode } from "../types/graph";
 import { UI_IDS } from "../ui/ids";
@@ -27,7 +25,7 @@ export const useLookupPanel = () => {
   const loading = ref(false);
 
   const open = computed(() => popovers.isOpen("lookup"));
-  const payload = computed(() => payloadOf(router.currentRoute.value.query));
+  const payload = computed(() => popovers.payload("lookup"));
   const kind = computed(() => payload.value.kind || "");
   const key = computed(() => payload.value.key || "");
   const method = computed(() => payload.value.method || "");
