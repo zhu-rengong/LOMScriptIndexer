@@ -3,7 +3,6 @@ import type { BeatRow } from "../types/beats";
 import type { Dataset } from "../types/graph";
 import type { ShardState, TextPack, TextProgress } from "../types/text";
 import { t } from "../i18n";
-import { measure } from "../lib/perf";
 import { readDataset } from "./access";
 import { convert } from "./convert";
 import { TextHeadSchema, fetchJson, fetchValidated } from "./load";
@@ -75,7 +74,7 @@ const hasConverted = (lang: string): boolean => lang !== sourceLang() && convert
 const ensureConvert = (lang: string): Promise<boolean> => {
   if (lang === sourceLang()) return Promise.resolve(true);
   if (convert.hasConverter(lang)) return Promise.resolve(true);
-  return measure("t2cn", () => convert.ensureConverter(lang));
+  return convert.ensureConverter(lang);
 };
 
 const loadHead = (): Promise<boolean> => {

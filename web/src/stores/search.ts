@@ -3,7 +3,6 @@ import { graph } from "../data/graph";
 import { textStore } from "../data/text";
 import type { Chapter } from "../types/graph";
 import { normalizeSearchText } from "../lib/browser";
-import { measure } from "../lib/perf";
 import { createSearchEngine, searchCandidates, type SearchDoc } from "../lib/searchEngine";
 import { resetSearchText, searchLinesOfId, type SearchLine } from "../lib/searchText";
 import type { FocusTarget } from "./panels";
@@ -222,7 +221,6 @@ export const useSearchStore = defineStore("search", () => {
   return {
     invalidate: () => index.invalidate(),
     warm: () => index.warm(),
-    search: (input: string, onProgress?: SearchProgress) =>
-      measure("search", () => index.search(input, onProgress)),
+    search: (input: string, onProgress?: SearchProgress) => index.search(input, onProgress),
   };
 });

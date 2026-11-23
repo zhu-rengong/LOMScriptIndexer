@@ -17,7 +17,7 @@ const messages = {
   en,
 };
 
-export const i18n = createI18n({
+const i18n = createI18n({
   legacy: false,
   locale: FALLBACK,
   fallbackLocale: FALLBACK,
@@ -51,9 +51,6 @@ export const t = (
   if (vars && vars.defaultValue !== undefined) return String(vars.defaultValue);
   return key;
 };
-
-export const tDynamic = (key: string, vars?: Record<string, unknown>): string =>
-  t(key as TranslationKey, vars);
 
 export const messageOf = (lang: string, key: TranslationKey): string =>
   LANGS.indexOf(lang) >= 0 ? String(composer.t(key, {}, { locale: lang })) : "";

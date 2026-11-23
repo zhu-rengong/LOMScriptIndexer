@@ -37,7 +37,7 @@ const flagNames = (): Record<string, string> => {
   return names;
 };
 
-export class FilterCompiler {
+class FilterCompiler {
   private lang = "";
   private count = -1;
   private cached: QueryIndex | null = null;
@@ -80,13 +80,13 @@ export class FilterCompiler {
   }
 }
 
-export const filterCompiler = new FilterCompiler();
+const filterCompiler = new FilterCompiler();
 
 export const resetFilterContext = (): void => filterCompiler.reset();
 
 export const queryIndex = (): QueryIndex => filterCompiler.build();
 
-export const filterErrorText = (error: QueryError): string =>
+const filterErrorText = (error: QueryError): string =>
   t("filterSyntax", {
     column: error.column,
     message: query.errorTextOf(error),

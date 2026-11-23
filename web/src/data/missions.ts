@@ -1,7 +1,7 @@
 import type { MissionPack, MissionRecord, MissionState, MissionTimeRule } from "../types/missions";
 import { readDataset } from "./access";
 
-export type MissionLookup = { mission: string; state: MissionState };
+type MissionLookup = { mission: string; state: MissionState };
 
 const EMPTY_TIME: MissionTimeRule = {
   check: false,

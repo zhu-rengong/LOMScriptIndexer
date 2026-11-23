@@ -41,7 +41,7 @@ export const UI_IDS = {
   lookupPanel: "lookupPanel",
 } as const;
 
-export const OVERLAY_KEYS = [
+const OVERLAY_KEYS = [
   "chapterRail",
   "navMenu",
   "search",
@@ -62,3 +62,6 @@ export const OVERLAY_KEYS = [
 ] as const;
 
 export type OverlayKey = (typeof OVERLAY_KEYS)[number];
+
+export const isOverlayKey = (value: string): value is OverlayKey =>
+  OVERLAY_KEYS.some((key) => key === value);

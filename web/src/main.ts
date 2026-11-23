@@ -1,7 +1,6 @@
 import type { TranslationKey } from "./i18n";
 import { syncLocale, t } from "./i18n";
 import { languageMeta } from "./i18n/meta";
-import { measure, watchLongTasks } from "./lib/perf";
 
 const langOf = (): string => {
   const html = String(document.documentElement.lang || "").toLowerCase();
@@ -45,13 +44,10 @@ const showFatal = (error: unknown) => {
 };
 
 const boot = async () => {
-  watchLongTasks();
   try {
-    await measure("dataset", () => useDataStore(pinia).load());
-    await measure("bootstrap", async () => {
-      const { start } = await import("./bootstrap");
-      start();
-    });
+    await useDataStore(pinia).load();
+    const { start } = await import("./bootstrap");
+    start();
   } catch (error) {
     showFatal(error);
   }

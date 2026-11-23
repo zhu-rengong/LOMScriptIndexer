@@ -1,4 +1,5 @@
 import type { LocationQuery, LocationQueryRaw } from "vue-router";
+import { isOverlayKey } from "../ui/ids";
 import type { OverlayKey } from "../ui/ids";
 
 export type OverlayPayload = {
@@ -19,7 +20,7 @@ const textOf = (value: LocationQuery[string] | LocationQueryRaw[string]): string
 
 export const panelOf = (query: LocationQuery): OverlayKey | null => {
   const value = textOf(query[PANEL]);
-  return value ? (value as OverlayKey) : null;
+  return isOverlayKey(value) ? value : null;
 };
 
 export const payloadOf = (query: LocationQuery): OverlayPayload => ({

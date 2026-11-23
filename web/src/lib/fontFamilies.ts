@@ -15,7 +15,7 @@ const ROUND =
 
 const MONO = 'ui-monospace,"Sarasa Mono TC","Cascadia Mono",Consolas,"Courier New",monospace';
 
-export const BASE_FONT = SERIF;
+const BASE_FONT = SERIF;
 
 export const DEFAULT_BASE_FONT = "serif";
 

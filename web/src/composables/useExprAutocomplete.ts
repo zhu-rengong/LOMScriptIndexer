@@ -5,7 +5,7 @@ import type { OverlayKey } from "../ui/ids";
 import { query } from "../lib/query";
 import type { QuerySuggestion } from "../types/query";
 
-export type SuggestState = {
+type SuggestState = {
   items: QuerySuggestion[];
   activeIndex: number;
   from: number;
