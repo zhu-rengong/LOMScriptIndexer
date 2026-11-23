@@ -1,14 +1,12 @@
+import { clamp } from "@vueuse/core";
 import type { RichTextSegment } from "../types/beats";
-import { clamp } from "./math";
 
 const SIZE_BASE = 40;
 const SIZE_MIN_SCALE = 0.72;
 const SIZE_MAX_SCALE = 1.9;
-const MARKUP_TAG = /\{([^{}]*)\}/g;
-const MARKUP_TAG_ALL = /\{[^{}]*\}/g;
 
 export const stripMarkup = (value: unknown): string =>
-  value ? String(value).replace(MARKUP_TAG_ALL, "") : "";
+  value ? String(value).replace(/\{[^{}]*\}/g, "") : "";
 
 export const paragraphLines = (value: unknown): string[] =>
   stripMarkup(value)
@@ -29,15 +27,14 @@ export const parseRichText = (value: string): RichTextSegment[] => {
   const out: RichTextSegment[] = [];
   const stack: number[] = [];
   let last = 0;
-  let match: RegExpExecArray | null;
-  MARKUP_TAG.lastIndex = 0;
   const push = (chunk: string) => {
     if (!chunk) return;
     const scale = stack.length ? stack[stack.length - 1] : 1;
     out.push({ text: chunk, scale });
   };
-  while ((match = MARKUP_TAG.exec(source)) !== null) {
-    if (match.index > last) push(source.slice(last, match.index));
+  for (const match of source.matchAll(/\{([^{}]*)\}/g)) {
+    const index = match.index ?? 0;
+    if (index > last) push(source.slice(last, index));
     const tag = (match[1] || "").trim();
     const tagLower = tag.toLowerCase();
     if (tagLower.indexOf("/size") === 0 || tagLower === "size") {
@@ -50,7 +47,7 @@ export const parseRichText = (value: string): RichTextSegment[] => {
           : stack[stack.length - 1] || 1,
       );
     }
-    last = MARKUP_TAG.lastIndex;
+    last = index + match[0].length;
   }
   if (last < source.length) push(source.slice(last));
   return out;

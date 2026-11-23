@@ -1,6 +1,4 @@
-import { usePreferredDark } from "@vueuse/core";
 import {
-  DEFAULT_BASE_FONT,
   FOLLOW_BASE,
   FOLLOW_GROUP,
   baseFontStack,
@@ -8,16 +6,27 @@ import {
   fontStackOf,
 } from "../lib/fontFamilies";
 import { TYPE_SLOTS, slotById } from "../lib/fontTypes";
+import type { PrefsSnapshot } from "../lib/prefsDom";
 import {
   PREFS_DEFAULTS,
   PREFS_LIMITS,
   decodePrefs,
   defaultPrefs,
+  normalizeBaseFont,
+  normalizeCaps,
+  normalizeFlag,
+  normalizeLeading,
+  normalizeMeasure,
+  normalizePortraitSize,
+  normalizeReaderZoom,
+  normalizeScale,
+  normalizeTheme,
+  normalizeTracking,
+  normalizeWeight,
   type StoredPrefs,
 } from "../lib/prefsSchema";
 import { keys, storedRef } from "../lib/storage";
 import type {
-  CapsMode,
   FontScope,
   FontTarget,
   PrefEntry,
@@ -32,8 +41,6 @@ const BASE_LEADING = 1.6;
 const BASE_WEIGHT = 400;
 
 const WEIGHTS = PREFS_DEFAULTS.weights;
-const CAPS = PREFS_DEFAULTS.caps;
-const THEMES = PREFS_DEFAULTS.themes;
 
 const LABELS = {
   followBase: "pref.followBase",
@@ -45,70 +52,29 @@ const PRESETS = { weights: WEIGHTS.slice() };
 
 const LIMITS = PREFS_LIMITS;
 
-const clampNumber = (value: unknown, min: number, max: number, fallback: number): number => {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return fallback;
-  return Math.max(min, Math.min(max, number));
-};
-
-const roundTo = (value: number, step: number): number => Math.round(value / step) * step;
-
-const clampScale = (value: unknown, fallback: number): number =>
-  roundTo(clampNumber(value, LIMITS.scale.min, LIMITS.scale.max, fallback), LIMITS.scale.step);
-
-const clampLeading = (value: unknown, fallback: number): number =>
-  Math.round(clampNumber(value, LIMITS.leading.min, LIMITS.leading.max, fallback) * 10) / 10;
-
-const clampTracking = (value: unknown, fallback: number): number =>
-  Math.round(clampNumber(value, LIMITS.tracking.min, LIMITS.tracking.max, fallback) * 100) / 100;
-
-const clampWeight = (value: unknown, fallback: number | null): number | null => {
-  if (value === null) return fallback;
-  const weight = Number(value);
-  if (!Number.isFinite(weight)) return fallback;
-  return WEIGHTS.reduce((best, item) =>
-    Math.abs(item - weight) < Math.abs(best - weight) ? item : best,
-  );
-};
-
-const clampCaps = (value: unknown, fallback: CapsMode | null): CapsMode | null => {
-  if (value === null) return fallback;
-  return CAPS.indexOf(String(value) as CapsMode) >= 0 ? (value as CapsMode) : fallback;
-};
-
-const clampTheme = (value: unknown, fallback: ThemeMode): ThemeMode =>
-  THEMES.indexOf(String(value) as ThemeMode) >= 0 ? (value as ThemeMode) : fallback;
-
-const clampBool = (value: unknown, fallback: boolean | null): boolean | null => {
-  if (value === null) return fallback;
-  return typeof value === "boolean" ? value : fallback;
-};
-
-const normalizeBaseFont = (value: unknown): string => {
-  const font = typeof value === "string" ? value.trim() : "";
-  return font && font !== FOLLOW_BASE && font !== FOLLOW_GROUP ? font : DEFAULT_BASE_FONT;
-};
-
 const patchEntry = (current: PrefEntry, next: Partial<PrefEntry>, slotScope: boolean): void => {
   if (typeof next.font === "string") current.font = next.font;
-  if (next.scale !== undefined) current.scale = clampScale(next.scale, current.scale);
-  if (next.leading !== undefined) current.leading = clampLeading(next.leading, current.leading);
-  if (next.tracking !== undefined)
-    current.tracking = clampTracking(next.tracking, current.tracking);
+  if (next.scale !== undefined) current.scale = normalizeScale(next.scale, current.scale);
+  if (next.leading !== undefined) {
+    current.leading = normalizeLeading(next.leading, current.leading);
+  }
+  if (next.tracking !== undefined) {
+    current.tracking = normalizeTracking(next.tracking, current.tracking);
+  }
   if (next.weight !== undefined) {
     current.weight =
-      next.weight === null && slotScope ? null : clampWeight(next.weight, current.weight);
+      next.weight === null && slotScope ? null : normalizeWeight(next.weight, current.weight);
   }
   if (next.italic !== undefined) {
     current.italic =
-      next.italic === null && slotScope ? null : clampBool(next.italic, current.italic);
+      next.italic === null && slotScope ? null : normalizeFlag(next.italic, current.italic);
   }
   if (next.caps !== undefined) {
-    current.caps = next.caps === null && slotScope ? null : clampCaps(next.caps, current.caps);
+    current.caps = next.caps === null && slotScope ? null : normalizeCaps(next.caps, current.caps);
   }
   if (next.numeric !== undefined) {
     current.numeric =
-      next.numeric === null && slotScope ? null : clampBool(next.numeric, current.numeric);
+      next.numeric === null && slotScope ? null : normalizeFlag(next.numeric, current.numeric);
   }
 };
 
@@ -125,7 +91,7 @@ export const usePrefsStore = defineStore("prefs", () => {
   const theme = computed({
     get: () => state.value.theme,
     set: (value: ThemeMode) => {
-      state.value.theme = clampTheme(value, state.value.theme);
+      state.value.theme = normalizeTheme(value, state.value.theme);
     },
   });
   const baseStack = computed(() => baseFontStack(baseFont.value));
@@ -134,39 +100,26 @@ export const usePrefsStore = defineStore("prefs", () => {
   const measure = computed({
     get: () => state.value.measure,
     set: (value: number) => {
-      state.value.measure = Math.round(
-        clampNumber(value, LIMITS.measure.min, LIMITS.measure.max, state.value.measure),
-      );
+      state.value.measure = normalizeMeasure(value, state.value.measure);
     },
   });
   const showPortraits = computed({
     get: () => state.value.showPortraits,
     set: (value: boolean) => {
-      state.value.showPortraits = !!value;
+      state.value.showPortraits = value;
     },
   });
   const portraitSize = computed({
     get: () => state.value.portraitSize,
     set: (value: number) => {
-      state.value.portraitSize = roundTo(
-        clampNumber(
-          value,
-          LIMITS.portraitSize.min,
-          LIMITS.portraitSize.max,
-          state.value.portraitSize,
-        ),
-        LIMITS.portraitSize.step,
-      );
+      state.value.portraitSize = normalizePortraitSize(value, state.value.portraitSize);
     },
   });
   const readerZoom = computed({
     get: () =>
       state.value.readerZoom === 0 ? (view.sheetMode ? 75 : 100) : state.value.readerZoom,
     set: (value: number) => {
-      state.value.readerZoom = roundTo(
-        clampNumber(value, LIMITS.zoom.min, LIMITS.zoom.max, 100),
-        LIMITS.zoom.step,
-      );
+      state.value.readerZoom = normalizeReaderZoom(value, 100);
     },
   });
 
@@ -227,50 +180,16 @@ export const usePrefsStore = defineStore("prefs", () => {
     return scope === "group" ? groupStyle(id) : slotStyle(id);
   };
 
-  const capsTokens = (caps: CapsMode): [string, string] => {
-    if (caps === "upper") return ["uppercase", "normal"];
-    if (caps === "small") return ["none", "small-caps"];
-    return ["none", "normal"];
-  };
-
-  const applyToDocument = (): void => {
-    const root = document.documentElement;
-    root.style.setProperty("--font-base", baseStack.value);
-    root.style.setProperty("--reader-measure", `${measure.value}px`);
-    root.style.setProperty("--rd-portrait-w", `${portraitSize.value}px`);
-    root.style.setProperty("--reader-zoom", (readerZoom.value / 100).toFixed(3));
-    root.style.setProperty("--reader-zoom-inv", (100 / readerZoom.value).toFixed(4));
-    for (const slot of TYPE_SLOTS) {
-      const style = slotStyle(slot.id);
-      if (!style) continue;
-      const [transform, variant] = capsTokens(style.caps);
-      root.style.setProperty(`--rd-ff-${slot.id}`, style.fontStack);
-      root.style.setProperty(`--rd-fs-${slot.id}`, `${style.px.toFixed(2)}px`);
-      root.style.setProperty(`--rd-lh-${slot.id}`, style.lineHeight.toFixed(3));
-      root.style.setProperty(`--rd-fw-${slot.id}`, String(style.weight));
-      root.style.setProperty(`--rd-ls-${slot.id}`, `${style.tracking.toFixed(3)}em`);
-      root.style.setProperty(`--rd-fi-${slot.id}`, style.italic ? "italic" : "normal");
-      root.style.setProperty(`--rd-tt-${slot.id}`, transform);
-      root.style.setProperty(`--rd-fc-${slot.id}`, variant);
-      root.style.setProperty(`--rd-fn-${slot.id}`, style.numeric ? "tabular-nums" : "normal");
-    }
-  };
-
-  watch([state, () => view.sheetMode], applyToDocument, {
-    deep: true,
-    flush: "post",
-    immediate: true,
-  });
-
-  const preferredDark = usePreferredDark();
-
-  const applyTheme = (): void => {
-    const mode = state.value.theme;
-    const dark = mode === "dark" || (mode === "system" && preferredDark.value);
-    document.documentElement.dataset.theme = dark ? "dark" : "light";
-  };
-
-  watch([() => state.value.theme, preferredDark], applyTheme, { immediate: true, flush: "post" });
+  const snapshot = computed<PrefsSnapshot>(() => ({
+    baseStack: baseStack.value,
+    measure: measure.value,
+    portraitSize: portraitSize.value,
+    readerZoom: readerZoom.value,
+    theme: state.value.theme,
+    slots: TYPE_SLOTS.map((slot) => slotStyle(slot.id)).filter(
+      (style): style is ResolvedTypeStyle => style !== null,
+    ),
+  }));
 
   const get = (): PrefState => ({
     theme: state.value.theme,
@@ -334,6 +253,7 @@ export const usePrefsStore = defineStore("prefs", () => {
     showPortraits,
     portraitSize,
     readerZoom,
+    snapshot,
     resolveEntry,
     get,
     set,

@@ -31,46 +31,104 @@ const ZOOM_STEP = 5;
 const clampValue = (value: number, min: number, max: number): number =>
   Math.max(min, Math.min(max, value));
 
-const scale = v.pipe(
-  v.number(),
-  v.transform(
-    (value) => Math.round(clampValue(value, SCALE_MIN, SCALE_MAX) / SCALE_STEP) * SCALE_STEP,
-  ),
-);
-const leading = v.pipe(
-  v.number(),
-  v.transform((value) => Math.round(clampValue(value, LEADING_MIN, LEADING_MAX) * 10) / 10),
-);
-const tracking = v.pipe(
-  v.number(),
-  v.transform((value) => Math.round(clampValue(value, TRACKING_MIN, TRACKING_MAX) * 100) / 100),
-);
-const weight = v.pipe(
-  v.number(),
-  v.transform((value) =>
-    WEIGHTS.reduce((best, item) => (Math.abs(item - value) < Math.abs(best - value) ? item : best)),
-  ),
-);
+const roundTo = (value: number, step: number): number => Math.round(value / step) * step;
+
+const numberOrNull = (value: unknown): number | null => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
+
+const scaleValue = (value: number): number =>
+  roundTo(clampValue(value, SCALE_MIN, SCALE_MAX), SCALE_STEP);
+
+const leadingValue = (value: number): number =>
+  Math.round(clampValue(value, LEADING_MIN, LEADING_MAX) * 10) / 10;
+
+const trackingValue = (value: number): number =>
+  Math.round(clampValue(value, TRACKING_MIN, TRACKING_MAX) * 100) / 100;
+
+const weightValue = (value: number): number =>
+  WEIGHTS.reduce((best, item) => (Math.abs(item - value) < Math.abs(best - value) ? item : best));
+
+const measureValue = (value: number): number =>
+  Math.round(clampValue(value, MEASURE_MIN, MEASURE_MAX));
+
+const portraitSizeValue = (value: number): number =>
+  roundTo(clampValue(value, PORTRAIT_SIZE_MIN, PORTRAIT_SIZE_MAX), PORTRAIT_SIZE_STEP);
+
+const readerZoomValue = (value: number): number =>
+  value === 0 ? 0 : roundTo(clampValue(value, ZOOM_MIN, ZOOM_MAX), ZOOM_STEP);
+
+const isCaps = (value: unknown): value is CapsMode => CAPS.some((item) => item === value);
+
+const isTheme = (value: unknown): value is ThemeMode => THEMES.some((item) => item === value);
+
+export const normalizeBaseFont = (value: unknown): string => {
+  const font = typeof value === "string" ? value.trim() : "";
+  return font && font !== FOLLOW_BASE && font !== FOLLOW_GROUP ? font : DEFAULT_BASE_FONT;
+};
+
+export const normalizeScale = (value: unknown, fallback: number): number => {
+  const number = numberOrNull(value);
+  return number === null ? fallback : scaleValue(number);
+};
+
+export const normalizeLeading = (value: unknown, fallback: number): number => {
+  const number = numberOrNull(value);
+  return number === null ? fallback : leadingValue(number);
+};
+
+export const normalizeTracking = (value: unknown, fallback: number): number => {
+  const number = numberOrNull(value);
+  return number === null ? fallback : trackingValue(number);
+};
+
+export const normalizeWeight = (value: unknown, fallback: number | null): number | null => {
+  if (value === null) return fallback;
+  const number = numberOrNull(value);
+  return number === null ? fallback : weightValue(number);
+};
+
+export const normalizeCaps = (value: unknown, fallback: CapsMode | null): CapsMode | null => {
+  if (value === null) return fallback;
+  return isCaps(value) ? value : fallback;
+};
+
+export const normalizeTheme = (value: unknown, fallback: ThemeMode): ThemeMode =>
+  isTheme(value) ? value : fallback;
+
+export const normalizeFlag = (value: unknown, fallback: boolean | null): boolean | null => {
+  if (value === null) return fallback;
+  return typeof value === "boolean" ? value : fallback;
+};
+
+export const normalizeBoolean = (value: unknown, fallback: boolean): boolean =>
+  typeof value === "boolean" ? value : fallback;
+
+export const normalizeMeasure = (value: unknown, fallback: number): number => {
+  const number = numberOrNull(value);
+  return number === null ? fallback : measureValue(number);
+};
+
+export const normalizePortraitSize = (value: unknown, fallback: number): number => {
+  const number = numberOrNull(value);
+  return number === null ? fallback : portraitSizeValue(number);
+};
+
+export const normalizeReaderZoom = (value: unknown, fallback: number): number => {
+  const number = numberOrNull(value);
+  return number === null ? fallback : readerZoomValue(number);
+};
+
+const scale = v.pipe(v.number(), v.transform(scaleValue));
+const leading = v.pipe(v.number(), v.transform(leadingValue));
+const tracking = v.pipe(v.number(), v.transform(trackingValue));
+const weight = v.pipe(v.number(), v.transform(weightValue));
 const caps = v.picklist(CAPS);
 const theme = v.picklist(THEMES);
-const measure = v.pipe(
-  v.number(),
-  v.transform((value) => Math.round(clampValue(value, MEASURE_MIN, MEASURE_MAX))),
-);
-const portraitSize = v.pipe(
-  v.number(),
-  v.transform(
-    (value) =>
-      Math.round(clampValue(value, PORTRAIT_SIZE_MIN, PORTRAIT_SIZE_MAX) / PORTRAIT_SIZE_STEP) *
-      PORTRAIT_SIZE_STEP,
-  ),
-);
-const readerZoom = v.pipe(
-  v.number(),
-  v.transform((value) =>
-    value === 0 ? 0 : Math.round(clampValue(value, ZOOM_MIN, ZOOM_MAX) / ZOOM_STEP) * ZOOM_STEP,
-  ),
-);
+const measure = v.pipe(v.number(), v.transform(measureValue));
+const portraitSize = v.pipe(v.number(), v.transform(portraitSizeValue));
+const readerZoom = v.pipe(v.number(), v.transform(readerZoomValue));
 
 const entry = v.object({
   font: v.string(),

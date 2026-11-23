@@ -1,5 +1,6 @@
+import { clamp } from "@vueuse/core";
+import { applyReaderMeasure } from "../lib/prefsDom";
 import { useDragValue } from "./useDragValue";
-import { clamp } from "../lib/math";
 
 const prefs = usePrefsStore(pinia);
 const view = useViewStore(pinia);
@@ -28,7 +29,7 @@ export const createGripController = (
   };
 
   const applyMeasure = (value: number): void => {
-    document.documentElement.style.setProperty("--reader-measure", `${value}px`);
+    applyReaderMeasure(value);
   };
 
   const commitMeasure = (value: number): void => {

@@ -7,12 +7,13 @@ import { syncLocale } from "./i18n";
 import { applyFilter } from "./lib/filter";
 import { installNavHistory } from "./lib/navHistory";
 import { popovers } from "./lib/popover";
+import { installPrefsDom } from "./lib/prefsDom";
 import { router, scriptIdOf, showScript } from "./router";
 
 export const start = (): void => {
   const app = createAppShell(App);
   app.use(router);
-  usePrefsStore(pinia);
+  installPrefsDom(usePrefsStore(pinia));
 
   const script = useScriptStore(pinia);
   const search = useSearchStore(pinia);
