@@ -118,7 +118,11 @@ export class PopoverHost {
     });
 
     if (current === key) {
-      if (trigger && (!panel || !panel.contains(trigger))) this.triggers.set(key, trigger);
+      if (trigger && (!panel || !panel.contains(trigger))) {
+        const changed = this.triggers.get(key) !== trigger;
+        this.triggers.set(key, trigger);
+        if (changed) this.retrack(key, trigger);
+      }
       if (router.resolve(this.locationOf(query)).fullPath !== router.currentRoute.value.fullPath) {
         void router.replace(this.locationOf(query));
       }
@@ -191,6 +195,18 @@ export class PopoverHost {
     }
     if (def.autofocus) byId(def.autofocus)?.focus({ preventScroll: true });
     if (typeof def.onOpen === "function") def.onOpen();
+  }
+
+  private retrack(key: OverlayKey, trigger: HTMLElement): void {
+    const def = this.defs.get(key);
+    if (!def?.placement) return;
+    const panel = byId(def.id);
+    if (!panel) return;
+    const stop = this.stops.get(key);
+    this.stops.delete(key);
+    if (stop) stop();
+    panel.classList.add("is-placed");
+    this.stops.set(key, trackPlacement(panel, trigger, def.placement));
   }
 
   private deactivate(key: OverlayKey): void {
