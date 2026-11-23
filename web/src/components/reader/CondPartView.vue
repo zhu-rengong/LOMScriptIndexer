@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useLongPress } from "../../composables/useLongPress";
 import type { ConditionPart } from "../../lib/conditions";
 
 const panels = usePanelsStore();
@@ -10,17 +11,36 @@ const props = defineProps<{
 
 const isText = (part: ConditionPart): part is { text: string } => "text" in part;
 
-const onLookup = (event: Event) => {
+const openLookup = (trigger: HTMLElement | null): boolean => {
+  const part = props.part;
+  if (isText(part) || !part.lookup || !trigger) return false;
+  panels.openLookup(part.lookup.kind, part.lookup.key, trigger, props.method);
+  return true;
+};
+
+const longPress = useLongPress({
+  onLongPress: (trigger) => openLookup(trigger),
+});
+
+const onClick = (event: MouseEvent): void => {
   const part = props.part;
   if (isText(part) || !part.lookup) return;
+  const pointerType = event instanceof PointerEvent ? event.pointerType : "mouse";
+  if (pointerType === "mouse") {
+    event.stopPropagation();
+    event.preventDefault();
+    openLookup(event.currentTarget as HTMLElement | null);
+    return;
+  }
+  if (!longPress.consume()) return;
   event.stopPropagation();
   event.preventDefault();
-  panels.openLookup(
-    part.lookup.kind,
-    part.lookup.key,
-    event.currentTarget as HTMLElement,
-    props.method,
-  );
+};
+
+const onKey = (event: KeyboardEvent): void => {
+  event.preventDefault();
+  event.stopPropagation();
+  openLookup(event.currentTarget as HTMLElement | null);
 };
 </script>
 
@@ -52,9 +72,10 @@ const onLookup = (event: Event) => {
     :data-kind="part.lookup ? part.kind : undefined"
     :data-key="part.lookup ? part.lookup.key : undefined"
     :aria-label="part.title"
-    @click="onLookup"
-    @keydown.enter.prevent="onLookup"
-    @keydown.space.prevent="onLookup"
+    v-on="longPress.handlers"
+    @click="onClick"
+    @keydown.enter="onKey"
+    @keydown.space="onKey"
   >
     <AppIcon v-if="part.icon" :name="part.icon" />
     <span v-if="part.seal" class="infer-seal" :class="`is-${part.seal}`" aria-hidden="true">

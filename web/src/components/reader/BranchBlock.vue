@@ -6,6 +6,7 @@ import { condHint, condText, checkpointExpr, checkpointFallback } from "../../li
 import type { BranchView, CheckRef } from "../../types/beats";
 import type { ConditionNode } from "../../types/condition";
 import { useFoldable } from "../../composables/useFoldable";
+import { useLongPress } from "../../composables/useLongPress";
 
 const panels = usePanelsStore();
 
@@ -50,6 +51,20 @@ const openCheck = (event: Event) => {
   if (!check) return;
   event.stopPropagation();
   panels.openLookup("check", check.key, event.currentTarget as HTMLElement, check.kind);
+};
+
+const longPress = useLongPress({
+  onLongPress: (trigger) => {
+    const check = props.branch.check;
+    if (!check || !trigger || isEmpty.value) return false;
+    panels.openLookup("check", check.key, trigger, check.kind);
+    return true;
+  },
+});
+
+const onHeadClick = (): void => {
+  if (isEmpty.value || longPress.consume()) return;
+  toggle();
 };
 
 const checkSignature = computed(() => {
@@ -108,7 +123,7 @@ watch(checkSignature, resolveCondition, { immediate: true });
       :aria-expanded="isEmpty ? undefined : open"
       :data-kind="branch.check ? 'check' : undefined"
       :data-key="branch.check ? branch.check.key : undefined"
-      @click="isEmpty ? undefined : toggle()"
+      @click="onHeadClick"
       @keydown.enter.prevent="isEmpty ? undefined : toggle()"
       @keydown.space.prevent="isEmpty ? undefined : toggle()"
     >
@@ -116,6 +131,7 @@ watch(checkSignature, resolveCondition, { immediate: true });
         class="cond"
         :class="{ 'is-expr': hasCondition, 'is-fallback': isFallback }"
         :title="tooltipText || undefined"
+        v-on="longPress.handlers"
       >
         <CondExpr v-if="hasCondition" :expr="condition" :method="branch.check?.kind" />
         <span v-else-if="isFallback" class="cx-fallback">{{ t("lookupCondFallback") }}</span>
