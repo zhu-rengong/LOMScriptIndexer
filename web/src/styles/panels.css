@@ -1932,7 +1932,7 @@
       margin: 0;
     }
 
-    .is-placed[data-positioned="false"] {
+    .is-placed:not([data-positioned="true"]) {
       visibility: hidden;
       opacity: 0;
       pointer-events: none;

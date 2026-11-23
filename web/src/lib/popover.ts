@@ -3,7 +3,7 @@ import { useFocusTrap } from "@vueuse/integrations/useFocusTrap";
 import { router } from "../router";
 import type { OverlayKey } from "../ui/ids";
 import { byId } from "./dom";
-import { trackPlacement } from "./placement";
+import { clearPlacement, placePanel, trackPlacement } from "./placement";
 import type { Placement } from "./placement";
 
 type LayerGroup = "menu" | "pop" | "sheet" | "modal";
@@ -132,7 +132,8 @@ export class PopoverHost {
     if (trigger && !byId(def.id)?.contains(trigger)) {
       const changed = this.triggers.get(key) !== trigger;
       this.triggers.set(key, trigger);
-      if (changed && wasTop) this.retrack(key, trigger);
+      const positioned = byId(def.id)?.dataset.positioned === "true";
+      if (changed || !wasTop || !positioned) this.place(key, trigger);
     }
 
     this.setPayload(key, opts.payload);
@@ -186,36 +187,41 @@ export class PopoverHost {
   private activate(key: OverlayKey): void {
     const def = this.defs.value.get(key);
     if (!def) return;
-    const panel = byId(def.id);
-    if (panel && def.placement) {
-      const trigger = this.triggerFor(key, def);
-      if (trigger) {
-        panel.classList.add("is-placed");
-        panel.dataset.positioned = "false";
-        this.stops.set(key, trackPlacement(panel, trigger, def.placement));
-      }
+    const panel = def.placement ? byId(def.id) : null;
+    const trigger = panel ? this.triggerFor(key, def) : null;
+    if (panel && trigger && def.placement) {
+      if (panel.dataset.positioned !== "true") this.place(key, trigger);
+      else this.track(key, panel, trigger, def.placement);
     }
     if (def.autofocus) byId(def.autofocus)?.focus({ preventScroll: true });
     if (typeof def.onOpen === "function") def.onOpen();
   }
 
-  private retrack(key: OverlayKey, trigger: HTMLElement): void {
+  private place(key: OverlayKey, trigger: HTMLElement): void {
     const def = this.defs.value.get(key);
     if (!def?.placement) return;
     const panel = byId(def.id);
-    if (!panel) return;
+    if (!panel || panel.contains(trigger)) return;
     this.release(key);
-    panel.classList.add("is-placed");
-    panel.dataset.positioned = "false";
-    this.stops.set(key, trackPlacement(panel, trigger, def.placement));
+    if (!placePanel(panel, trigger, def.placement)) return;
+    if (this.isOpen(key)) this.track(key, panel, trigger, def.placement);
+  }
+
+  private track(
+    key: OverlayKey,
+    panel: HTMLElement,
+    trigger: HTMLElement,
+    placement: Placement,
+  ): void {
+    this.release(key);
+    this.stops.set(key, trackPlacement(panel, trigger, placement));
   }
 
   private deactivate(key: OverlayKey): void {
     const def = this.defs.value.get(key);
     this.release(key);
     const panel = def ? byId(def.id) : null;
-    panel?.classList.remove("is-placed");
-    if (panel) delete panel.dataset.positioned;
+    if (panel) clearPlacement(panel);
     if (def && typeof def.onHide === "function") def.onHide();
     this.clearPayload(key);
     if (this.focusKey !== key) return;
