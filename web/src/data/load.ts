@@ -25,9 +25,16 @@ const looseRecord = v.custom<Record<string, unknown>>(
   "expected an object",
 );
 
+const GameSchema = v.object({
+  version: v.optional(v.nullable(v.string()), ""),
+  build: v.optional(v.nullable(v.string()), ""),
+  updated: v.optional(v.nullable(v.string()), ""),
+});
+
 export const GraphSchema = v.object({
   schema: v.string(),
-  meta: v.object({
+  meta: v.looseObject({
+    game: v.optional(GameSchema, {}),
     langs: v.array(v.string()),
     sourceLang: v.optional(v.string(), ""),
     shards: looseArray,
