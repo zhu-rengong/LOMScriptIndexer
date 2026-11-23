@@ -3,7 +3,7 @@ import { textStore } from "../data/text";
 import { syncLocale } from "../i18n";
 import { applyFilter, resetFilterContext } from "../lib/filter";
 import { lang as langState } from "../lib/lang";
-import { usePanelsStore } from "./panels";
+import { popovers } from "../lib/popover";
 import { useScriptStore } from "./script";
 import { useSearchStore } from "./search";
 
@@ -13,7 +13,6 @@ export const useLanguageStore = defineStore("language", () => {
   const switchTo = async (id: string): Promise<void> => {
     if (!id) return;
     const script = useScriptStore(pinia);
-    const panels = usePanelsStore(pinia);
     const search = useSearchStore(pinia);
     const current = ++token;
     const content = readDataset().meta.langs.indexOf(id) >= 0 ? id : script.textLang();
@@ -22,7 +21,7 @@ export const useLanguageStore = defineStore("language", () => {
     if (!script.setLang(id)) return;
     syncLocale(id);
     langState.applyDocument(id);
-    panels.hideLookup();
+    popovers.close("lookup");
     search.invalidate();
     search.warm();
     resetFilterContext();

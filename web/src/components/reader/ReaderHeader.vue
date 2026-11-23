@@ -41,9 +41,8 @@ const toggleBookmark = () => {
     <div class="reader-title">
       <div class="reader-title-row">
         <h2
-          v-if="!view.sheetMode"
           id="nodeTitle"
-          class="node-title"
+          class="node-title reader-node-title"
           :title="selectedScript ? selectedScript.id : ''"
         >
           {{ selectedScript ? selectedScript.id : t("readerEmptyTitle") }}

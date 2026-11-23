@@ -2,8 +2,11 @@ import { useNavigatorLanguage, usePreferredLanguages } from "@vueuse/core";
 import { readDataset } from "../data/access";
 import { graph } from "../data/graph";
 import { lang as langState } from "../lib/lang";
+import { popovers } from "../lib/popover";
 import { keys, storedRef } from "../lib/storage";
 import type { GraphNode } from "../types/graph";
+
+export type ReadingAnchor = { index: number; offset: number };
 
 export type FilterState = {
   source: string;
@@ -43,7 +46,7 @@ export const useScriptStore = defineStore("script", () => {
   const initialLang = (): string =>
     langState.has(pinnedLang.value) ? pinnedLang.value : detectedLang();
 
-  const positions = new Map<string, number>();
+  const anchors = new Map<string, ReadingAnchor>();
   const lang = ref(initialLang());
   const selectedId = ref("");
   const filterSource = ref("");
@@ -61,6 +64,10 @@ export const useScriptStore = defineStore("script", () => {
   const select = (id: string): boolean => {
     const node = graph.nodeById.get(id);
     if (!node) return false;
+    if (selectedId.value === id) {
+      popovers.closeTop(false);
+      return true;
+    }
     selectedId.value = id;
     return true;
   };
@@ -115,12 +122,12 @@ export const useScriptStore = defineStore("script", () => {
     bookmarkVersion.value++;
   };
 
-  const rememberPosition = (id: string, fraction: number): void => {
-    if (!id || typeof fraction !== "number" || !Number.isFinite(fraction)) return;
-    positions.set(id, Math.max(0, Math.min(1, fraction)));
+  const rememberAnchor = (id: string, anchor: ReadingAnchor): void => {
+    if (!id) return;
+    anchors.set(id, anchor);
   };
 
-  const positionOf = (id: string): number => positions.get(id) ?? 0;
+  const readingAnchor = (id: string): ReadingAnchor | null => anchors.get(id) ?? null;
 
   return {
     lang,
@@ -141,7 +148,7 @@ export const useScriptStore = defineStore("script", () => {
     bookmarkList,
     toggleBookmark,
     clearBookmarks,
-    rememberPosition,
-    positionOf,
+    rememberAnchor,
+    readingAnchor,
   };
 });

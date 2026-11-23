@@ -1,6 +1,7 @@
 import { useDebounceFn } from "@vueuse/core";
 import { textStore } from "../data/text";
 import { t } from "../i18n";
+import { byId } from "../lib/browser";
 import { popovers } from "../lib/popover";
 import { UI_IDS } from "../ui/ids";
 
@@ -11,7 +12,6 @@ export const useSearchPanel = () => {
   const panels = usePanelsStore();
   const ui = useUiStore();
   const search = useSearchStore();
-  const view = useViewStore();
 
   const query = ref("");
   const hits = ref<SearchHit[]>([]);
@@ -21,7 +21,7 @@ export const useSearchPanel = () => {
   const activeIndex = ref(0);
   const building = ref(false);
   const buildProgress = ref({ done: 0, total: 0 });
-  const openState = ref(false);
+  const openState = computed(() => popovers.isOpen("searchResults"));
   const status = ref({ count: "", note: "", excluded: "", message: "" });
 
   let renderedQuery = "";
@@ -59,16 +59,11 @@ export const useSearchPanel = () => {
   };
 
   const show = (): void => {
-    popovers.open("searchResults", {
-      trigger: document.getElementById(UI_IDS.search),
-      placement: { align: "start", gap: 8, matchWidth: true, fit: true },
-    });
-    openState.value = true;
+    popovers.open("searchResults", { trigger: byId(UI_IDS.search) });
   };
 
   const hide = (): void => {
     popovers.close("searchResults");
-    openState.value = false;
   };
 
   const applyResult = (value: string, result: SearchResult, keepScroll: boolean): void => {
@@ -196,27 +191,17 @@ export const useSearchPanel = () => {
   const pickAt = (index: number): boolean => {
     const hit = hits.value[Math.min(index, hits.value.length - 1)] ?? hits.value[0];
     if (!hit) return false;
-    hide();
-    view.collapseSearch();
     panels.focusText(hit.id, hit.anchor, hit.target);
     store.select(hit.id);
     return true;
   };
 
   const pick = (hit: SearchHit): void => {
-    hide();
-    view.collapseSearch();
     panels.focusText(hit.id, hit.anchor, hit.target);
     store.select(hit.id);
   };
 
   const onKeydown = (event: KeyboardEvent): void => {
-    if (event.key === "Escape") {
-      hide();
-      view.collapseSearch();
-      (document.getElementById(UI_IDS.search) as HTMLInputElement | null)?.blur();
-      return;
-    }
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       const count = Math.min(renderedCount.value, hits.value.length);
       if (!count) return;
@@ -261,11 +246,7 @@ export const useSearchPanel = () => {
       id: UI_IDS.searchResults,
       triggerId: UI_IDS.search,
       group: "menu",
-      float: true,
-      placement: { align: "start", gap: 8, matchWidth: true, fit: true },
-      onHide: () => {
-        openState.value = false;
-      },
+      keep: ["search"],
     });
   });
 

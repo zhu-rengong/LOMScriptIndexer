@@ -1,8 +1,7 @@
-import { useMediaQuery } from "@vueuse/core";
-import { popBackLayer, pushBackLayer, releaseBackLayer } from "../lib/backLayer";
 import { byId } from "../lib/browser";
 import { popovers } from "../lib/popover";
 import { keys, storedRef } from "../lib/storage";
+import { overlayRail, sheetMode } from "../lib/viewport";
 import type { ReaderVisibleKind, ReaderVisibility } from "../types/beats";
 import type { FontTarget } from "../types/font";
 import { UI_IDS } from "../ui/ids";
@@ -16,14 +15,10 @@ const flagStored = (key: string) =>
   });
 
 export const useViewStore = defineStore("view", () => {
-  const sheetMode = useMediaQuery("(max-width: 767px)");
-  const overlayRail = useMediaQuery("(max-width: 1023px)");
   const railTab = ref("outline");
   const outlineChapter = ref<number | undefined>(undefined);
   const fontTarget = ref<FontTarget>({ scope: "slot", id: "dialog" });
   const pickerTarget = ref<FontTarget>({ scope: "slot", id: "dialog" });
-  const railOpen = ref(false);
-  const searchOpen = ref(false);
   const chromeHidden = ref(false);
   const inferEnabled = flagStored(keys.infer);
   const revealOn = ref(false);
@@ -41,6 +36,10 @@ export const useViewStore = defineStore("view", () => {
       !visibleKinds.value.narration ||
       !visibleKinds.value.lore,
   );
+
+  const railOpen = computed(() => popovers.isOpen(CHAPTER_RAIL));
+
+  const searchOpen = computed(() => popovers.isOpen("search") || popovers.isOpen("searchResults"));
 
   const setRailTab = (tab: string): void => {
     if (tab === railTab.value) return;
@@ -65,22 +64,10 @@ export const useViewStore = defineStore("view", () => {
     document.body.classList.toggle("chrome-hidden", chromeHidden.value);
   });
 
-  let searchLayer = false;
-
   watch(sheetMode, (sheet) => {
-    if (sheet) {
-      if (searchOpen.value && !searchLayer) {
-        searchLayer = true;
-        pushBackLayer();
-      }
-      return;
-    }
-    if (searchLayer) {
-      searchLayer = false;
-      releaseBackLayer();
-    }
-    searchOpen.value = false;
+    if (sheet) return;
     chromeHidden.value = false;
+    if (popovers.isOpen("search")) popovers.close("search");
   });
 
   const showChrome = (): void => {
@@ -96,36 +83,35 @@ export const useViewStore = defineStore("view", () => {
   };
 
   const openSearch = (): void => {
-    searchOpen.value = true;
     showChrome();
-    if (!sheetMode.value || searchLayer) return;
-    searchLayer = true;
-    pushBackLayer();
+    if (!sheetMode.value) {
+      void nextTick(() => byId(UI_IDS.search)?.focus());
+      return;
+    }
+    popovers.open("search");
   };
+
+  watch(searchOpen, (open) => {
+    if (!open) return;
+    void nextTick(() => byId(UI_IDS.search)?.focus());
+  });
 
   const collapseSearch = (): void => {
-    if (!searchOpen.value) return;
-    searchOpen.value = false;
-    if (!searchLayer) return;
-    searchLayer = false;
-    popBackLayer();
-  };
-
-  const hideRail = (): void => {
-    railOpen.value = false;
+    if (popovers.isOpen("search")) {
+      popovers.close("search");
+      return;
+    }
+    if (popovers.isOpen("searchResults")) popovers.close("searchResults");
   };
 
   const openRail = (): void => {
     if (!overlayRail.value) return;
-    collapseSearch();
-    railOpen.value = true;
-    showChrome();
     popovers.open(CHAPTER_RAIL, { trigger: byId(UI_IDS.railToggle) });
+    showChrome();
   };
 
   const closeRail = (): void => {
     if (popovers.isOpen(CHAPTER_RAIL)) popovers.close(CHAPTER_RAIL);
-    else hideRail();
   };
 
   const toggleRail = (): void => {
@@ -169,7 +155,6 @@ export const useViewStore = defineStore("view", () => {
     hideChrome,
     openSearch,
     collapseSearch,
-    hideRail,
     openRail,
     closeRail,
     toggleRail,

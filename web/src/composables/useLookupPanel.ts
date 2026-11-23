@@ -4,8 +4,9 @@ import { missions } from "../data/missions";
 import { names } from "../data/names";
 import { chapterTitle, t } from "../i18n";
 import { firstSayTextOf, speakerName } from "../lib/blocks";
-import { byId } from "../lib/browser";
+import { payloadOf } from "../lib/overlayRoute";
 import { popovers } from "../lib/popover";
+import { router } from "../router";
 import type { CheckpointModel } from "../types/condition";
 import type { GraphNode } from "../types/graph";
 import { UI_IDS } from "../ui/ids";
@@ -25,10 +26,11 @@ export const useLookupPanel = () => {
   const checkpoint = ref<CheckpointModel | null>(null);
   const loading = ref(false);
 
-  const open = computed(() => panels.lookupState.open);
-  const kind = computed(() => panels.lookupState.kind);
-  const key = computed(() => panels.lookupState.key);
-  const method = computed(() => panels.lookupState.method);
+  const open = computed(() => popovers.isOpen("lookup"));
+  const payload = computed(() => payloadOf(router.currentRoute.value.query));
+  const kind = computed(() => payload.value.kind || "");
+  const key = computed(() => payload.value.key || "");
+  const method = computed(() => payload.value.method || "");
 
   const flagNodeGroups = computed(() =>
     kind.value === "flag" ? graph.flagUsage(key.value) : null,
@@ -103,101 +105,59 @@ export const useLookupPanel = () => {
   const mainRows = computed(() => matchedNodes.value.map(rowOf));
   const readerRows = computed(() => checkpointReaders.value.map(rowOf));
 
-  const close = () => {
-    panels.hideLookup();
+  const close = (): void => {
     popovers.close("lookup");
   };
 
-  const pick = (node: GraphNode) => {
+  const pick = (node: GraphNode): void => {
     const target = { kind: kind.value, key: key.value };
     const name = displayName.value;
-    close();
     panels.focusText(node.id, name, target);
     store.select(node.id);
   };
 
-  const pickById = (id: string) => {
+  const pickById = (id: string): void => {
     const node = graph.nodeById.get(id);
     if (node) pick(node);
   };
 
-  const positionLookup = () => {
-    const panel = byId(UI_IDS.lookupPanel);
-    if (!panel || !panels.lookupState.trigger) return;
-    popovers.place(panel, panels.lookupState.trigger, { align: "start", width: 380, fit: true });
-  };
-
-  let resizeFrame = 0;
-  let observedHeight = 0;
-  let observer: ResizeObserver | null = null;
-
-  const schedulePlace = () => {
-    if (resizeFrame) return;
-    resizeFrame = requestAnimationFrame(() => {
-      resizeFrame = 0;
-      if (!panels.lookupState.open || panels.lookupState.pinned) return;
-      positionLookup();
-    });
-  };
-
-  const loadCheckpoint = async () => {
+  const loadCheckpoint = async (): Promise<void> => {
     checkpoint.value = null;
     if (kind.value !== "check" || !key.value) return;
+    const requested = key.value;
     loading.value = true;
-    await checkpoints.ensure(key.value);
-    if (kind.value !== "check" || key.value !== panels.lookupState.key) return;
+    await checkpoints.ensure(requested);
+    if (kind.value !== "check" || key.value !== requested) return;
     loading.value = false;
-    checkpoint.value = checkpoints.getByKey(key.value, method.value);
+    checkpoint.value = checkpoints.getByKey(requested, method.value);
   };
 
   watch(
-    () => panels.lookupState.requestSeq,
-    async () => {
-      if (!panels.lookupState.open) return;
-      await nextTick();
-      if (!panels.lookupState.pinned) {
-        popovers.open("lookup", { trigger: panels.lookupState.trigger });
-        positionLookup();
+    () => [open.value, kind.value, key.value, method.value].join("\u0000"),
+    () => {
+      if (!open.value) {
+        checkpoint.value = null;
+        loading.value = false;
+        return;
       }
       void loadCheckpoint();
     },
-  );
-
-  watch(
-    () => panels.lookupState.open,
-    (value) => {
-      if (value) return;
-      if (popovers.isOpen("lookup")) popovers.close("lookup");
-      checkpoint.value = null;
-    },
+    { immediate: true },
   );
 
   onMounted(() => {
     popovers.register("lookup", {
       id: UI_IDS.lookupPanel,
       group: "pop",
-      placement: { align: "start", width: 380, fit: true },
-      onHide: () => panels.hideLookup(),
+      placement: { align: "start", width: 380 },
     });
-    const panel = byId(UI_IDS.lookupPanel);
-    if (!panel) return;
-    observer = new ResizeObserver((entries) => {
-      const height = entries[0]?.contentRect.height ?? 0;
-      const grew = height > observedHeight + 1;
-      observedHeight = height;
-      if (grew) schedulePlace();
-    });
-    observer.observe(panel);
-  });
-
-  onUnmounted(() => {
-    if (observer) observer.disconnect();
-    observer = null;
-    if (resizeFrame) cancelAnimationFrame(resizeFrame);
   });
 
   return {
     open,
+    kind,
+    key,
+    method,
     checkpoint,
     loading,
     title,

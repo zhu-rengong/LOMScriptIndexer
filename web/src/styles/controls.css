@@ -338,10 +338,6 @@
     box-shadow: var(--shadow-float);
   }
 
-  .is-overlay {
-    z-index: var(--z-pop);
-  }
-
   .menu {
     position: fixed;
     top: auto;

@@ -21,7 +21,6 @@
         (var(--masthead-h) + var(--reader-head-h) + var(--sp-4)) * var(--reader-zoom-inv, 1)
       )
       var(--sp-4) calc(56px + env(safe-area-inset-bottom));
-    scroll-behavior: smooth;
     zoom: var(--reader-zoom, 1);
   }
 
@@ -1335,6 +1334,9 @@
 
   .meta-chips .meta-chip {
     height: auto;
+    user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
     --tlh-mark: 0.75;
   }
 

@@ -75,7 +75,6 @@ const canJump = (id: string): boolean => !!id && graph.nodeById.has(id);
 
 const go = (id: string) => {
   if (!canJump(id)) return;
-  panels.hideLookup();
   store.select(id);
 };
 

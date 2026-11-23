@@ -6,7 +6,7 @@ import { condHint, condText, checkpointExpr, checkpointFallback } from "../../li
 import type { BranchView, CheckRef } from "../../types/beats";
 import type { ConditionNode } from "../../types/condition";
 import { useFoldable } from "../../composables/useFoldable";
-import { useLongPress } from "../../composables/useLongPress";
+import { useLookupPress } from "../../composables/useLookupPress";
 
 const panels = usePanelsStore();
 
@@ -53,17 +53,14 @@ const openCheck = (event: Event) => {
   panels.openLookup("check", check.key, event.currentTarget as HTMLElement, check.kind);
 };
 
-const longPress = useLongPress({
-  onLongPress: (trigger) => {
-    const check = props.branch.check;
-    if (!check || !trigger || isEmpty.value) return false;
-    panels.openLookup("check", check.key, trigger, check.kind);
-    return true;
-  },
+const { target: pressTarget, consume: consumePress } = useLookupPress((trigger) => {
+  const check = props.branch.check;
+  if (!check || !trigger || isEmpty.value) return;
+  panels.openLookup("check", check.key, trigger, check.kind);
 });
 
 const onHeadClick = (): void => {
-  if (isEmpty.value || longPress.consume()) return;
+  if (isEmpty.value || consumePress()) return;
   toggle();
 };
 
@@ -128,10 +125,10 @@ watch(checkSignature, resolveCondition, { immediate: true });
       @keydown.space.prevent="isEmpty ? undefined : toggle()"
     >
       <span
+        ref="pressTarget"
         class="cond"
         :class="{ 'is-expr': hasCondition, 'is-fallback': isFallback }"
         :title="tooltipText || undefined"
-        v-on="longPress.handlers"
       >
         <CondExpr v-if="hasCondition" :expr="condition" :method="branch.check?.kind" />
         <span v-else-if="isFallback" class="cx-fallback">{{ t("lookupCondFallback") }}</span>

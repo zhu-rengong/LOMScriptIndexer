@@ -185,8 +185,7 @@ onMounted(() => {
     id: "fontPicker",
     group: "menu",
     keep: ["settings"],
-    float: true,
-    placement: { align: "start", gap: 6, width: 300, fit: true },
+    placement: { align: "start", gap: 6, width: 300 },
     onOpen: () => {
       void ensureSystemFonts();
     },
@@ -197,7 +196,7 @@ onMounted(() => {
 <template>
   <div
     id="fontPicker"
-    class="picker popover surface"
+    class="picker popover surface is-anchored"
     role="listbox"
     :aria-label="t('typeFont')"
     :hidden="!open"

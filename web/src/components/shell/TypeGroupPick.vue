@@ -60,7 +60,6 @@ onMounted(() => {
     triggerId: UI_IDS.typeGroupTrigger,
     group: "menu",
     keep: ["settings"],
-    float: true,
     placement: { align: "start", gap: 6, matchWidth: true },
   });
 });
@@ -69,7 +68,7 @@ onMounted(() => {
 <template>
   <div
     :id="PANEL"
-    class="picker popover surface"
+    class="picker popover surface is-anchored"
     role="listbox"
     tabindex="-1"
     :aria-label="t('pref.groupTitle')"

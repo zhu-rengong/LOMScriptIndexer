@@ -166,7 +166,6 @@ const onResultsScroll = () => {
 };
 
 const pickNode = (id: string) => {
-  popovers.close(POPOVER_KEY);
   store.select(id);
 };
 
@@ -257,7 +256,7 @@ const isPopoverOpen = computed(() => popovers.isOpen(POPOVER_KEY));
           <div
             :id="SUGGEST_KEY"
             ref="suggestPanel"
-            class="filter-suggest surface popover"
+            class="filter-suggest surface popover is-anchored"
             role="listbox"
             :hidden="!isSuggestOpen"
             @scroll.passive="onSuggestScroll"

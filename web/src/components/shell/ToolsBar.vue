@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { langShort, t } from "../../i18n";
-import { byId } from "../../lib/browser";
 import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
 import type { OverlayKey } from "../../ui/ids";
@@ -24,21 +23,18 @@ const toggle = (key: OverlayKey) => {
 
 const toggleSearch = () => {
   if (view.searchOpen) {
-    popovers.close("searchResults");
     view.collapseSearch();
     return;
   }
   view.openSearch();
-  void nextTick(() => byId(UI_IDS.search)?.focus());
 };
 </script>
 
 <template>
   <div class="tools">
     <button
-      v-if="view.sheetMode"
       :id="UI_IDS.searchToggle"
-      class="btn btn-icon search-toggle"
+      class="btn btn-icon search-toggle tool-narrow"
       :class="{ 'is-on': view.searchOpen }"
       type="button"
       aria-haspopup="dialog"
@@ -71,9 +67,8 @@ const toggleSearch = () => {
     </div>
 
     <button
-      v-if="!view.sheetMode"
       id="statsBtn"
-      class="btn btn-icon"
+      class="btn btn-icon tool-wide"
       :class="{ 'is-on': statsOpen }"
       type="button"
       aria-haspopup="dialog"
@@ -87,9 +82,8 @@ const toggleSearch = () => {
     </button>
 
     <button
-      v-if="!view.sheetMode"
       id="helpBtn"
-      class="btn btn-icon"
+      class="btn btn-icon tool-wide"
       :class="{ 'is-on': helpOpen }"
       type="button"
       aria-haspopup="dialog"
@@ -103,9 +97,8 @@ const toggleSearch = () => {
     </button>
 
     <button
-      v-if="!view.sheetMode"
       id="changelogBtn"
-      class="btn btn-icon"
+      class="btn btn-icon tool-wide"
       :class="{ 'is-on': changelogOpen }"
       type="button"
       aria-haspopup="dialog"
@@ -119,9 +112,8 @@ const toggleSearch = () => {
     </button>
 
     <a
-      v-if="!view.sheetMode"
       id="githubBtn"
-      class="btn btn-icon tool-external"
+      class="btn btn-icon tool-external tool-wide"
       href="https://github.com/zhu-rengong/LOMScriptIndexer"
       target="_blank"
       rel="noopener noreferrer"
@@ -132,9 +124,8 @@ const toggleSearch = () => {
     </a>
 
     <a
-      v-if="!view.sheetMode"
       id="workbuddyBtn"
-      class="btn btn-icon tool-external"
+      class="btn btn-icon tool-external tool-wide"
       href="https://wbapp-xx74txuyeotgchq6dlrweb.app.workbuddy.host/?sharecode=BZQLRCGPP5"
       target="_blank"
       rel="noopener noreferrer"

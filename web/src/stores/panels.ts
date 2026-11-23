@@ -1,21 +1,10 @@
-import { byId } from "../lib/browser";
-import { UI_IDS } from "../ui/ids";
+import { popovers } from "../lib/popover";
 
 export type FocusTarget = { kind: string; key: string };
 
 export type PendingHit = { id: string; query: string; target: FocusTarget | null };
 
 export const usePanelsStore = defineStore("panels", () => {
-  const lookupState = reactive({
-    open: false,
-    kind: "",
-    key: "",
-    method: "",
-    trigger: null as HTMLElement | null,
-    requestSeq: 0,
-    pinned: false,
-  });
-
   const pendingHit = shallowRef<PendingHit | null>(null);
 
   const openLookup = (
@@ -25,20 +14,7 @@ export const usePanelsStore = defineStore("panels", () => {
     method?: string,
   ): void => {
     if (!key) return;
-    const panel = byId(UI_IDS.lookupPanel);
-    lookupState.pinned = !!(trigger && panel && panel.contains(trigger));
-    lookupState.open = true;
-    lookupState.kind = kind;
-    lookupState.key = key;
-    lookupState.method = method || "";
-    lookupState.trigger = trigger || null;
-    lookupState.requestSeq++;
-  };
-
-  const hideLookup = (): void => {
-    lookupState.open = false;
-    lookupState.pinned = false;
-    lookupState.trigger = null;
+    popovers.open("lookup", { trigger: trigger || null, payload: { kind, key, method } });
   };
 
   const focusText = (id: string, query: string, target?: FocusTarget | null): void => {
@@ -57,10 +33,8 @@ export const usePanelsStore = defineStore("panels", () => {
   };
 
   return {
-    lookupState,
     pendingHit,
     openLookup,
-    hideLookup,
     focusText,
     takePendingHit,
   };

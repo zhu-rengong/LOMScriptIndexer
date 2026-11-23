@@ -20,7 +20,7 @@ onMounted(() => {
     id: "langMenu",
     triggerId: UI_IDS.langBtn,
     group: "menu",
-    placement: { align: "end", width: 240, fit: true },
+    placement: { align: "end", width: 240 },
   });
 });
 </script>

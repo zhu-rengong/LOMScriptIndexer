@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useLongPress } from "../../composables/useLongPress";
+import { useLookupPress } from "../../composables/useLookupPress";
 import type { ConditionPart } from "../../lib/conditions";
 
 const panels = usePanelsStore();
@@ -11,36 +11,34 @@ const props = defineProps<{
 
 const isText = (part: ConditionPart): part is { text: string } => "text" in part;
 
-const openLookup = (trigger: HTMLElement | null): boolean => {
+const openLookup = (target: HTMLElement | null): boolean => {
   const part = props.part;
-  if (isText(part) || !part.lookup || !trigger) return false;
-  panels.openLookup(part.lookup.kind, part.lookup.key, trigger, props.method);
+  if (isText(part) || !part.lookup || !target) return false;
+  panels.openLookup(part.lookup.kind, part.lookup.key, target, props.method);
   return true;
 };
 
-const longPress = useLongPress({
-  onLongPress: (trigger) => openLookup(trigger),
-});
+const { target, consume } = useLookupPress(openLookup);
 
 const onClick = (event: MouseEvent): void => {
   const part = props.part;
   if (isText(part) || !part.lookup) return;
   const pointerType = event instanceof PointerEvent ? event.pointerType : "mouse";
-  if (pointerType === "mouse") {
+  if (pointerType !== "mouse") {
+    if (!consume()) return;
     event.stopPropagation();
     event.preventDefault();
-    openLookup(event.currentTarget as HTMLElement | null);
     return;
   }
-  if (!longPress.consume()) return;
   event.stopPropagation();
   event.preventDefault();
+  openLookup(target.value);
 };
 
 const onKey = (event: KeyboardEvent): void => {
   event.preventDefault();
   event.stopPropagation();
-  openLookup(event.currentTarget as HTMLElement | null);
+  openLookup(target.value);
 };
 </script>
 
@@ -65,6 +63,7 @@ const onKey = (event: KeyboardEvent): void => {
   </span>
   <button
     v-else
+    ref="target"
     :class="part.className"
     type="button"
     :title="part.title"
@@ -72,7 +71,6 @@ const onKey = (event: KeyboardEvent): void => {
     :data-kind="part.lookup ? part.kind : undefined"
     :data-key="part.lookup ? part.lookup.key : undefined"
     :aria-label="part.title"
-    v-on="longPress.handlers"
     @click="onClick"
     @keydown.enter="onKey"
     @keydown.space="onKey"

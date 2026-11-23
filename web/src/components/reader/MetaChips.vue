@@ -1,14 +1,12 @@
 <script setup lang="ts">
+import { onLongPress, useEventListener } from "@vueuse/core";
 import type { MetaChip, MetaSeal } from "../../types/beats";
 
 const panels = usePanelsStore();
 
 const props = defineProps<{ chips: MetaChip[]; dice?: boolean; method?: string }>();
 
-const PEEK_DELAY = 350;
-
 const wrap = ref<HTMLElement | null>(null);
-let peekTimer = 0;
 let peeked: HTMLElement | null = null;
 
 const sealClass = (seal: MetaSeal): string | undefined =>
@@ -25,43 +23,37 @@ const open = (chip: MetaChip, event: Event) => {
   );
 };
 
-const stopPeek = () => {
-  if (peekTimer) {
-    window.clearTimeout(peekTimer);
-    peekTimer = 0;
-  }
-  if (peeked) {
-    peeked.classList.remove("is-peeking");
-    peeked = null;
-  }
+const stopPeek = (): void => {
+  if (!peeked) return;
+  peeked.classList.remove("is-peeking");
+  peeked = null;
 };
 
-const startPeek = (event: PointerEvent) => {
-  if (event.pointerType === "mouse") return;
-  const target = event.target;
-  if (!(target instanceof HTMLElement)) return;
-  const chip = target.closest(".meta-chip.is-hidden");
-  if (!(chip instanceof HTMLElement) || !wrap.value?.contains(chip)) return;
-  stopPeek();
-  peekTimer = window.setTimeout(() => {
-    peekTimer = 0;
+onLongPress(
+  wrap,
+  (event) => {
+    if (event.pointerType === "mouse") return;
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const chip = target.closest(".meta-chip.is-hidden");
+    if (!(chip instanceof HTMLElement) || !wrap.value?.contains(chip)) return;
+    stopPeek();
     chip.classList.add("is-peeking");
     peeked = chip;
-  }, PEEK_DELAY);
-};
+  },
+  { delay: 350, distanceThreshold: 8 },
+);
+
+useEventListener(wrap, ["pointerup", "pointercancel", "pointerleave"], stopPeek);
+
+useEventListener(wrap, "contextmenu", (event) => {
+  if (peeked) event.preventDefault();
+});
 </script>
 
 <template>
   <div class="meta-group" :class="{ 'is-dice': dice }">
-    <div
-      ref="wrap"
-      class="meta-chips"
-      @pointerdown="startPeek"
-      @pointerup="stopPeek"
-      @pointercancel="stopPeek"
-      @pointerleave="stopPeek"
-      @contextmenu="stopPeek"
-    >
+    <div ref="wrap" class="meta-chips">
       <template v-for="(chip, index) in chips" :key="index">
         <button
           v-if="chip.target"

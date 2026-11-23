@@ -16,12 +16,10 @@ const {
   toggleChapter,
   openScript,
 } = useStatsPanel();
-
-const view = useViewStore();
 </script>
 
 <template>
-  <div class="scrim" :hidden="!open || !view.sheetMode" @click="close"></div>
+  <div class="scrim scrim-sheet" :hidden="!open" @click="close"></div>
   <div
     id="statsPanel"
     class="stats-panel surface"

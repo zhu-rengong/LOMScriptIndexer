@@ -8,8 +8,6 @@ const open = computed(() => popovers.isOpen("version"));
 
 const close = () => popovers.close("version");
 
-const view = useViewStore();
-
 onMounted(() => {
   popovers.register("version", {
     id: UI_IDS.versionPanel,
@@ -21,7 +19,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="scrim" :hidden="!open || !view.sheetMode" @click="close"></div>
+  <div class="scrim scrim-sheet" :hidden="!open" @click="close"></div>
   <div
     id="versionPanel"
     class="version-panel surface"

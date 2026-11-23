@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useLayout } from "../composables/useLayout";
 import { useShortcuts } from "../composables/useShortcuts";
 import { t } from "../i18n";
 import { byId } from "../lib/browser";
@@ -12,7 +11,6 @@ const view = useViewStore();
 const ui = useUiStore();
 const fold = useFoldStore();
 
-useLayout();
 useShortcuts({
   back: navBack,
   forward: navForward,
@@ -27,10 +25,7 @@ useShortcuts({
     if (button && !button.disabled) button.click();
   },
   help: () => popovers.toggle("help", byId(UI_IDS.helpBtn)),
-  search: () => {
-    view.openSearch();
-    void nextTick(() => (byId(UI_IDS.search) as HTMLInputElement | null)?.focus());
-  },
+  search: view.openSearch,
   infer: view.toggleInfer,
   reveal: view.toggleReveal,
   fold: () => fold.toggle(),
@@ -41,7 +36,6 @@ onMounted(() => {
     id: UI_IDS.chapterRail,
     triggerId: UI_IDS.railToggle,
     group: "sheet",
-    onHide: view.hideRail,
   });
 });
 </script>

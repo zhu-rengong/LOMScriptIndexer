@@ -49,7 +49,6 @@ const edgeGroupLabel = (edge: GraphEdge) => {
 };
 
 const pick = (id: string) => {
-  popovers.close("navMenu");
   store.select(id);
 };
 
@@ -58,7 +57,7 @@ onMounted(() => {
     id: "navMenu",
     triggerId: UI_IDS.navBtn,
     group: "menu",
-    placement: { align: "end", width: 340, fit: true },
+    placement: { align: "end", width: 340 },
   });
 });
 </script>

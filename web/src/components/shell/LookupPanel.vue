@@ -3,10 +3,11 @@ import { useLookupPanel } from "../../composables/useLookupPanel";
 import { missions } from "../../data/missions";
 import { t } from "../../i18n";
 
-const panels = usePanelsStore();
-
 const {
   open,
+  kind,
+  key,
+  method,
   checkpoint,
   loading,
   title,
@@ -20,9 +21,6 @@ const {
   pickById,
 } = useLookupPanel();
 
-const kind = computed(() => panels.lookupState.kind);
-const key = computed(() => panels.lookupState.key);
-const method = computed(() => panels.lookupState.method);
 const totalCount = computed(() => mainRows.value.length + readerRows.value.length);
 const flagGroups = computed(() =>
   kind.value === "flag" ? { writers: flagWriters.value, checkers: flagCheckers.value } : null,

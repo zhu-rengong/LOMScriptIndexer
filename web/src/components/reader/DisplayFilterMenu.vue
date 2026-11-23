@@ -29,7 +29,7 @@ onMounted(() => {
     id: UI_IDS.displayFilterMenu,
     triggerId: UI_IDS.displayFilterBtn,
     group: "menu",
-    placement: { align: "end", width: 200, fit: true },
+    placement: { align: "end", width: 200 },
   });
 });
 </script>

@@ -1,92 +1,54 @@
-import { computePosition, flip, offset, shift, size } from "@floating-ui/dom";
-import type { Middleware, Placement as FloatingPlacement, VirtualElement } from "@floating-ui/dom";
-import { onClickOutside, useEventListener, useMediaQuery } from "@vueuse/core";
+import { useEventListener } from "@vueuse/core";
 import { useFocusTrap } from "@vueuse/integrations/useFocusTrap";
+import type { LocationQueryRaw, RouteLocationPathRaw } from "vue-router";
+import { router } from "../router";
 import type { OverlayKey } from "../ui/ids";
-import { popBackLayer, pushBackLayer } from "./backLayer";
 import { byId } from "./browser";
+import { panelOf, stripPanel, withPanel } from "./overlayRoute";
+import type { OverlayPayload } from "./overlayRoute";
+import { trackPlacement } from "./placement";
+import type { Placement } from "./placement";
 
-const MARGIN = 12;
-const GAP = 8;
-const TRAP_GROUPS: Record<string, boolean> = { sheet: true, modal: true };
-const AUTO_CLOSE_GROUPS: Record<string, boolean> = { menu: true, pop: true };
-
-const sheetMode = useMediaQuery("(max-width: 767px)");
-
-export type Placement = {
-  align?: "start" | "center" | "end";
-  width?: number;
-  matchWidth?: boolean;
-  fit?: boolean;
-  gap?: number;
-  side?: "top";
-  margin?: number;
-};
+type LayerGroup = "menu" | "pop" | "sheet" | "modal";
 
 export type PopoverDef = {
   id: string;
   triggerId?: string;
-  group?: string;
+  group?: LayerGroup;
   keep?: OverlayKey[];
   autofocus?: string;
   placement?: Placement;
-  float?: boolean;
   onOpen?: () => void;
   onHide?: () => void;
 };
 
-type Layer = { key: OverlayKey; trigger: HTMLElement | null; focusInside: boolean };
-
-const floatingSide = (options: Placement): FloatingPlacement => {
-  const side = options.side === "top" ? "top" : "bottom";
-  const align = options.align === "start" ? "start" : options.align === "center" ? "" : "end";
-  return (align ? `${side}-${align}` : side) as FloatingPlacement;
+export type OpenOptions = {
+  trigger?: HTMLElement | null;
+  payload?: OverlayPayload;
 };
 
-const virtualAnchor = (margin: number): VirtualElement => ({
-  getBoundingClientRect: () => {
-    const width = document.documentElement.clientWidth || window.innerWidth;
-    return {
-      x: margin,
-      y: margin,
-      top: margin,
-      left: margin,
-      right: width - margin,
-      bottom: margin,
-      width: width - margin * 2,
-      height: 0,
-    };
-  },
-});
-
-const sizeMiddleware = (options: Placement, margin: number): Middleware =>
-  size({
-    padding: margin,
-    apply({ rects, elements, availableWidth, availableHeight }) {
-      let width = 0;
-      if (options.width) width = Math.min(options.width, availableWidth);
-      else if (options.matchWidth) width = Math.min(rects.reference.width, availableWidth);
-      elements.floating.style.width = width ? `${Math.round(width)}px` : "";
-      elements.floating.style.maxHeight = options.fit
-        ? `${Math.max(120, Math.round(availableHeight))}px`
-        : "";
-    },
-  });
+const TRAP_GROUPS = new Set<string>(["sheet", "modal"]);
+const AUTO_CLOSE_GROUPS = new Set<string>(["menu", "pop"]);
 
 export class PopoverHost {
   private readonly defs = new Map<OverlayKey, PopoverDef>();
-  private readonly openState = reactive<Record<string, boolean>>({});
-  private readonly stack: Layer[] = [];
-  private readonly outsideStops = new Map<OverlayKey, () => void>();
-  private readonly stackRevision = ref(0);
-  private pendingAutofocus = "";
-  private ringSuppressor: (() => void) | null = null;
+  private readonly triggers = new Map<OverlayKey, HTMLElement>();
+  private readonly stops = new Map<OverlayKey, () => void>();
+  private readonly version = ref(0);
+  private applied: OverlayKey[] = [];
+  private basePosition: number | null = null;
+  private focusKey: OverlayKey | null = null;
+  private navigating = false;
+
+  private readonly chain = computed<OverlayKey[]>(() => {
+    void this.version.value;
+    return this.chainOf(panelOf(router.currentRoute.value.query));
+  });
 
   private readonly trapPanel = computed<HTMLElement | null>(() => {
-    void this.stackRevision.value;
-    const key = this.stack.length ? this.stack[this.stack.length - 1].key : null;
-    const def = key ? this.defs.get(key) : undefined;
-    if (!def || !TRAP_GROUPS[def.group || ""]) return null;
+    const top = this.chain.value[0];
+    const def = top ? this.defs.get(top) : undefined;
+    if (!def || !TRAP_GROUPS.has(def.group || "")) return null;
     return byId(def.id);
   });
 
@@ -94,257 +56,223 @@ export class PopoverHost {
     escapeDeactivates: false,
     returnFocusOnDeactivate: false,
     allowOutsideClick: true,
-    initialFocus: () => this.initialFocusTarget(),
+    initialFocus: () => this.autofocusTarget() || false,
     fallbackFocus: () => this.trapPanel.value || document.body,
   });
 
-  constructor() {
+  install(): void {
+    useEventListener(document, "keydown", this.onKeydown, { capture: true });
+    useEventListener(document, "click", this.onClick);
+    watch(this.chain, this.sync, { flush: "post", immediate: true });
     watch(
       this.trapPanel,
-      () => {
+      (panel) => {
         if (this.trap.hasFocus.value) this.trap.deactivate();
-        if (!this.trapPanel.value) return;
-        this.trap.activate();
+        if (panel) this.trap.activate();
       },
       { flush: "post" },
-    );
-    useEventListener(
-      document,
-      "keydown",
-      (event) => {
-        if (event.defaultPrevented || event.key !== "Escape") return;
-        if (!this.closeTop()) return;
-        event.preventDefault();
-        event.stopPropagation();
-      },
-      { capture: true },
     );
   }
 
   register(key: OverlayKey, def: PopoverDef): void {
     this.defs.set(key, def);
-    if (this.openState[key] === undefined) this.openState[key] = false;
+    this.version.value++;
     if (getCurrentInstance()) onUnmounted(() => this.unregister(key));
   }
 
   unregister(key: OverlayKey): void {
-    this.close(key, { restoreFocus: false });
+    if (panelOf(router.currentRoute.value.query) === key) this.close(key);
+    this.triggers.delete(key);
     this.defs.delete(key);
-    delete this.openState[key];
+    this.version.value++;
   }
 
   isOpen(key: OverlayKey): boolean {
-    return !!this.openState[key];
+    return this.chain.value.indexOf(key) >= 0;
   }
 
   anyOpen(): boolean {
-    return this.stack.length > 0;
+    return this.chain.value.length > 0;
+  }
+
+  triggerOf(key: OverlayKey): HTMLElement | null {
+    const def = this.defs.get(key);
+    return def ? this.triggerFor(key, def) : null;
   }
 
   toggle(key: OverlayKey, trigger?: HTMLElement | null): boolean {
     return this.isOpen(key) ? this.close(key) : this.open(key, { trigger });
   }
 
-  triggerOf(key: OverlayKey): HTMLElement | null {
-    const def = this.defs.get(key);
-    return def && def.triggerId ? byId(def.triggerId) : null;
-  }
-
-  open(
-    key: OverlayKey,
-    options?: {
-      trigger?: HTMLElement | null;
-      keep?: OverlayKey[];
-      autofocus?: string;
-      placement?: Placement;
-    },
-  ): boolean {
-    const opts = options || {};
+  open(key: OverlayKey, options?: OpenOptions): boolean {
     const def = this.defs.get(key);
     if (!def) return false;
-    const panel = byId(def.id);
-    if (!panel) return false;
-
-    const keep = (def.keep || []).concat(opts.keep || []);
-    for (let index = this.stack.length - 1; index >= 0; index--) {
-      const layer = this.stack[index];
-      if (layer.key === key || keep.indexOf(layer.key) >= 0) continue;
-      this.close(layer.key, { restoreFocus: false });
-    }
-
-    const anchor = this.anchorOf(def, opts.trigger);
-    this.openState[key] = true;
-    panel.hidden = false;
-    panel.setAttribute("aria-hidden", "false");
-
-    const existing = this.stack.find((layer) => layer.key === key);
-    if (!existing) {
-      this.stack.push({
-        key,
-        trigger: anchor || (document.activeElement as HTMLElement | null),
-        focusInside: panel.contains(document.activeElement),
-      });
-      pushBackLayer();
-    } else if (anchor) {
-      existing.trigger = anchor;
-    }
-
-    const placement = opts.placement || def.placement;
-    if (placement) def.placement = placement;
-    if (def.placement) this.place(panel, anchor, def.placement);
-    this.stackRevision.value++;
-
-    if (!existing) {
-      const autofocus = opts.autofocus || def.autofocus || "";
-      const target = autofocus ? byId(autofocus) : null;
-      if (target) target.focus({ preventScroll: true });
-      if (TRAP_GROUPS[def.group || ""]) this.pendingAutofocus = autofocus;
-    }
-
-    this.watchOutside(key, panel, def);
-    if (typeof def.onOpen === "function") def.onOpen();
-    return true;
-  }
-
-  close(key: OverlayKey, options?: { restoreFocus?: boolean }): boolean {
     const opts = options || {};
-    this.stopOutside(key);
-    const def = this.defs.get(key);
-    const index = this.stack.findIndex((layer) => layer.key === key);
-    this.openState[key] = false;
-    if (def && typeof def.onHide === "function") def.onHide();
-    if (index < 0) return false;
-    const layer = this.stack.splice(index, 1)[0];
-    this.stackRevision.value++;
-    popBackLayer();
-    if (this.trap.hasFocus.value) this.trap.deactivate();
-    if (opts.restoreFocus && !layer.focusInside) this.restoreFocus(layer.trigger);
+    const trigger = opts.trigger || null;
+    const current = panelOf(router.currentRoute.value.query);
+    const query = withPanel(router.currentRoute.value.query, key, opts.payload);
+    const panel = byId(def.id);
+    this.navigating = true;
+    queueMicrotask(() => {
+      this.navigating = false;
+    });
+
+    if (current === key) {
+      if (trigger && (!panel || !panel.contains(trigger))) this.triggers.set(key, trigger);
+      if (router.resolve(this.locationOf(query)).fullPath !== router.currentRoute.value.fullPath) {
+        void router.replace(this.locationOf(query));
+      }
+      return true;
+    }
+
+    if (trigger) this.triggers.set(key, trigger);
+    if (current && this.chainOf(key).indexOf(current) < 0) {
+      void router.replace(this.locationOf(query));
+    } else {
+      void router.push(this.locationOf(query));
+    }
     return true;
   }
 
-  closeAll(): void {
-    const keys = this.stack.map((layer) => layer.key).reverse();
-    for (const key of keys) this.close(key, { restoreFocus: false });
+  close(key: OverlayKey): boolean {
+    const chain = this.chain.value;
+    const index = chain.indexOf(key);
+    if (index < 0) return false;
+    this.dismiss(index + 1);
+    return true;
   }
 
-  place(panel: HTMLElement | null, trigger: HTMLElement | null, options?: Placement): void {
-    if (!panel) return;
-    const def = this.defOfPanel(panel);
-    if (sheetMode.value && !def?.float) {
-      panel.style.position = "";
-      panel.style.left = "";
-      panel.style.top = "";
-      panel.style.width = "";
-      panel.style.maxHeight = "";
-      panel.style.margin = "";
-      panel.classList.remove("is-overlay");
+  closeTop(restoreFocus: boolean): boolean {
+    const top = this.chain.value[0];
+    if (!top) return false;
+    this.focusKey = restoreFocus ? top : null;
+    return this.close(top);
+  }
+
+  private readonly onKeydown = (event: KeyboardEvent): void => {
+    if (event.defaultPrevented || event.key !== "Escape") return;
+    if (!this.closeTop(true)) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  private readonly onClick = (event: MouseEvent): void => {
+    if (this.navigating) return;
+    const chain = this.chain.value;
+    if (!chain.length) return;
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    if (this.inside(chain, target) || this.onTrigger(target)) return;
+    const auto = chain.filter((key) => AUTO_CLOSE_GROUPS.has(this.defs.get(key)?.group || ""));
+    const last = auto[auto.length - 1];
+    if (last) this.close(last);
+  };
+
+  private readonly sync = (): void => {
+    const chain = this.chain.value;
+    if (!chain.length) this.basePosition = this.position();
+    const opened = chain.filter((key) => this.applied.indexOf(key) < 0);
+    const closed = this.applied.filter((key) => chain.indexOf(key) < 0);
+    for (const key of closed) this.deactivate(key);
+    for (const key of opened.reverse()) this.activate(key);
+    this.applied = chain;
+  };
+
+  private activate(key: OverlayKey): void {
+    const def = this.defs.get(key);
+    if (!def) return;
+    const panel = byId(def.id);
+    if (panel && def.placement) {
+      const trigger = this.triggerFor(key, def);
+      if (trigger) {
+        panel.classList.add("is-placed");
+        this.stops.set(key, trackPlacement(panel, trigger, def.placement));
+      }
+    }
+    if (def.autofocus) byId(def.autofocus)?.focus({ preventScroll: true });
+    if (typeof def.onOpen === "function") def.onOpen();
+  }
+
+  private deactivate(key: OverlayKey): void {
+    const def = this.defs.get(key);
+    const stop = this.stops.get(key);
+    this.stops.delete(key);
+    if (stop) stop();
+    const panel = def ? byId(def.id) : null;
+    panel?.classList.remove("is-placed");
+    if (def && typeof def.onHide === "function") def.onHide();
+    if (this.focusKey !== key) return;
+    this.focusKey = null;
+    if (!def) return;
+    const trigger = this.triggerFor(key, def);
+    if (!trigger || !trigger.isConnected || (trigger as HTMLButtonElement).disabled) return;
+    trigger.focus({ preventScroll: true });
+  }
+
+  private dismiss(count: number): void {
+    const location = this.locationOf(stripPanel(router.currentRoute.value.query));
+    const depth = this.depth();
+    if (depth < 1 || count > depth) {
+      void router.replace(location);
       return;
     }
-    const opts = options || {};
-    const margin = opts.margin == null ? MARGIN : opts.margin;
-    const gap = opts.gap == null ? GAP : opts.gap;
-    panel.style.width = "";
-    panel.style.maxHeight = "";
-    const middleware: Middleware[] = [
-      offset(gap),
-      flip({ padding: margin }),
-      shift({ padding: margin }),
-    ];
-    if (opts.fit || opts.width || opts.matchWidth) middleware.push(sizeMiddleware(opts, margin));
-    panel.classList.add("is-overlay");
-    panel.style.position = "fixed";
-    panel.style.margin = "0";
-    void computePosition(trigger ?? virtualAnchor(margin), panel, {
-      strategy: "fixed",
-      placement: floatingSide(opts),
-      middleware,
-    }).then((result) => {
-      const viewWidth = document.documentElement.clientWidth || window.innerWidth;
-      const viewHeight = document.documentElement.clientHeight || window.innerHeight;
-      const limitHeight = viewHeight - margin * 2;
-      if (panel.offsetHeight > limitHeight) panel.style.maxHeight = `${limitHeight}px`;
-      const maxX = Math.max(margin, viewWidth - panel.offsetWidth - margin);
-      const maxY = Math.max(margin, viewHeight - panel.offsetHeight - margin);
-      const x = Math.min(Math.max(result.x, margin), maxX);
-      const y = Math.min(Math.max(result.y, margin), maxY);
-      panel.style.left = `${Math.round(x)}px`;
-      panel.style.top = `${Math.round(y)}px`;
-    });
+    router.go(-count);
   }
 
-  private defOfPanel(panel: HTMLElement): PopoverDef | undefined {
-    for (const def of this.defs.values()) {
-      if (def.id === panel.id) return def;
+  private locationOf(query: LocationQueryRaw): RouteLocationPathRaw {
+    return { path: router.currentRoute.value.path, query };
+  }
+
+  private depth(): number {
+    return this.basePosition === null ? 0 : Math.max(0, this.position() - this.basePosition);
+  }
+
+  private position(): number {
+    const value = (router.options.history.state as { position?: unknown }).position;
+    return typeof value === "number" ? value : 0;
+  }
+
+  private chainOf(top: OverlayKey | null): OverlayKey[] {
+    if (!top || !this.defs.has(top)) return [];
+    const keys: OverlayKey[] = [top];
+    for (let index = 0; index < keys.length; index++) {
+      const def = this.defs.get(keys[index]);
+      for (const parent of def?.keep || []) {
+        if (keys.indexOf(parent) < 0 && this.defs.has(parent)) keys.push(parent);
+      }
     }
-    return undefined;
+    return keys;
   }
 
-  private anchorOf(def: PopoverDef, explicit?: HTMLElement | null): HTMLElement | null {
-    if (explicit) return explicit;
-    return def.triggerId ? byId(def.triggerId) : null;
+  private triggerFor(key: OverlayKey, def: PopoverDef): HTMLElement | null {
+    const stored = this.triggers.get(key);
+    if (stored && stored.isConnected) return stored;
+    if (!def.triggerId) return null;
+    return byId(def.triggerId);
   }
 
-  private initialFocusTarget(): HTMLElement | false {
-    const autofocus = this.pendingAutofocus;
-    this.pendingAutofocus = "";
-    return (autofocus ? byId(autofocus) : null) || this.trapPanel.value || false;
-  }
-
-  private closeTop(): boolean {
-    const top = this.stack.length ? this.stack[this.stack.length - 1].key : null;
-    return top ? this.close(top, { restoreFocus: true }) : false;
-  }
-
-  private watchOutside(key: OverlayKey, panel: HTMLElement, def: PopoverDef): void {
-    this.stopOutside(key);
-    if (!AUTO_CLOSE_GROUPS[def.group || ""]) return;
-    const anchor = this.anchorOf(def);
-    this.outsideStops.set(
-      key,
-      onClickOutside(
-        panel,
-        (event) => {
-          const target = event.target as Node | null;
-          if (!target || panel.contains(target) || (anchor && anchor.contains(target))) return;
-          this.close(key, { restoreFocus: false });
-        },
-        { ignore: [panel, ...(anchor ? [anchor] : [])] },
-      ),
-    );
-  }
-
-  private stopOutside(key: OverlayKey): void {
-    const stop = this.outsideStops.get(key);
-    this.outsideStops.delete(key);
-    if (stop) stop();
-  }
-
-  private restoreFocus(trigger: HTMLElement | null): void {
-    if (!trigger || !trigger.isConnected || (trigger as HTMLButtonElement).disabled) return;
-    this.clearRing();
-    trigger.classList.add("is-focus-silent");
-    const clear = () => {
-      if (this.ringSuppressor === clear) this.ringSuppressor = null;
-      trigger.classList.remove("is-focus-silent");
-      document.removeEventListener("keydown", clear, true);
-      document.removeEventListener("pointerdown", clear, true);
-      trigger.removeEventListener("blur", clear);
-    };
-    this.ringSuppressor = clear;
-    document.addEventListener("keydown", clear, true);
-    document.addEventListener("pointerdown", clear, true);
-    trigger.addEventListener("blur", clear, { once: true });
-    try {
-      trigger.focus({ preventScroll: true });
-    } catch {
-      this.clearRing();
+  private inside(chain: OverlayKey[], target: Node): boolean {
+    for (const key of chain) {
+      const def = this.defs.get(key);
+      if (!def) continue;
+      if (byId(def.id)?.contains(target)) return true;
+      if (this.triggerFor(key, def)?.contains(target)) return true;
     }
+    return false;
   }
 
-  private clearRing(): void {
-    const current = this.ringSuppressor;
-    this.ringSuppressor = null;
-    if (current) current();
+  private onTrigger(target: Node): boolean {
+    for (const [key, def] of this.defs) {
+      if (this.triggerFor(key, def)?.contains(target)) return true;
+    }
+    return false;
+  }
+
+  private autofocusTarget(): HTMLElement | null {
+    const top = this.chain.value[0];
+    const def = top ? this.defs.get(top) : undefined;
+    if (!def) return null;
+    return (def.autofocus ? byId(def.autofocus) : null) || byId(def.id);
   }
 }
 

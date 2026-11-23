@@ -10,9 +10,8 @@ const scriptTitle = computed(() => store.selected()?.id || "");
 <template>
   <header class="masthead">
     <button
-      v-if="view.overlayRail"
       id="railToggle"
-      class="btn btn-icon rail-toggle"
+      class="btn btn-icon rail-toggle rail-toggle-overlay"
       :class="{ 'is-on': view.railOpen }"
       type="button"
       :aria-expanded="view.railOpen"
@@ -24,11 +23,11 @@ const scriptTitle = computed(() => store.selected()?.id || "");
       <AppIcon name="panel" />
     </button>
 
-    <h1 v-if="view.sheetMode" class="node-title" :title="scriptTitle">
+    <h1 class="node-title masthead-title" :title="scriptTitle">
       {{ scriptTitle || t("readerEmptyTitle") }}
     </h1>
 
-    <BrandMark v-if="!view.sheetMode" />
+    <BrandMark />
 
     <SearchBox />
 

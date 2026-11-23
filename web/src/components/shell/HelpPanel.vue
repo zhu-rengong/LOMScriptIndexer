@@ -35,8 +35,6 @@ const open = computed(() => popovers.isOpen("help"));
 
 const close = () => popovers.close("help");
 
-const view = useViewStore();
-
 onMounted(() => {
   popovers.register("help", {
     id: UI_IDS.helpPanel,
@@ -48,7 +46,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="scrim" :hidden="!open || !view.sheetMode" @click="close"></div>
+  <div class="scrim scrim-sheet" :hidden="!open" @click="close"></div>
   <div
     id="helpPanel"
     class="help-panel surface"
@@ -79,7 +77,7 @@ onMounted(() => {
           </template>
         </dl>
       </section>
-      <section v-if="view.sheetMode" class="help-group">
+      <section class="help-group help-touch">
         <h3 class="help-group-title">{{ t("helpGroupTouch") }}</h3>
         <dl class="help-list">
           <template v-for="row in TOUCH_ROWS" :key="row.gesture">

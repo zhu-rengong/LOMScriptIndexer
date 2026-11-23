@@ -12,7 +12,7 @@ import {
 import type { CheckRef, ChoiceOption } from "../../types/beats";
 import type { ConditionNode } from "../../types/condition";
 import { useFoldable } from "../../composables/useFoldable";
-import { useLongPress } from "../../composables/useLongPress";
+import { useLookupPress } from "../../composables/useLookupPress";
 
 const panels = usePanelsStore();
 
@@ -52,17 +52,14 @@ const openCheck = (event: Event) => {
   panels.openLookup("check", checkRef.key, event.currentTarget as HTMLElement, checkRef.kind);
 };
 
-const longPress = useLongPress({
-  onLongPress: (trigger) => {
-    const checkRef = check.value;
-    if (!checkRef || !trigger) return false;
-    panels.openLookup("check", checkRef.key, trigger, checkRef.kind);
-    return true;
-  },
+const { target: pressTarget, consume: consumePress } = useLookupPress((trigger) => {
+  const checkRef = check.value;
+  if (!checkRef || !trigger) return;
+  panels.openLookup("check", checkRef.key, trigger, checkRef.kind);
 });
 
 const onHeadClick = (): void => {
-  if (longPress.consume()) return;
+  if (consumePress()) return;
   toggle();
 };
 
@@ -110,10 +107,14 @@ watch(() => props.option.condition, resolveCondition, { immediate: true });
         <span v-if="option.lockedText" class="option-lock">
           <AppIcon name="lock" class="lock-icon" />{{ option.lockedText }}
         </span>
-        <span v-if="requirement || detailRequirements || expr" class="option-conds">
+        <span
+          v-if="requirement || detailRequirements || expr"
+          ref="pressTarget"
+          class="option-conds"
+        >
           <template v-if="requirement || detailRequirements">
             <span class="option-cond-label">{{ t("optionNeedLabel") }}</span>
-            <span class="option-cond-stack" v-on="longPress.handlers">
+            <span class="option-cond-stack">
               <span v-if="requirement" class="option-cond">{{ requirement }}</span>
               <span v-if="detailRequirements" class="option-cond">{{ detailRequirements }}</span>
             </span>
@@ -121,7 +122,7 @@ watch(() => props.option.condition, resolveCondition, { immediate: true });
           <template v-if="expr">
             <span class="option-cond-label">{{ t("optionCondLabel") }}</span>
             <span class="option-cond-row">
-              <span class="option-cond" :title="hint || undefined" v-on="longPress.handlers">
+              <span class="option-cond" :title="hint || undefined">
                 <CondExpr v-if="expanded" :expr="expr" :method="check?.kind" />
                 <span v-else class="cx-var"
                   ><span class="cx-name">{{ check?.key }}</span></span

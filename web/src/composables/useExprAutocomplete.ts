@@ -6,7 +6,6 @@ import { query } from "../lib/query";
 import type { QuerySuggestion } from "../types/query";
 
 export type SuggestState = {
-  isOpen: boolean;
   items: QuerySuggestion[];
   activeIndex: number;
   from: number;
@@ -25,7 +24,6 @@ type AutocompleteOptions = {
 const REFRESH_SUFFIX = /(:|\(|\s)$/;
 
 const emptyState = (): SuggestState => ({
-  isOpen: false,
   items: [],
   activeIndex: 0,
   from: 0,
@@ -58,7 +56,6 @@ export const useExprAutocomplete = (
     cancelHide();
     const result = query.suggest(source, caret, queryIndex());
     state.value = {
-      isOpen: true,
       items: result.items || [],
       activeIndex: 0,
       from: result.from,
@@ -66,11 +63,7 @@ export const useExprAutocomplete = (
       mode: result.mode,
     };
     void nextTick(() => {
-      popovers.open(options.suggestKey, {
-        trigger: node,
-        keep: [options.popoverKey],
-        placement: { align: "start", gap: 6, matchWidth: true, fit: true },
-      });
+      popovers.open(options.suggestKey, { trigger: node });
     });
   };
 
@@ -124,14 +117,6 @@ export const useExprAutocomplete = (
 
   const onKeydown = (event: KeyboardEvent): void => {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
-    if (event.key === "Escape") {
-      if (state.value.isOpen) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      hide();
-      return;
-    }
     const navigating =
       state.value.items.length > 0 &&
       !event.shiftKey &&
@@ -142,7 +127,7 @@ export const useExprAutocomplete = (
       return;
     }
     const picking =
-      state.value.isOpen &&
+      isOpen.value &&
       state.value.items.length > 0 &&
       (event.key === "Tab" || event.key === "Enter");
     if (picking) {
@@ -169,11 +154,10 @@ export const useExprAutocomplete = (
       id: options.domId,
       group: "menu",
       keep: [options.popoverKey],
-      float: true,
       onHide: () => {
         state.value = emptyState();
       },
-      placement: { align: "start", gap: 6, matchWidth: true, fit: true },
+      placement: { align: "start", gap: 6, matchWidth: true },
     });
   });
 

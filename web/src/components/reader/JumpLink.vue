@@ -7,7 +7,7 @@ import { signedNumber } from "../../lib/numbers";
 import type { JumpView } from "../../types/beats";
 import type { CheckpointModel, PositionCandidate } from "../../types/condition";
 import { useFoldable } from "../../composables/useFoldable";
-import { useLongPress } from "../../composables/useLongPress";
+import { useLookupPress } from "../../composables/useLookupPress";
 
 const store = useScriptStore();
 const panels = usePanelsStore();
@@ -145,16 +145,13 @@ const openLookup = (event: Event) => {
   panels.openLookup("check", props.jump.position, event.currentTarget as HTMLElement, "position");
 };
 
-const longPress = useLongPress({
-  onLongPress: (trigger) => {
-    if (!props.jump.position || !trigger) return false;
-    panels.openLookup("check", props.jump.position, trigger, "position");
-    return true;
-  },
+const { target: pressTarget, consume: consumePress } = useLookupPress((trigger) => {
+  if (!props.jump.position || !trigger) return;
+  panels.openLookup("check", props.jump.position, trigger, "position");
 });
 
 const onHeadClick = (): void => {
-  if (!collapsible.value || longPress.consume()) return;
+  if (!collapsible.value || consumePress()) return;
   toggle();
 };
 
@@ -193,7 +190,7 @@ watch(() => props.jump.position, loadCheckpoint, { immediate: true });
       @keydown.enter.prevent="collapsible ? toggle() : undefined"
       @keydown.space.prevent="collapsible ? toggle() : undefined"
     >
-      <span class="option-main" v-on="longPress.handlers">
+      <span ref="pressTarget" class="option-main">
         <span class="option-text">{{ jump.position }}</span>
       </span>
       <button

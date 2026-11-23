@@ -7,26 +7,19 @@ import { UI_IDS } from "../../ui/ids";
 const open = computed(() => popovers.isOpen("moreMenu"));
 const exporting = ref(false);
 
-const view = useViewStore();
-
 const openStats = () => {
-  popovers.close("moreMenu");
   popovers.open("stats", { trigger: byId(UI_IDS.statsBtn) });
 };
 
 const openHelp = () => {
-  popovers.close("moreMenu");
-  if (popovers.isOpen("help")) popovers.close("help");
-  else popovers.open("help", { trigger: byId(UI_IDS.helpBtn) });
+  popovers.open("help", { trigger: byId(UI_IDS.helpBtn) });
 };
 
 const openChangelog = () => {
-  popovers.close("moreMenu");
   popovers.open("changelog", { trigger: byId(UI_IDS.changelogBtn) });
 };
 
 const openVersion = () => {
-  popovers.close("moreMenu");
   popovers.open("version", { trigger: byId(UI_IDS.moreBtn) });
 };
 
@@ -50,7 +43,7 @@ onMounted(() => {
     id: "moreMenu",
     triggerId: UI_IDS.moreBtn,
     group: "menu",
-    placement: { align: "end", width: 268, fit: true },
+    placement: { align: "end", width: 268 },
   });
 });
 </script>
@@ -65,27 +58,25 @@ onMounted(() => {
     <button class="menu-item row" type="button" @click="openVersion">
       {{ t("versionTitle") }}
     </button>
-    <template v-if="view.sheetMode">
-      <div class="menu-sep"></div>
-      <a
-        class="menu-item row"
-        href="https://github.com/zhu-rengong/LOMScriptIndexer"
-        target="_blank"
-        rel="noopener noreferrer"
-        :title="t('githubBtnTitle')"
-      >
-        GitHub
-      </a>
-      <a
-        class="menu-item row"
-        href="https://wbapp-xx74txuyeotgchq6dlrweb.app.workbuddy.host/?sharecode=BZQLRCGPP5"
-        target="_blank"
-        rel="noopener noreferrer"
-        :title="t('workbuddyBtnTitle')"
-      >
-        WorkBuddy
-      </a>
-    </template>
+    <div class="menu-sep menu-narrow"></div>
+    <a
+      class="menu-item row menu-narrow"
+      href="https://github.com/zhu-rengong/LOMScriptIndexer"
+      target="_blank"
+      rel="noopener noreferrer"
+      :title="t('githubBtnTitle')"
+    >
+      GitHub
+    </a>
+    <a
+      class="menu-item row menu-narrow"
+      href="https://wbapp-xx74txuyeotgchq6dlrweb.app.workbuddy.host/?sharecode=BZQLRCGPP5"
+      target="_blank"
+      rel="noopener noreferrer"
+      :title="t('workbuddyBtnTitle')"
+    >
+      WorkBuddy
+    </a>
     <div class="menu-sep"></div>
     <button
       class="menu-item row"

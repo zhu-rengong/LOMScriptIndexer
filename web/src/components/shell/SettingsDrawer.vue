@@ -63,14 +63,10 @@ const toggleGroupPick = () => {
   }
   popovers.open("typeGroupPick", {
     trigger: byId(UI_IDS.typeGroupTrigger),
-    keep: ["settings"],
-    placement: { align: "start", gap: 6, matchWidth: true },
   });
 };
 
 const close = () => {
-  popovers.close("typeGroupPick");
-  popovers.close("fontPicker");
   popovers.close("settings");
 };
 

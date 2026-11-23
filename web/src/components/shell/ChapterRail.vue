@@ -154,8 +154,7 @@ const clearQuery = () => {
 };
 
 const pick = (id: string) => {
-  if (!store.select(id)) return;
-  if (view.overlayRail) view.closeRail();
+  store.select(id);
 };
 
 const removeBookmark = (id: string) => {
@@ -182,9 +181,8 @@ watch(
     <header class="rail-head">
       <h2 class="rail-title">{{ t("railTitle") }}</h2>
       <button
-        v-if="view.overlayRail"
         id="railClose"
-        class="btn btn-icon rail-close"
+        class="btn btn-icon rail-close rail-close-overlay"
         type="button"
         :title="t('closeTitle')"
         :aria-label="t('closeTitle')"

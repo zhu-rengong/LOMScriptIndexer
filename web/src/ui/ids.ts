@@ -8,6 +8,7 @@ export const UI_IDS = {
   displayFilterMenu: "displayFilterMenu",
   foldToggleBtn: "foldToggleBtn",
   search: "search",
+  searchWrap: "searchWrap",
   searchClose: "searchClose",
   searchResults: "searchResults",
   searchToggle: "searchToggle",
@@ -43,6 +44,7 @@ export const UI_IDS = {
 export const OVERLAY_KEYS = [
   "chapterRail",
   "navMenu",
+  "search",
   "searchResults",
   "displayFilter",
   "filterPopover",
