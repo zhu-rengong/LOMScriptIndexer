@@ -1,6 +1,5 @@
 import { popovers } from "../lib/popover";
-
-export type FocusTarget = { kind: string; key: string };
+import type { FocusTarget } from "../types/focus";
 
 export type PendingHit = { id: string; query: string; target: FocusTarget | null };
 

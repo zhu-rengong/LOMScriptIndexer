@@ -11,10 +11,9 @@ const ui = useUiStore();
 
 const selectedScript = computed(() => store.selected());
 
-const isBookmarked = computed(() => {
-  void store.bookmarkVersion;
-  return !!selectedScript.value && store.isBookmarked(selectedScript.value.id);
-});
+const isBookmarked = computed(
+  () => !!selectedScript.value && store.isBookmarked(selectedScript.value.id),
+);
 
 const navOpen = computed(() => popovers.isOpen("navMenu"));
 

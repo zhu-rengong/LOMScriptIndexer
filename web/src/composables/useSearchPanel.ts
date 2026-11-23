@@ -4,15 +4,17 @@ import { t } from "../i18n";
 import { byId } from "../lib/dom";
 import { clampIndex, stepIndex } from "../lib/listNav";
 import { popovers } from "../lib/popover";
+import { searchIndex } from "../lib/searchIndex";
+import type { SearchHit, SearchResult } from "../lib/searchIndex";
 import { UI_IDS } from "../ui/ids";
 
 const PAGE = 50;
 
 export const useSearchPanel = () => {
   const store = useScriptStore();
+  const filter = useFilterStore();
   const panels = usePanelsStore();
   const ui = useUiStore();
-  const search = useSearchStore();
 
   const query = ref("");
   const hits = ref<SearchHit[]>([]);
@@ -26,13 +28,13 @@ export const useSearchPanel = () => {
   const status = ref({ count: "", note: "", excluded: "", message: "" });
 
   let renderedQuery = "";
-  let renderedFilterSet: Set<number> | null = null;
+  let renderedMatches: Set<number> | null = null;
   let isStale = true;
   let requestSeq = 0;
   let warmPromise: Promise<unknown> | null = null;
   let warmLang = "";
 
-  const hasActiveFilter = (): boolean => !!store.filterSet;
+  const hasActiveFilter = (): boolean => !!filter.matches;
 
   const loadingText = (): string => {
     const state = textStore.progress();
@@ -76,7 +78,7 @@ export const useSearchPanel = () => {
     activeIndex.value = 0;
     updateStatus();
     renderedQuery = value;
-    renderedFilterSet = store.filterSet;
+    renderedMatches = filter.matches;
     isStale = false;
   };
 
@@ -90,7 +92,7 @@ export const useSearchPanel = () => {
     const seq = ++requestSeq;
     building.value = true;
     updateStatus();
-    const result = await search.search(value, trackProgress(seq));
+    const result = await searchIndex.search(value, filter.matches, trackProgress(seq));
     if (seq !== requestSeq) return 0;
     building.value = false;
     applyResult(value, result, keepScroll);
@@ -103,7 +105,7 @@ export const useSearchPanel = () => {
   };
 
   const clearFilter = (): void => {
-    store.setFilterState({ source: "", set: null, error: "", loading: false });
+    filter.reset();
     void searchNow();
   };
 
@@ -113,13 +115,8 @@ export const useSearchPanel = () => {
       hide();
       return 0;
     }
-    const filterSet = store.filterSet;
-    if (
-      !isStale &&
-      value === renderedQuery &&
-      filterSet === renderedFilterSet &&
-      hits.value.length
-    ) {
+    const matches = filter.matches;
+    if (!isStale && value === renderedQuery && matches === renderedMatches && hits.value.length) {
       updateStatus();
       show();
       return hits.value.length;
@@ -136,7 +133,7 @@ export const useSearchPanel = () => {
       return;
     }
     const seq = ++requestSeq;
-    const result = await search.search(value, trackProgress(seq));
+    const result = await searchIndex.search(value, filter.matches, trackProgress(seq));
     if (seq !== requestSeq) return;
     building.value = false;
     if (result.total !== total.value || !hits.value.length) {
@@ -164,7 +161,7 @@ export const useSearchPanel = () => {
           warmLang = "";
         }
         ui.setIoStatus("");
-        search.warm();
+        searchIndex.warm();
         if (query.value.trim()) void searchNow();
       })
       .catch(() => {
@@ -231,7 +228,7 @@ export const useSearchPanel = () => {
     renderedCount.value = 0;
     activeIndex.value = 0;
     renderedQuery = "";
-    renderedFilterSet = null;
+    renderedMatches = null;
     isStale = true;
     ui.setIoStatus("");
     hide();

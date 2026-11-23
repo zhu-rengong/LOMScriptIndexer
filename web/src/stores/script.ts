@@ -8,25 +8,11 @@ import type { GraphNode } from "../types/graph";
 
 export type ReadingAnchor = { path: number[]; offset: number };
 
-export type FilterState = {
-  source: string;
-  set: Set<number> | null;
-  error: string;
-  loading: boolean;
-};
-
-const readBookmarks = (raw: unknown): Set<string> => {
-  const out = new Set<string>();
-  if (!Array.isArray(raw)) return out;
-  for (const id of raw) if (typeof id === "string") out.add(id);
-  return out;
-};
+const readBookmarks = (raw: unknown): string[] =>
+  Array.isArray(raw) ? raw.filter((id): id is string => typeof id === "string") : [];
 
 const bookmarksRef = () =>
-  storedRef<Set<string>>(keys.bookmarks, new Set<string>(), {
-    decode: (raw) => readBookmarks(raw),
-    encode: (value) => JSON.stringify(Array.from(value)),
-  });
+  storedRef<string[]>(keys.bookmarks, [], { decode: (raw) => readBookmarks(raw) });
 
 export const useScriptStore = defineStore("script", () => {
   const preferredLanguages = usePreferredLanguages();
@@ -49,14 +35,8 @@ export const useScriptStore = defineStore("script", () => {
   const anchors = new Map<string, ReadingAnchor>();
   const lang = ref(initialLang());
   const selectedId = ref("");
-  const filterSource = ref("");
-  const filterSet = shallowRef<Set<number> | null>(null);
-  const filterError = ref("");
-  const filterLoading = ref(false);
-  const filterRevision = ref(0);
 
   const bookmarks = bookmarksRef();
-  const bookmarkVersion = ref(0);
 
   const selected = (): GraphNode | null =>
     selectedId.value ? graph.nodeById.get(selectedId.value) || null : null;
@@ -71,16 +51,6 @@ export const useScriptStore = defineStore("script", () => {
     selectedId.value = id;
     return true;
   };
-
-  const setFilterState = (state: FilterState): void => {
-    filterSource.value = state.source;
-    filterSet.value = state.set === null ? null : markRaw(state.set);
-    filterError.value = state.error;
-    filterLoading.value = state.loading;
-    filterRevision.value++;
-  };
-
-  let restored = false;
 
   const textLang = (): string => {
     const meta = readDataset().meta;
@@ -97,29 +67,31 @@ export const useScriptStore = defineStore("script", () => {
     return changed;
   };
 
+  let restored = false;
+
   const restoreLang = (): void => {
     if (restored) return;
     restored = true;
     lang.value = initialLang();
     langState.applyDocument(lang.value);
-    filterRevision.value++;
   };
 
-  const isBookmarked = (id: string): boolean => bookmarks.value.has(id);
+  const isBookmarked = (id: string): boolean => bookmarks.value.indexOf(id) >= 0;
 
-  const bookmarkList = (): string[] => Array.from(bookmarks.value);
+  const bookmarkList = (): string[] => bookmarks.value.slice();
 
   const toggleBookmark = (id: string): boolean => {
     if (!id) return false;
-    if (bookmarks.value.has(id)) bookmarks.value.delete(id);
-    else bookmarks.value.add(id);
-    bookmarkVersion.value++;
-    return bookmarks.value.has(id);
+    const index = bookmarks.value.indexOf(id);
+    const next = bookmarks.value.slice();
+    if (index >= 0) next.splice(index, 1);
+    else next.push(id);
+    bookmarks.value = next;
+    return index < 0;
   };
 
   const clearBookmarks = (): void => {
-    bookmarks.value.clear();
-    bookmarkVersion.value++;
+    bookmarks.value = [];
   };
 
   const rememberAnchor = (id: string, anchor: ReadingAnchor): void => {
@@ -132,15 +104,8 @@ export const useScriptStore = defineStore("script", () => {
   return {
     lang,
     selectedId,
-    filterSource,
-    filterSet,
-    filterError,
-    filterLoading,
-    filterRevision,
-    bookmarkVersion,
     selected,
     select,
-    setFilterState,
     restoreLang,
     textLang,
     setLang,

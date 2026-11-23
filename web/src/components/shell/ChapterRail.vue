@@ -78,10 +78,7 @@ watch(rows, () => {
   void nextTick(() => virtualizer.value.measure());
 });
 
-const bookmarks = computed(() => {
-  void store.bookmarkVersion;
-  return bookmarkRows(query.value, store.bookmarkList());
-});
+const bookmarks = computed(() => bookmarkRows(query.value, store.bookmarkList()));
 
 const specials = computed(() => specialRows(query.value, store.lang));
 
@@ -92,7 +89,6 @@ const matchCount = computed(() => {
 });
 
 const tabs = computed(() => {
-  void store.bookmarkVersion;
   const counts: Record<RailTab, number> = {
     outline: graph.nodes.length,
     bookmarks: store.bookmarkList().length,

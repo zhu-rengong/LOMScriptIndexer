@@ -3,6 +3,7 @@ import { missions } from "../../data/missions";
 import { t } from "../../i18n";
 import { missionEventTarget } from "../../lib/conditions";
 import type { MissionEventType, MissionEventView } from "../../types/beats";
+import type { FocusTarget } from "../../types/focus";
 import type { MissionState } from "../../types/missions";
 
 const panels = usePanelsStore();

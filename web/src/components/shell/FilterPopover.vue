@@ -3,7 +3,7 @@ import { useDebounceFn, useInfiniteScroll } from "@vueuse/core";
 import { graph } from "../../data/graph";
 import { chapterTitle, t } from "../../i18n";
 import { byId } from "../../lib/dom";
-import { applyFilter, FIELD_LABEL_KEYS, RESULT_LIMIT } from "../../lib/filter";
+import { FIELD_LABEL_KEYS, RESULT_LIMIT } from "../../lib/filter";
 import { scrollAt } from "../../lib/listNav";
 import { popovers } from "../../lib/popover";
 import { query } from "../../lib/query";
@@ -12,6 +12,7 @@ import { UI_IDS } from "../../ui/ids";
 import { useExprAutocomplete } from "../../composables/useExprAutocomplete";
 
 const store = useScriptStore();
+const filter = useFilterStore();
 
 const SUGGEST_LIMIT = 100;
 
@@ -21,12 +22,12 @@ const SUGGEST_KEY = UI_IDS.filterSuggestions;
 const exprInput = ref<HTMLInputElement | null>(null);
 const resultsPanel = ref<HTMLElement | null>(null);
 const suggestPanel = ref<HTMLElement | null>(null);
-const exprValue = ref(store.filterSource);
+const exprValue = ref(filter.source);
 const visibleLimit = ref(RESULT_LIMIT);
 const suggestLimit = ref(SUGGEST_LIMIT);
 
 const applyDebounced = useDebounceFn(() => {
-  applyFilter(exprValue.value);
+  filter.apply(exprValue.value);
 }, 250);
 
 const {
@@ -48,39 +49,37 @@ const {
   onSubmit: () => {
     applyDebounced.cancel();
     hideSuggestions();
-    applyFilter(exprValue.value);
+    filter.apply(exprValue.value);
   },
 });
 
 const fields = computed(() => query.fields());
 
-const hasAppliedFilter = computed(() => !!store.filterSet);
+const hasAppliedFilter = computed(() => !!filter.matches);
 
 const badgeCount = computed(() => {
-  const set = store.filterSet;
+  const set = filter.matches;
   if (!set) return "";
   return set.size > 99 ? "99+" : String(set.size);
 });
 
 const status = computed(() => {
-  const { filterError, filterSource, filterSet, filterLoading } = store;
-  if (filterError) return { text: filterError, className: "filter-status is-error" };
-  if (!filterSource.trim()) return { text: t("filterIdle"), className: "filter-status" };
-  if (filterSet && filterSet.size === 0) {
+  if (filter.error) return { text: filter.error, className: "filter-status is-error" };
+  if (!filter.source.trim()) return { text: t("filterIdle"), className: "filter-status" };
+  if (filter.matches && filter.matches.size === 0) {
     return {
-      text: filterLoading ? t("filterLoadingText") : t("filterNoMatch"),
-      className: filterLoading ? "filter-status" : "filter-status is-error",
+      text: filter.loading ? t("filterLoadingText") : t("filterNoMatch"),
+      className: filter.loading ? "filter-status" : "filter-status is-error",
     };
   }
   return {
-    text: filterLoading ? t("filterLoadingText") : "",
+    text: filter.loading ? t("filterLoadingText") : "",
     className: "filter-status is-ok",
   };
 });
 
 const hitNodeIndexes = computed(() => {
-  void store.filterRevision;
-  const set = store.filterSet;
+  const set = filter.matches;
   return set ? Array.from(set) : [];
 });
 
@@ -148,7 +147,7 @@ watch(
 );
 
 const openPopover = () => {
-  exprValue.value = store.filterSource;
+  exprValue.value = filter.source;
   popovers.open(POPOVER_KEY, { trigger: byId(UI_IDS.filterBtn) });
   void nextTick(() => {
     const node = exprInput.value;
@@ -175,7 +174,7 @@ const pickNode = (id: string) => {
 };
 
 watch(
-  () => store.filterSource,
+  () => filter.source,
   (value) => {
     const node = exprInput.value;
     if (node && document.activeElement === node) return;
@@ -236,7 +235,7 @@ const isPopoverOpen = computed(() => popovers.isOpen(POPOVER_KEY));
       </header>
 
       <div class="filter-row">
-        <div class="filter-input-wrap" :class="{ 'is-error': !!store.filterError }">
+        <div class="filter-input-wrap" :class="{ 'is-error': !!filter.error }">
           <input
             id="filterExpr"
             ref="exprInput"
@@ -310,7 +309,7 @@ const isPopoverOpen = computed(() => popovers.isOpen(POPOVER_KEY));
       <div
         id="filterResults"
         class="filter-results"
-        :hidden="!hasAppliedFilter || !store.filterSource.trim()"
+        :hidden="!hasAppliedFilter || !filter.source.trim()"
       >
         <div class="filter-results-title">
           <span class="filter-count">

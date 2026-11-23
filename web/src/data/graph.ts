@@ -60,9 +60,6 @@ const index = (): GraphIndex => (built ??= build());
 const chapterOf = (node: GraphNode | null | undefined): Chapter =>
   (node ? index().chapters[node.chapterIndex] : undefined) || EMPTY_CHAPTER;
 
-const passesFilter = (position: number, filterSet: Set<number> | null): boolean =>
-  !filterSet || filterSet.has(position);
-
 const nodesByChapter = (): GraphNode[][] => {
   const state = index();
   if (state.chapterBuckets) return state.chapterBuckets;
@@ -161,5 +158,4 @@ export const graph = {
   get outgoingByIndex(): GraphEdge[][] {
     return index().outgoingByIndex;
   },
-  passesFilter,
 };

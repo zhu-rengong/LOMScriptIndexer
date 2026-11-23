@@ -4,6 +4,7 @@ import { textStore } from "../../data/text";
 import { buildReaderBlocks } from "../../lib/blocks";
 import { normalizeSearchText } from "../../lib/strings";
 import type { ReadingAnchor } from "../../stores/script";
+import type { FocusTarget } from "../../types/focus";
 
 const store = useScriptStore();
 const view = useViewStore();

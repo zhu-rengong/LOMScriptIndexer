@@ -1,12 +1,11 @@
 import { convert } from "../data/convert";
 import { graph } from "../data/graph";
 import { textStore } from "../data/text";
+import type { FocusTarget } from "../types/focus";
 import type { Chapter } from "../types/graph";
-import { normalizeSearchText } from "../lib/strings";
-import { createSearchEngine, searchCandidates, type SearchDoc } from "../lib/searchEngine";
-import { resetSearchText, searchLinesOfId, type SearchLine } from "../lib/searchText";
-import type { FocusTarget } from "./panels";
-import { useScriptStore } from "./script";
+import { createSearchEngine, searchCandidates, type SearchDoc } from "./searchEngine";
+import { resetSearchText, searchLinesOfId, type SearchLine } from "./searchText";
+import { normalizeSearchText } from "./strings";
 
 export type SearchHit = {
   id: string;
@@ -69,7 +68,7 @@ class SearchIndex {
   private readonly listeners = new Set<SearchProgress>();
 
   private script() {
-    return useScriptStore();
+    return useScriptStore(pinia);
   }
 
   private needleOf(input: string): string {
@@ -94,7 +93,11 @@ class SearchIndex {
     });
   }
 
-  async search(input: string, onProgress?: SearchProgress): Promise<SearchResult> {
+  async search(
+    input: string,
+    allowed: Set<number> | null,
+    onProgress?: SearchProgress,
+  ): Promise<SearchResult> {
     const result: SearchResult = { hits: [], total: 0, excludedByFilter: 0 };
     const needle = this.needleOf(input);
     if (!needle) return result;
@@ -108,14 +111,14 @@ class SearchIndex {
       if (onProgress) this.listeners.delete(onProgress);
     }
     const candidates = searchCandidates(this.engine, needle);
-    const allowed = candidates === null ? null : new Set(candidates);
+    const candidateSet = candidates === null ? null : new Set(candidates);
     let excludedByFilter = 0;
     for (const entry of this.entries) {
-      if (allowed && !allowed.has(entry.id)) continue;
+      if (candidateSet && !candidateSet.has(entry.id)) continue;
       if (entry.nodeIndex < 0) continue;
       const hits = hitsOf(entry, needle);
       if (!hits.length) continue;
-      if (!graph.passesFilter(entry.nodeIndex, this.script().filterSet)) {
+      if (allowed && !allowed.has(entry.nodeIndex)) {
         excludedByFilter++;
         continue;
       }
@@ -216,11 +219,4 @@ class SearchIndex {
   }
 }
 
-export const useSearchStore = defineStore("search", () => {
-  const index = new SearchIndex();
-  return {
-    invalidate: () => index.invalidate(),
-    warm: () => index.warm(),
-    search: (input: string, onProgress?: SearchProgress) => index.search(input, onProgress),
-  };
-});
+export const searchIndex = new SearchIndex();

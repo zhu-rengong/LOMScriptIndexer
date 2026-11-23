@@ -4,9 +4,9 @@ import App from "./components/App.vue";
 import { graph } from "./data/graph";
 import { textStore } from "./data/text";
 import { syncLocale } from "./i18n";
-import { applyFilter } from "./lib/filter";
 import { popovers } from "./lib/popover";
 import { installPrefsDom } from "./lib/prefsDom";
+import { searchIndex } from "./lib/searchIndex";
 import { router, scriptIdOf, showScript } from "./router";
 
 export const start = (): void => {
@@ -15,7 +15,7 @@ export const start = (): void => {
   installPrefsDom(usePrefsStore(pinia));
 
   const script = useScriptStore(pinia);
-  const search = useSearchStore(pinia);
+  const filter = useFilterStore(pinia);
 
   script.restoreLang();
   syncLocale(script.lang);
@@ -47,8 +47,8 @@ export const start = (): void => {
   );
 
   textStore.ensureHead(script.textLang()).then(() => {
-    search.invalidate();
-    search.warm();
-    if (script.filterSource.trim()) applyFilter(script.filterSource);
+    searchIndex.invalidate();
+    searchIndex.warm();
+    if (filter.source.trim()) filter.apply(filter.source);
   });
 };

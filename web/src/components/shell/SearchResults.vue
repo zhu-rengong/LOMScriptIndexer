@@ -2,6 +2,7 @@
 import { useInfiniteScroll } from "@vueuse/core";
 import { chapterTitle, t } from "../../i18n";
 import { scrollAt } from "../../lib/listNav";
+import type { SearchHit } from "../../lib/searchIndex";
 
 const SCROLL_THRESHOLD = 96;
 

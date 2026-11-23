@@ -1,6 +1,7 @@
 import { convert } from "../data/convert";
 import { readDataset } from "../data/access";
 import { textStore } from "../data/text";
+import type { FocusTarget } from "../types/focus";
 import { normalizeSearchText } from "./strings";
 import * as beatRows from "./beatRows";
 import { metaText, missionEventTarget, missionEventView } from "./conditions";

@@ -1,5 +1,4 @@
 import { useTimeoutFn } from "@vueuse/core";
-import { queryIndex } from "../lib/filter";
 import { stepIndex } from "../lib/listNav";
 import { popovers } from "../lib/popover";
 import type { OverlayKey } from "../ui/ids";
@@ -37,6 +36,7 @@ export const useExprAutocomplete = (
   value: Ref<string>,
   options: AutocompleteOptions,
 ) => {
+  const filter = useFilterStore();
   const state = ref<SuggestState>(emptyState());
 
   const isOpen = computed(() => popovers.isOpen(options.suggestKey));
@@ -55,7 +55,7 @@ export const useExprAutocomplete = (
       return;
     }
     cancelHide();
-    const result = query.suggest(source, caret, queryIndex());
+    const result = query.suggest(source, caret, filter.queryIndex());
     state.value = {
       items: result.items || [],
       activeIndex: 0,
