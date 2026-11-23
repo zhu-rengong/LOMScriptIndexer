@@ -18,7 +18,15 @@ export const scriptIdOf = (value: unknown): string => {
   }
 };
 
-export const showScript = (id: string): void => {
-  if (!id || router.currentRoute.value.params.id === id) return;
-  void router.push({ name: "script", params: { id } });
+const navigate = (id: string, replace: boolean): void => {
+  const current = scriptIdOf(router.currentRoute.value.params.id);
+  if (!id || current === id) return;
+  const target = { name: "script", params: { id } };
+  if (replace) void router.replace(target);
+  else void router.push(target);
 };
+
+export const showScript = (id: string): void =>
+  navigate(id, !scriptIdOf(router.currentRoute.value.params.id));
+
+export const replaceScript = (id: string): void => navigate(id, true);

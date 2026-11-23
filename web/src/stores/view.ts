@@ -1,4 +1,5 @@
 import { useMediaQuery } from "@vueuse/core";
+import { popBackLayer, pushBackLayer, releaseBackLayer } from "../lib/backLayer";
 import { byId } from "../lib/browser";
 import { popovers } from "../lib/popover";
 import { keys, storedRef } from "../lib/storage";
@@ -64,8 +65,20 @@ export const useViewStore = defineStore("view", () => {
     document.body.classList.toggle("chrome-hidden", chromeHidden.value);
   });
 
+  let searchLayer = false;
+
   watch(sheetMode, (sheet) => {
-    if (sheet) return;
+    if (sheet) {
+      if (searchOpen.value && !searchLayer) {
+        searchLayer = true;
+        pushBackLayer();
+      }
+      return;
+    }
+    if (searchLayer) {
+      searchLayer = false;
+      releaseBackLayer();
+    }
     searchOpen.value = false;
     chromeHidden.value = false;
   });
@@ -85,10 +98,17 @@ export const useViewStore = defineStore("view", () => {
   const openSearch = (): void => {
     searchOpen.value = true;
     showChrome();
+    if (!sheetMode.value || searchLayer) return;
+    searchLayer = true;
+    pushBackLayer();
   };
 
   const collapseSearch = (): void => {
+    if (!searchOpen.value) return;
     searchOpen.value = false;
+    if (!searchLayer) return;
+    searchLayer = false;
+    popBackLayer();
   };
 
   const hideRail = (): void => {
@@ -97,7 +117,7 @@ export const useViewStore = defineStore("view", () => {
 
   const openRail = (): void => {
     if (!overlayRail.value) return;
-    searchOpen.value = false;
+    collapseSearch();
     railOpen.value = true;
     showChrome();
     popovers.open(CHAPTER_RAIL, { trigger: byId(UI_IDS.railToggle) });

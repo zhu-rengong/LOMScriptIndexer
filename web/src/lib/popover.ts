@@ -3,6 +3,7 @@ import type { Middleware, Placement as FloatingPlacement, VirtualElement } from 
 import { onClickOutside, useEventListener, useMediaQuery } from "@vueuse/core";
 import { useFocusTrap } from "@vueuse/integrations/useFocusTrap";
 import type { OverlayKey } from "../ui/ids";
+import { popBackLayer, pushBackLayer } from "./backLayer";
 import { byId } from "./browser";
 
 const MARGIN = 12;
@@ -183,6 +184,7 @@ export class PopoverHost {
         trigger: anchor || (document.activeElement as HTMLElement | null),
         focusInside: panel.contains(document.activeElement),
       });
+      pushBackLayer();
     } else if (anchor) {
       existing.trigger = anchor;
     }
@@ -214,9 +216,15 @@ export class PopoverHost {
     if (index < 0) return false;
     const layer = this.stack.splice(index, 1)[0];
     this.stackRevision.value++;
+    popBackLayer();
     if (this.trap.hasFocus.value) this.trap.deactivate();
     if (opts.restoreFocus && !layer.focusInside) this.restoreFocus(layer.trigger);
     return true;
+  }
+
+  closeAll(): void {
+    const keys = this.stack.map((layer) => layer.key).reverse();
+    for (const key of keys) this.close(key, { restoreFocus: false });
   }
 
   place(panel: HTMLElement | null, trigger: HTMLElement | null, options?: Placement): void {
