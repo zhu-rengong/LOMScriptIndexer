@@ -4,6 +4,7 @@ import { graph } from "../data/graph";
 import { lang as langState } from "../lib/lang";
 import { popovers } from "../lib/popover";
 import { keys, storedRef } from "../lib/storage";
+import { router, scriptIdOf, showScript } from "../router";
 import type { GraphNode } from "../types/graph";
 
 export type ReadingAnchor = { path: number[]; offset: number };
@@ -34,7 +35,10 @@ export const useScriptStore = defineStore("script", () => {
 
   const anchors = new Map<string, ReadingAnchor>();
   const lang = ref(initialLang());
-  const selectedId = ref("");
+  const selectedId = computed(() => {
+    const id = scriptIdOf(router.currentRoute.value.params.id);
+    return id && graph.nodeById.has(id) ? id : "";
+  });
 
   const bookmarks = bookmarksRef();
 
@@ -42,13 +46,12 @@ export const useScriptStore = defineStore("script", () => {
     selectedId.value ? graph.nodeById.get(selectedId.value) || null : null;
 
   const select = (id: string): boolean => {
-    const node = graph.nodeById.get(id);
-    if (!node) return false;
+    if (!graph.nodeById.has(id)) return false;
     if (selectedId.value === id) {
       popovers.closeTop(false);
       return true;
     }
-    selectedId.value = id;
+    showScript(id);
     return true;
   };
 
