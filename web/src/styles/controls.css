@@ -466,6 +466,16 @@
     animation: pop-in var(--t-base) var(--ease);
   }
 
+  #searchResults {
+    right: calc(-40px - var(--sp-2));
+  }
+
+  @media (min-width: 768px) {
+    #searchResults {
+      right: 0;
+    }
+  }
+
   .drop-item {
     display: flex;
     flex-wrap: wrap;

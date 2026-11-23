@@ -21,15 +21,6 @@ const {
   clearFilter,
 } = useSearchPanel();
 
-const view = useViewStore();
-
-const input = ref<HTMLInputElement | null>(null);
-
-const closeSearch = () => {
-  view.collapseSearch();
-  input.value?.blur();
-};
-
 onMounted(() => {
   popovers.register("search", {
     id: UI_IDS.searchWrap,
@@ -45,7 +36,6 @@ onMounted(() => {
       <AppIcon name="search" class="search-icon" />
       <input
         :id="UI_IDS.search"
-        ref="input"
         v-model="query"
         class="search-input"
         type="search"
@@ -76,16 +66,5 @@ onMounted(() => {
     </div>
 
     <FilterPopover />
-
-    <button
-      :id="UI_IDS.searchClose"
-      class="btn btn-icon search-close"
-      type="button"
-      :title="t('closeTitle')"
-      :aria-label="t('closeTitle')"
-      @click="closeSearch"
-    >
-      <AppIcon name="close" />
-    </button>
   </div>
 </template>

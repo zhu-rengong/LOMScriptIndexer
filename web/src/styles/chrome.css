@@ -32,10 +32,6 @@
     .reader-node-title {
       display: block;
     }
-
-    .search-close {
-      display: none;
-    }
   }
 
   @media (min-width: 1024px) {

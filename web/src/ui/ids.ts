@@ -9,7 +9,6 @@ export const UI_IDS = {
   foldToggleBtn: "foldToggleBtn",
   search: "search",
   searchWrap: "searchWrap",
-  searchClose: "searchClose",
   searchResults: "searchResults",
   searchToggle: "searchToggle",
   filterBtn: "filterBtn",
