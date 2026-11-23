@@ -249,7 +249,7 @@
   "hkJump": "Jump to a linked script",
   "hkHelp": "Open this guide",
   "htTap": "Tap",
-  "htTapDesc": "Expand or collapse an option, branch or jump row.",
+  "htTapDesc": "Expand or collapse an option, branch or jump row; tap empty space to bring the top bar back.",
   "htHold": "Hold",
   "htHoldDesc": "Hold a condition or variable to open its lookup; the magnifier at the row end does the same.",
   "htPress": "Press",

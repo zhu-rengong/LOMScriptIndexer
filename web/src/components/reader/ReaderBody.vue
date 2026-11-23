@@ -210,6 +210,26 @@ watch(
   },
 );
 
+const TAP_EXCLUDE = [
+  "button",
+  "a",
+  "input",
+  "select",
+  "textarea",
+  "label",
+  '[role="button"]',
+  '[role="tab"]',
+  "[data-kind][data-key]",
+  '[contenteditable="true"]',
+].join(", ");
+
+const onBodyTap = (event: MouseEvent): void => {
+  if (!view.chromeHidden) return;
+  const target = event.target;
+  if (!(target instanceof HTMLElement) || target.closest(TAP_EXCLUDE)) return;
+  view.showChrome();
+};
+
 const onScroll = () => {
   const element = body.value;
   const current = node.value;
@@ -245,6 +265,7 @@ defineExpose({ body, scrollFraction });
     :class="{ 'is-revealing': view.revealOn }"
     :aria-busy="isLoading ? 'true' : 'false'"
     @scroll.passive="onScroll"
+    @click="onBodyTap"
   >
     <EmptyState v-if="!node" no-selection />
     <ReaderSkeleton v-else-if="isLoading" />
