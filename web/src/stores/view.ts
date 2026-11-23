@@ -80,11 +80,10 @@ export const useViewStore = defineStore("view", () => {
     chromeHidden.value = false;
   };
 
-  const hideChrome = (): void => {
-    if (chromeHidden.value) return;
-    if (!sheetMode.value || searchOpen.value || railOpen.value) return;
+  const toggleChrome = (): void => {
+    if (!sheetMode.value) return;
     if (popovers.anyOpen()) return;
-    chromeHidden.value = true;
+    chromeHidden.value = !chromeHidden.value;
   };
 
   const openSearch = (): void => {
@@ -164,7 +163,7 @@ export const useViewStore = defineStore("view", () => {
     setFontTarget,
     setPickerTarget,
     showChrome,
-    hideChrome,
+    toggleChrome,
     openSearch,
     collapseSearch,
     openRail,

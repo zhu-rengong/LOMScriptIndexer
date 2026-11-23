@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useDebounceFn, useScroll } from "@vueuse/core";
+import { useDebounceFn } from "@vueuse/core";
 import { textStore } from "../../data/text";
 import { buildReaderBlocks } from "../../lib/blocks";
 import { normalizeSearchText } from "../../lib/browser";
@@ -27,7 +27,6 @@ const body = ref<HTMLElement | null>(null);
 const reloadTick = ref(0);
 const readingId = ref("");
 let pendingRestore = false;
-let scrollBase = 0;
 
 const node = computed(() => store.selected());
 
@@ -176,7 +175,6 @@ const scrollToTarget = (target: HTMLElement | null, position: number, remember =
       }
       if (target) alignTo(current, target, position);
       else current.scrollTop = 0;
-      scrollBase = current.scrollTop;
       if (pass >= 2) {
         settling = false;
         if (remember) rememberReading();
@@ -272,7 +270,6 @@ watch(
     }
     readingId.value = id;
     pendingRestore = true;
-    view.showChrome();
     const current = store.selected();
     if (!current) return;
     await textStore.ensureScript(store.textLang(), current.id);
@@ -316,31 +313,14 @@ const TAP_EXCLUDE = [
 ].join(", ");
 
 const onBodyTap = (event: MouseEvent): void => {
-  if (!view.chromeHidden) return;
   const target = event.target;
   if (!(target instanceof HTMLElement) || target.closest(TAP_EXCLUDE)) return;
-  view.showChrome();
+  view.toggleChrome();
 };
 
-const { y } = useScroll(body);
-
-watch(y, (value) => {
-  const delta = value - scrollBase;
-  scrollBase = value;
+const onScroll = (): void => {
   if (!settling && !pendingRestore) rememberSettled();
-  if (!view.sheetMode || pendingRestore) return;
-  const element = body.value;
-  if (!element) return;
-  if (value <= 8) {
-    view.showChrome();
-    return;
-  }
-  if (delta > 4 && value > element.clientHeight * 0.5) {
-    view.hideChrome();
-    return;
-  }
-  if (delta < -4) view.showChrome();
-});
+};
 
 const retry = () => {
   reloadTick.value++;
@@ -355,6 +335,7 @@ const retry = () => {
     :class="{ 'is-revealing': view.revealOn }"
     :aria-busy="isLoading ? 'true' : 'false'"
     @click="onBodyTap"
+    @scroll.passive="onScroll"
   >
     <EmptyState v-if="!node" no-selection />
     <ReaderSkeleton v-else-if="isLoading" />
