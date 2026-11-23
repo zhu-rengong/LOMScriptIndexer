@@ -1380,18 +1380,9 @@
 
   .reader-body:not(.is-revealing)
     .meta-chips
-    .meta-chip.is-hidden:not(:hover):not(:focus-visible):not(:active) {
+    .meta-chip.is-hidden:not(:hover):not(:focus-visible):not(:active):not(.is-peeking) {
     background: var(--ink);
     color: var(--ink);
-  }
-
-  @media (hover: none) {
-    .reader-body:not(.is-revealing)
-      .meta-chips
-      .meta-chip.is-hidden:not(:hover):not(:focus-visible):not(:active) {
-      background: var(--surface-hover);
-      color: var(--ink-2);
-    }
   }
 
   .reader-skeleton {

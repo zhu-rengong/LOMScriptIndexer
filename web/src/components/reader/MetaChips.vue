@@ -5,6 +5,12 @@ const panels = usePanelsStore();
 
 const props = defineProps<{ chips: MetaChip[]; dice?: boolean; method?: string }>();
 
+const PEEK_DELAY = 350;
+
+const wrap = ref<HTMLElement | null>(null);
+let peekTimer = 0;
+let peeked: HTMLElement | null = null;
+
 const sealClass = (seal: MetaSeal): string | undefined =>
   seal === "infer" ? undefined : `is-${seal}`;
 
@@ -18,11 +24,44 @@ const open = (chip: MetaChip, event: Event) => {
     props.method || chip.target.method,
   );
 };
+
+const stopPeek = () => {
+  if (peekTimer) {
+    window.clearTimeout(peekTimer);
+    peekTimer = 0;
+  }
+  if (peeked) {
+    peeked.classList.remove("is-peeking");
+    peeked = null;
+  }
+};
+
+const startPeek = (event: PointerEvent) => {
+  if (event.pointerType === "mouse") return;
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return;
+  const chip = target.closest(".meta-chip.is-hidden");
+  if (!(chip instanceof HTMLElement) || !wrap.value?.contains(chip)) return;
+  stopPeek();
+  peekTimer = window.setTimeout(() => {
+    peekTimer = 0;
+    chip.classList.add("is-peeking");
+    peeked = chip;
+  }, PEEK_DELAY);
+};
 </script>
 
 <template>
   <div class="meta-group" :class="{ 'is-dice': dice }">
-    <div class="meta-chips">
+    <div
+      ref="wrap"
+      class="meta-chips"
+      @pointerdown="startPeek"
+      @pointerup="stopPeek"
+      @pointercancel="stopPeek"
+      @pointerleave="stopPeek"
+      @contextmenu="stopPeek"
+    >
       <template v-for="(chip, index) in chips" :key="index">
         <button
           v-if="chip.target"
