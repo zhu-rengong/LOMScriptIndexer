@@ -18,6 +18,13 @@ const HELP_GROUPS: { title: string; rows: [string, string][] }[] = [
   },
 ];
 
+const TOUCH_ROWS: { gesture: string; desc: string }[] = [
+  { gesture: "htTap", desc: "htTapDesc" },
+  { gesture: "htHold", desc: "htHoldDesc" },
+  { gesture: "htPress", desc: "htPressDesc" },
+  { gesture: "htBack", desc: "htBackDesc" },
+];
+
 const FILTER_DOCS: { expr: string; desc: string }[] = [
   { expr: "helpFilterField", desc: "helpFilterFieldDesc" },
   { expr: "helpFilterLogic", desc: "helpFilterLogicDesc" },
@@ -69,6 +76,15 @@ onMounted(() => {
           <template v-for="row in group.rows" :key="row[0]">
             <dt class="help-key">{{ row[0] }}</dt>
             <dd class="help-desc">{{ t(row[1]) }}</dd>
+          </template>
+        </dl>
+      </section>
+      <section v-if="view.sheetMode" class="help-group">
+        <h3 class="help-group-title">{{ t("helpGroupTouch") }}</h3>
+        <dl class="help-list">
+          <template v-for="row in TOUCH_ROWS" :key="row.gesture">
+            <dt class="help-key">{{ t(row.gesture) }}</dt>
+            <dd class="help-desc">{{ t(row.desc) }}</dd>
           </template>
         </dl>
       </section>

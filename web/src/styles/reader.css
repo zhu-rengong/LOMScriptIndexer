@@ -598,6 +598,12 @@
     }
   }
 
+  @media (hover: none) {
+    .cond-lookup {
+      opacity: 1;
+    }
+  }
+
   .cond-lookup svg {
     width: 12px;
     height: 12px;
