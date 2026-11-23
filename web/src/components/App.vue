@@ -2,8 +2,8 @@
 import { useShortcuts } from "../composables/useShortcuts";
 import { t } from "../i18n";
 import { byId } from "../lib/dom";
-import { navBack, navForward } from "../lib/navHistory";
 import { popovers } from "../lib/popover";
+import { router } from "../router";
 import { UI_IDS } from "../ui/ids";
 
 const store = useScriptStore();
@@ -12,8 +12,8 @@ const ui = useUiStore();
 const fold = useFoldStore();
 
 useShortcuts({
-  back: navBack,
-  forward: navForward,
+  back: () => router.back(),
+  forward: () => router.forward(),
   bookmark: () => {
     const node = store.selected();
     if (!node) return;

@@ -5,7 +5,6 @@ import { graph } from "./data/graph";
 import { textStore } from "./data/text";
 import { syncLocale } from "./i18n";
 import { applyFilter } from "./lib/filter";
-import { installNavHistory } from "./lib/navHistory";
 import { popovers } from "./lib/popover";
 import { installPrefsDom } from "./lib/prefsDom";
 import { router, scriptIdOf, showScript } from "./router";
@@ -22,7 +21,6 @@ export const start = (): void => {
   syncLocale(script.lang);
 
   app.mount("#app");
-  installNavHistory();
   popovers.install();
 
   watch(

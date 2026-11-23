@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { t } from "../../i18n";
 import { byId } from "../../lib/dom";
-import { canBack, canForward, navBack, navForward } from "../../lib/navHistory";
 import { popovers } from "../../lib/popover";
+import { router } from "../../router";
 import { UI_IDS } from "../../ui/ids";
 
 const store = useScriptStore();
@@ -55,8 +55,7 @@ const toggleBookmark = () => {
               type="button"
               :title="t('backTitle')"
               :aria-label="t('backTitle')"
-              :disabled="!canBack"
-              @click="navBack"
+              @click="router.back()"
             >
               <AppIcon name="back" />
             </button>
@@ -68,8 +67,7 @@ const toggleBookmark = () => {
               type="button"
               :title="t('forwardTitle')"
               :aria-label="t('forwardTitle')"
-              :disabled="!canForward"
-              @click="navForward"
+              @click="router.forward()"
             >
               <AppIcon name="forward" />
             </button>
@@ -109,13 +107,13 @@ const toggleBookmark = () => {
           <div id="navWrap" class="menu-wrap reader-nav">
             <span class="tip-host" :title="t('navBtnTitle')">
               <button
-                id="navBtn"
+                :id="UI_IDS.navBtn"
                 class="btn btn-icon"
                 :class="{ 'is-on': navOpen }"
                 type="button"
                 aria-haspopup="true"
                 :aria-expanded="navOpen"
-                aria-controls="navMenu"
+                :aria-controls="UI_IDS.navMenu"
                 :title="t('navBtnTitle')"
                 :aria-label="t('navBtnTitle')"
                 :disabled="!selectedScript"
