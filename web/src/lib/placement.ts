@@ -17,6 +17,22 @@ const floatingSide = (options: Placement): FloatingPlacement => {
   return (align ? `bottom-${align}` : "bottom") as FloatingPlacement;
 };
 
+export const placePanel = (
+  panel: HTMLElement,
+  reference: HTMLElement,
+  options: Placement,
+): void => {
+  const margin = options.margin ?? MARGIN;
+  const gap = options.gap ?? GAP;
+  const rect = reference.getBoundingClientRect();
+  const width = options.width || (options.matchWidth ? Math.round(rect.width) : 0);
+  const room = Math.max(rect.top - margin, window.innerHeight - rect.bottom - gap - margin);
+  if (width > 0) panel.style.setProperty("--pop-w", `${width}px`);
+  panel.style.setProperty("--pop-x", `${Math.round(rect.left)}px`);
+  panel.style.setProperty("--pop-y", `${Math.round(rect.bottom + gap)}px`);
+  panel.style.setProperty("--pop-max-h", `${Math.max(120, Math.floor(room))}px`);
+};
+
 export const trackPlacement = (
   panel: HTMLElement,
   reference: HTMLElement,
@@ -24,11 +40,7 @@ export const trackPlacement = (
 ): (() => void) => {
   const margin = options.margin ?? MARGIN;
   const gap = options.gap ?? GAP;
-  const rect = reference.getBoundingClientRect();
-  const width = options.width || (options.matchWidth ? Math.round(rect.width) : 0);
-  if (width > 0) panel.style.setProperty("--pop-w", `${width}px`);
-  panel.style.setProperty("--pop-x", `${Math.round(rect.left)}px`);
-  panel.style.setProperty("--pop-y", `${Math.round(rect.bottom + gap)}px`);
+  placePanel(panel, reference, options);
   const middleware: Middleware[] = [
     offset(gap),
     flip({ padding: margin }),

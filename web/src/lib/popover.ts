@@ -6,7 +6,7 @@ import type { OverlayKey } from "../ui/ids";
 import { byId } from "./browser";
 import { panelOf, stripPanel, withPanel } from "./overlayRoute";
 import type { OverlayPayload } from "./overlayRoute";
-import { trackPlacement } from "./placement";
+import { placePanel, trackPlacement } from "./placement";
 import type { Placement } from "./placement";
 
 type LayerGroup = "menu" | "pop" | "sheet" | "modal";
@@ -129,7 +129,10 @@ export class PopoverHost {
       return true;
     }
 
-    if (trigger) this.triggers.set(key, trigger);
+    if (trigger) {
+      this.triggers.set(key, trigger);
+      this.place(key, trigger);
+    }
     if (current && this.chainOf(key).indexOf(current) < 0) {
       void router.replace(this.locationOf(query));
     } else {
@@ -195,6 +198,15 @@ export class PopoverHost {
     }
     if (def.autofocus) byId(def.autofocus)?.focus({ preventScroll: true });
     if (typeof def.onOpen === "function") def.onOpen();
+  }
+
+  private place(key: OverlayKey, trigger: HTMLElement): void {
+    const def = this.defs.get(key);
+    if (!def?.placement) return;
+    const panel = byId(def.id);
+    if (!panel) return;
+    panel.classList.add("is-placed");
+    placePanel(panel, trigger, def.placement);
   }
 
   private retrack(key: OverlayKey, trigger: HTMLElement): void {
