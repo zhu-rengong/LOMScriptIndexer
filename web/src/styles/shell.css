@@ -113,7 +113,7 @@
   .search-input {
     width: 100%;
     height: var(--ctl-sm);
-    padding: 0 34px 0 38px;
+    padding: 0 14px 0 38px;
     border: 1px solid var(--line-1);
     border-radius: var(--r-sm);
     background: var(--surface-inset);
@@ -140,22 +140,6 @@
 
   .search-input::-webkit-search-cancel-button {
     appearance: none;
-  }
-
-  .search-key {
-    position: absolute;
-    right: 10px;
-    display: none;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 4px;
-    border: 1px solid var(--line-1);
-    border-radius: var(--r-sm);
-    background: var(--surface-inset);
-    color: var(--ink-2);
-    text-align: center;
-    pointer-events: none;
-    --tlh-code: 0.625;
   }
 
   .menu-wrap {
@@ -1146,10 +1130,6 @@
     .brand-text h1 {
       --ts-display: 1;
       --tls-display: 0em;
-    }
-
-    .search-key {
-      display: inline-flex;
     }
 
     .filter-btn {

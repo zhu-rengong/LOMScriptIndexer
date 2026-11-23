@@ -302,8 +302,7 @@
   }
 
   .btn.btn-mono,
-  .input.input-mono,
-  kbd.search-key {
+  .input.input-mono {
     font-family: var(--rd-ff-code, var(--font-base));
     font-size: calc(var(--rd-fs-code, 16px) * var(--ts-code, 1));
     font-weight: var(--rd-fw-code, 400);

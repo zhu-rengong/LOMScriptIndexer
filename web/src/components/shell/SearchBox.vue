@@ -61,7 +61,6 @@ onMounted(() => {
         @focus="onFocus"
         @keydown="onKeydown"
       />
-      <kbd class="search-key" aria-hidden="true">/</kbd>
       <SearchResults
         :hits="hits"
         :rendered-count="renderedCount"
