@@ -23,7 +23,7 @@ type EventRow = {
   target: FocusTarget;
 };
 
-const props = defineProps<{ event: MissionEventView }>();
+const props = defineProps<{ event: MissionEventView; blockPath: string }>();
 
 const row = computed<EventRow>(() => {
   const event = props.event;
@@ -59,6 +59,7 @@ const openMission = (key: string, event: Event) => {
     :class="{ 'is-cancel': row.cancel }"
     :data-kind="row.target.kind"
     :data-key="row.target.key"
+    :data-block-path="blockPath"
   >
     <div class="mission-event-panel">
       <MissionStateBody v-if="row.state" :state="row.state" :show-tags="false" :lead="lead" />

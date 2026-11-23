@@ -3,7 +3,7 @@ import { sceneText, t } from "../../i18n";
 import type { BattleView } from "../../types/beats";
 import { useFoldable } from "../../composables/useFoldable";
 
-const props = defineProps<{ battle: BattleView; foldKey: string }>();
+const props = defineProps<{ battle: BattleView; foldKey: string; blockPath: string }>();
 
 const isCampaign = computed(() => props.battle.kind === "battle");
 
@@ -28,10 +28,6 @@ const toggle = () => {
   open.value = !open.value;
 };
 
-const reveal = () => {
-  if (isExpandable.value) open.value = true;
-};
-
 const onHeadClick = (event: MouseEvent) => {
   if (!isExpandable.value) return;
   const target = event.target as HTMLElement | null;
@@ -49,7 +45,7 @@ const onHeadKey = (event: KeyboardEvent) => {
 </script>
 
 <template>
-  <div :class="rootClass" :data-reveal="isExpandable ? '' : undefined" @reveal="reveal">
+  <div :class="rootClass" :data-block-path="blockPath">
     <BattleHead
       v-bind="headAttrs"
       :battle="battle"

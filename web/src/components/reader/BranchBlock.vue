@@ -41,10 +41,6 @@ const toggle = () => {
   open.value = !open.value;
 };
 
-const reveal = () => {
-  if (!isEmpty.value) open.value = true;
-};
-
 const openCheck = (event: Event) => {
   const check = props.branch.check;
   if (!check) return;
@@ -106,12 +102,7 @@ watch(checkSignature, resolveCondition, { immediate: true });
 </script>
 
 <template>
-  <div
-    class="branch"
-    :class="{ 'is-empty': isEmpty, 'is-open': open }"
-    :data-reveal="isEmpty ? undefined : ''"
-    @reveal="reveal"
-  >
+  <div class="branch" :class="{ 'is-empty': isEmpty, 'is-open': open }" :data-block-path="foldKey">
     <div
       :class="isEmpty ? 'branch-head' : 'branch-head row row-sm'"
       :role="isEmpty ? undefined : 'button'"

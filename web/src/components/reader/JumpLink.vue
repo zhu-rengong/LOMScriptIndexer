@@ -12,7 +12,7 @@ import { useLookupPress } from "../../composables/useLookupPress";
 const store = useScriptStore();
 const panels = usePanelsStore();
 
-const props = defineProps<{ jump: JumpView; foldKey?: string }>();
+const props = defineProps<{ jump: JumpView; foldKey?: string; blockPath?: string }>();
 
 const candidates = computed(() =>
   (props.jump.targets || []).filter((id) => graph.nodeById.has(id)),
@@ -175,8 +175,7 @@ watch(() => props.jump.position, loadCheckpoint, { immediate: true });
     v-if="display.mode === 'rows'"
     class="jump-group"
     :class="{ 'is-open': !collapsible || open }"
-    :data-reveal="collapsible ? '' : undefined"
-    @reveal="open = true"
+    :data-block-path="blockPath"
   >
     <div
       class="option-head jump-head row"
@@ -262,8 +261,7 @@ watch(() => props.jump.position, loadCheckpoint, { immediate: true });
     v-else-if="display.mode === 'candidates'"
     class="jump-group"
     :class="{ 'is-open': open }"
-    :data-reveal="collapsible ? '' : undefined"
-    @reveal="open = true"
+    :data-block-path="blockPath"
   >
     <div
       class="option-head jump-head row"
@@ -298,11 +296,17 @@ watch(() => props.jump.position, loadCheckpoint, { immediate: true });
       </div>
     </div>
   </div>
-  <button v-else-if="display.mode === 'link'" class="jump btn" type="button" @click="go(target)">
+  <button
+    v-else-if="display.mode === 'link'"
+    class="jump btn"
+    type="button"
+    :data-block-path="blockPath"
+    @click="go(target)"
+  >
     <AppIcon name="arrow-right" class="arrow" />{{ display.text
     }}<span v-if="dynamicHint" class="option-cond">{{ `  ${dynamicHint}` }}</span>
   </button>
-  <span v-else class="scene-switch">
+  <span v-else class="scene-switch" :data-block-path="blockPath">
     <span class="scene-name">{{ display.text }}</span>
   </span>
 </template>

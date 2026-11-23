@@ -13,6 +13,7 @@ const props = defineProps<{
   offstage?: boolean;
   showPortrait?: boolean;
   inBattle?: boolean;
+  blockPath?: string;
 }>();
 
 const kind = computed(() => sayKindOf(props.mode));
@@ -43,7 +44,7 @@ const open = (event: Event) => {
 </script>
 
 <template>
-  <div :class="[className, { 'has-portrait': hasSlot }]">
+  <div :class="[className, { 'has-portrait': hasSlot }]" :data-block-path="blockPath">
     <PortraitAvatar v-if="showAvatar" :character="speaker" :expression="expression || ''" />
     <span
       v-else-if="showOffstage"

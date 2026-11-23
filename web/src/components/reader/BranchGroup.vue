@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BranchView } from "../../types/beats";
 
-const props = defineProps<{ branches: BranchView[]; foldKey: string }>();
+const props = defineProps<{ branches: BranchView[]; foldKey: string; blockPath: string }>();
 
 const branchKey = (branch: BranchView, position: number): string =>
   branch.check
@@ -10,7 +10,7 @@ const branchKey = (branch: BranchView, position: number): string =>
 </script>
 
 <template>
-  <div class="branch-group">
+  <div class="branch-group" :data-block-path="blockPath">
     <BranchBlock
       v-for="(branch, position) in props.branches"
       :key="branchKey(branch, position)"

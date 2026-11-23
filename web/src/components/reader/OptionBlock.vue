@@ -90,7 +90,7 @@ watch(() => props.option.condition, resolveCondition, { immediate: true });
 </script>
 
 <template>
-  <div class="option" :class="{ 'is-open': open }" data-reveal @reveal="open = true">
+  <div class="option" :class="{ 'is-open': open }" :data-block-path="foldKey">
     <div
       class="option-head row"
       role="button"

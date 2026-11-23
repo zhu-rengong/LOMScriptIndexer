@@ -2,13 +2,13 @@
 import { sceneLabel, sceneText, t } from "../../i18n";
 import type { SceneView } from "../../types/beats";
 
-const props = defineProps<{ view: SceneView }>();
+const props = defineProps<{ view: SceneView; blockPath: string }>();
 
 const scene = computed(() => sceneLabel(props.view.scene));
 </script>
 
 <template>
-  <div class="scene-switch">
+  <div class="scene-switch" :data-block-path="blockPath">
     <span v-if="scene" class="scene-name">{{ scene }}</span>
     <template v-else-if="view.scene">
       <span class="scene-label">{{ t("sceneSwitch") }}</span>

@@ -4,7 +4,12 @@ import type { MetaChip, MetaSeal } from "../../types/beats";
 
 const panels = usePanelsStore();
 
-const props = defineProps<{ chips: MetaChip[]; dice?: boolean; method?: string }>();
+const props = defineProps<{
+  chips: MetaChip[];
+  dice?: boolean;
+  method?: string;
+  blockPath: string;
+}>();
 
 const wrap = ref<HTMLElement | null>(null);
 let peeked: HTMLElement | null = null;
@@ -52,7 +57,7 @@ useEventListener(wrap, "contextmenu", (event) => {
 </script>
 
 <template>
-  <div class="meta-group" :class="{ 'is-dice': dice }">
+  <div class="meta-group" :class="{ 'is-dice': dice }" :data-block-path="blockPath">
     <div ref="wrap" class="meta-chips">
       <template v-for="(chip, index) in chips" :key="index">
         <button

@@ -3,7 +3,12 @@ import type { ChoiceOption, MetaChip } from "../../types/beats";
 
 const panels = usePanelsStore();
 
-defineProps<{ options: ChoiceOption[]; diceChips: MetaChip[]; foldKey: string }>();
+defineProps<{
+  options: ChoiceOption[];
+  diceChips: MetaChip[];
+  foldKey: string;
+  blockPath: string;
+}>();
 
 const openDice = (chip: MetaChip, event: Event) => {
   if (!chip.target) return;
@@ -18,7 +23,7 @@ const openDice = (chip: MetaChip, event: Event) => {
 </script>
 
 <template>
-  <div class="choice">
+  <div class="choice" :data-block-path="blockPath">
     <template v-for="(chip, index) in diceChips" :key="`dice-${index}`">
       <button
         v-if="chip.target"

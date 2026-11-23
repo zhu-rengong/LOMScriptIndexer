@@ -2,11 +2,11 @@
 import { t } from "../../i18n";
 import type { EndingView } from "../../types/beats";
 
-defineProps<{ ending: EndingView }>();
+defineProps<{ ending: EndingView; blockPath: string }>();
 </script>
 
 <template>
-  <div class="ending">
+  <div class="ending" :data-block-path="blockPath">
     <div class="ending-head">
       <span class="ending-label">{{ t("deathEnding") }}</span>
       <span v-if="ending.title" class="ending-title">{{ ending.title }}</span>

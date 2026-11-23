@@ -43,6 +43,15 @@ export const useFoldStore = defineStore("fold", () => {
     return "mixed";
   });
 
+  const openPath = (path: string): void => {
+    if (!path) return;
+    const parts = path.split("/");
+    for (let index = 1; index <= parts.length; index++) {
+      const id = scoped(parts.slice(0, index).join("/"));
+      if (registered.has(id)) states.set(id, true);
+    }
+  };
+
   const openAll = (): void => {
     for (const key of registered) states.set(key, true);
   };
@@ -73,6 +82,7 @@ export const useFoldStore = defineStore("fold", () => {
     setOpen,
     register,
     unregister,
+    openPath,
     openAll,
     closeAll,
     toggle,

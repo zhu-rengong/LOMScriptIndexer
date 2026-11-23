@@ -7,7 +7,7 @@ import { keys, storedRef } from "../lib/storage";
 import { router, scriptIdOf, showScript } from "../router";
 import type { GraphNode } from "../types/graph";
 
-export type ReadingAnchor = { path: number[]; offset: number };
+export type ReadingAnchor = { path: string; offset: number };
 
 const readBookmarks = (raw: unknown): string[] =>
   Array.isArray(raw) ? raw.filter((id): id is string => typeof id === "string") : [];
