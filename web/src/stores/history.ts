@@ -63,10 +63,13 @@ export const useHistoryStore = defineStore("history", () => {
     return true;
   };
 
-  const back = (): boolean => (cursor.value > 0 ? go(cursor.value - 1) : false);
+  const canBack = computed(() => cursor.value > 0);
 
-  const forward = (): boolean =>
-    cursor.value >= 0 && cursor.value < spots.value.length - 1 ? go(cursor.value + 1) : false;
+  const canForward = computed(() => cursor.value >= 0 && cursor.value < spots.value.length - 1);
+
+  const back = (): boolean => (canBack.value ? go(cursor.value - 1) : false);
+
+  const forward = (): boolean => (canForward.value ? go(cursor.value + 1) : false);
 
   watch(
     () => script.selectedId,
@@ -90,6 +93,8 @@ export const useHistoryStore = defineStore("history", () => {
     remember,
     record,
     takeSpot,
+    canBack,
+    canForward,
     back,
     forward,
   };
