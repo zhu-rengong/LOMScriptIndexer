@@ -55,32 +55,93 @@ const isFailed = computed(
 
 const hasBeats = computed(() => !!blocks.value && blocks.value.length > 0);
 
+const STRUCT = [
+  ".choice",
+  ".option",
+  ".option-body",
+  ".branch-group",
+  ".branch",
+  ".branch-body",
+  ".battle",
+  ".battle-campaign-events",
+  ".battle-event",
+  ".battle-body",
+  ".jump-group",
+  ".jump-body",
+].join(", ");
+const MAX_DEPTH = 12;
+
 const scaleOf = (element: HTMLElement): number => {
   const width = element.offsetWidth;
   return width > 0 ? element.getBoundingClientRect().width / width : 1;
 };
 
-const anchorOf = (element: HTMLElement): ReadingAnchor => {
-  const top = element.getBoundingClientRect().top;
-  const scale = scaleOf(element);
-  const children = element.children;
-  let index = Math.max(0, children.length - 1);
-  let offset = 0;
-  for (let i = 0; i < children.length; i++) {
-    const rect = (children[i] as HTMLElement).getBoundingClientRect();
-    if (rect.bottom <= top) continue;
-    index = i;
-    offset = Math.round((top - rect.top) / scale);
-    break;
+const childIndex = (parent: HTMLElement, child: Element): number =>
+  Array.from(parent.children).indexOf(child);
+
+const childAtTop = (container: HTMLElement, top: number): HTMLElement | null => {
+  let first: HTMLElement | null = null;
+  for (const child of Array.from(container.children)) {
+    if (!(child instanceof HTMLElement)) continue;
+    const rect = child.getBoundingClientRect();
+    if (rect.height > 0 && rect.top <= top + 1 && rect.bottom > top) return child;
+    if (!first && rect.bottom > top) first = child;
   }
-  return { index, offset };
+  return first;
+};
+
+const pathOf = (root: HTMLElement, top: number): { path: number[]; target: HTMLElement } => {
+  const path: number[] = [];
+  let container = root;
+  let target = root;
+  for (let depth = 0; depth < MAX_DEPTH; depth++) {
+    const child = childAtTop(container, top);
+    if (!child) break;
+    const index = childIndex(container, child);
+    if (index < 0) break;
+    path.push(index);
+    target = child;
+    if (!child.matches(STRUCT)) break;
+    container = child;
+  }
+  return { path, target };
+};
+
+const captureAnchor = (element: HTMLElement): ReadingAnchor | null => {
+  const top = element.getBoundingClientRect().top;
+  const { path, target } = pathOf(element, top);
+  if (!path.length) return null;
+  const offset = Math.round((top - target.getBoundingClientRect().top) / scaleOf(element));
+  return { path, offset };
 };
 
 const rememberReading = (): void => {
   const element = body.value;
   const current = node.value;
-  if (!element || !current) return;
-  store.rememberAnchor(current.id, anchorOf(element));
+  if (!element || !current || !blocks.value || !blocks.value.length) return;
+  if (readingId.value && readingId.value !== current.id) return;
+  if (pendingRestore || settling) return;
+  if (element.scrollTop <= 0) {
+    store.rememberAnchor(current.id, { path: [], offset: 0 });
+    return;
+  }
+  const anchor = captureAnchor(element);
+  if (anchor) store.rememberAnchor(current.id, anchor);
+};
+
+const resolvePath = (
+  root: HTMLElement,
+  path: number[],
+): { target: HTMLElement | null; complete: boolean } => {
+  let container = root;
+  let target: HTMLElement | null = null;
+  for (const index of path) {
+    const child = container.children[index];
+    if (!(child instanceof HTMLElement)) return { target, complete: false };
+    target = child;
+    container = child;
+  }
+  return { target, complete: true };
 };
 
 const alignTo = (element: HTMLElement, target: HTMLElement, position: number): void => {
@@ -98,42 +159,68 @@ const alignTo = (element: HTMLElement, target: HTMLElement, position: number): v
 let settleToken = 0;
 let settling = false;
 
-const scrollToTarget = (target: HTMLElement | null, position: number): void => {
+const scrollToTarget = (target: HTMLElement | null, position: number, remember = true) =>
+  new Promise<void>((resolve) => {
+    const element = body.value;
+    if (!element) {
+      resolve();
+      return;
+    }
+    const token = ++settleToken;
+    settling = true;
+    const step = (pass: number): void => {
+      const current = body.value;
+      if (!current || token !== settleToken) {
+        resolve();
+        return;
+      }
+      if (target) alignTo(current, target, position);
+      else current.scrollTop = 0;
+      scrollBase = current.scrollTop;
+      if (pass >= 2) {
+        settling = false;
+        if (remember) rememberReading();
+        resolve();
+        return;
+      }
+      requestAnimationFrame(() => void nextTick(() => step(pass + 1)));
+    };
+    step(0);
+  });
+
+const revealAncestors = (target: HTMLElement | null): void => {
   const element = body.value;
   if (!element) return;
-  const token = ++settleToken;
-  settling = true;
-  if (target) alignTo(element, target, position);
-  else element.scrollTop = 0;
-  scrollBase = element.scrollTop;
-  requestAnimationFrame(() => {
-    void nextTick(() => {
-      if (token !== settleToken) return;
-      const current = body.value;
-      if (current) {
-        if (target) alignTo(current, target, position);
-        else current.scrollTop = 0;
-        scrollBase = current.scrollTop;
-      }
-      settling = false;
-      rememberReading();
-    });
-  });
+  let current: HTMLElement | null = target;
+  while (current && current !== element) {
+    if (current.dataset.reveal !== undefined) current.dispatchEvent(new Event("reveal"));
+    current = current.parentElement;
+  }
 };
 
-const restoreScroll = (): void => {
+const revealCollapsed = (target: HTMLElement): boolean => {
+  if (target.getBoundingClientRect().height > 0) return false;
+  revealAncestors(target);
+  return true;
+};
+
+const restoreScroll = async (): Promise<void> => {
   const element = body.value;
   const current = node.value;
   if (!element || !current) return;
   const anchor = store.readingAnchor(current.id);
-  const target = anchor ? element.children[anchor.index] : undefined;
-  if (anchor && target instanceof HTMLElement) {
-    const height = Math.round(target.getBoundingClientRect().height / scaleOf(element));
-    const offset = anchor.offset >= 0 && anchor.offset <= height ? anchor.offset : 0;
-    scrollToTarget(target, -offset);
+  if (!anchor || !anchor.path.length) {
+    await scrollToTarget(null, 0);
     return;
   }
-  scrollToTarget(null, 0);
+  const resolved = resolvePath(element, anchor.path);
+  if (!resolved.target) {
+    await scrollToTarget(null, 0);
+    return;
+  }
+  if (revealCollapsed(resolved.target)) await nextTick();
+  await scrollToTarget(resolved.target, resolved.complete ? -anchor.offset : 0, false);
+  if (resolved.complete) store.rememberAnchor(current.id, anchor);
 };
 
 const scrollHit = (target: HTMLElement) => {
@@ -142,16 +229,6 @@ const scrollHit = (target: HTMLElement) => {
   const box = element.getBoundingClientRect();
   const height = target.getBoundingClientRect().height;
   scrollToTarget(target, Math.max(0, (box.height - height) / 2 / scaleOf(element)));
-};
-
-const revealHit = (target: HTMLElement) => {
-  const element = body.value;
-  if (!element) return;
-  let current: HTMLElement | null = target.parentElement;
-  while (current && current !== element) {
-    if (current.dataset.reveal !== undefined) current.dispatchEvent(new Event("reveal"));
-    current = current.parentElement;
-  }
 };
 
 const firstByTarget = (root: HTMLElement, target: FocusTarget): HTMLElement | null =>
@@ -180,7 +257,7 @@ const applyHit = async () => {
     (pending.target ? firstByTarget(element, pending.target) : null) ||
     (pending.query ? firstByText(element, pending.query) : null);
   if (!target) return;
-  revealHit(target);
+  revealAncestors(target);
   await nextTick();
   scrollHit(target);
 };
@@ -190,7 +267,8 @@ watch(
   async ([id]) => {
     const element = body.value;
     if (element && readingId.value && readingId.value !== id) {
-      store.rememberAnchor(readingId.value, anchorOf(element));
+      const anchor = captureAnchor(element);
+      if (anchor) store.rememberAnchor(readingId.value, anchor);
     }
     readingId.value = id;
     pendingRestore = true;
@@ -208,8 +286,8 @@ watch(blocks, async () => {
   if (blocks.value === null) return;
   await nextTick();
   if (pendingRestore) {
+    await restoreScroll();
     pendingRestore = false;
-    restoreScroll();
   }
   await applyHit();
 });

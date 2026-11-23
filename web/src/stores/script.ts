@@ -6,7 +6,7 @@ import { popovers } from "../lib/popover";
 import { keys, storedRef } from "../lib/storage";
 import type { GraphNode } from "../types/graph";
 
-export type ReadingAnchor = { index: number; offset: number };
+export type ReadingAnchor = { path: number[]; offset: number };
 
 export type FilterState = {
   source: string;
