@@ -18,7 +18,7 @@ const panels = usePanelsStore();
 
 const props = defineProps<{ option: ChoiceOption; index: number; foldKey: string }>();
 
-const open = useFoldable(props.foldKey);
+const open = useFoldable(props.foldKey, () => props.option.beats.length > 0);
 
 const head = computed(() => optionHeadText(props.option.text, props.option.detail));
 

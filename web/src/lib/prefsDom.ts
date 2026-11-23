@@ -17,7 +17,8 @@ const capsTokens = (caps: CapsMode): [string, string] => {
   return ["none", "normal"];
 };
 
-const applyTheme = (dark: boolean): void => {
+const applyTheme = (mode: ThemeMode, prefersDark: boolean): void => {
+  const dark = mode === "dark" || (mode === "system" && prefersDark);
   document.documentElement.dataset.theme = dark ? "dark" : "light";
 };
 
@@ -52,7 +53,7 @@ export const installPrefsDom = (source: { snapshot: PrefsSnapshot }): void => {
     [() => source.snapshot, dark],
     ([snapshot, isDark]) => {
       applyPrefs(snapshot);
-      applyTheme(isDark);
+      applyTheme(snapshot.theme, isDark);
     },
     { flush: "post", immediate: true },
   );

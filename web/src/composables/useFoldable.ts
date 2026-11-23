@@ -7,14 +7,19 @@ export const useFoldable = (
     get: () => fold.isOpen(key),
     set: (value: boolean) => fold.setOpen(key, value),
   });
+  let registeredId = "";
   watch(
     enabled,
     (active) => {
-      if (active) fold.register(key);
-      else fold.unregister(key);
+      if (active) {
+        registeredId = fold.register(key);
+        return;
+      }
+      fold.unregister(registeredId);
+      registeredId = "";
     },
     { immediate: true, flush: "sync" },
   );
-  onUnmounted(() => fold.unregister(key));
+  onUnmounted(() => fold.unregister(registeredId));
   return open;
 };

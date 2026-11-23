@@ -37,7 +37,7 @@ const openChapter = computed(() => {
 const outline = computed(() => outlineRows(query.value, openChapter.value));
 const rows = computed(() => outline.value.rows);
 
-const rowSize = reactive({ chapter: 44, node: 32 });
+const rowSize = reactive({ chapter: 46, node: 43 });
 
 const virtualizer = useVirtualizer(
   computed(() => ({

@@ -3,6 +3,9 @@ import type { ReadingAnchor } from "../stores/script";
 import type { FocusTarget } from "../types/focus";
 
 const BLOCK_SELECTOR = "[data-block-path]";
+const MEASURE_CLASS = "is-measuring";
+const MAX_SETTLE_PASSES = 4;
+const MAX_ALIGN_STEPS = 8;
 
 const scaleOf = (element: HTMLElement): number => {
   const width = element.offsetWidth;
@@ -11,6 +14,32 @@ const scaleOf = (element: HTMLElement): number => {
 
 const nextFrame = (): Promise<void> =>
   new Promise((resolve) => requestAnimationFrame(() => resolve()));
+
+const offsetOf = (element: HTMLElement, target: HTMLElement): number =>
+  (target.getBoundingClientRect().top - element.getBoundingClientRect().top) / scaleOf(element);
+
+const align = (element: HTMLElement, target: HTMLElement, position: number): void => {
+  for (let step = 0; step < MAX_ALIGN_STEPS; step++) {
+    const delta = offsetOf(element, target) - position;
+    if (Math.abs(delta) < 1) return;
+    const before = element.scrollTop;
+    element.scrollTop = before + delta;
+    if (element.scrollTop === before) return;
+  }
+};
+
+const settle = async (
+  element: HTMLElement,
+  target: HTMLElement,
+  position: number,
+): Promise<void> => {
+  for (let pass = 0; pass < MAX_SETTLE_PASSES; pass++) {
+    align(element, target, position);
+    await nextFrame();
+    await nextTick();
+    if (Math.abs(offsetOf(element, target) - position) < 1) return;
+  }
+};
 
 export const useReaderAnchor = (body: Ref<HTMLElement | null>) => {
   const store = useScriptStore();
@@ -52,10 +81,32 @@ export const useReaderAnchor = (body: Ref<HTMLElement | null>) => {
   const byTarget = (target: FocusTarget): HTMLElement | null => {
     const element = body.value;
     if (!element) return null;
+    let hit: HTMLElement | null = null;
+    let depth = -1;
     for (const node of element.querySelectorAll<HTMLElement>("[data-kind][data-key]")) {
-      if (node.dataset.kind === target.kind && node.dataset.key === target.key) return node;
+      if (node.dataset.kind !== target.kind || node.dataset.key !== target.key) continue;
+      const block = node.closest<HTMLElement>(BLOCK_SELECTOR);
+      const length = block?.dataset.blockPath?.split("/").length ?? 0;
+      if (length > depth) {
+        hit = node;
+        depth = length;
+      }
     }
-    return null;
+    return hit;
+  };
+
+  const elementsContaining = (root: HTMLElement, needle: string): HTMLElement[] => {
+    const out: HTMLElement[] = [];
+    const visit = (node: HTMLElement): void => {
+      for (const child of node.children) {
+        if (!(child instanceof HTMLElement)) continue;
+        if (!normalizeSearchText(child.textContent || "").includes(needle)) continue;
+        out.push(child);
+        visit(child);
+      }
+    };
+    visit(root);
+    return out;
   };
 
   const byText = (query: string): HTMLElement | null => {
@@ -64,13 +115,21 @@ export const useReaderAnchor = (body: Ref<HTMLElement | null>) => {
     if (!element || !needle) return null;
     const blocks = Array.from(element.querySelectorAll<HTMLElement>(BLOCK_SELECTOR)).reverse();
     for (const block of blocks) {
-      if (normalizeSearchText(block.textContent || "").includes(needle)) return block;
+      if (!normalizeSearchText(block.textContent || "").includes(needle)) continue;
+      const hits = elementsContaining(block, needle);
+      return hits[hits.length - 1] || block;
     }
     return null;
   };
 
-  const find = (target: FocusTarget | null, query: string): HTMLElement | null =>
-    (target ? byTarget(target) : null) || (query ? byText(query) : null);
+  const find = (target: FocusTarget | null, query: string): HTMLElement | null => {
+    const exact = (target ? byTarget(target) : null) || (query ? byText(query) : null);
+    if (!exact) return null;
+    const block = exact.closest<HTMLElement>(BLOCK_SELECTOR);
+    const path = block?.dataset.blockPath || "";
+    if (!path) return exact;
+    return blockOfPath(path) ? exact : null;
+  };
 
   const remember = (id: string): void => {
     const element = body.value;
@@ -91,9 +150,42 @@ export const useReaderAnchor = (body: Ref<HTMLElement | null>) => {
     store.rememberAnchor(id, { path, offset });
   };
 
-  const reveal = (target: HTMLElement): void => {
-    const path = target.dataset.blockPath || "";
-    if (path) fold.openPath(path);
+  const visibleAt = (path: string): HTMLElement | null => {
+    const target = blockOfPath(path);
+    return target && target.getBoundingClientRect().height > 0 ? target : null;
+  };
+
+  const open = async (path: string): Promise<HTMLElement | null> => {
+    if (!path) return null;
+    fold.openPath(path);
+    await nextTick();
+    const first = visibleAt(path);
+    if (first) return first;
+    fold.openPath(path);
+    await nextTick();
+    return visibleAt(path);
+  };
+
+  const reveal = async (target: HTMLElement): Promise<void> => {
+    const block = target.closest<HTMLElement>(BLOCK_SELECTOR) || target;
+    await open(block.dataset.blockPath || "");
+  };
+
+  const measured = async (
+    element: HTMLElement,
+    target: HTMLElement,
+    position: number | ((root: HTMLElement) => number),
+  ): Promise<void> => {
+    const value = (): number => (typeof position === "function" ? position(element) : position);
+    element.classList.add(MEASURE_CLASS);
+    try {
+      await nextFrame();
+      await settle(element, target, value());
+    } finally {
+      element.classList.remove(MEASURE_CLASS);
+    }
+    await nextFrame();
+    await settle(element, target, value());
   };
 
   const restore = async (anchor: ReadingAnchor | null): Promise<void> => {
@@ -105,47 +197,34 @@ export const useReaderAnchor = (body: Ref<HTMLElement | null>) => {
         element.scrollTop = 0;
         return;
       }
-      fold.openPath(anchor.path);
-      await nextTick();
       const fonts = document.fonts?.ready;
       if (fonts) await fonts;
-      const target = blockOfPath(anchor.path);
+      const target = await open(anchor.path);
       if (!target) {
         element.scrollTop = 0;
         return;
       }
-      const adjust = (): void => {
-        const gap =
-          (target.getBoundingClientRect().top - element.getBoundingClientRect().top) /
-          scaleOf(element);
-        element.scrollTop += gap + anchor.offset;
-      };
-      adjust();
-      await nextTick();
-      await nextFrame();
-      adjust();
+      await measured(element, target, -anchor.offset);
     } finally {
       settling.value = false;
     }
   };
 
-  const center = async (target: HTMLElement): Promise<void> => {
+  const center = async (target: HTMLElement): Promise<boolean> => {
     const element = body.value;
-    if (!element) return;
+    if (!element) return false;
     settling.value = true;
     try {
-      const adjust = (): void => {
-        const scale = scaleOf(element);
-        const bodyRect = element.getBoundingClientRect();
-        const targetRect = target.getBoundingClientRect();
-        const gap = (targetRect.top - bodyRect.top) / scale;
-        const room = Math.max(0, (bodyRect.height - targetRect.height) / 2 / scale);
-        element.scrollTop += gap - room;
-      };
-      adjust();
       await nextTick();
-      await nextFrame();
-      adjust();
+      const fonts = document.fonts?.ready;
+      if (fonts) await fonts;
+      if (!element.contains(target) || target.getBoundingClientRect().height <= 0) return false;
+      await measured(element, target, (root) => {
+        const bodyRect = root.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        return Math.max(0, (bodyRect.height - targetRect.height) / 2 / scaleOf(root));
+      });
+      return true;
     } finally {
       settling.value = false;
     }

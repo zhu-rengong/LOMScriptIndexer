@@ -29,6 +29,10 @@
     contain-intrinsic-size: auto 88px;
   }
 
+  .reader-body.is-measuring > * {
+    content-visibility: visible;
+  }
+
   .reader-body > .say.has-portrait {
     content-visibility: visible;
   }

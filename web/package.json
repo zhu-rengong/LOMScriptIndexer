@@ -1,6 +1,6 @@
 {
   "name": "scriptindexer-web",
-  "version": "1.14.9",
+  "version": "1.14.16",
   "private": true,
   "type": "module",
   "scripts": {
