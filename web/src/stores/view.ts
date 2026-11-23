@@ -39,7 +39,12 @@ export const useViewStore = defineStore("view", () => {
 
   const railOpen = computed(() => popovers.isOpen(CHAPTER_RAIL));
 
-  const searchOpen = computed(() => popovers.isOpen("search") || popovers.isOpen("searchResults"));
+  const searchOpen = computed(
+    () =>
+      popovers.isOpen("search") ||
+      popovers.isOpen("searchResults") ||
+      popovers.isOpen("filterPopover"),
+  );
 
   const setRailTab = (tab: string): void => {
     if (tab === railTab.value) return;
@@ -91,12 +96,19 @@ export const useViewStore = defineStore("view", () => {
     popovers.open("search");
   };
 
-  watch(searchOpen, (open) => {
-    if (!open) return;
-    void nextTick(() => byId(UI_IDS.search)?.focus());
-  });
+  watch(
+    () => popovers.isOpen("search"),
+    (open) => {
+      if (!open) return;
+      void nextTick(() => byId(UI_IDS.search)?.focus());
+    },
+  );
 
   const collapseSearch = (): void => {
+    if (popovers.isOpen("filterPopover")) {
+      popovers.close("filterPopover");
+      return;
+    }
     if (popovers.isOpen("search")) {
       popovers.close("search");
       return;

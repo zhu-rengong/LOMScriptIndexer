@@ -22,7 +22,7 @@ const toggle = (key: OverlayKey) => {
 };
 
 const toggleSearch = () => {
-  if (view.searchOpen) {
+  if (popovers.isOpen("search") || popovers.isOpen("searchResults")) {
     view.collapseSearch();
     return;
   }
