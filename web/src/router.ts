@@ -25,3 +25,8 @@ export const showScript = (id: string): void => {
   if (current) void router.push(target);
   else void router.replace(target);
 };
+
+export const replaceScript = async (id: string): Promise<void> => {
+  if (!id || scriptIdOf(router.currentRoute.value.params.id) === id) return;
+  await router.replace({ name: "script", params: { id } });
+};

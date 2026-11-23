@@ -21,6 +21,7 @@ export const start = (): void => {
 
   app.mount("#app");
   popovers.install();
+  useHistoryStore(pinia);
 
   watch(
     () => script.lang,

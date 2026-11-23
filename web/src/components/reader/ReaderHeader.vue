@@ -2,12 +2,12 @@
 import { t } from "../../i18n";
 import { byId } from "../../lib/dom";
 import { popovers } from "../../lib/popover";
-import { router } from "../../router";
 import { UI_IDS } from "../../ui/ids";
 
 const store = useScriptStore();
 const view = useViewStore();
 const ui = useUiStore();
+const history = useHistoryStore();
 
 const selectedScript = computed(() => store.selected());
 
@@ -54,7 +54,7 @@ const toggleBookmark = () => {
               type="button"
               :title="t('backTitle')"
               :aria-label="t('backTitle')"
-              @click="router.back()"
+              @click="history.back()"
             >
               <AppIcon name="back" />
             </button>
@@ -66,7 +66,7 @@ const toggleBookmark = () => {
               type="button"
               :title="t('forwardTitle')"
               :aria-label="t('forwardTitle')"
-              @click="router.forward()"
+              @click="history.forward()"
             >
               <AppIcon name="forward" />
             </button>

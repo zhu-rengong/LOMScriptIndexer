@@ -5,6 +5,8 @@ import type { FocusTarget } from "../types/focus";
 export type PendingHit = { id: string; query: string; target: FocusTarget | null };
 
 export const usePanelsStore = defineStore("panels", () => {
+  const script = useScriptStore(pinia);
+  const history = useHistoryStore(pinia);
   const pendingHit = shallowRef<PendingHit | null>(null);
 
   const openLookup = (
@@ -19,8 +21,12 @@ export const usePanelsStore = defineStore("panels", () => {
 
   const focusText = (id: string, query: string, target?: FocusTarget | null): void => {
     const needle = toNeedle(query);
-    pendingHit.value =
-      id && (needle || target) ? { id, query: needle, target: target || null } : null;
+    const hit = id && (needle || target) ? { id, query: needle, target: target || null } : null;
+    if (hit && id === script.selectedId) {
+      history.settle();
+      history.record(id, true);
+    }
+    pendingHit.value = hit;
   };
 
   const takePendingHit = (id: string): PendingHit | null => {

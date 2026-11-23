@@ -4,19 +4,19 @@ import { useShortcuts } from "../composables/useShortcuts";
 import { t } from "../i18n";
 import { byId } from "../lib/dom";
 import { popovers } from "../lib/popover";
-import { router } from "../router";
 import { UI_IDS } from "../ui/ids";
 
 const store = useScriptStore();
 const view = useViewStore();
 const ui = useUiStore();
 const fold = useFoldStore();
+const history = useHistoryStore();
 
 useBodyClasses();
 
 useShortcuts({
-  back: () => router.back(),
-  forward: () => router.forward(),
+  back: () => history.back(),
+  forward: () => history.forward(),
   bookmark: () => {
     const node = store.selected();
     if (!node) return;

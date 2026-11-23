@@ -9,6 +9,7 @@ import type { PendingHit } from "../../stores/panels";
 const store = useScriptStore();
 const view = useViewStore();
 const panels = usePanelsStore();
+const history = useHistoryStore();
 
 const body = ref<HTMLElement | null>(null);
 const anchor = useReaderAnchor(body);
@@ -80,7 +81,8 @@ const rememberReading = (): void => {
   if (!current || !blocks.value?.length) return;
   if (readingId.value && readingId.value !== current.id) return;
   if (pendingRestore || anchor.settling.value) return;
-  anchor.remember(current.id);
+  const settled = anchor.remember(current.id);
+  if (settled) history.remember(current.id, settled);
 };
 
 const rememberSettled = useDebounceFn(rememberReading, 120);
@@ -129,6 +131,7 @@ const applyHit = async (): Promise<boolean> => {
       if (await anchor.center(target)) {
         if (staleHit(pending)) return false;
         panels.takePendingHit(current.id);
+        rememberReading();
         return true;
       }
     }
@@ -149,14 +152,20 @@ const retryHit = async (): Promise<void> => {
   }
 };
 
+onMounted(() => history.bindCapture(anchor.capture));
+
 onUnmounted(() => {
   hitRun++;
+  history.bindCapture(null);
 });
 
 watch(
   () => [store.selectedId, store.lang] as const,
   async ([id]) => {
-    if (readingId.value && readingId.value !== id) anchor.remember(readingId.value);
+    if (readingId.value && readingId.value !== id) {
+      const settled = anchor.remember(readingId.value);
+      if (settled) history.remember(readingId.value, settled);
+    }
     readingId.value = id;
     loadedId.value = "";
     const token = beginRestore();
@@ -186,10 +195,13 @@ watch(
       const token = restoreToken;
       pendingRestore = false;
       try {
-        await anchor.restore(store.readingAnchor(id));
+        const spot = history.takeSpot(id);
+        await anchor.restore(spot?.anchor ?? store.readingAnchor(id));
       } finally {
         endRestore(token);
       }
+      const settled = anchor.remember(id);
+      if (settled) history.remember(id, settled);
     }
     await retryHit();
   },
@@ -201,6 +213,17 @@ watch(
   async () => {
     await nextTick();
     await retryHit();
+  },
+);
+
+watch(
+  () => history.pendingSpot,
+  (spot) => {
+    if (!spot || spot.id !== store.selectedId) return;
+    if (pendingRestore || restoring || loadedId.value !== spot.id) return;
+    const taken = history.takeSpot(spot.id);
+    if (!taken) return;
+    void anchor.restore(taken.anchor ?? store.readingAnchor(taken.id));
   },
 );
 

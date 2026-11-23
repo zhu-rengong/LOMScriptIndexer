@@ -131,23 +131,24 @@ export const useReaderAnchor = (body: Ref<HTMLElement | null>) => {
     return blockOfPath(path) ? exact : null;
   };
 
-  const remember = (id: string): void => {
+  const capture = (): ReadingAnchor | null => {
     const element = body.value;
-    if (!element || !id) return;
-    if (element.scrollTop <= 0) {
-      store.rememberAnchor(id, { path: "", offset: 0 });
-      return;
-    }
+    if (!element) return null;
+    if (element.scrollTop <= 0) return { path: "", offset: 0 };
     const block = blockAt(element);
     const path = block?.dataset.blockPath || "";
-    if (!block || !path) {
-      store.rememberAnchor(id, { path: "", offset: 0 });
-      return;
-    }
+    if (!block || !path) return { path: "", offset: 0 };
     const offset = Math.round(
       (element.getBoundingClientRect().top - block.getBoundingClientRect().top) / scaleOf(element),
     );
-    store.rememberAnchor(id, { path, offset });
+    return { path, offset };
+  };
+
+  const remember = (id: string): ReadingAnchor | null => {
+    const anchor = capture();
+    if (!id || !anchor) return null;
+    store.rememberAnchor(id, anchor);
+    return anchor;
   };
 
   const visibleAt = (path: string): HTMLElement | null => {
@@ -230,5 +231,5 @@ export const useReaderAnchor = (body: Ref<HTMLElement | null>) => {
     }
   };
 
-  return { settling, remember, reveal, restore, center, find };
+  return { settling, capture, remember, reveal, restore, center, find };
 };
