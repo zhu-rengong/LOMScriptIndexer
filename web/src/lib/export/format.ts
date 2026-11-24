@@ -14,6 +14,7 @@ import type {
 import type { CheckpointModel, ConditionNode, PositionCandidate } from "../../types/condition";
 import type { Chapter, GraphNode } from "../../types/graph";
 import { battleText } from "../battleText";
+import { endingLabelKey } from "../beatRows";
 import { buildReaderBlocks, speakerName } from "../blocks";
 import {
   checkpointExpr,
@@ -353,7 +354,7 @@ const renderBlocks = (blocks: ReaderBlock[], indent = ""): string[] => {
         break;
       case "ending":
         out.push(
-          `${indent}[${t("deathEnding")}]${block.ending.title ? ` ${inlineText(block.ending.title)}` : ""}`,
+          `${indent}[${t(endingLabelKey(block.ending))}]${block.ending.title ? ` ${inlineText(block.ending.title)}` : ""}`,
         );
         for (const line of block.ending.desc) {
           if (line) out.push(`${indent}  ${line}`);

@@ -135,11 +135,15 @@ export const parseScene = (row: BeatNode): SceneView => {
 export const parseEnding = (row: BeatNode): EndingView => {
   const record = asRecord(row) || {};
   return {
+    kind: asString(record.kind),
     key: asString(record.key),
     title: asString(record.title),
     desc: paragraphLines(record.desc),
   };
 };
+
+export const endingLabelKey = (ending: EndingView): string =>
+  ending.kind === "endgame" ? "endgameEnding" : "deathEnding";
 
 export const parseMeta = (row: BeatNode): MetaView => {
   const record = asRecord(row) || {};

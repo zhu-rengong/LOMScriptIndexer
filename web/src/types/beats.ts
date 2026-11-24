@@ -61,6 +61,7 @@ export type SceneView = {
 };
 
 export type EndingView = {
+  kind: string;
   key: string;
   title: string;
   desc: string[];
