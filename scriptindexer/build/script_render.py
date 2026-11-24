@@ -31,6 +31,9 @@ from ..script_model import (
 from ..vocab import (
     BATTLE_LIKE_SCENE_NAMES,
     DEATH_SCENE,
+    ENDING_DEATH,
+    ENDING_ENDGAME,
+    META_ENDGAME,
 )
 from . import labels
 from .option_text import OptionView, decode_option
@@ -157,13 +160,14 @@ class Renderer:
         self.locked_count += 1
         return text
 
-    def _ending(self, key: str) -> EndingRow | None:
+    def _ending(self, key: str, kind: str) -> EndingRow | None:
         if not key:
             return None
         title = self.library.get(f"Title/{key}") or key
         desc = self.library.get(f"Desc/{key}") or ""
-        self.registry.register(labels.NAME_ENDING, key, title)
-        return EndingRow(key=key, title=title, desc=desc)
+        if kind == ENDING_DEATH:
+            self.registry.register(labels.NAME_ENDING, key, title)
+        return EndingRow(kind=kind, key=key, title=title, desc=desc)
 
     def row(self, beat: Beat) -> BeatNode | None:
         match beat:
@@ -295,6 +299,11 @@ class Renderer:
         if beat.kind == "time":
             out.append(MetaRow(kind=beat.kind, value=beat.value))
             return
+        if beat.kind == META_ENDGAME:
+            ending = self._ending(beat.key, ENDING_ENDGAME)
+            if ending is not None:
+                out.append(ending)
+            return
         key = beat.key
         if beat.kind == "dice":
             labels.record_check_display_name(beat.key, self.locale, self.registry)
@@ -339,7 +348,7 @@ class Renderer:
 
     def _scene(self, beat: SceneBeat) -> BeatNode:
         if beat.scene == DEATH_SCENE:
-            ending = self._ending(beat.scene_key)
+            ending = self._ending(beat.scene_key, ENDING_DEATH)
             if ending is not None:
                 return ending
         if beat.scene in BATTLE_LIKE_SCENE_NAMES and self.battles is not None:

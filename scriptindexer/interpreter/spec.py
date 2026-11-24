@@ -61,6 +61,8 @@ class Semantics:
     stage_floor: float = 0.0
     character_offset_methods: tuple[str, ...] = ()
     call_runner: str = ""
+    endgame_object: str = ""
+    endgame_method: str = ""
     view_object: str = "flowcharts.view"
     view_block_method: str = "runblock"
     view_hidden_blocks: frozenset[str] = frozenset()

@@ -27,7 +27,7 @@ from ..script_model import (
     TextRef,
     Unevaluated,
 )
-from ..vocab import CHECK_POSITION
+from ..vocab import CHECK_POSITION, META_ENDGAME
 from .spec import Semantics
 from .state import (
     ChoiceDraft,
@@ -136,6 +136,8 @@ class CallHandler:
             routes[(semantics.dice_object, method)] = self._dice_call
         for method, kind in semantics.check_methods.items():
             routes[(semantics.check_object, method)] = partial(self._check_call, kind)
+        if semantics.endgame_object and semantics.endgame_method:
+            routes[(semantics.endgame_object, semantics.endgame_method)] = self._endgame_call
         return routes
 
     def eval_call(self, expr: lua.Node, state: EvalState) -> Any:
@@ -179,7 +181,7 @@ class CallHandler:
         args = lua.arguments(call)
         for arg in args:
             if arg.type == "function_call":
-                self._scan_nested(method, arg, state)
+                self._scan_nested(method, arg, state, beats)
         route = self._routes.get((obj, method))
         if route is not None:
             return route(args, state, beats)
@@ -188,7 +190,9 @@ class CallHandler:
             return object_route(method, args, state, beats)
         return None
 
-    def _scan_nested(self, method: str, arg: lua.Node, state: EvalState) -> None:
+    def _scan_nested(
+        self, method: str, arg: lua.Node, state: EvalState, beats: list[Any]
+    ) -> None:
         inner_obj, inner_method = callee(arg)
         inner_args = lua.arguments(arg)
         semantics = self.semantics
@@ -200,12 +204,21 @@ class CallHandler:
             state.menu_options = self.option_list(
                 self.analyzer.expressions.eval(inner_args[0], state)
             )
+        if method != semantics.call_runner:
+            return
         if (
-            method == semantics.call_runner
-            and inner_obj == semantics.character_object
+            inner_obj == semantics.character_object
             and inner_method in semantics.character_offset_methods
         ):
             self.apply_offset(state, inner_args)
+        elif inner_obj == semantics.stat_object and inner_method in semantics.effects:
+            self.apply_effect(inner_method, inner_args, state, beats)
+        elif (
+            semantics.endgame_object
+            and inner_obj == semantics.endgame_object
+            and inner_method == semantics.endgame_method
+        ):
+            self._endgame_call(inner_args, state, beats)
 
     def _say_call(
         self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
@@ -306,6 +319,15 @@ class CallHandler:
         self.emit_scene(args, state, beats)
         state.portraits.clear()
         state.pending_says.clear()
+        return None
+
+    def _endgame_call(
+        self, args: Sequence[lua.Node], state: EvalState, beats: list[Any]
+    ) -> ChoiceDraft | None:
+        if args:
+            key = unwrap_text(self.analyzer.expressions.eval(args[0], state))
+            if key:
+                beats.append(MetaBeat(META_ENDGAME, key))
         return None
 
     def _time_call(

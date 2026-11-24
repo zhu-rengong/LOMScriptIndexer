@@ -1,1 +1,1 @@
-export const DATA_SCHEMA = 'fcc27aa99da6';
+export const DATA_SCHEMA = 'e2a68f505e9d';

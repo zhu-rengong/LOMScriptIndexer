@@ -1764,6 +1764,10 @@
             "ending"
           ]
         },
+        "kind": {
+          "type": "string",
+          "default": ""
+        },
         "key": {
           "type": "string",
           "default": ""

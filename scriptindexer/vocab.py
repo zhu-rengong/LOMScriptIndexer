@@ -22,6 +22,9 @@ BEAT_TAGS = (
 )
 BATTLE_LIKE_SCENE_NAMES = ("Battle", "Combat")
 DEATH_SCENE = "GameOver"
+META_ENDGAME = "endgame"
+ENDING_DEATH = "death"
+ENDING_ENDGAME = "endgame"
 
 HARDCODED_ENTRIES: tuple[dict[str, str], ...] = (
     {"id": "ch1_1", "label": "New game start", "origin": "SaveSystem new game"},

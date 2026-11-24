@@ -98,6 +98,7 @@ class BattleRow(BeatRow, tag="battle"):
 
 
 class EndingRow(BeatRow, tag="ending"):
+    kind: str = ""
     key: str = ""
     title: str = ""
     desc: str = ""
