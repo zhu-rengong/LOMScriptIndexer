@@ -56,6 +56,8 @@ class Facets(Wire):
     stats: list[str] = msgspec.field(default_factory=list)
     relations: list[str] = msgspec.field(default_factory=list)
     endings: list[str] = msgspec.field(default_factory=list)
+    chronicles: list[str] = msgspec.field(default_factory=list)
+    endgames: list[str] = msgspec.field(default_factory=list)
     missions: list[str] = msgspec.field(default_factory=list)
     option_count: int = 0
     lock_count: int = 0

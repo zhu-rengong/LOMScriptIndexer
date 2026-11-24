@@ -41,6 +41,7 @@ STAT_ALIASES: dict[str, str] = {
 }
 
 NAME_ENDING = "ending"
+NAME_ENDGAME = "endgame"
 NAME_CHECK = "check"
 NAME_STAT = VALUE_STAT
 NAME_MISSION = "mission"

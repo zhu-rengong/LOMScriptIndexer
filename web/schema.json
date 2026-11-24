@@ -599,6 +599,20 @@
           },
           "default": []
         },
+        "chronicles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "endgames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
         "missions": {
           "type": "array",
           "items": {

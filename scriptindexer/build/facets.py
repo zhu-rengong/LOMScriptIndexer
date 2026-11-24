@@ -10,7 +10,7 @@ from ..script_model import (
     SayBeat,
     SceneBeat,
 )
-from ..vocab import DEATH_SCENE
+from ..vocab import DEATH_SCENE, META_ENDGAME, META_LIBRARY
 from .visit import BeatWalker
 
 MISSION_KIND = "mission"
@@ -61,6 +61,8 @@ class FacetWalker(BeatWalker):
         self.stats: set[str] = set()
         self.relations: set[str] = set()
         self.endings: set[str] = set()
+        self.chronicles: set[str] = set()
+        self.endgames: set[str] = set()
         self.missions: set[str] = set()
         self.option_count = 0
         self.lock_count = 0
@@ -80,7 +82,11 @@ class FacetWalker(BeatWalker):
             return
         if not beat.key:
             return
-        if beat.kind in FLAG_KINDS:
+        if beat.kind == META_LIBRARY:
+            self.chronicles.add(beat.key)
+        elif beat.kind == META_ENDGAME:
+            self.endgames.add(beat.key)
+        elif beat.kind in FLAG_KINDS:
             self.flags.add(beat.key)
         elif beat.kind in STAT_KINDS:
             self.stats.add(beat.key)
@@ -122,6 +128,8 @@ class FacetWalker(BeatWalker):
             stats=sorted(self.stats),
             relations=sorted(self.relations),
             endings=sorted(self.endings),
+            chronicles=sorted(self.chronicles),
+            endgames=sorted(self.endgames),
             missions=sorted(self.missions),
             option_count=self.option_count,
             lock_count=self.lock_count,
@@ -156,6 +164,8 @@ def merge(base: Facets, battle_facets: Mapping[str, Iterable[str]] | None) -> Fa
         stats=combine(base.stats, "stats"),
         relations=combine(base.relations, "relations"),
         endings=combine(base.endings, "endings"),
+        chronicles=combine(base.chronicles, "chronicles"),
+        endgames=combine(base.endgames, "endgames"),
         missions=combine(base.missions, "missions"),
         option_count=base.option_count,
         lock_count=base.lock_count,

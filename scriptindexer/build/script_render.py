@@ -165,8 +165,8 @@ class Renderer:
             return None
         title = self.library.get(f"Title/{key}") or key
         desc = self.library.get(f"Desc/{key}") or ""
-        if kind == ENDING_DEATH:
-            self.registry.register(labels.NAME_ENDING, key, title)
+        name = labels.NAME_ENDGAME if kind == ENDING_ENDGAME else labels.NAME_ENDING
+        self.registry.register(name, key, title)
         return EndingRow(kind=kind, key=key, title=title, desc=desc)
 
     def row(self, beat: Beat) -> BeatNode | None:

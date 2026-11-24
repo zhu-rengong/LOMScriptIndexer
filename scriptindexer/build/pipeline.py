@@ -714,6 +714,8 @@ def _write_report(
         "stats": len({key for row in result.facets.values() for key in row.stats}),
         "relations": len({key for row in result.facets.values() for key in row.relations}),
         "endings": len({key for row in result.facets.values() for key in row.endings}),
+        "chronicles": len({key for row in result.facets.values() for key in row.chronicles}),
+        "endgames": len({key for row in result.facets.values() for key in row.endgames}),
         "missions": len({key for row in result.facets.values() for key in row.missions}),
         "scripts_with_ending": sum(1 for row in result.facets.values() if row.endings),
         "scripts_with_mission": sum(1 for row in result.facets.values() if row.missions),

@@ -22,6 +22,7 @@ BEAT_TAGS = (
 )
 BATTLE_LIKE_SCENE_NAMES = ("Battle", "Combat")
 DEATH_SCENE = "GameOver"
+META_LIBRARY = "library"
 META_ENDGAME = "endgame"
 ENDING_DEATH = "death"
 ENDING_ENDGAME = "endgame"
@@ -57,7 +58,16 @@ EDGE_GROUP_BY_KIND = {
     EDGE_AFTER: EDGE_AFTER,
 }
 
-FACET_LIST_FIELDS = ("speakers", "flags", "checks", "stats", "relations", "endings")
+FACET_LIST_FIELDS = (
+    "speakers",
+    "flags",
+    "checks",
+    "stats",
+    "relations",
+    "endings",
+    "chronicles",
+    "endgames",
+)
 FACET_KINDS = (
     "speakers",
     "flags",
@@ -65,6 +75,8 @@ FACET_KINDS = (
     "stats",
     "relations",
     "endings",
+    "chronicles",
+    "endgames",
     "missions",
     "optionCount",
     "lockCount",
