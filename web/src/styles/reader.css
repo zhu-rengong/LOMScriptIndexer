@@ -1344,6 +1344,11 @@
     --tlh-mark: 0.75;
   }
 
+  .meta-chips .chip-stat.meta-chip:not(.is-hidden) {
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+
   .meta-chips .meta-chip.is-hidden {
     background: var(--surface-hover);
     user-select: none;
