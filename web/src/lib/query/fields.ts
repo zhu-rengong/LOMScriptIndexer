@@ -8,6 +8,8 @@ const FIELD_SPECS: QueryField[] = [
   { id: "stat", kind: "text", aliases: ["stat", "stats"] },
   { id: "rel", kind: "text", aliases: ["rel"] },
   { id: "ending", kind: "text", aliases: ["ending", "endings", "death"] },
+  { id: "chronicle", kind: "text", aliases: ["chronicle", "achievement"] },
+  { id: "endgame", kind: "text", aliases: ["endgame"] },
   { id: "mission", kind: "text", aliases: ["mission"] },
   { id: "chapter", kind: "string", aliases: ["chapter"] },
 ];
@@ -19,6 +21,8 @@ export const FACET_KEY: Record<string, string> = {
   stat: "stats",
   rel: "relations",
   ending: "endings",
+  chronicle: "chronicles",
+  endgame: "endgames",
   mission: "missions",
 };
 

@@ -46,6 +46,8 @@ export class FilterIndex {
         stats: names.stat || {},
         relations: names.rel || {},
         endings: names.ending || {},
+        chronicles: names.chronicle || {},
+        endgames: names.endgame || {},
         missions: missionLabelTable(),
       },
     };

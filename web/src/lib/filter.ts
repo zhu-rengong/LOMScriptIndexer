@@ -7,6 +7,8 @@ export const FIELD_LABEL_KEYS: Record<string, string> = {
   stat: "fieldStat",
   rel: "fieldRel",
   ending: "fieldEnding",
+  chronicle: "fieldChronicle",
+  endgame: "fieldEndgame",
   mission: "fieldMission",
   chapter: "fieldChapter",
 };
