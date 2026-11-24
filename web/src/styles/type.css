@@ -98,6 +98,19 @@
     font-variant-numeric: var(--rd-fn-ending, normal);
   }
 
+  .endgame-title,
+  .endgame-line {
+    font-family: var(--rd-ff-endgame, var(--font-base));
+    font-size: calc(var(--rd-fs-endgame, 16px) * var(--ts-endgame, 1));
+    font-weight: var(--rd-fw-endgame, 400);
+    line-height: calc(var(--rd-lh-endgame, 1.6) * var(--tlh-endgame, 1));
+    letter-spacing: calc(var(--rd-ls-endgame, 0em) + var(--tls-endgame, 0em));
+    font-style: var(--rd-fi-endgame, normal);
+    text-transform: var(--rd-tt-endgame, none);
+    font-variant-caps: var(--rd-fc-endgame, normal);
+    font-variant-numeric: var(--rd-fn-endgame, normal);
+  }
+
   .option-text,
   .jump-target,
   .jump.jump-target {

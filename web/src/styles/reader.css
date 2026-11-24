@@ -951,6 +951,46 @@
     gap: 0.5em;
   }
 
+  .endgame {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+    margin: var(--rd-gap-3) 0 var(--rd-gap-4);
+    padding: var(--sp-5) var(--sp-6);
+    border: 1px solid var(--line-3);
+    border-radius: var(--r-sm);
+    background: var(--surface-inset);
+  }
+
+  .endgame-title {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    color: var(--ending-ink);
+    text-align: center;
+    --ts-endgame: 1.7;
+  }
+
+  .endgame-title::before,
+  .endgame-title::after {
+    content: "";
+    flex: 1 1 auto;
+    height: 1px;
+    background: var(--line-3);
+  }
+
+  .endgame-desc {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .endgame-line {
+    color: var(--ink);
+    text-align: justify;
+    text-justify: inter-ideograph;
+    overflow-wrap: anywhere;
+  }
+
   .time-mark {
     display: flex;
     flex-wrap: wrap;
