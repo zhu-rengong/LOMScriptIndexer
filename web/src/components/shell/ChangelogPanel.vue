@@ -4,6 +4,7 @@ import { popovers } from "../../lib/popover";
 import { UI_IDS } from "../../ui/ids";
 
 const ENTRIES = [
+  { date: "2026-11-24", key: "changelogEntry10" },
   { date: "2026-11-23", key: "changelogEntry9" },
   { date: "2026-11-22", key: "changelogEntry8" },
   { date: "2026-11-21", key: "changelogEntry7" },
