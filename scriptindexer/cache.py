@@ -116,6 +116,7 @@ def _interpreter_digest() -> str:
     for path in sorted(root.glob("*.py")):
         digest.update(path.read_bytes())
     digest.update((Path(__file__).parent / "script_model.py").read_bytes())
+    digest.update((Path(__file__).parent / "game" / "lua_bindings.py").read_bytes())
     return digest.hexdigest()[:12]
 
 

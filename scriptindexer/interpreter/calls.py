@@ -308,6 +308,7 @@ class CallHandler:
         state.pending_story_script = None
         state.portraits.clear()
         state.stage_positions.clear()
+        state.stage_offsets.clear()
         state.hidden_characters.clear()
         state.pending_says.clear()
         state.view_hidden = False
@@ -381,13 +382,17 @@ class CallHandler:
         character = self.stage_character(settings)
         if not character:
             return
+        target = unwrap_text(settings.get(self.semantics.stage_to_key)) or ""
+        previous = state.stage_positions.get(character)
         position = (
-            self.stage_position(settings)
-            or state.stage_positions.get(character)
+            target
+            or previous
+            or self.stage_position(settings)
             or self.semantics.stage_default_position
         )
         state.stage_positions[character] = position
-        state.stage_offsets[character] = 0.0
+        if target or previous is None:
+            state.stage_offsets.pop(character, None)
         state.hidden_characters.discard(character)
         if self.visible(state, character):
             self.resolve_pending(state, character, beats)
@@ -426,10 +431,19 @@ class CallHandler:
         if len(args) < 3:
             return
         character = unwrap_text(self.analyzer.expressions.eval(args[0], state))
-        value = self.analyzer.expressions.eval(args[2], state)
-        if not character or isinstance(value, bool) or not isinstance(value, int | float):
+        if not character:
             return
-        state.stage_offsets[character] = state.stage_offsets.get(character, 0.0) + float(value)
+        dx, dy = state.stage_offsets.get(character, (0.0, 0.0))
+        state.stage_offsets[character] = (
+            dx + self.offset_value(args[1], state),
+            dy + self.offset_value(args[2], state),
+        )
+
+    def offset_value(self, arg: lua.Node, state: EvalState) -> float:
+        value = self.analyzer.expressions.eval(arg, state)
+        if isinstance(value, bool) or not isinstance(value, int | float):
+            return 0.0
+        return float(value)
 
     def visible(self, state: EvalState, character: str) -> bool:
         if state.view_hidden or character in state.hidden_characters:
@@ -437,11 +451,14 @@ class CallHandler:
         position = state.stage_positions.get(character)
         if position is None:
             return True
-        sunk = self.semantics.sunk_positions.get(position)
-        if sunk is not None:
-            offset = state.stage_offsets.get(character, 0.0)
-            return sunk + offset > self.semantics.stage_floor
-        return position not in self.semantics.offstage_positions
+        dx, dy = state.stage_offsets.get(character, (0.0, 0.0))
+        base_x = self.semantics.horizontal_offscreen_positions.get(position)
+        base_y = self.semantics.sunk_positions.get(position)
+        if base_x is None and base_y is None:
+            return position not in self.semantics.offstage_positions
+        if base_x is not None and abs(base_x + dx) >= self.semantics.stage_x_limit:
+            return False
+        return base_y is None or base_y + dy > self.semantics.stage_floor
 
     def resolve_pending(self, state: EvalState, character: str, beats: list[Any]) -> None:
         pending = state.pending_says.get(character)

@@ -57,7 +57,9 @@ class Semantics:
     stage_to_key: str = "toPosition"
     stage_default_position: str = "M"
     offstage_positions: frozenset[str] = frozenset()
+    horizontal_offscreen_positions: Mapping[str, float] = field(default_factory=dict)
     sunk_positions: Mapping[str, float] = field(default_factory=dict)
+    stage_x_limit: float = 0.0
     stage_floor: float = 0.0
     character_offset_methods: tuple[str, ...] = ()
     call_runner: str = ""

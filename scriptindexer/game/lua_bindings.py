@@ -26,7 +26,16 @@ OFFSTAGE_POSITIONS = frozenset(
     }
 )
 
+HORIZONTAL_OFFSCREEN_POSITIONS = {
+    "SL": -1920.0,
+    "SR": 1920.0,
+    "SLB": -1920.0,
+    "SRB": 1920.0,
+}
+
 SUNK_POSITIONS = {
+    "SLB": -2169.73,
+    "SRB": -2169.73,
     "LB1": -2169.73,
     "LB2": -2169.73,
     "LB3": -2169.73,
@@ -37,6 +46,7 @@ SUNK_POSITIONS = {
     "BCB2": -3500.0,
 }
 
+STAGE_X_LIMIT = 1920.0
 STAGE_FLOOR = -2160.0
 
 LUA_BINDINGS = Semantics(
@@ -69,7 +79,9 @@ LUA_BINDINGS = Semantics(
     time_method="SetGameTime",
     stage_hide_method="hide",
     offstage_positions=OFFSTAGE_POSITIONS,
+    horizontal_offscreen_positions=HORIZONTAL_OFFSCREEN_POSITIONS,
     sunk_positions=SUNK_POSITIONS,
+    stage_x_limit=STAGE_X_LIMIT,
     stage_floor=STAGE_FLOOR,
     character_offset_methods=("MoveOffset", "MoveOffsetCoroutine"),
     call_runner="runwait",
